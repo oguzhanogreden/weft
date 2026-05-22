@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "vp pack",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -21,12 +21,9 @@
   "devDependencies": {
     "@types/node": "^25.9.1",
     "effect": "^3.21.2",
-    "oxfmt": "^0.51.0",
-    "oxlint": "^1.66.0",
-    "oxlint-tsgolint": "^0.23.0",
-    "tsdown": "^0.22.0",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.21"
