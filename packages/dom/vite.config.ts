@@ -1,7 +1,21 @@
-import tsdownConfig from "./tsdown.config.js";
-
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  pack: tsdownConfig,
+  run: {
+    tasks: {
+      pack: {
+        command: "vp pack",
+      },
+    },
+  },
+  pack: {
+    entry: ["src/**/*.{ts,tsx}", "!src/**/*.test.{ts,tsx}"],
+    outDir: "dist",
+    dts: true,
+    platform: "browser",
+    minify: true,
+    deps: {
+      neverBundle: ["effect", /^@effect-ui\//],
+    },
+  },
 });

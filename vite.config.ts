@@ -4,6 +4,18 @@ export default defineConfig({
   staged: {
     "*": "vp check --fix",
   },
+  run: {
+    tasks: {
+      pack: {
+        command: "vp run -r pack",
+        cache: true,
+      },
+    },
+  },
+
+  test: {
+    include: ["**/*.test.{ts,tsx}"],
+  },
   fmt: {
     ignorePatterns: ["dist/**", "*.min.js"],
   },

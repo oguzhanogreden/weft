@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import type { JSXChild } from "@effect-ui/html-types";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";

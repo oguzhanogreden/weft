@@ -11,9 +11,6 @@
       "import": "./dist/index.mjs"
     }
   },
-  "scripts": {
-    "build": "vp pack"
-  },
   "dependencies": {
     "csstype": "^3.2.3"
   },

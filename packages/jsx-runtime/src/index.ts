@@ -27,6 +27,22 @@ export function jsx(
 
 export const jsxs: typeof jsx = jsx;
 
+/**
+ * Development variant of the automatic JSX runtime entry point.
+ *
+ * Vite/esbuild emit calls to this function (imported from
+ * `@effect-ui/jsx-runtime/jsx-dev-runtime`) when transforming JSX with the
+ * automatic runtime in development mode. Children are passed inside `props`,
+ * so we delegate to {@link jsx}; the dev-only metadata arguments (`key`,
+ * `isStaticChildren`, `source`, `self`) are currently ignored.
+ */
+export function jsxDEV(
+  type: JSXType,
+  props: { [key: string]: unknown; children?: JSXChild | JSXChild[] } | null,
+): JSXChild {
+  return jsx(type, props);
+}
+
 declare global {
   namespace JSX {
     type Element = JSXChild;

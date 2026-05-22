@@ -13,10 +13,11 @@
     "./jsx-runtime": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     }
-  },
-  "scripts": {
-    "build": "vp pack"
   },
   "dependencies": {
     "@effect-ui/html-types": "workspace:*"

@@ -1,4 +1,4 @@
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 
 describe("effect-ui/server", () => {
   it("should run tests", () => {

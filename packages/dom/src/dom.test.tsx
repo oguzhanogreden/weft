@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { Effect, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
 import { JSDOM } from "jsdom";
 import { mount } from "./api";
