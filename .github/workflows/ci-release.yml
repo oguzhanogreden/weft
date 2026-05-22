@@ -60,7 +60,7 @@ jobs:
       - name: Build
         run: vp run pack
 
-  check:
+  status:
     name: CI Status
     runs-on: ubuntu-latest
     needs: [check, test, build]
