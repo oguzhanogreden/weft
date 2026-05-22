@@ -1,26 +1,35 @@
 {
-	"name": "@effect-ui/jsx-runtime",
-	"version": "0.0.0",
-	"description": "JSX transform functions and global namespace augmentation for effect-ui",
-	"license": "MIT",
-	"author": "Stef van Wijchen",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		},
-		"./jsx-runtime": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"scripts": {
-		"build": "tsdown",
-		"typecheck": "tsc",
-		"typecheck.type-tests": "tsc --project tsconfig.type-tests.json"
-	},
-	"dependencies": {
-		"@effect-ui/html-types": "workspace:*"
-	}
+  "name": "@effect-ui/jsx-runtime",
+  "version": "0.0.0",
+  "description": "JSX transform functions and global namespace augmentation for effect-ui",
+  "license": "MIT",
+  "author": "Stef van Wijchen",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@effect-ui/html-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "effect": "^3.21.2",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^3.21"
+  }
 }

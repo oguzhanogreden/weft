@@ -48,6 +48,7 @@ effect-ui supports reactive styles through streams:
 ## Usage Patterns
 
 ### Individual Property Stream
+
 ```typescript
 const hueStream = Stream.iterate(0, h => (h + 1) % 360).pipe(
   Stream.schedule(Schedule.spaced("50 millis"))
@@ -60,6 +61,7 @@ const hueStream = Stream.iterate(0, h => (h + 1) % 360).pipe(
 ```
 
 ### Style Object Stream
+
 ```typescript
 const styleStream = Stream.make(
   { backgroundColor: "red", transform: "scale(1)" },
@@ -70,6 +72,7 @@ const styleStream = Stream.make(
 ```
 
 ### Combined Static and Reactive
+
 ```typescript
 <div style={{
   ...dynamicStream,

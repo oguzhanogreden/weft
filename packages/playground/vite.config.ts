@@ -1,16 +1,21 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-	esbuild: {
-		jsx: "transform",
-		jsxDev: false,
-		jsxImportSource: "@effect-ui/jsx-runtime",
-		jsxInject: `import { jsx, Fragment } from '@effect-ui/jsx-runtime'`,
-		jsxFactory: "jsx",
-		jsxFragment: "Fragment",
-	},
-	server: {
-		port: 3000,
-		open: true,
-	},
+  run: {
+    tasks: {
+      dev: {
+        command: "vp dev",
+        dependsOn: [
+          "@effect-ui/core#pack",
+          "@effect-ui/dom#pack",
+          "@effect-ui/html-types#pack",
+          "@effect-ui/jsx-runtime#pack",
+        ],
+      },
+    },
+  },
+  server: {
+    port: 3000,
+    open: true,
+  },
 });

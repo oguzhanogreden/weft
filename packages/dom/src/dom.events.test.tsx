@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import type { JSXChild } from "@effect-ui/html-types";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
@@ -13,46 +13,46 @@ import { mount } from "./api";
  * Creates a fresh DOM environment for each test
  */
 function createTestDOM() {
-	const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-	global.document = dom.window.document;
-	global.HTMLElement = dom.window.HTMLElement;
-	global.Comment = dom.window.Comment;
-	global.Text = dom.window.Text;
-	global.MouseEvent = dom.window.MouseEvent;
-	global.Event = dom.window.Event;
-	return dom;
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+  global.document = dom.window.document;
+  global.HTMLElement = dom.window.HTMLElement;
+  global.Comment = dom.window.Comment;
+  global.Text = dom.window.Text;
+  global.MouseEvent = dom.window.MouseEvent;
+  global.Event = dom.window.Event;
+  return dom;
 }
 
 /**
  * Creates a root element for mounting
  */
 function createRoot(): HTMLElement {
-	const root = document.createElement("div");
-	root.id = "root";
-	document.body.appendChild(root);
-	return root;
+  const root = document.createElement("div");
+  root.id = "root";
+  document.body.appendChild(root);
+  return root;
 }
 
 /**
  * Helper to run mount and wait for initial render
  */
 async function runMount(app: JSXChild, root: HTMLElement) {
-	const handle = await Effect.runPromise(mount(app, root));
-	return handle;
+  const handle = await Effect.runPromise(mount(app, root));
+  return handle;
 }
 
 /**
  * Helper to wait for async operations
  */
 function waitFor(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
  * Wait for stream emissions
  */
 function waitForStream(): Promise<void> {
-	return waitFor(100);
+  return waitFor(100);
 }
 
 // ============================================================================
@@ -60,78 +60,78 @@ function waitForStream(): Promise<void> {
 // ============================================================================
 
 describe("AC1: Static Plain Callback Handler", () => {
-	it("should invoke callback synchronously when event fires", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clicked = false;
+  it("should invoke callback synchronously when event fires", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clicked = false;
 
-		await runMount(
-			<button
-				type="button"
-				onclick={() => {
-					clicked = true;
-				}}
-			>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button
+        type="button"
+        onclick={() => {
+          clicked = true;
+        }}
+      >
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		assert.ok(button, "Button should exist");
+    const button = root.querySelector("button");
+    assert.ok(button, "Button should exist");
 
-		button.click();
-		assert.equal(clicked, true, "Callback should have been invoked");
-	});
+    button.click();
+    assert.equal(clicked, true, "Callback should have been invoked");
+  });
 
-	it("should pass event object to callback", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let receivedEvent: Event | null = null;
+  it("should pass event object to callback", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let receivedEvent: Event | null = null;
 
-		await runMount(
-			<button
-				type="button"
-				onclick={(e) => {
-					receivedEvent = e;
-				}}
-			>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button
+        type="button"
+        onclick={(e) => {
+          receivedEvent = e;
+        }}
+      >
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		assert.ok(receivedEvent !== null, "Event should have been received");
-		assert.equal((receivedEvent as Event).type, "click");
-	});
+    assert.ok(receivedEvent !== null, "Event should have been received");
+    assert.equal((receivedEvent as Event).type, "click");
+  });
 
-	it("should handle multiple event types on same element", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const events: string[] = [];
+  it("should handle multiple event types on same element", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const events: string[] = [];
 
-		await runMount(
-			<input
-				type="text"
-				onfocus={() => {
-					events.push("focus");
-				}}
-				onblur={() => {
-					events.push("blur");
-				}}
-			/>,
-			root,
-		);
+    await runMount(
+      <input
+        type="text"
+        onfocus={() => {
+          events.push("focus");
+        }}
+        onblur={() => {
+          events.push("blur");
+        }}
+      />,
+      root,
+    );
 
-		const input = root.querySelector("input");
-		input?.focus();
-		input?.blur();
+    const input = root.querySelector("input");
+    input?.focus();
+    input?.blur();
 
-		assert.deepEqual(events, ["focus", "blur"]);
-	});
+    assert.deepEqual(events, ["focus", "blur"]);
+  });
 });
 
 // ============================================================================
@@ -139,59 +139,59 @@ describe("AC1: Static Plain Callback Handler", () => {
 // ============================================================================
 
 describe("AC2: Static Effect Handler", () => {
-	it("should detect and run Effect-returning handler", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let effectRan = false;
+  it("should detect and run Effect-returning handler", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let effectRan = false;
 
-		await runMount(
-			<button
-				type="button"
-				onclick={() =>
-					Effect.sync(() => {
-						effectRan = true;
-					})
-				}
-			>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button
+        type="button"
+        onclick={() =>
+          Effect.sync(() => {
+            effectRan = true;
+          })
+        }
+      >
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		// Effect runs async via runFork
-		await waitFor(50);
-		assert.equal(effectRan, true, "Effect should have run");
-	});
+    // Effect runs async via runFork
+    await waitFor(50);
+    assert.equal(effectRan, true, "Effect should have run");
+  });
 
-	it("should allow Effect.gen in handler", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const logs: string[] = [];
+  it("should allow Effect.gen in handler", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const logs: string[] = [];
 
-		await runMount(
-			<button
-				type="button"
-				onclick={() =>
-					Effect.gen(function* () {
-						logs.push("step1");
-						yield* Effect.sync(() => logs.push("step2"));
-					})
-				}
-			>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button
+        type="button"
+        onclick={() =>
+          Effect.gen(function* () {
+            logs.push("step1");
+            yield* Effect.sync(() => logs.push("step2"));
+          })
+        }
+      >
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		await waitFor(50);
-		assert.deepEqual(logs, ["step1", "step2"]);
-	});
+    await waitFor(50);
+    assert.deepEqual(logs, ["step1", "step2"]);
+  });
 });
 
 // ============================================================================
@@ -199,56 +199,56 @@ describe("AC2: Static Effect Handler", () => {
 // ============================================================================
 
 describe("AC3: Effect Handler with Services", () => {
-	it("should allow handler to access services provided at mount", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should allow handler to access services provided at mount", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Define a test service
-		class CounterService extends Context.Tag("CounterService")<
-			CounterService,
-			{ increment: () => Effect.Effect<number> }
-		>() {}
+    // Define a test service
+    class CounterService extends Context.Tag("CounterService")<
+      CounterService,
+      { increment: () => Effect.Effect<number> }
+    >() {}
 
-		let counterValue = 0;
-		const CounterServiceLive = Layer.succeed(CounterService, {
-			increment: () =>
-				Effect.sync(() => {
-					counterValue++;
-					return counterValue;
-				}),
-		});
+    let counterValue = 0;
+    const CounterServiceLive = Layer.succeed(CounterService, {
+      increment: () =>
+        Effect.sync(() => {
+          counterValue++;
+          return counterValue;
+        }),
+    });
 
-		// Mount with service provided
-		const handle = await Effect.runPromise(
-			mount(
-				<button
-					type="button"
-					onclick={() =>
-						Effect.gen(function* () {
-							const counter = yield* CounterService;
-							yield* counter.increment();
-						})
-					}
-				>
-					Increment
-				</button>,
-				root,
-			).pipe(Effect.provide(CounterServiceLive)),
-		);
+    // Mount with service provided
+    const handle = await Effect.runPromise(
+      mount(
+        <button
+          type="button"
+          onclick={() =>
+            Effect.gen(function* () {
+              const counter = yield* CounterService;
+              yield* counter.increment();
+            })
+          }
+        >
+          Increment
+        </button>,
+        root,
+      ).pipe(Effect.provide(CounterServiceLive)),
+    );
 
-		const button = root.querySelector("button");
+    const button = root.querySelector("button");
 
-		// Click multiple times
-		button?.click();
-		await waitFor(50);
-		assert.equal(counterValue, 1);
+    // Click multiple times
+    button?.click();
+    await waitFor(50);
+    assert.equal(counterValue, 1);
 
-		button?.click();
-		await waitFor(50);
-		assert.equal(counterValue, 2);
+    button?.click();
+    await waitFor(50);
+    assert.equal(counterValue, 2);
 
-		await Effect.runPromise(handle.unmount());
-	});
+    await Effect.runPromise(handle.unmount());
+  });
 });
 
 // ============================================================================
@@ -256,44 +256,40 @@ describe("AC3: Effect Handler with Services", () => {
 // ============================================================================
 
 describe("AC4: Effect Handler Error Handling", () => {
-	it("should log error and not crash UI when Effect fails", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clickCount = 0;
+  it("should log error and not crash UI when Effect fails", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clickCount = 0;
 
-		await runMount(
-			<div>
-				<button
-					type="button"
-					id="failing"
-					onclick={() => Effect.fail(new Error("Test error"))}
-				>
-					Fail
-				</button>
-				<button
-					type="button"
-					id="working"
-					onclick={() => {
-						clickCount++;
-					}}
-				>
-					Work
-				</button>
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <button type="button" id="failing" onclick={() => Effect.fail(new Error("Test error"))}>
+          Fail
+        </button>
+        <button
+          type="button"
+          id="working"
+          onclick={() => {
+            clickCount++;
+          }}
+        >
+          Work
+        </button>
+      </div>,
+      root,
+    );
 
-		const failingButton = root.querySelector("#failing") as HTMLButtonElement;
-		const workingButton = root.querySelector("#working") as HTMLButtonElement;
+    const failingButton = root.querySelector("#failing") as HTMLButtonElement;
+    const workingButton = root.querySelector("#working") as HTMLButtonElement;
 
-		// Click failing button - should not crash
-		failingButton?.click();
-		await waitFor(50);
+    // Click failing button - should not crash
+    failingButton?.click();
+    await waitFor(50);
 
-		// UI should still be responsive
-		workingButton?.click();
-		assert.equal(clickCount, 1, "Working button should still work");
-	});
+    // UI should still be responsive
+    workingButton?.click();
+    assert.equal(clickCount, 1, "Working button should still work");
+  });
 });
 
 // ============================================================================
@@ -301,66 +297,66 @@ describe("AC4: Effect Handler Error Handling", () => {
 // ============================================================================
 
 describe("AC5: Reactive Handler (Stream)", () => {
-	it("should update handler when stream emits", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const calls: string[] = [];
+  it("should update handler when stream emits", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const calls: string[] = [];
 
-		const handlerStream = Stream.make(
-			() => {
-				calls.push("handler1");
-			},
-			() => {
-				calls.push("handler2");
-			},
-		);
+    const handlerStream = Stream.make(
+      () => {
+        calls.push("handler1");
+      },
+      () => {
+        calls.push("handler2");
+      },
+    );
 
-		await runMount(
-			<button type="button" onclick={handlerStream}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={handlerStream}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		// Stream.make emits all values synchronously, so handler2 is active
-		assert.deepEqual(calls, ["handler2"]);
-	});
+    // Stream.make emits all values synchronously, so handler2 is active
+    assert.deepEqual(calls, ["handler2"]);
+  });
 
-	it("should remove old listener when new handler emitted", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const calls: string[] = [];
+  it("should remove old listener when new handler emitted", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const calls: string[] = [];
 
-		const handlerStream = Stream.make(
-			() => {
-				calls.push("handler1");
-			},
-			() => {
-				calls.push("handler2");
-			},
-		);
+    const handlerStream = Stream.make(
+      () => {
+        calls.push("handler1");
+      },
+      () => {
+        calls.push("handler2");
+      },
+    );
 
-		await runMount(
-			<button type="button" onclick={handlerStream}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={handlerStream}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
+    button?.click();
 
-		// Only handler2 should be called (twice)
-		assert.deepEqual(calls, ["handler2", "handler2"]);
-	});
+    // Only handler2 should be called (twice)
+    assert.deepEqual(calls, ["handler2", "handler2"]);
+  });
 });
 
 // ============================================================================
@@ -368,29 +364,29 @@ describe("AC5: Reactive Handler (Stream)", () => {
 // ============================================================================
 
 describe("AC6: Reactive Handler (Effect)", () => {
-	it("should attach handler when Effect resolves", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clicked = false;
+  it("should attach handler when Effect resolves", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clicked = false;
 
-		const handlerEffect = Effect.succeed((): void => {
-			clicked = true;
-		});
+    const handlerEffect = Effect.succeed((): void => {
+      clicked = true;
+    });
 
-		await runMount(
-			<button type="button" onclick={handlerEffect}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={handlerEffect}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		assert.equal(clicked, true);
-	});
+    assert.equal(clicked, true);
+  });
 });
 
 // ============================================================================
@@ -398,67 +394,67 @@ describe("AC6: Reactive Handler (Effect)", () => {
 // ============================================================================
 
 describe("AC7: Null/False Handler Values", () => {
-	it("should not attach listener when handler is null", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should not attach listener when handler is null", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<button type="button" onclick={null}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={null}>
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		// Should not throw or cause issues
-		button?.click();
-		assert.ok(true, "Click on null handler should not crash");
-	});
+    const button = root.querySelector("button");
+    // Should not throw or cause issues
+    button?.click();
+    assert.ok(true, "Click on null handler should not crash");
+  });
 
-	it("should not attach listener when handler is false", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should not attach listener when handler is false", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<button type="button" onclick={false}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={false}>
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		button?.click();
-		assert.ok(true, "Click on false handler should not crash");
-	});
+    const button = root.querySelector("button");
+    button?.click();
+    assert.ok(true, "Click on false handler should not crash");
+  });
 
-	it("should remove listener when stream emits null", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clickCount = 0;
+  it("should remove listener when stream emits null", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clickCount = 0;
 
-		const handlerStream = Stream.make(
-			(): void => {
-				clickCount++;
-			},
-			null as (() => void) | null,
-		);
+    const handlerStream = Stream.make(
+      (): void => {
+        clickCount++;
+      },
+      null as (() => void) | null,
+    );
 
-		await runMount(
-			<button type="button" onclick={handlerStream}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={handlerStream}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
+    button?.click();
 
-		// Handler was removed after null emission
-		assert.equal(clickCount, 0);
-	});
+    // Handler was removed after null emission
+    assert.equal(clickCount, 0);
+  });
 });
 
 // ============================================================================
@@ -466,39 +462,39 @@ describe("AC7: Null/False Handler Values", () => {
 // ============================================================================
 
 describe("AC8: Handler Change Cleanup", () => {
-	it("should only have one listener attached at a time", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let callCount = 0;
+  it("should only have one listener attached at a time", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let callCount = 0;
 
-		// Create a stream that emits multiple handlers
-		const handlerStream = Stream.make(
-			(): void => {
-				callCount++;
-			},
-			(): void => {
-				callCount++;
-			},
-			(): void => {
-				callCount++;
-			},
-		);
+    // Create a stream that emits multiple handlers
+    const handlerStream = Stream.make(
+      (): void => {
+        callCount++;
+      },
+      (): void => {
+        callCount++;
+      },
+      (): void => {
+        callCount++;
+      },
+    );
 
-		await runMount(
-			<button type="button" onclick={handlerStream}>
-				Click me
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" onclick={handlerStream}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
+    const button = root.querySelector("button");
+    button?.click();
 
-		// Only one listener should be active (the last one)
-		assert.equal(callCount, 1);
-	});
+    // Only one listener should be active (the last one)
+    assert.equal(callCount, 1);
+  });
 });
 
 // ============================================================================
@@ -506,62 +502,62 @@ describe("AC8: Handler Change Cleanup", () => {
 // ============================================================================
 
 describe("AC9: Cleanup on Unmount", () => {
-	it("should remove event listeners on unmount", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clickCount = 0;
+  it("should remove event listeners on unmount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clickCount = 0;
 
-		const handle = await runMount(
-			<button
-				type="button"
-				onclick={() => {
-					clickCount++;
-				}}
-			>
-				Click me
-			</button>,
-			root,
-		);
+    const handle = await runMount(
+      <button
+        type="button"
+        onclick={() => {
+          clickCount++;
+        }}
+      >
+        Click me
+      </button>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		button?.click();
-		assert.equal(clickCount, 1);
+    const button = root.querySelector("button");
+    button?.click();
+    assert.equal(clickCount, 1);
 
-		// Unmount
-		await Effect.runPromise(handle.unmount());
+    // Unmount
+    await Effect.runPromise(handle.unmount());
 
-		// Click after unmount should not increment
-		button?.click();
-		assert.equal(clickCount, 1, "Handler should not fire after unmount");
-	});
+    // Click after unmount should not increment
+    button?.click();
+    assert.equal(clickCount, 1, "Handler should not fire after unmount");
+  });
 
-	it("should cleanup reactive handler streams on unmount", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let clickCount = 0;
+  it("should cleanup reactive handler streams on unmount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let clickCount = 0;
 
-		const handlerStream = Stream.make((): void => {
-			clickCount++;
-		});
+    const handlerStream = Stream.make((): void => {
+      clickCount++;
+    });
 
-		const handle = await runMount(
-			<button type="button" onclick={handlerStream}>
-				Click me
-			</button>,
-			root,
-		);
+    const handle = await runMount(
+      <button type="button" onclick={handlerStream}>
+        Click me
+      </button>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const button = root.querySelector("button");
-		button?.click();
-		assert.equal(clickCount, 1);
+    const button = root.querySelector("button");
+    button?.click();
+    assert.equal(clickCount, 1);
 
-		await Effect.runPromise(handle.unmount());
+    await Effect.runPromise(handle.unmount());
 
-		button?.click();
-		assert.equal(clickCount, 1, "Handler should not fire after unmount");
-	});
+    button?.click();
+    assert.equal(clickCount, 1, "Handler should not fire after unmount");
+  });
 });
 
 // ============================================================================
@@ -569,56 +565,56 @@ describe("AC9: Cleanup on Unmount", () => {
 // ============================================================================
 
 describe("AC10: Event Handler Detection", () => {
-	it("should detect lowercase event names (onclick, onchange)", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const events: string[] = [];
+  it("should detect lowercase event names (onclick, onchange)", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const events: string[] = [];
 
-		await runMount(
-			<div>
-				<button
-					type="button"
-					onclick={() => {
-						events.push("click");
-					}}
-				>
-					Button
-				</button>
-				<input
-					type="text"
-					onchange={() => {
-						events.push("change");
-					}}
-				/>
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <button
+          type="button"
+          onclick={() => {
+            events.push("click");
+          }}
+        >
+          Button
+        </button>
+        <input
+          type="text"
+          onchange={() => {
+            events.push("change");
+          }}
+        />
+      </div>,
+      root,
+    );
 
-		const button = root.querySelector("button");
-		const input = root.querySelector("input");
+    const button = root.querySelector("button");
+    const input = root.querySelector("input");
 
-		button?.click();
-		input?.dispatchEvent(new Event("change"));
+    button?.click();
+    input?.dispatchEvent(new Event("change"));
 
-		assert.deepEqual(events, ["click", "change"]);
-	});
+    assert.deepEqual(events, ["click", "change"]);
+  });
 
-	it("should not treat non-event props as handlers", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should not treat non-event props as handlers", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// "on" prefix but not followed by lowercase - these should be attributes
-		await runMount(
-			// @ts-expect-error - testing invalid prop handling
-			<div onX="value" on123="test">
-				Content
-			</div>,
-			root,
-		);
+    // "on" prefix but not followed by lowercase - these should be attributes
+    await runMount(
+      // @ts-expect-error - testing invalid prop handling
+      <div onX="value" on123="test">
+        Content
+      </div>,
+      root,
+    );
 
-		const div = root.querySelector("div");
-		// These should be set as attributes, not event handlers
-		assert.equal(div?.getAttribute("onX"), "value");
-		assert.equal(div?.getAttribute("on123"), "test");
-	});
+    const div = root.querySelector("div");
+    // These should be set as attributes, not event handlers
+    assert.equal(div?.getAttribute("onX"), "value");
+    assert.equal(div?.getAttribute("on123"), "test");
+  });
 });

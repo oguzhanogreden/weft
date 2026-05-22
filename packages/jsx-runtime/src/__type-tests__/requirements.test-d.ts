@@ -1,3 +1,5 @@
+// oxlint-disable no-unused-vars
+
 /**
  * Type tests for JSX.Requirements augmentation feature.
  *
@@ -13,13 +15,13 @@ import type { Context, Effect, Stream } from "effect";
 // =============================================================================
 
 interface ServiceA {
-	readonly a: string;
+  readonly a: string;
 }
 interface ServiceB {
-	readonly b: number;
+  readonly b: number;
 }
 interface ServiceC {
-	readonly c: boolean;
+  readonly c: boolean;
 }
 
 declare const TagA: Context.Tag<ServiceA, ServiceA>;
@@ -34,11 +36,7 @@ declare const TagC: Context.Tag<ServiceC, ServiceC>;
 // Without augmentation, all requirement types should be accepted
 declare const streamWithServiceA: Stream.Stream<string, never, ServiceA>;
 declare const streamWithServiceB: Stream.Stream<string, never, ServiceB>;
-declare const streamWithBothServices: Stream.Stream<
-	string,
-	never,
-	ServiceA | ServiceB
->;
+declare const streamWithBothServices: Stream.Stream<string, never, ServiceA | ServiceB>;
 declare const streamWithNoRequirements: Stream.Stream<string, never, never>;
 
 // All should be assignable to JSXChild (default permissive mode)
@@ -58,11 +56,11 @@ const _effectA: JSXChild = effectWithServiceA;
 
 // Augment JSX.Requirements with ServiceA and ServiceB
 declare global {
-	namespace JSX {
-		interface Requirements {
-			_: ServiceA | ServiceB;
-		}
-	}
+  namespace JSX {
+    interface Requirements {
+      _: ServiceA | ServiceB;
+    }
+  }
 }
 
 // Streams with registered services should be accepted
@@ -77,11 +75,7 @@ declare const streamWithServiceC: Stream.Stream<string, never, ServiceC>;
 const _unregistered: JSXChild = streamWithServiceC;
 
 // Stream with mix of registered and unregistered should fail
-declare const streamWithAandC: Stream.Stream<
-	string,
-	never,
-	ServiceA | ServiceC
->;
+declare const streamWithAandC: Stream.Stream<string, never, ServiceA | ServiceC>;
 // @ts-expect-error - ServiceC is not registered in JSX.Requirements
 const _mixedUnregistered: JSXChild = streamWithAandC;
 
@@ -97,11 +91,7 @@ const _effectUnregistered: JSXChild = effectWithServiceC;
 // Test: Nested JSXChild (recursive type)
 // =============================================================================
 
-declare const nestedStream: Stream.Stream<
-	Stream.Stream<string, never, ServiceA>,
-	never,
-	ServiceB
->;
+declare const nestedStream: Stream.Stream<Stream.Stream<string, never, ServiceA>, never, ServiceB>;
 const _nested: JSXChild = nestedStream;
 
 // =============================================================================

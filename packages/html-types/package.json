@@ -1,21 +1,27 @@
 {
-	"name": "@effect-ui/html-types",
-	"version": "0.0.0",
-	"description": "Renderer-agnostic HTML/SVG/ARIA type definitions for effect-ui",
-	"license": "MIT",
-	"author": "Stef van Wijchen",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"scripts": {
-		"build": "tsdown",
-		"typecheck": "tsc"
-	},
-	"dependencies": {
-		"csstype": "^3.2.3"
-	}
+  "name": "@effect-ui/html-types",
+  "version": "0.0.0",
+  "description": "Renderer-agnostic HTML/SVG/ARIA type definitions for effect-ui",
+  "license": "MIT",
+  "author": "Stef van Wijchen",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "csstype": "^3.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "effect": "^3.21.2",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^3.21"
+  }
 }

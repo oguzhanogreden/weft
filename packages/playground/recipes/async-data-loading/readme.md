@@ -50,6 +50,7 @@ const DelayedComponent = () =>
 ## Usage Patterns
 
 ### Basic Loading Pattern
+
 ```typescript
 const LoadingData = () =>
   Stream.concat(
@@ -61,6 +62,7 @@ const LoadingData = () =>
 ```
 
 ### With Error Handling
+
 ```typescript
 const SafeData = () =>
   Stream.concat(
@@ -77,6 +79,7 @@ const SafeData = () =>
 ```
 
 ### Direct Effect Component
+
 ```typescript
 const UserProfile = ({ id }: { id: number }) =>
   Effect.gen(function* () {
@@ -86,6 +89,7 @@ const UserProfile = ({ id }: { id: number }) =>
 ```
 
 ### Sequential Loading Steps
+
 ```typescript
 const MultiStep = () =>
   Stream.concat(

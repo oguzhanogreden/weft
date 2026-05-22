@@ -1,7 +1,7 @@
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 
 describe("effect-ui/server", () => {
-	it("should run tests", () => {
-		// This test is just a placeholder to ensure that the test runner is set up correctly.
-	});
+  it("should run tests", () => {
+    // This test is just a placeholder to ensure that the test runner is set up correctly.
+  });
 });

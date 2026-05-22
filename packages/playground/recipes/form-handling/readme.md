@@ -45,6 +45,7 @@ const validationStream = Stream.map(valueStream, validate);
 ## Usage Patterns
 
 ### Basic Emitter Pattern
+
 ```typescript
 function createEmitter<T>(initial: T) {
   let listener: ((value: T) => void) | null = null;
@@ -52,7 +53,9 @@ function createEmitter<T>(initial: T) {
   const stream = Stream.async<T>((emit) => {
     emit.single(initial);
     listener = (value) => emit.single(value);
-    return Effect.sync(() => { listener = null; });
+    return Effect.sync(() => {
+      listener = null;
+    });
   });
 
   const emit = (value: T) => listener?.(value);
@@ -61,6 +64,7 @@ function createEmitter<T>(initial: T) {
 ```
 
 ### Schema Validation
+
 ```typescript
 import { Schema, Either } from "effect";
 
@@ -87,6 +91,7 @@ const validationStream = Stream.map(emailStream, (email) => {
 ```
 
 ### Character Counter
+
 ```typescript
 const [textStream, setText] = createEmitter("");
 const countStream = Stream.map(textStream, (t) => t.length);
@@ -97,6 +102,7 @@ const remainingStream = Stream.map(countStream, (c) => 100 - c);
 ```
 
 ### Effect Submit Handler
+
 ```typescript
 <form onsubmit={(e) => {
   e.preventDefault();

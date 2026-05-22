@@ -48,7 +48,7 @@ import { mount } from "effect-ui";
 
 const fetchUser = (id: number) =>
   Effect.tryPromise({
-    try: () => fetch(`/api/users/${id}`).then(r => r.json()),
+    try: () => fetch(`/api/users/${id}`).then((r) => r.json()),
     catch: () => new Error("Failed to fetch user"),
   });
 
@@ -58,13 +58,13 @@ const UserProfile = ({ id }: { id: number }) =>
     Stream.fromEffect(
       fetchUser(id).pipe(
         Effect.retry(Schedule.exponential("100 millis").pipe(Schedule.compose(Schedule.recurs(3)))),
-        Effect.map(user => <div>{user.name}</div>),
-        Effect.catchAll(() => Effect.succeed(<div>Failed to load user</div>))
-      )
-    )
+        Effect.map((user) => <div>{user.name}</div>),
+        Effect.catchAll(() => Effect.succeed(<div>Failed to load user</div>)),
+      ),
+    ),
   );
 
-Effect.runPromise(mount(<UserProfile id={1} />, document.getElementById("root")!));
+void Effect.runPromise(mount(<UserProfile id={1} />, document.getElementById("root")!));
 ```
 
 ### Event Handler with Logging
@@ -86,7 +86,7 @@ const SaveButton = ({ data }: { data: FormData }) => (
     onclick={() =>
       saveData(data).pipe(
         Effect.tap(() => Effect.log("User clicked save")),
-        Effect.catchAll(error => Effect.log("Save failed", { error }))
+        Effect.catchAll((error) => Effect.log("Save failed", { error })),
       )
     }
   >
@@ -109,8 +109,8 @@ const Counter = () =>
     return (
       <div>
         <span>{count.changes}</span>
-        <button onclick={() => SubscriptionRef.update(count, n => n + 1)}>+</button>
-        <button onclick={() => SubscriptionRef.update(count, n => n - 1)}>-</button>
+        <button onclick={() => SubscriptionRef.update(count, (n) => n + 1)}>+</button>
+        <button onclick={() => SubscriptionRef.update(count, (n) => n - 1)}>-</button>
       </div>
     );
   });
@@ -127,15 +127,15 @@ const Dashboard = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    const doubled = Stream.map(count.changes, n => n * 2);
-    const status = Stream.map(count.changes, n => (n > 10 ? "High" : "Normal"));
+    const doubled = Stream.map(count.changes, (n) => n * 2);
+    const status = Stream.map(count.changes, (n) => (n > 10 ? "High" : "Normal"));
 
     return (
       <div>
         <p>Count: {count.changes}</p>
         <p>Doubled: {doubled}</p>
         <p>Status: {status}</p>
-        <button onclick={() => SubscriptionRef.update(count, n => n + 1)}>Increment</button>
+        <button onclick={() => SubscriptionRef.update(count, (n) => n + 1)}>Increment</button>
       </div>
     );
   });
@@ -147,14 +147,14 @@ const Dashboard = () =>
 
 ```tsx
 const message = Stream.make("Loading...", "Ready!");
-<div>{message}</div>
+<div>{message}</div>;
 ```
 
 **Stream properties**: Any prop can be a stream for reactive updates:
 
 ```tsx
 const isDisabled = Stream.make(true, false);
-<button disabled={isDisabled}>Submit</button>
+<button disabled={isDisabled}>Submit</button>;
 ```
 
 **Stream styles**: Styles support streams at any level:
