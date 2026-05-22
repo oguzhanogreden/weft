@@ -101,7 +101,7 @@ interface AnimationTimingSVGAttributes {
   min?: AttributeValue<number | string>;
   max?: AttributeValue<number | string>;
   restart?: AttributeValue<"always" | "whenNotActive" | "never">;
-  repeatCount?: AttributeValue<number | string | "indefinite">;
+  repeatCount?: AttributeValue<number | (string & {}) | "indefinite">;
   repeatDur?: AttributeValue<number | string>;
   fill?: AttributeValue<"freeze" | "remove">;
 }
@@ -165,11 +165,11 @@ interface PresentationSVGAttributes {
   >;
   "enable-background"?: AttributeValue<string>;
   fill?: AttributeValue<string>;
-  "fill-opacity"?: AttributeValue<number | string | "inherit">;
+  "fill-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
   "fill-rule"?: AttributeValue<"nonzero" | "evenodd" | "inherit">;
   filter?: AttributeValue<string>;
   "flood-color"?: AttributeValue<string>;
-  "flood-opacity"?: AttributeValue<number | string | "inherit">;
+  "flood-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
   "font-family"?: AttributeValue<string>;
   "font-size"?: AttributeValue<number | string>;
   "font-size-adjust"?: AttributeValue<number | string>;
@@ -187,7 +187,7 @@ interface PresentationSVGAttributes {
   "marker-mid"?: AttributeValue<string>;
   "marker-start"?: AttributeValue<string>;
   mask?: AttributeValue<string>;
-  opacity?: AttributeValue<number | string | "inherit">;
+  opacity?: AttributeValue<number | (string & {}) | "inherit">;
   overflow?: AttributeValue<"visible" | "hidden" | "scroll" | "auto" | "inherit">;
   "pointer-events"?: AttributeValue<
     | "bounding-box"
@@ -207,7 +207,7 @@ interface PresentationSVGAttributes {
     "auto" | "optimizeSpeed" | "crispEdges" | "geometricPrecision" | "inherit"
   >;
   "stop-color"?: AttributeValue<string>;
-  "stop-opacity"?: AttributeValue<number | string | "inherit">;
+  "stop-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
   stroke?: AttributeValue<string>;
   "stroke-dasharray"?: AttributeValue<string>;
   "stroke-dashoffset"?: AttributeValue<number | string>;
@@ -215,8 +215,8 @@ interface PresentationSVGAttributes {
   "stroke-linejoin"?: AttributeValue<
     "arcs" | "bevel" | "miter" | "miter-clip" | "round" | "inherit"
   >;
-  "stroke-miterlimit"?: AttributeValue<number | string | "inherit">;
-  "stroke-opacity"?: AttributeValue<number | string | "inherit">;
+  "stroke-miterlimit"?: AttributeValue<number | (string & {}) | "inherit">;
+  "stroke-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
   "stroke-width"?: AttributeValue<number | string>;
   "text-anchor"?: AttributeValue<"start" | "middle" | "end" | "inherit">;
   "text-decoration"?: AttributeValue<
@@ -365,7 +365,7 @@ interface AnimateMotionSVGAttributes<T>
     AnimationAdditionSVGAttributes {
   path?: AttributeValue<string>;
   keyPoints?: AttributeValue<string>;
-  rotate?: AttributeValue<number | string | "auto" | "auto-reverse">;
+  rotate?: AttributeValue<number | "auto" | "auto-reverse" | (string & {})>;
   origin?: AttributeValue<"default">;
 }
 interface AnimateTransformSVGAttributes<T>

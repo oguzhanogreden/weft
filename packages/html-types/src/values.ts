@@ -28,8 +28,7 @@ declare global {
  * - When augmented: union of all registered service types
  */
 type JSXRequirements = keyof JSX.Requirements extends never
-  ? // biome-ignore lint/suspicious/noExplicitAny: intentionally permissive when not augmented
-    any
+  ? any
   : JSX.Requirements[keyof JSX.Requirements];
 
 export type AttributeValue<T> =
@@ -56,7 +55,6 @@ export type StyleAttributeValue =
   | Effect.Effect<StreamableStyleObject, never, JSXRequirements>; // Effect of style object
 
 export type JSXChild =
-  // biome-ignore lint/suspicious/noConfusingVoidType: convenient way to represent void nodes
   | void
   | null
   | undefined

@@ -257,5 +257,4 @@ const App = () => (
   </div>
 );
 
-// biome-ignore lint/style/noNonNullAssertion: playground code, element always exists
-Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(<App />, document.getElementById("root")!));

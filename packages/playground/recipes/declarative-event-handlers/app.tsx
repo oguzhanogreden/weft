@@ -22,7 +22,7 @@ import { Context, Effect, Layer, Stream } from "effect";
  * - Stream.concat for initial value
  */
 const StreamCounter = () =>
-  Effect.gen(function* () {
+  Effect.sync(() => {
     // Generate unique IDs for this instance
     const incId = `inc-${Math.random().toString(36).slice(2, 8)}`;
     const decId = `dec-${Math.random().toString(36).slice(2, 8)}`;
@@ -34,9 +34,8 @@ const StreamCounter = () =>
         Effect.promise(() => Promise.resolve(true)),
         () =>
           Effect.sync(() => ({
-            // biome-ignore lint/style/noNonNullAssertion: buttons exist after mount
             incBtn: document.getElementById(incId)!,
-            // biome-ignore lint/style/noNonNullAssertion: buttons exist after mount
+
             decBtn: document.getElementById(decId)!,
           })),
       ),
@@ -198,7 +197,6 @@ const App = () => (
 );
 
 // Mount with services provided
-Effect.runPromise(
-  // biome-ignore lint/style/noNonNullAssertion: playground code, element always exists
+void Effect.runPromise(
   mount(<App />, document.getElementById("root")!).pipe(Effect.provide(AnalyticsLive)),
 );

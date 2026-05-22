@@ -182,6 +182,7 @@ function serializeAttributeValue(value: unknown): string | undefined {
   }
 
   // AC9: Convert to string
+  // oxlint-disable-next-line typescript/no-base-to-string
   return String(value);
 }
 
@@ -253,6 +254,7 @@ function setStyleFromObject(
           stream,
           (val) => {
             if (val !== undefined && val !== null) {
+              // oxlint-disable-next-line typescript/no-base-to-string
               element.style.setProperty(camelToKebab(key), String(val));
             }
           },
@@ -261,6 +263,7 @@ function setStyleFromObject(
       } else {
         // AC11: Static style property
         if (value !== undefined && value !== null) {
+          // oxlint-disable-next-line typescript/no-base-to-string
           element.style.setProperty(camelToKebab(key), String(value));
         }
       }
@@ -291,11 +294,7 @@ function subscribeToStream<A>(
     const context = yield* RenderContext;
 
     // Create the stream subscription effect
-    const effect = Stream.runForEach(stream, (value) =>
-      Effect.sync(() => {
-        onValue(value);
-      }),
-    );
+    const effect = Stream.runForEach(stream, (value) => Effect.sync(() => void onValue(value)));
 
     // Fork the effect in the scope so it's automatically interrupted when scope closes
     yield* Effect.forkIn(effect, context.scope);

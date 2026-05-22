@@ -15,10 +15,7 @@ export function nextStreamId(): Effect.Effect<number, never, RenderContext> {
  * Checks if value is a Stream.
  * Uses `any` for E and R parameters to allow matching streams with any error/requirements.
  */
-export function isStream(
-  value: unknown,
-  // biome-ignore lint/suspicious/noExplicitAny: required for flexible type guard matching
-): value is Stream.Stream<unknown, any, any> {
+export function isStream(value: unknown): value is Stream.Stream<unknown, any, any> {
   return typeof value === "object" && value != null && Stream.StreamTypeId in value;
 }
 

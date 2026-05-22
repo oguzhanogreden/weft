@@ -64,7 +64,7 @@ const UserProfile = ({ id }: { id: number }) =>
     ),
   );
 
-Effect.runPromise(mount(<UserProfile id={1} />, document.getElementById("root")!));
+void Effect.runPromise(mount(<UserProfile id={1} />, document.getElementById("root")!));
 ```
 
 ### Event Handler with Logging

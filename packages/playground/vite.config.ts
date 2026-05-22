@@ -4,7 +4,7 @@ export default defineConfig({
   run: {
     tasks: {
       dev: {
-        command: "vite",
+        command: "vp dev",
         dependsOn: [
           "@effect-ui/core#pack",
           "@effect-ui/dom#pack",

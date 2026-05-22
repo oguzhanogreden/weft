@@ -17,10 +17,10 @@ function createEmitter<T>(initial: T) {
   let listener: ((value: T) => void) | null = null;
 
   const stream = Stream.async<T>((emit) => {
-    emit.single(currentValue);
+    void emit.single(currentValue);
     listener = (value: T) => {
       currentValue = value;
-      emit.single(value);
+      void emit.single(value);
     };
     return Effect.sync(() => {
       listener = null;
@@ -409,5 +409,4 @@ const App = () => (
   </div>
 );
 
-// biome-ignore lint/style/noNonNullAssertion: playground code, element always exists
-Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(<App />, document.getElementById("root")!));

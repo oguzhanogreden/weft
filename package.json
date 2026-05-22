@@ -1,6 +1,7 @@
 {
   "name": "effect-ui-workspace",
   "private": true,
+  "type": "module",
   "scripts": {
     "prepare": "vp config"
   },

@@ -53,7 +53,6 @@ const App = () => (
 );
 
 // Provide all services at the mount boundary
-Effect.runPromise(
-  // biome-ignore lint/style/noNonNullAssertion: playground code, element always exists
+void Effect.runPromise(
   mount(<App />, document.getElementById("root")!).pipe(Effect.provide(AppLayer)),
 );

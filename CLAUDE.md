@@ -8,8 +8,10 @@ A minimal Node.js + TypeScript project template using modern tooling and strict 
 
 ## Requirements
 
-- Node.js ≥ 24.7.0
-- pnpm ≥ 10.28.0
+- Node.js
+- pnpm
+
+See versions in package.json > engines.
 
 ## Development Commands
 
@@ -37,7 +39,7 @@ pnpm lint            # Check code with Biome
 pnpm lint.fix        # Auto-fix linting issues
 ```
 
-**Important:** This project uses Biome for linting and formatting, NOT ESLint. Always use Biome commands and configuration. When adding lint ignore comments, use Biome's syntax (e.g., `// biome-ignore lint/...` not `// eslint-disable`).
+**Important:** This project uses Biome for linting and formatting, NOT ESLint. Always use Biome commands and configuration. When adding lint ignore comments, use Biome's syntax (e.g., `
 
 ## Architecture
 
@@ -70,7 +72,7 @@ Biome enforces:
 
 When ignoring lint rules, use Biome syntax:
 
-- ✅ Correct: `// biome-ignore lint/correctness/noChildrenProp: testing edge case`
+- ✅ Correct: `
 - ❌ Wrong: `// eslint-disable-next-line`
 
 ### Project Structure

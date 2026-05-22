@@ -1,3 +1,5 @@
+// oxlint-disable no-unused-vars
+
 /**
  * Type tests for JSX.Requirements augmentation feature.
  *
