@@ -1,12 +1,8 @@
-import type {
-  InvalidElementTypeError,
-  RenderError,
-  StreamSubscriptionError,
-} from "@effect-ui/core";
-import { RenderContext } from "@effect-ui/core";
-import type { JSXChild } from "@effect-ui/html-types";
 import { Effect, Exit, Layer, ManagedRuntime, Scope } from "effect";
 import { renderNode } from "./render-core";
+import type { JSXNode } from "@effect-ui/core/types";
+import type { InvalidElementTypeError, RenderError, StreamSubscriptionError } from "./data";
+import { RenderContext } from "./render-context";
 
 /**
  * Mounts a JSX tree to a DOM element with full reactive support.
@@ -33,7 +29,7 @@ import { renderNode } from "./render-core";
  */
 
 export function mount(
-  app: JSXChild,
+  app: JSXNode,
   root: HTMLElement,
 ): Effect.Effect<MountHandle, InvalidElementTypeError | StreamSubscriptionError | RenderError> {
   return Effect.gen(function* () {
@@ -90,7 +86,7 @@ export function mount(
           // ManagedRuntime.dispose returns a Promise, so we need to wrap it
           yield* Effect.promise(() => runtime.dispose());
         }),
-    };
+    } satisfies MountHandle;
   });
 }
 

@@ -1,4 +1,4 @@
-import type { AttributeValue } from "./values";
+import type { AttributeValue } from "./attributes";
 
 // All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
 export interface AriaAttributes {

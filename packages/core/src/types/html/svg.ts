@@ -1,6 +1,7 @@
 import type { Option, Ref } from "effect";
 import type { DOMAttributes } from "./dom";
-import type { AttributeValue, JSXChild, StyleAttributeValue } from "./values";
+import type { AttributeValue, StyleAttributeValue } from "./attributes";
+import type { JSXNode } from "..";
 
 type SVGPreserveAspectRatio =
   | "none"
@@ -64,7 +65,7 @@ type ImagePreserveAspectRatio =
 type SVGUnits = "userSpaceOnUse" | "objectBoundingBox";
 export interface SVGAttributes<T> extends DOMAttributes<T> {
   // effect-ui internals ========================================================
-  children?: AttributeValue<JSXChild>;
+  children?: AttributeValue<JSXNode>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================
 

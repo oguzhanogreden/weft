@@ -31,7 +31,7 @@ of whether the consumer's bundler runs the automatic runtime in production
 
 The package exposes three subpaths, all pointing at the same dist bundle:
 
-- `.` — direct imports (`import { jsx } from "@effect-ui/jsx-runtime"`).
+- `.` — direct imports (`import { jsx } from "@effect-ui/core/jsx-runtime"`).
 - `./jsx-runtime` — automatic runtime, production (resolves `jsx`, `jsxs`,
   `Fragment`).
 - `./jsx-dev-runtime` — automatic runtime, development (resolves `jsxDEV`,

@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "jsxImportSource": "@effect-ui/jsx-runtime",
+    "jsxImportSource": "@effect-ui/core/jsx-runtime",
     "types": ["node"]
   },
   "include": ["src"],

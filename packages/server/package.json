@@ -12,9 +12,7 @@
     }
   },
   "dependencies": {
-    "@effect-ui/core": "workspace:*",
-    "@effect-ui/html-types": "workspace:*",
-    "@effect-ui/jsx-runtime": "workspace:*"
+    "@effect-ui/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

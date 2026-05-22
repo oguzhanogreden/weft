@@ -5,12 +5,7 @@ export default defineConfig({
     tasks: {
       dev: {
         command: "vp dev",
-        dependsOn: [
-          "@effect-ui/core#pack",
-          "@effect-ui/dom#pack",
-          "@effect-ui/html-types#pack",
-          "@effect-ui/jsx-runtime#pack",
-        ],
+        dependsOn: ["@effect-ui/core#pack", "@effect-ui/dom#pack"],
       },
     },
   },

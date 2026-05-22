@@ -1,9 +1,9 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import type { JSXChild } from "@effect-ui/html-types";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { mount } from "./api";
+import type { JSXNode } from "@effect-ui/core/types";
 
 // ============================================================================
 // Test Setup
@@ -36,7 +36,7 @@ function createRoot(): HTMLElement {
 /**
  * Helper to run mount and wait for initial render
  */
-async function runMount(app: JSXChild, root: HTMLElement) {
+async function runMount(app: JSXNode, root: HTMLElement) {
   const handle = await Effect.runPromise(mount(app, root));
   return handle;
 }

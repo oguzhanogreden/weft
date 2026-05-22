@@ -35,14 +35,13 @@ importers:
         version: 0.1.22(@types/node@25.9.1)(esbuild@0.28.0)(jsdom@29.1.1)(tsx@4.22.3)(typescript@6.0.3)(vite@7.3.3(@types/node@25.9.1)(lightningcss@1.32.0)(tsx@4.22.3))
 
   packages/core:
-    dependencies:
-      '@effect-ui/jsx-runtime':
-        specifier: workspace:*
-        version: link:../jsx-runtime
     devDependencies:
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
       effect:
         specifier: ^3.21.2
         version: 3.21.2
@@ -61,12 +60,6 @@ importers:
       '@effect-ui/core':
         specifier: workspace:*
         version: link:../core
-      '@effect-ui/html-types':
-        specifier: workspace:*
-        version: link:../html-types
-      '@effect-ui/jsx-runtime':
-        specifier: workspace:*
-        version: link:../jsx-runtime
       '@types/jsdom':
         specifier: ^28.0.3
         version: 28.0.3
@@ -136,12 +129,12 @@ importers:
 
   packages/playground:
     dependencies:
+      '@effect-ui/core':
+        specifier: workspace:*
+        version: link:../core
       '@effect-ui/dom':
         specifier: workspace:*
         version: link:../dom
-      '@effect-ui/jsx-runtime':
-        specifier: workspace:*
-        version: link:../jsx-runtime
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
@@ -161,12 +154,6 @@ importers:
       '@effect-ui/core':
         specifier: workspace:*
         version: link:../core
-      '@effect-ui/html-types':
-        specifier: workspace:*
-        version: link:../html-types
-      '@effect-ui/jsx-runtime':
-        specifier: workspace:*
-        version: link:../jsx-runtime
     devDependencies:
       '@types/node':
         specifier: ^25.9.1

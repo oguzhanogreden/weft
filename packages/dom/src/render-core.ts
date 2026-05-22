@@ -1,23 +1,17 @@
-import {
-  InvalidElementTypeError,
-  isStream,
-  nextStreamId,
-  normalizeToStream,
-  RenderContext,
-  type RenderError,
-  type StreamSubscriptionError,
-} from "@effect-ui/core";
-import type { JSXChild } from "@effect-ui/html-types";
-import { FRAGMENT } from "@effect-ui/html-types";
 import { Effect, Stream } from "effect";
 import { setElementProps } from "./dom";
+import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
+import type { JSXNode } from "@effect-ui/core/types";
+import { InvalidElementTypeError, type StreamSubscriptionError, type RenderError } from "./data";
+import { RenderContext } from "./render-context";
+import { isStream, normalizeToStream, nextStreamId } from "./utilities";
 
 /**
  * Main rendering function that converts JSXNode to DOM nodes.
  * Handles all JSXNode types and sets up reactive subscriptions.
  */
 export function renderNode(
-  node: JSXChild,
+  node: JSXNode,
 ): Effect.Effect<
   RenderResult,
   InvalidElementTypeError | StreamSubscriptionError | RenderError,
@@ -66,7 +60,7 @@ export function renderNode(
 
       // AC5: Function component
       if (typeof type === "function") {
-        return yield* renderComponent(type as (props: object) => JSXChild, props);
+        return yield* renderComponent(type as (props: object) => JSXNode, props);
       }
 
       // AC23: Invalid element type
@@ -86,10 +80,10 @@ export function renderNode(
 /**
  * Flattens iterable children recursively
  */
-function flattenChildren(node: JSXChild): readonly JSXChild[] {
-  const result: JSXChild[] = [];
+function flattenChildren(node: JSXNode): readonly JSXNode[] {
+  const result: JSXNode[] = [];
 
-  function flatten(item: JSXChild): void {
+  function flatten(item: JSXNode): void {
     // Don't try to iterate streams/effects
     if (isStream(item) || Effect.isEffect(item)) {
       result.push(item);
@@ -97,7 +91,7 @@ function flattenChildren(node: JSXChild): readonly JSXChild[] {
     }
 
     if (typeof item === "object" && item !== null && Symbol.iterator in item && !("type" in item)) {
-      for (const child of item as Iterable<JSXChild>) {
+      for (const child of item as Iterable<JSXNode>) {
         flatten(child);
       }
     } else {
@@ -113,7 +107,7 @@ function flattenChildren(node: JSXChild): readonly JSXChild[] {
  * Renders an array of children nodes
  */
 function renderChildren(
-  children: readonly JSXChild[],
+  children: readonly JSXNode[],
 ): Effect.Effect<
   readonly Node[],
   InvalidElementTypeError | StreamSubscriptionError | RenderError,
@@ -125,7 +119,7 @@ function renderChildren(
     for (const child of children) {
       // Check if child is a stream/effect and handle specially
       if (isStream(child) || Effect.isEffect(child)) {
-        const stream = normalizeToStream(child) as Stream.Stream<JSXChild>;
+        const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
         const fragment = document.createDocumentFragment();
         const markers = yield* handleStreamChild(stream, fragment);
         nodes.push(...markers);
@@ -195,7 +189,7 @@ function renderElement(
       for (const child of childArray) {
         // Check if child is a stream/effect
         if (isStream(child) || Effect.isEffect(child)) {
-          const stream = normalizeToStream(child) as Stream.Stream<JSXChild>;
+          const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
           const markers = yield* handleStreamChild(stream, element);
           for (const marker of markers) {
             element.appendChild(marker);
@@ -223,7 +217,7 @@ function renderElement(
  * Renders a function component JSXNode (type: function)
  */
 function renderComponent(
-  component: (props: object) => JSXChild,
+  component: (props: object) => JSXNode,
   props: object,
 ): Effect.Effect<
   RenderResult,
@@ -265,7 +259,7 @@ type RenderResult = Node | readonly Node[] | null;
  * Handles a child that is a Stream by setting up comment markers and subscriptions
  */
 function handleStreamChild(
-  stream: Stream.Stream<JSXChild>,
+  stream: Stream.Stream<JSXNode>,
   _parent: HTMLElement | DocumentFragment,
 ): Effect.Effect<
   readonly Node[],
@@ -312,7 +306,7 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
 function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
-  newNode: JSXChild,
+  newNode: JSXNode,
 ): Effect.Effect<
   void,
   InvalidElementTypeError | StreamSubscriptionError | RenderError,

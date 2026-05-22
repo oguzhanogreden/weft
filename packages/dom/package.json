@@ -13,8 +13,6 @@
   },
   "dependencies": {
     "@effect-ui/core": "workspace:*",
-    "@effect-ui/html-types": "workspace:*",
-    "@effect-ui/jsx-runtime": "workspace:*",
     "@types/jsdom": "^28.0.3",
     "jsdom": "^29.1.1"
   },

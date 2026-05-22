@@ -1,7 +1,7 @@
 /**
  * Unique symbol used to identify JSX fragment nodes.
  */
-export const FRAGMENT = Symbol("effect-ui/jsx-runtime/fragment");
+export const FRAGMENT = Symbol("@effect-ui/core/jsx-runtime/fragment");
 
 /**
  * Fragment export alias for JSX transform compatibility.

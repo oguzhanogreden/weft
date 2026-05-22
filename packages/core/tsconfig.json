@@ -1,9 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
-  "include": ["src"],
-  "exclude": ["src/**/__type-tests__/**/*", "dist"]
+  "include": [
+    "src",
+    "../dom/src/utilities.ts",
+    "../dom/src/render-context.ts",
+    "../dom/src/data.ts"
+  ],
+  "exclude": ["dist"]
 }

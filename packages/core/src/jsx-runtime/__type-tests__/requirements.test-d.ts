@@ -7,8 +7,8 @@
  * Use `@ts-expect-error` to assert that certain code should NOT compile.
  */
 
-import type { JSXChild } from "@effect-ui/html-types";
 import type { Context, Effect, Stream } from "effect";
+import type { JSXNode } from "~/types";
 
 // =============================================================================
 // Test Setup: Define mock services
@@ -40,14 +40,14 @@ declare const streamWithBothServices: Stream.Stream<string, never, ServiceA | Se
 declare const streamWithNoRequirements: Stream.Stream<string, never, never>;
 
 // All should be assignable to JSXChild (default permissive mode)
-const _defaultA: JSXChild = streamWithServiceA;
-const _defaultB: JSXChild = streamWithServiceB;
-const _defaultBoth: JSXChild = streamWithBothServices;
-const _defaultNone: JSXChild = streamWithNoRequirements;
+const _defaultA: JSXNode = streamWithServiceA;
+const _defaultB: JSXNode = streamWithServiceB;
+const _defaultBoth: JSXNode = streamWithBothServices;
+const _defaultNone: JSXNode = streamWithNoRequirements;
 
 // Effects should also work
 declare const effectWithServiceA: Effect.Effect<string, never, ServiceA>;
-const _effectA: JSXChild = effectWithServiceA;
+const _effectA: JSXNode = effectWithServiceA;
 
 // =============================================================================
 // Test: Augmented behavior
@@ -64,20 +64,20 @@ declare global {
 }
 
 // Streams with registered services should be accepted
-const _augmentedA: JSXChild = streamWithServiceA;
-const _augmentedB: JSXChild = streamWithServiceB;
-const _augmentedBoth: JSXChild = streamWithBothServices;
-const _augmentedNone: JSXChild = streamWithNoRequirements;
+const _augmentedA: JSXNode = streamWithServiceA;
+const _augmentedB: JSXNode = streamWithServiceB;
+const _augmentedBoth: JSXNode = streamWithBothServices;
+const _augmentedNone: JSXNode = streamWithNoRequirements;
 
 // Stream with unregistered service should fail
 declare const streamWithServiceC: Stream.Stream<string, never, ServiceC>;
 // @ts-expect-error - ServiceC is not registered in JSX.Requirements
-const _unregistered: JSXChild = streamWithServiceC;
+const _unregistered: JSXNode = streamWithServiceC;
 
 // Stream with mix of registered and unregistered should fail
 declare const streamWithAandC: Stream.Stream<string, never, ServiceA | ServiceC>;
 // @ts-expect-error - ServiceC is not registered in JSX.Requirements
-const _mixedUnregistered: JSXChild = streamWithAandC;
+const _mixedUnregistered: JSXNode = streamWithAandC;
 
 // =============================================================================
 // Test: Effect with requirements
@@ -85,14 +85,14 @@ const _mixedUnregistered: JSXChild = streamWithAandC;
 
 declare const effectWithServiceC: Effect.Effect<string, never, ServiceC>;
 // @ts-expect-error - ServiceC is not registered in JSX.Requirements
-const _effectUnregistered: JSXChild = effectWithServiceC;
+const _effectUnregistered: JSXNode = effectWithServiceC;
 
 // =============================================================================
 // Test: Nested JSXChild (recursive type)
 // =============================================================================
 
 declare const nestedStream: Stream.Stream<Stream.Stream<string, never, ServiceA>, never, ServiceB>;
-const _nested: JSXChild = nestedStream;
+const _nested: JSXNode = nestedStream;
 
 // =============================================================================
 // Test: Component return types
@@ -105,9 +105,9 @@ declare const componentB: Component<ServiceB>;
 declare const componentC: Component<ServiceC>;
 
 // Components returning registered services should work
-const _compResultA: JSXChild = componentA();
-const _compResultB: JSXChild = componentB();
+const _compResultA: JSXNode = componentA();
+const _compResultB: JSXNode = componentB();
 
 // Component returning unregistered service should fail
 // @ts-expect-error - ServiceC is not registered in JSX.Requirements
-const _compResultC: JSXChild = componentC();
+const _compResultC: JSXNode = componentC();
