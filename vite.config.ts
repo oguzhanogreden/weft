@@ -13,11 +13,9 @@ export default defineConfig({
       pack: {
         command: "vp run -r pack",
       },
-      lint: {
-        command: "vp run -r lint",
-      },
-      format: {
-        command: "vp run -r format",
+      check: {
+        command: "vp check",
+        dependsOn: ["pack"],
       },
     },
   },
