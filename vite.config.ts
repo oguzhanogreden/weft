@@ -17,6 +17,10 @@ export default defineConfig({
         command: "vp check",
         dependsOn: ["pack"],
       },
+      test: {
+        command: "vp test",
+        dependsOn: ["pack"],
+      },
     },
   },
 
