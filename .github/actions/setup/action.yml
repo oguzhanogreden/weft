@@ -4,15 +4,8 @@ description: Setup pnpm, Node.js, and install dependencies
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v6
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
+    - name: VP Setup
+    - uses: voidzero-dev/setup-vp@v1
       with:
-        node-version: 26.x
-        cache: pnpm
-
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install --frozen-lockfile
+        node-version: 26
+        cache: true
