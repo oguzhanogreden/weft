@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsxImportSource": "@effect-ui/jsx-runtime"
+    "jsxImportSource": "@effect-ui/core"
   },
   "include": ["app.tsx", "recipes"]
 }

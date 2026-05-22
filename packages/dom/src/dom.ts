@@ -1,6 +1,7 @@
-import type { StreamSubscriptionError } from "@effect-ui/core";
-import { isStream, normalizeToStream, RenderContext } from "@effect-ui/core";
 import { Effect, Option, pipe, Ref, Scope, Stream } from "effect";
+import type { StreamSubscriptionError } from "./data";
+import { RenderContext } from "./render-context";
+import { isStream, normalizeToStream } from "./utilities";
 
 // ============================================================================
 // Event Handler Detection
