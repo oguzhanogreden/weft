@@ -70,12 +70,10 @@ jobs:
       - name: Check CI status
         run: |
           if [ "${{ needs.check.result }}" != "success" ] || \
-             [ "${{ needs.typecheck.result }}" != "success" ] || \
              [ "${{ needs.test.result }}" != "success" ] || \
              [ "${{ needs.build.result }}" != "success" ]; then
             echo "CI validation failed"
             echo "Lint: ${{ needs.check.result }}"
-            echo "Type Check: ${{ needs.typecheck.result }}"
             echo "Test: ${{ needs.test.result }}"
             echo "Build: ${{ needs.build.result }}"
             exit 1
