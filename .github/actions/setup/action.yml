@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: VP Setup
-    - uses: voidzero-dev/setup-vp@v1
+      uses: voidzero-dev/setup-vp@v1
       with:
         node-version: 26
         cache: true
