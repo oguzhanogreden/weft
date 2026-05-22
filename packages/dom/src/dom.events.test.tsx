@@ -256,7 +256,7 @@ describe("AC3: Effect Handler with Services", () => {
 // ============================================================================
 
 describe("AC4: Effect Handler Error Handling", () => {
-  it("should log error and not crash UI when Effect fails", async () => {
+  it("should not crash UI when Effect fails", async () => {
     createTestDOM();
     const root = createRoot();
     let clickCount = 0;

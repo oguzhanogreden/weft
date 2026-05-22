@@ -352,9 +352,12 @@ function setEventHandler(
           context.runtime.runFork(
             pipe(
               result as Effect.Effect<void, unknown, never>,
-              Effect.catchAll((error) =>
-                Effect.logError(`Event handler error: ${name}`, { error }),
-              ),
+              Effect.catchAll((error) => {
+                if (process.env.NODE_ENV !== "development") {
+                  return Effect.void;
+                }
+                return Effect.logError(`Event handler error: ${name}`, { error });
+              }),
             ),
           );
         }
