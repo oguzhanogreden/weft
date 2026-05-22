@@ -460,7 +460,6 @@ describe("AC7: Attribute vs Property Detection", () => {
 
 		// Test that children prop doesn't override JSX children
 		// @ts-expect-error - testing children prop duplication
-		// biome-ignore lint/correctness/noChildrenProp: testing edge case
 		await runMount(<div children="should not set">actual children</div>, root);
 
 		const div = root.children[0] as HTMLElement;
