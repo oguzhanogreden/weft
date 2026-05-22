@@ -17,5 +17,15 @@
 	},
 	"dependencies": {
 		"@effect-ui/jsx-runtime": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^25.9.1",
+		"effect": "^3.21.2",
+		"tsdown": "^0.22.0",
+		"tsx": "^4.22.3",
+		"typescript": "^6.0.3"
+	},
+	"peerDependencies": {
+		"effect": "^3.21"
 	}
 }
