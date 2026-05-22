@@ -45,4 +45,4 @@ const App = () => {
   );
 };
 
-Effect.runPromise(mount(<App />, document.body).pipe(Effect.provide(MyValueLayer)));
+void Effect.runPromise(mount(<App />, document.body).pipe(Effect.provide(MyValueLayer)));

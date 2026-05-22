@@ -9,7 +9,7 @@ export default defineConfig({
     },
   },
   pack: {
-    entry: ["src/**/*.{ts,tsx}", "!src/**/*.test.{ts,tsx}"],
+    entry: ["src/index.ts", "!src/**/*.test.{ts,tsx}"],
     outDir: "dist",
     dts: true,
     platform: "node",
