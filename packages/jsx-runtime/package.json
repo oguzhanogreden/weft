@@ -16,9 +16,7 @@
     }
   },
   "scripts": {
-    "build": "vp pack",
-    "typecheck": "tsc",
-    "typecheck.type-tests": "tsc --project tsconfig.type-tests.json"
+    "build": "vp pack"
   },
   "dependencies": {
     "@effect-ui/html-types": "workspace:*"

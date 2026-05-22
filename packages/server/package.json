@@ -14,8 +14,7 @@
   "scripts": {
     "build": "vp pack",
     "test": "node --import tsx --test src/**/*.test.{ts,tsx}",
-    "test.watch": "node --import tsx --test --watch src/**/*.test.{ts,tsx}",
-    "typecheck": "tsc"
+    "test.watch": "node --import tsx --test --watch src/**/*.test.{ts,tsx}"
   },
   "dependencies": {
     "@effect-ui/core": "workspace:*",
