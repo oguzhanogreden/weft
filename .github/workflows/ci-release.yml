@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup
-        uses: .github/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Run format, lint, and type checks together.
         run: vp check
@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup
-        uses: .github/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Run tests
         run: vp test
@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup
-        uses: .github/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Build
         run: vp run pack
@@ -90,7 +90,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
-        uses: .github/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Build
         run: vp run pack
