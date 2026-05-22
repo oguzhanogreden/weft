@@ -1,9 +1,9 @@
 {
-	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"rootDir": "src",
-		"types": ["node"]
-	},
-	"include": ["src"],
-	"exclude": ["src/**/__type-tests__/**/*"]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["src/**/__type-tests__/**/*", "dist"]
 }

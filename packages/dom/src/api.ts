@@ -1,7 +1,7 @@
 import type {
-	InvalidElementTypeError,
-	RenderError,
-	StreamSubscriptionError,
+  InvalidElementTypeError,
+  RenderError,
+  StreamSubscriptionError,
 } from "@effect-ui/core";
 import { RenderContext } from "@effect-ui/core";
 import type { JSXChild } from "@effect-ui/html-types";
@@ -33,70 +33,65 @@ import { renderNode } from "./render-core";
  */
 
 export function mount(
-	app: JSXChild,
-	root: HTMLElement,
-): Effect.Effect<
-	MountHandle,
-	InvalidElementTypeError | StreamSubscriptionError | RenderError
-> {
-	return Effect.gen(function* () {
-		// Capture current Effect context (includes any provided services)
-		// This allows event handlers to access services provided via Effect.provide(layer)
-		const effectContext = yield* Effect.context<never>();
+  app: JSXChild,
+  root: HTMLElement,
+): Effect.Effect<MountHandle, InvalidElementTypeError | StreamSubscriptionError | RenderError> {
+  return Effect.gen(function* () {
+    // Capture current Effect context (includes any provided services)
+    // This allows event handlers to access services provided via Effect.provide(layer)
+    const effectContext = yield* Effect.context<never>();
 
-		// AC24: Create fresh ManagedRuntime per mount with captured context
-		const runtime = ManagedRuntime.make(Layer.succeedContext(effectContext));
-		const scope = yield* Scope.make();
+    // AC24: Create fresh ManagedRuntime per mount with captured context
+    const runtime = ManagedRuntime.make(Layer.succeedContext(effectContext));
+    const scope = yield* Scope.make();
 
-		// Create the RenderContext service implementation
-		const context = {
-			runtime,
-			scope,
-			streamIdCounter: { current: 0 },
-		};
+    // Create the RenderContext service implementation
+    const context = {
+      runtime,
+      scope,
+      streamIdCounter: { current: 0 },
+    };
 
-		// AC1: Clear root element's existing children
-		root.innerHTML = "";
+    // AC1: Clear root element's existing children
+    root.innerHTML = "";
 
-		// AC1: Render the JSX tree with the provided context
-		const result = yield* renderNode(app).pipe(
-			Effect.provideService(RenderContext, context),
-		);
+    // AC1: Render the JSX tree with the provided context
+    const result = yield* renderNode(app).pipe(Effect.provideService(RenderContext, context));
 
-		// AC1: Append rendered nodes to root
-		if (result !== null) {
-			if (Array.isArray(result)) {
-				for (const node of result) {
-					root.appendChild(node);
-				}
-			} else {
-				root.appendChild(result as Node);
-			}
-		}
+    // AC1: Append rendered nodes to root
+    if (result !== null) {
+      if (Array.isArray(result)) {
+        for (const node of result) {
+          root.appendChild(node);
+        }
+      } else {
+        root.appendChild(result as Node);
+      }
+    }
 
-		// AC27: Return cleanup handle
-		// Track if already unmounted for idempotency
-		let unmounted = false;
+    // AC27: Return cleanup handle
+    // Track if already unmounted for idempotency
+    let unmounted = false;
 
-		return {
-			unmount: () =>
-				Effect.gen(function* () {
-					// AC27: Make unmount idempotent
-					if (unmounted) {
-						return;
-					}
-					unmounted = true;
+    return {
+      unmount: () =>
+        Effect.gen(function* () {
+          // AC27: Make unmount idempotent
+          if (unmounted) {
+            return;
+          }
+          unmounted = true;
 
-					// AC26: Close scope to cancel all running streams
-					// All fibers forked with Effect.forkIn will be automatically interrupted
-					yield* Scope.close(scope, Exit.void);
+          // AC26: Close scope to cancel all running streams
+          // All fibers forked with Effect.forkIn will be automatically interrupted
+          yield* Scope.close(scope, Exit.void);
 
-					// AC26: Dispose the ManagedRuntime
-					// ManagedRuntime.dispose returns a Promise, so we need to wrap it
-					yield* Effect.promise(() => runtime.dispose());
-				}),
-		};
-	});
+          // AC26: Dispose the ManagedRuntime
+          // ManagedRuntime.dispose returns a Promise, so we need to wrap it
+          yield* Effect.promise(() => runtime.dispose());
+        }),
+    };
+  });
 }
 
 // ============================================================================
@@ -107,10 +102,10 @@ export function mount(
  */
 
 export interface MountHandle {
-	/**
-	 * Unmounts the rendered tree and cleans up all resources.
-	 * Returns an Effect that completes when cleanup is done.
-	 * Safe to call multiple times (idempotent).
-	 */
-	unmount(): Effect.Effect<void>;
+  /**
+   * Unmounts the rendered tree and cleans up all resources.
+   * Returns an Effect that completes when cleanup is done.
+   * Safe to call multiple times (idempotent).
+   */
+  unmount(): Effect.Effect<void>;
 }

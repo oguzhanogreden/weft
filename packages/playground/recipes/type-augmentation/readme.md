@@ -16,9 +16,7 @@ Augment the `JSX.Requirements` interface to declare which services your app uses
 declare global {
   namespace JSX {
     interface Requirements {
-      _:
-        | Context.Tag.Service<typeof ServiceA>
-        | Context.Tag.Service<typeof ServiceB>;
+      _: Context.Tag.Service<typeof ServiceA> | Context.Tag.Service<typeof ServiceB>;
     }
   }
 }

@@ -1,31 +1,34 @@
 {
-	"name": "@effect-ui/core",
-	"version": "0.0.0",
-	"description": "Shared rendering infrastructure for effect-ui",
-	"license": "MIT",
-	"author": "Stef van Wijchen",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"scripts": {
-		"build": "tsdown",
-		"typecheck": "tsc"
-	},
-	"dependencies": {
-		"@effect-ui/jsx-runtime": "workspace:*"
-	},
-	"devDependencies": {
-		"@types/node": "^25.9.1",
-		"effect": "^3.21.2",
-		"tsdown": "^0.22.0",
-		"tsx": "^4.22.3",
-		"typescript": "^6.0.3"
-	},
-	"peerDependencies": {
-		"effect": "^3.21"
-	}
+  "name": "@effect-ui/core",
+  "version": "0.0.0",
+  "description": "Shared rendering infrastructure for effect-ui",
+  "license": "MIT",
+  "author": "Stef van Wijchen",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@effect-ui/jsx-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "effect": "^3.21.2",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "oxlint-tsgolint": "^0.23.0",
+    "tsdown": "^0.22.0",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "effect": "^3.21"
+  }
 }

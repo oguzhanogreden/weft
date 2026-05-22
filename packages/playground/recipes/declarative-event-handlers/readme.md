@@ -7,6 +7,7 @@ This recipe demonstrates how to use event handlers in effect-ui. Handlers follow
 ## Problem
 
 Traditional event handlers are limited to plain callbacks. When building Effect-based applications, you often want handlers to:
+
 - Run Effects (async operations, logging, etc.)
 - Access services provided at mount time
 - Change dynamically based on application state
@@ -48,16 +49,19 @@ effect-ui event handlers support three patterns:
 ## Usage Patterns
 
 ### Plain Callback
+
 ```typescript
 <button onclick={() => { count++; }} />
 ```
 
 ### Effect Handler
+
 ```typescript
 <button onclick={() => Effect.log("clicked")} />
 ```
 
 ### Handler with Services
+
 ```typescript
 <button onclick={() => Effect.gen(function* () {
   const db = yield* Database;
@@ -69,11 +73,13 @@ mount(<App />, root).pipe(Effect.provide(DatabaseLive))
 ```
 
 ### Conditional Handler
+
 ```typescript
 <button onclick={isEnabled ? handler : null} />
 ```
 
 ### Reactive Handler
+
 ```typescript
 const handlerStream = Stream.make(handlerA, handlerB);
 <button onclick={handlerStream} />

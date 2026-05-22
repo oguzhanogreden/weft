@@ -48,12 +48,14 @@ const itemsStream = Stream.iterate([], items => [...items, newItem]);
 ## Usage Patterns
 
 ### Static Array
+
 ```typescript
 const items = ["A", "B", "C"];
 <ul>{items.map(item => <li>{item}</li>)}</ul>
 ```
 
 ### Fragment Component
+
 ```typescript
 const TableRow = ({ data }) => (
   <>
@@ -68,6 +70,7 @@ const TableRow = ({ data }) => (
 ```
 
 ### Growing List
+
 ```typescript
 const itemsStream = Stream.iterate(
   ["Initial"],
@@ -82,6 +85,7 @@ const itemsStream = Stream.iterate(
 ```
 
 ### Items with Individual Streams
+
 ```typescript
 const items = ids.map(id => ({
   id,
@@ -96,6 +100,7 @@ const items = ids.map(id => ({
 ```
 
 ### Nested Lists
+
 ```typescript
 const categories = [
   { name: "A", items: ["A1", "A2"] },

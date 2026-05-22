@@ -182,12 +182,12 @@ const CanvasExample = () =>
 
 ## Comparison with React Refs
 
-| React | Effect UI |
-|-------|-----------|
-| `useRef<HTMLElement>(null)` | `SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none())` |
-| `ref.current` (nullable) | `Ref.get(ref)` returns `Option` |
-| `useEffect(() => { if (ref.current) ... })` | `Stream.filter(Option.isSome)` on `.changes` |
-| Manual null checks | Type-safe `Option` operations |
+| React                                       | Effect UI                                                         |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `useRef<HTMLElement>(null)`                 | `SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none())` |
+| `ref.current` (nullable)                    | `Ref.get(ref)` returns `Option`                                   |
+| `useEffect(() => { if (ref.current) ... })` | `Stream.filter(Option.isSome)` on `.changes`                      |
+| Manual null checks                          | Type-safe `Option` operations                                     |
 
 ## Notes
 

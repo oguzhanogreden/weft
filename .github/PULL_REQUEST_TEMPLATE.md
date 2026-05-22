@@ -1,7 +1,9 @@
 ## Description
+
 <!-- Provide a brief description of the changes in this PR -->
 
 ## Type of Change
+
 <!-- Mark the relevant option with an "x" -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -13,6 +15,7 @@
 - [ ] Test improvement
 
 ## Checklist
+
 <!-- Mark completed items with an "x" -->
 
 - [ ] My code follows the project's style guidelines
@@ -25,4 +28,5 @@
 - [ ] Any dependent changes have been merged and published
 
 ## Additional Context
+
 <!-- Add any other context, screenshots, or considerations about the PR here -->

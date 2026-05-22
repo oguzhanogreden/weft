@@ -11,6 +11,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 ## Acceptance Criteria
 
 ### AC1: Mount Function API
+
 - **Given** a JSXNode and a root HTMLElement
 - **When** `mount(app, root)` is called
 - **Then** it returns `Effect.Effect<void>` that:
@@ -22,6 +23,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Logs warning about runtime leaks (cleanup not yet implemented)
 
 ### AC2: Primitive JSXNode Rendering
+
 - **Given** primitive JSXNode values
 - **When** rendering occurs
 - **Then**:
@@ -29,11 +31,13 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - `boolean`, `null`, `undefined`, `void` → render nothing (skip)
 
 ### AC3: Iterable Children
+
 - **Given** JSXNode that is an iterable (including nested iterables)
 - **When** rendering children
 - **Then** recursively flatten all iterables and render each child
 
 ### AC4: Element Creation
+
 - **Given** JSXNode with `{ type: string, props: object }`
 - **When** rendering
 - **Then**:
@@ -42,6 +46,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Render order: create → set attrs/props → set up streams → append children → append to parent
 
 ### AC5: Function Components
+
 - **Given** JSXNode with `{ type: function, props: object }`
 - **When** rendering
 - **Then**:
@@ -51,6 +56,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Component doesn't re-execute (no re-rendering)
 
 ### AC6: Fragment Handling
+
 - **Given** JSXNode with `{ type: FRAGMENT, props: { children } }`
 - **When** rendering
 - **Then**:
@@ -59,6 +65,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - As child: append all fragment children to parent
 
 ### AC7: Attribute vs Property Detection
+
 - **Given** element props (excluding `children`)
 - **When** setting props on element
 - **Then**:
@@ -69,6 +76,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Skip `children` prop
 
 ### AC8: Boolean Attributes
+
 - **Given** boolean attribute (e.g., `disabled`, `checked`, `readonly`)
 - **When** setting attribute
 - **Then**:
@@ -77,6 +85,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Falsy value: `removeAttribute(name)`
 
 ### AC9: Attribute Value Serialization
+
 - **Given** non-string attribute value
 - **When** setting attribute
 - **Then**:
@@ -85,11 +94,13 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - `null` values: not valid, skip/remove
 
 ### AC10: Style Attribute - String Form
+
 - **Given** `style` prop as string (e.g., `style="background: blue;"`)
 - **When** rendering
 - **Then**: use `element.setAttribute("style", value)`
 
 ### AC11: Style Attribute - Object Form
+
 - **Given** `style` prop as object (e.g., `style={{ fontSize: "16px", color: "red" }}`)
 - **When** rendering
 - **Then**:
@@ -98,6 +109,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Property names use camelCase (matches CSSStyleDeclaration)
 
 ### AC12: Style with Stream Properties
+
 - **Given** `style` object with Stream values (e.g., `style={{ color: Stream.make("red"), fontSize: "16px" }}`)
 - **When** rendering
 - **Then**:
@@ -106,6 +118,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Each emission updates only that CSS property
 
 ### AC13: Style as Stream
+
 - **Given** `style` prop as `Stream<string>` or `Stream<object>`
 - **When** stream emits
 - **Then**:
@@ -114,6 +127,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Handle both cases appropriately
 
 ### AC14: Effect/Stream Normalization
+
 - **Given** Effect or Stream values in JSX
 - **When** rendering begins
 - **Then**:
@@ -121,6 +135,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Applies to: attributes, properties, style properties, children, component return values
 
 ### AC15: Reactive Attribute/Property Updates
+
 - **Given** attribute or property value as Stream
 - **When** stream emits
 - **Then**:
@@ -130,11 +145,13 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Stream runs in background (doesn't block render)
 
 ### AC16: Stream Completion
+
 - **Given** a Stream that completes without error
 - **When** completion occurs
 - **Then**: leave last rendered value in place
 
 ### AC17: Stream Errors
+
 - **Given** a Stream that fails
 - **When** error occurs
 - **Then**:
@@ -143,6 +160,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Error types: `StreamSubscriptionError`
 
 ### AC18: Children Array with Mixed Streams
+
 - **Given** children array with mix of static and Stream values (e.g., `[Stream.make("a"), "b", Stream.make("c")]`)
 - **When** rendering
 - **Then**:
@@ -151,6 +169,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Static children remain static
 
 ### AC19: Stream Children - Comment Markers
+
 - **Given** a child that is a Stream
 - **When** rendering
 - **Then**:
@@ -161,6 +180,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Keep internal reference to track nodes
 
 ### AC20: Stream Children - Updates
+
 - **Given** a Stream child that emits new value
 - **When** emission occurs
 - **Then**:
@@ -172,6 +192,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Text nodes replaced entirely (not updated in place)
 
 ### AC21: Nested Streams in Dynamic Children
+
 - **Given** a Stream child that emits JSXNode containing Streams
 - **When** rendering the emitted JSXNode
 - **Then**:
@@ -179,6 +200,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Dynamically rendered content gets full reactive support
 
 ### AC22: Component Returning Stream
+
 - **Given** function component that returns `Stream<JSXNode>`
 - **When** rendering
 - **Then**:
@@ -187,6 +209,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Wrap in comment markers
 
 ### AC23: Tagged Errors
+
 - **Given** various error conditions during rendering
 - **When** error occurs
 - **Then** throw appropriate tagged error:
@@ -196,6 +219,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - All errors include useful context for debugging
 
 ### AC24: Runtime Management
+
 - **Given** mount is called
 - **When** creating runtime
 - **Then**:
@@ -205,6 +229,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - No warnings about runtime leaks when properly cleaned up
 
 ### AC25: Scope Management
+
 - **Given** stream subscriptions
 - **When** setting up subscriptions
 - **Then**:
@@ -213,6 +238,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - All scopes closed on unmount
 
 ### AC26: Unmount Function
+
 - **Given** a mounted JSX tree
 - **When** `unmount()` is called on the cleanup function
 - **Then**:
@@ -223,6 +249,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - No runtime leak warnings after proper cleanup
 
 ### AC27: Mount Return Value
+
 - **Given** mount function is called
 - **When** the mount Effect completes
 - **Then**:
@@ -233,26 +260,31 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 ## Technical Requirements
 
 ### Dependencies
+
 - Effect library for Effect, Stream, Layer, Scope primitives
 - JSX runtime types from `@/jsx-runtime`
 - Browser DOM APIs
 
 ### Architecture
+
 - Keep implementation in `src/dom.tsx` initially
 - Split into multiple files if implementation grows large
 - Use Effect patterns throughout (avoid try/catch unless ergonomics suffer)
 - Follow strict TypeScript config: use type guards, careful narrowing
 
 ### Performance Considerations
+
 - Static values don't create streams (optimization for common case)
 - Comment markers for tracking positions (minimal DOM overhead)
 - Internal references for efficient updates
 
 ### Browser Compatibility
+
 - Modern browsers only (no polyfills planned)
 - Relies on standard DOM APIs
 
 ### Future Extensions
+
 - SVG namespace support (`createElementNS`)
 - MathML namespace support
 - Custom elements support

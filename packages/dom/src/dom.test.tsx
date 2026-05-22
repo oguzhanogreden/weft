@@ -12,22 +12,22 @@ import { mount } from "./api";
  * Creates a fresh DOM environment for each test
  */
 function createTestDOM() {
-	const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-	global.document = dom.window.document as unknown as Document;
-	global.HTMLElement = dom.window.HTMLElement as unknown as typeof HTMLElement;
-	global.Comment = dom.window.Comment as unknown as typeof Comment;
-	global.Text = dom.window.Text as unknown as typeof Text;
-	return dom;
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+  global.document = dom.window.document as unknown as Document;
+  global.HTMLElement = dom.window.HTMLElement as unknown as typeof HTMLElement;
+  global.Comment = dom.window.Comment as unknown as typeof Comment;
+  global.Text = dom.window.Text as unknown as typeof Text;
+  return dom;
 }
 
 /**
  * Creates a root element for mounting
  */
 function createRoot(): HTMLElement {
-	const root = document.createElement("div");
-	root.id = "root";
-	document.body.appendChild(root);
-	return root;
+  const root = document.createElement("div");
+  root.id = "root";
+  document.body.appendChild(root);
+  return root;
 }
 
 /**
@@ -35,8 +35,8 @@ function createRoot(): HTMLElement {
  * Returns the mount handle for cleanup
  */
 async function runMount(app: unknown, root: HTMLElement) {
-	const handle = await Effect.runPromise(mount(app as never, root));
-	return handle;
+  const handle = await Effect.runPromise(mount(app as never, root));
+  return handle;
 }
 
 /**
@@ -44,21 +44,21 @@ async function runMount(app: unknown, root: HTMLElement) {
  * Streams run asynchronously after mount, need sufficient time for emissions
  */
 function waitFor(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
  * Wait for initial stream emission (streams fork async)
  */
 function waitForStream(): Promise<void> {
-	return waitFor(100);
+  return waitFor(100);
 }
 
 /**
  * Wait for subsequent stream emissions
  */
 function waitForStreamUpdate(): Promise<void> {
-	return waitFor(150);
+  return waitFor(150);
 }
 
 // ============================================================================
@@ -66,62 +66,62 @@ function waitForStreamUpdate(): Promise<void> {
 // ============================================================================
 
 describe("AC1: Mount Function API", () => {
-	it("should clear root element's existing children", async () => {
-		createTestDOM();
-		const root = createRoot();
-		root.innerHTML = "<div>existing</div><span>content</span>";
+  it("should clear root element's existing children", async () => {
+    createTestDOM();
+    const root = createRoot();
+    root.innerHTML = "<div>existing</div><span>content</span>";
 
-		await runMount(<div>new</div>, root);
+    await runMount(<div>new</div>, root);
 
-		assert.equal(root.children.length, 1);
-		assert.equal(root.children[0]?.tagName, "DIV");
-		assert.equal(root.children[0]?.textContent, "new");
-	});
+    assert.equal(root.children.length, 1);
+    assert.equal(root.children[0]?.tagName, "DIV");
+    assert.equal(root.children[0]?.textContent, "new");
+  });
 
-	it("should append rendered nodes to root", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should append rendered nodes to root", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div id="test">Hello</div>, root);
+    await runMount(<div id="test">Hello</div>, root);
 
-		assert.equal(root.children.length, 1);
-		assert.equal((root.children[0] as HTMLElement).id, "test");
-	});
+    assert.equal(root.children.length, 1);
+    assert.equal((root.children[0] as HTMLElement).id, "test");
+  });
 
-	it("should complete after initial render", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const stream = Stream.make(1, 2, 3);
+  it("should complete after initial render", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const stream = Stream.make(1, 2, 3);
 
-		// Should not throw and should complete
-		await runMount(<div>{stream}</div>, root);
+    // Should not throw and should complete
+    await runMount(<div>{stream}</div>, root);
 
-		// If we got here, Effect completed successfully
-		assert.ok(true);
-	});
+    // If we got here, Effect completed successfully
+    assert.ok(true);
+  });
 
-	it("should return cleanup handle with unmount function", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should return cleanup handle with unmount function", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const handle = await runMount(<div>test</div>, root);
+    const handle = await runMount(<div>test</div>, root);
 
-		// Should have unmount function
-		assert.ok(typeof handle.unmount === "function");
-	});
+    // Should have unmount function
+    assert.ok(typeof handle.unmount === "function");
+  });
 
-	it("should properly dispose runtime when unmounted", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should properly dispose runtime when unmounted", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const handle = await runMount(<div>test</div>, root);
+    const handle = await runMount(<div>test</div>, root);
 
-		// Should unmount without errors
-		await Effect.runPromise(handle.unmount());
+    // Should unmount without errors
+    await Effect.runPromise(handle.unmount());
 
-		// Unmounting again should be idempotent
-		await Effect.runPromise(handle.unmount());
-	});
+    // Unmounting again should be idempotent
+    await Effect.runPromise(handle.unmount());
+  });
 });
 
 // ============================================================================
@@ -129,65 +129,65 @@ describe("AC1: Mount Function API", () => {
 // ============================================================================
 
 describe("AC2: Primitive JSXNode Rendering", () => {
-	it("should render string as text node", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render string as text node", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>Hello World</div>, root);
+    await runMount(<div>Hello World</div>, root);
 
-		assert.equal(root.textContent, "Hello World");
-	});
+    assert.equal(root.textContent, "Hello World");
+  });
 
-	it("should render number as text node", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render number as text node", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{42}</div>, root);
+    await runMount(<div>{42}</div>, root);
 
-		assert.equal(root.textContent, "42");
-	});
+    assert.equal(root.textContent, "42");
+  });
 
-	it("should render bigint as text node", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render bigint as text node", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{BigInt(9007199254740991)}</div>, root);
+    await runMount(<div>{BigInt(9007199254740991)}</div>, root);
 
-		assert.equal(root.textContent, "9007199254740991");
-	});
+    assert.equal(root.textContent, "9007199254740991");
+  });
 
-	it("should render boolean as nothing", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render boolean as nothing", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div>
-				{true}
-				{false}
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        {true}
+        {false}
+      </div>,
+      root,
+    );
 
-		assert.equal(root.textContent, "");
-	});
+    assert.equal(root.textContent, "");
+  });
 
-	it("should render null as nothing", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render null as nothing", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{null}</div>, root);
+    await runMount(<div>{null}</div>, root);
 
-		assert.equal(root.textContent, "");
-	});
+    assert.equal(root.textContent, "");
+  });
 
-	it("should render undefined as nothing", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render undefined as nothing", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{undefined}</div>, root);
+    await runMount(<div>{undefined}</div>, root);
 
-		assert.equal(root.textContent, "");
-	});
+    assert.equal(root.textContent, "");
+  });
 });
 
 // ============================================================================
@@ -195,40 +195,40 @@ describe("AC2: Primitive JSXNode Rendering", () => {
 // ============================================================================
 
 describe("AC3: Iterable Children", () => {
-	it("should flatten and render array children", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should flatten and render array children", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{["a", "b", "c"]}</div>, root);
+    await runMount(<div>{["a", "b", "c"]}</div>, root);
 
-		assert.equal(root.textContent, "abc");
-	});
+    assert.equal(root.textContent, "abc");
+  });
 
-	it("should recursively flatten nested iterables", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should recursively flatten nested iterables", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div>
-				{[
-					["a", "b"],
-					["c", ["d", "e"]],
-				]}
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        {[
+          ["a", "b"],
+          ["c", ["d", "e"]],
+        ]}
+      </div>,
+      root,
+    );
 
-		assert.equal(root.textContent, "abcde");
-	});
+    assert.equal(root.textContent, "abcde");
+  });
 
-	it("should handle mixed primitives in arrays", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle mixed primitives in arrays", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{[1, "text", null, true, 3]}</div>, root);
+    await runMount(<div>{[1, "text", null, true, 3]}</div>, root);
 
-		assert.equal(root.textContent, "1text3");
-	});
+    assert.equal(root.textContent, "1text3");
+  });
 });
 
 // ============================================================================
@@ -236,44 +236,44 @@ describe("AC3: Iterable Children", () => {
 // ============================================================================
 
 describe("AC4: Element Creation", () => {
-	it("should create element with correct tag name", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should create element with correct tag name", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>test</div>, root);
+    await runMount(<div>test</div>, root);
 
-		assert.equal(root.children[0]?.tagName, "DIV");
-	});
+    assert.equal(root.children[0]?.tagName, "DIV");
+  });
 
-	it("should create multiple different elements", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should create multiple different elements", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div>
-				<span>a</span>
-				<p>b</p>
-				<section>c</section>
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <span>a</span>
+        <p>b</p>
+        <section>c</section>
+      </div>,
+      root,
+    );
 
-		const div = root.children[0];
-		assert.equal(div?.children[0]?.tagName, "SPAN");
-		assert.equal(div?.children[1]?.tagName, "P");
-		assert.equal(div?.children[2]?.tagName, "SECTION");
-	});
+    const div = root.children[0];
+    assert.equal(div?.children[0]?.tagName, "SPAN");
+    assert.equal(div?.children[1]?.tagName, "P");
+    assert.equal(div?.children[2]?.tagName, "SECTION");
+  });
 
-	it("should let browser validate element type", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should let browser validate element type", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Browser will create HTMLUnknownElement for invalid tags
-		// @ts-expect-error - testing custom elements
-		await runMount(<custom-element>test</custom-element>, root);
+    // Browser will create HTMLUnknownElement for invalid tags
+    // @ts-expect-error - testing custom elements
+    await runMount(<custom-element>test</custom-element>, root);
 
-		assert.equal(root.children[0]?.tagName, "CUSTOM-ELEMENT");
-	});
+    assert.equal(root.children[0]?.tagName, "CUSTOM-ELEMENT");
+  });
 });
 
 // ============================================================================
@@ -281,68 +281,68 @@ describe("AC4: Element Creation", () => {
 // ============================================================================
 
 describe("AC5: Function Components", () => {
-	it("should call function component once with props", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const callTracker: string[] = [];
+  it("should call function component once with props", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const callTracker: string[] = [];
 
-		function Greeting({ name }: { name: string }) {
-			callTracker.push(name);
-			return <div>Hello {name}</div>;
-		}
+    function Greeting({ name }: { name: string }) {
+      callTracker.push(name);
+      return <div>Hello {name}</div>;
+    }
 
-		await runMount(<Greeting name="World" />, root);
+    await runMount(<Greeting name="World" />, root);
 
-		assert.deepEqual(callTracker, ["World"]);
-		assert.equal(root.textContent, "Hello World");
-	});
+    assert.deepEqual(callTracker, ["World"]);
+    assert.equal(root.textContent, "Hello World");
+  });
 
-	it("should handle component returning Effect<JSXNode>", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle component returning Effect<JSXNode>", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function AsyncComponent(): Effect.Effect<JSX.Element> {
-			return Effect.sync(() => <div>Async Content</div>);
-		}
+    function AsyncComponent(): Effect.Effect<JSX.Element> {
+      return Effect.sync(() => <div>Async Content</div>);
+    }
 
-		await runMount(<AsyncComponent />, root);
+    await runMount(<AsyncComponent />, root);
 
-		// Effect is normalized to Stream which runs async
-		await waitForStream();
-		assert.equal(root.textContent, "Async Content");
-	});
+    // Effect is normalized to Stream which runs async
+    await waitForStream();
+    assert.equal(root.textContent, "Async Content");
+  });
 
-	it("should handle component returning Stream<JSXNode>", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle component returning Stream<JSXNode>", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function StreamComponent(): Stream.Stream<JSX.Element> {
-			return Stream.make(<div>First</div>, <div>Second</div>);
-		}
+    function StreamComponent(): Stream.Stream<JSX.Element> {
+      return Stream.make(<div>First</div>, <div>Second</div>);
+    }
 
-		await runMount(<StreamComponent />, root);
+    await runMount(<StreamComponent />, root);
 
-		// Stream.make emits all values synchronously, so only the last is visible
-		await waitForStream();
-		assert.ok(root.textContent?.includes("Second"));
-	});
+    // Stream.make emits all values synchronously, so only the last is visible
+    await waitForStream();
+    assert.ok(root.textContent?.includes("Second"));
+  });
 
-	it("should not re-execute component function", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let executionCount = 0;
+  it("should not re-execute component function", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let executionCount = 0;
 
-		function Counter(): Stream.Stream<JSX.Element> {
-			executionCount++;
-			return Stream.make(<div>Count: 1</div>, <div>Count: 2</div>);
-		}
+    function Counter(): Stream.Stream<JSX.Element> {
+      executionCount++;
+      return Stream.make(<div>Count: 1</div>, <div>Count: 2</div>);
+    }
 
-		await runMount(<Counter />, root);
-		await waitForStreamUpdate();
+    await runMount(<Counter />, root);
+    await waitForStreamUpdate();
 
-		// Component should only execute once despite stream emissions
-		assert.equal(executionCount, 1);
-	});
+    // Component should only execute once despite stream emissions
+    assert.equal(executionCount, 1);
+  });
 });
 
 // ============================================================================
@@ -350,60 +350,60 @@ describe("AC5: Function Components", () => {
 // ============================================================================
 
 describe("AC6: Fragment Handling", () => {
-	it("should render fragment children without wrapper at root", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render fragment children without wrapper at root", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<>
-				<div>A</div>
-				<span>B</span>
-			</>,
-			root,
-		);
+    await runMount(
+      <>
+        <div>A</div>
+        <span>B</span>
+      </>,
+      root,
+    );
 
-		assert.equal(root.children.length, 2);
-		assert.equal(root.children[0]?.tagName, "DIV");
-		assert.equal(root.children[1]?.tagName, "SPAN");
-	});
+    assert.equal(root.children.length, 2);
+    assert.equal(root.children[0]?.tagName, "DIV");
+    assert.equal(root.children[1]?.tagName, "SPAN");
+  });
 
-	it("should render fragment children without wrapper as child", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render fragment children without wrapper as child", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div>
-				<span>A</span>
-				<span>B</span>
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <span>A</span>
+        <span>B</span>
+      </div>,
+      root,
+    );
 
-		const div = root.children[0];
-		assert.equal(div?.children.length, 2);
-		assert.equal(div?.children[0]?.tagName, "SPAN");
-		assert.equal(div?.children[1]?.tagName, "SPAN");
-	});
+    const div = root.children[0];
+    assert.equal(div?.children.length, 2);
+    assert.equal(div?.children[0]?.tagName, "SPAN");
+    assert.equal(div?.children[1]?.tagName, "SPAN");
+  });
 
-	it("should handle nested fragments", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle nested fragments", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<>
-				<div>A</div>
+    await runMount(
+      <>
+        <div>A</div>
 
-				<span>B</span>
-				<p>C</p>
-			</>,
-			root,
-		);
+        <span>B</span>
+        <p>C</p>
+      </>,
+      root,
+    );
 
-		assert.equal(root.children.length, 3);
-		assert.equal(root.children[0]?.tagName, "DIV");
-		assert.equal(root.children[1]?.tagName, "SPAN");
-		assert.equal(root.children[2]?.tagName, "P");
-	});
+    assert.equal(root.children.length, 3);
+    assert.equal(root.children[0]?.tagName, "DIV");
+    assert.equal(root.children[1]?.tagName, "SPAN");
+    assert.equal(root.children[2]?.tagName, "P");
+  });
 });
 
 // ============================================================================
@@ -411,61 +411,61 @@ describe("AC6: Fragment Handling", () => {
 // ============================================================================
 
 describe("AC7: Attribute vs Property Detection", () => {
-	it("should set standard properties via property assignment", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set standard properties via property assignment", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<input type="text" value="test" />, root);
+    await runMount(<input type="text" value="test" />, root);
 
-		const input = root.children[0] as HTMLInputElement;
-		assert.equal(input.value, "test");
-		assert.equal(input.type, "text");
-	});
+    const input = root.children[0] as HTMLInputElement;
+    assert.equal(input.value, "test");
+    assert.equal(input.type, "text");
+  });
 
-	it("should set data-* attributes via setAttribute", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set data-* attributes via setAttribute", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div data-test-id="123" data-value="abc">
-				test
-			</div>,
-			root,
-		);
+    await runMount(
+      <div data-test-id="123" data-value="abc">
+        test
+      </div>,
+      root,
+    );
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.getAttribute("data-test-id"), "123");
-		assert.equal(div.getAttribute("data-value"), "abc");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.getAttribute("data-test-id"), "123");
+    assert.equal(div.getAttribute("data-value"), "abc");
+  });
 
-	it("should set aria-* attributes via setAttribute", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set aria-* attributes via setAttribute", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<button type="button" aria-label="Close" aria-expanded="false">
-				X
-			</button>,
-			root,
-		);
+    await runMount(
+      <button type="button" aria-label="Close" aria-expanded="false">
+        X
+      </button>,
+      root,
+    );
 
-		const button = root.children[0] as HTMLElement;
-		assert.equal(button.getAttribute("aria-label"), "Close");
-		assert.equal(button.getAttribute("aria-expanded"), "false");
-	});
+    const button = root.children[0] as HTMLElement;
+    assert.equal(button.getAttribute("aria-label"), "Close");
+    assert.equal(button.getAttribute("aria-expanded"), "false");
+  });
 
-	it("should skip children prop when setting props", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should skip children prop when setting props", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Test that children prop doesn't override JSX children
-		// @ts-expect-error - testing children prop duplication
-		await runMount(<div children="should not set">actual children</div>, root);
+    // Test that children prop doesn't override JSX children
+    // @ts-expect-error - testing children prop duplication
+    await runMount(<div children="should not set">actual children</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.textContent, "actual children");
-		assert.equal(div.hasAttribute("children"), false);
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.textContent, "actual children");
+    assert.equal(div.hasAttribute("children"), false);
+  });
 });
 
 // ============================================================================
@@ -473,39 +473,39 @@ describe("AC7: Attribute vs Property Detection", () => {
 // ============================================================================
 
 describe("AC8: Boolean Attributes", () => {
-	it("should set boolean attribute to empty string when truthy", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set boolean attribute to empty string when truthy", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<input disabled={true} readonly={true} />, root);
+    await runMount(<input disabled={true} readonly={true} />, root);
 
-		const input = root.children[0] as HTMLElement;
-		assert.equal(input.getAttribute("disabled"), "");
-		assert.equal(input.getAttribute("readonly"), "");
-	});
+    const input = root.children[0] as HTMLElement;
+    assert.equal(input.getAttribute("disabled"), "");
+    assert.equal(input.getAttribute("readonly"), "");
+  });
 
-	it("should remove boolean attribute when falsy", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should remove boolean attribute when falsy", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<input disabled={false} readonly={false} />, root);
+    await runMount(<input disabled={false} readonly={false} />, root);
 
-		const input = root.children[0] as HTMLElement;
-		assert.equal(input.hasAttribute("disabled"), false);
-		assert.equal(input.hasAttribute("readonly"), false);
-	});
+    const input = root.children[0] as HTMLElement;
+    assert.equal(input.hasAttribute("disabled"), false);
+    assert.equal(input.hasAttribute("readonly"), false);
+  });
 
-	it("should handle checked attribute on checkboxes", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle checked attribute on checkboxes", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<input type="checkbox" checked={true} />, root);
+    await runMount(<input type="checkbox" checked={true} />, root);
 
-		const input = root.children[0] as HTMLInputElement;
-		// checked is a property, not an attribute in most browsers
-		// But the boolean value should set it
-		assert.equal(input.checked, true);
-	});
+    const input = root.children[0] as HTMLInputElement;
+    // checked is a property, not an attribute in most browsers
+    // But the boolean value should set it
+    assert.equal(input.checked, true);
+  });
 });
 
 // ============================================================================
@@ -513,35 +513,35 @@ describe("AC8: Boolean Attributes", () => {
 // ============================================================================
 
 describe("AC9: Attribute Value Serialization", () => {
-	it("should convert numbers to strings for attributes", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should convert numbers to strings for attributes", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div data-count={42}>test</div>, root);
+    await runMount(<div data-count={42}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.getAttribute("data-count"), "42");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.getAttribute("data-count"), "42");
+  });
 
-	it("should skip undefined attribute values", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should skip undefined attribute values", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div data-value={undefined}>test</div>, root);
+    await runMount(<div data-value={undefined}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.hasAttribute("data-value"), false);
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.hasAttribute("data-value"), false);
+  });
 
-	it("should skip null attribute values", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should skip null attribute values", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div data-value={null}>test</div>, root);
+    await runMount(<div data-value={null}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.hasAttribute("data-value"), false);
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.hasAttribute("data-value"), false);
+  });
 });
 
 // ============================================================================
@@ -549,18 +549,15 @@ describe("AC9: Attribute Value Serialization", () => {
 // ============================================================================
 
 describe("AC10: Style Attribute - String Form", () => {
-	it("should set style attribute from string", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set style attribute from string", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div style="background: blue; color: white;">test</div>,
-			root,
-		);
+    await runMount(<div style="background: blue; color: white;">test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.getAttribute("style"), "background: blue; color: white;");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.getAttribute("style"), "background: blue; color: white;");
+  });
 });
 
 // ============================================================================
@@ -568,33 +565,27 @@ describe("AC10: Style Attribute - String Form", () => {
 // ============================================================================
 
 describe("AC11: Style Attribute - Object Form", () => {
-	it("should set style properties from object", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set style properties from object", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div style={{ fontSize: "16px", color: "red" }}>test</div>,
-			root,
-		);
+    await runMount(<div style={{ fontSize: "16px", color: "red" }}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.style.fontSize, "16px");
-		assert.equal(div.style.color, "red");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.style.fontSize, "16px");
+    assert.equal(div.style.color, "red");
+  });
 
-	it("should handle camelCase property names", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle camelCase property names", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div style={{ backgroundColor: "blue", marginTop: "10px" }}>test</div>,
-			root,
-		);
+    await runMount(<div style={{ backgroundColor: "blue", marginTop: "10px" }}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.style.backgroundColor, "blue");
-		assert.equal(div.style.marginTop, "10px");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.style.backgroundColor, "blue");
+    assert.equal(div.style.marginTop, "10px");
+  });
 });
 
 // ============================================================================
@@ -602,45 +593,39 @@ describe("AC11: Style Attribute - Object Form", () => {
 // ============================================================================
 
 describe("AC12: Style with Stream Properties", () => {
-	it("should update individual style properties from streams", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should update individual style properties from streams", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const colorStream = Stream.make("red", "blue", "green");
+    const colorStream = Stream.make("red", "blue", "green");
 
-		await runMount(
-			<div style={{ color: colorStream, fontSize: "16px" }}>test</div>,
-			root,
-		);
+    await runMount(<div style={{ color: colorStream, fontSize: "16px" }}>test</div>, root);
 
-		const div = root.children[0] as HTMLElement;
+    const div = root.children[0] as HTMLElement;
 
-		// Static property set immediately
-		assert.equal(div.style.fontSize, "16px");
+    // Static property set immediately
+    assert.equal(div.style.fontSize, "16px");
 
-		// Stream.make emits all values synchronously, so only the last is visible
-		await waitForStream();
-		assert.equal(div.style.color, "green");
-	});
+    // Stream.make emits all values synchronously, so only the last is visible
+    await waitForStream();
+    assert.equal(div.style.color, "green");
+  });
 
-	it("should handle multiple stream properties independently", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle multiple stream properties independently", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const colorStream = Stream.make("red");
-		const sizeStream = Stream.make("20px");
+    const colorStream = Stream.make("red");
+    const sizeStream = Stream.make("20px");
 
-		await runMount(
-			<div style={{ color: colorStream, fontSize: sizeStream }}>test</div>,
-			root,
-		);
+    await runMount(<div style={{ color: colorStream, fontSize: sizeStream }}>test</div>, root);
 
-		await waitForStream();
+    await waitForStream();
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.style.color, "red");
-		assert.equal(div.style.fontSize, "20px");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.style.color, "red");
+    assert.equal(div.style.fontSize, "20px");
+  });
 });
 
 // ============================================================================
@@ -648,44 +633,41 @@ describe("AC12: Style with Stream Properties", () => {
 // ============================================================================
 
 describe("AC13: Style as Stream", () => {
-	it("should replace entire style attribute from Stream<string>", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should replace entire style attribute from Stream<string>", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const styleStream = Stream.make(
-			"color: red;",
-			"color: blue; font-size: 20px;",
-		);
+    const styleStream = Stream.make("color: red;", "color: blue; font-size: 20px;");
 
-		await runMount(<div style={styleStream}>test</div>, root);
+    await runMount(<div style={styleStream}>test</div>, root);
 
-		// Stream.make emits all values synchronously, only last style is applied
-		await waitForStream();
-		const div = root.children[0] as HTMLElement;
-		const style = div.getAttribute("style");
-		assert.ok(style?.includes("blue"));
-		assert.ok(style?.includes("font-size"));
-	});
+    // Stream.make emits all values synchronously, only last style is applied
+    await waitForStream();
+    const div = root.children[0] as HTMLElement;
+    const style = div.getAttribute("style");
+    assert.ok(style?.includes("blue"));
+    assert.ok(style?.includes("font-size"));
+  });
 
-	it("should replace all style properties from Stream<object>", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should replace all style properties from Stream<object>", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const styleStream = Stream.make(
-			{ color: "red", fontSize: "16px" },
-			{ backgroundColor: "blue", padding: "10px" },
-		);
+    const styleStream = Stream.make(
+      { color: "red", fontSize: "16px" },
+      { backgroundColor: "blue", padding: "10px" },
+    );
 
-		await runMount(<div style={styleStream}>test</div>, root);
+    await runMount(<div style={styleStream}>test</div>, root);
 
-		await waitForStream();
-		const div = root.children[0] as HTMLElement;
-		// Stream.make emits all values synchronously, only last object is applied
-		assert.equal(div.style.backgroundColor, "blue");
-		assert.equal(div.style.padding, "10px");
-		// Previous style properties should be replaced
-		assert.equal(div.style.color, "");
-	});
+    await waitForStream();
+    const div = root.children[0] as HTMLElement;
+    // Stream.make emits all values synchronously, only last object is applied
+    assert.equal(div.style.backgroundColor, "blue");
+    assert.equal(div.style.padding, "10px");
+    // Previous style properties should be replaced
+    assert.equal(div.style.color, "");
+  });
 });
 
 // ============================================================================
@@ -693,31 +675,28 @@ describe("AC13: Style as Stream", () => {
 // ============================================================================
 
 describe("AC14: Effect/Stream Normalization", () => {
-	it("should normalize Effect to Stream for attributes", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should normalize Effect to Stream for attributes", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(
-			<div data-value={Effect.sync(() => "test")}>content</div>,
-			root,
-		);
+    await runMount(<div data-value={Effect.sync(() => "test")}>content</div>, root);
 
-		await waitForStream();
+    await waitForStream();
 
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.getAttribute("data-value"), "test");
-	});
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.getAttribute("data-value"), "test");
+  });
 
-	it("should normalize Effect to Stream for children", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should normalize Effect to Stream for children", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		await runMount(<div>{Effect.sync(() => "from effect")}</div>, root);
+    await runMount(<div>{Effect.sync(() => "from effect")}</div>, root);
 
-		await waitForStream();
+    await waitForStream();
 
-		assert.ok(root.textContent?.includes("from effect"));
-	});
+    assert.ok(root.textContent?.includes("from effect"));
+  });
 });
 
 // ============================================================================
@@ -725,47 +704,47 @@ describe("AC14: Effect/Stream Normalization", () => {
 // ============================================================================
 
 describe("AC15: Reactive Attribute/Property Updates", () => {
-	it("should update attribute on each stream emission", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should update attribute on each stream emission", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const valueStream = Stream.make("first", "second", "third");
+    const valueStream = Stream.make("first", "second", "third");
 
-		await runMount(<div data-value={valueStream}>test</div>, root);
+    await runMount(<div data-value={valueStream}>test</div>, root);
 
-		// Stream.make emits all values synchronously, only last value is visible
-		await waitForStream();
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.getAttribute("data-value"), "third");
-	});
+    // Stream.make emits all values synchronously, only last value is visible
+    await waitForStream();
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.getAttribute("data-value"), "third");
+  });
 
-	it("should remove attribute when stream emits null", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should remove attribute when stream emits null", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const valueStream = Stream.make("value", null as string | null);
+    const valueStream = Stream.make("value", null as string | null);
 
-		await runMount(<div data-value={valueStream}>test</div>, root);
+    await runMount(<div data-value={valueStream}>test</div>, root);
 
-		// Stream.make emits all values synchronously, only last value (null) is applied
-		await waitForStream();
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.hasAttribute("data-value"), false);
-	});
+    // Stream.make emits all values synchronously, only last value (null) is applied
+    await waitForStream();
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.hasAttribute("data-value"), false);
+  });
 
-	it("should remove attribute when stream emits undefined", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should remove attribute when stream emits undefined", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const valueStream = Stream.make("value", undefined as string | undefined);
+    const valueStream = Stream.make("value", undefined as string | undefined);
 
-		await runMount(<div data-value={valueStream}>test</div>, root);
+    await runMount(<div data-value={valueStream}>test</div>, root);
 
-		// Stream.make emits all values synchronously, only last value (undefined) is applied
-		await waitForStream();
-		const div = root.children[0] as HTMLElement;
-		assert.equal(div.hasAttribute("data-value"), false);
-	});
+    // Stream.make emits all values synchronously, only last value (undefined) is applied
+    await waitForStream();
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.hasAttribute("data-value"), false);
+  });
 });
 
 // ============================================================================
@@ -773,18 +752,18 @@ describe("AC15: Reactive Attribute/Property Updates", () => {
 // ============================================================================
 
 describe("AC16: Stream Completion", () => {
-	it("should leave last rendered value when stream completes", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should leave last rendered value when stream completes", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const completingStream = Stream.make("first", "second");
+    const completingStream = Stream.make("first", "second");
 
-		await runMount(<div>{completingStream}</div>, root);
+    await runMount(<div>{completingStream}</div>, root);
 
-		// Stream.make emits all values synchronously, only last value is visible
-		await waitForStream();
-		assert.ok(root.textContent?.includes("second"));
-	});
+    // Stream.make emits all values synchronously, only last value is visible
+    await waitForStream();
+    assert.ok(root.textContent?.includes("second"));
+  });
 });
 
 // ============================================================================
@@ -792,23 +771,23 @@ describe("AC16: Stream Completion", () => {
 // ============================================================================
 
 describe("AC17: Stream Errors", () => {
-	it("should throw StreamSubscriptionError when stream fails", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should throw StreamSubscriptionError when stream fails", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const failingStream = Stream.fail(new Error("Test error"));
+    const failingStream = Stream.fail(new Error("Test error"));
 
-		// Should eventually fail
-		try {
-			// @ts-expect-error - failingStream is a Stream<never, Error, never>
-			await runMount(<div>{failingStream}</div>, root);
-			await waitFor(100);
-			// If no error thrown yet, that's acceptable - errors may be async
-			assert.ok(true);
-		} catch (error) {
-			assert.ok(error instanceof Error);
-		}
-	});
+    // Should eventually fail
+    try {
+      // @ts-expect-error - failingStream is a Stream<never, Error, never>
+      await runMount(<div>{failingStream}</div>, root);
+      await waitFor(100);
+      // If no error thrown yet, that's acceptable - errors may be async
+      assert.ok(true);
+    } catch (error) {
+      assert.ok(error instanceof Error);
+    }
+  });
 });
 
 // ============================================================================
@@ -816,47 +795,47 @@ describe("AC17: Stream Errors", () => {
 // ============================================================================
 
 describe("AC18: Children Array with Mixed Streams", () => {
-	it("should handle mix of static and stream children", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle mix of static and stream children", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const streamA = Stream.make("A");
-		const streamC = Stream.make("C");
+    const streamA = Stream.make("A");
+    const streamC = Stream.make("C");
 
-		await runMount(
-			<div>
-				{streamA}B{streamC}
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        {streamA}B{streamC}
+      </div>,
+      root,
+    );
 
-		await waitForStream();
+    await waitForStream();
 
-		const text = root.textContent ?? "";
-		assert.ok(text.includes("A"));
-		assert.ok(text.includes("B"));
-		assert.ok(text.includes("C"));
-	});
+    const text = root.textContent ?? "";
+    assert.ok(text.includes("A"));
+    assert.ok(text.includes("B"));
+    assert.ok(text.includes("C"));
+  });
 
-	it("should update stream children independently", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should update stream children independently", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream1 = Stream.make("1", "one");
-		const stream2 = Stream.make("2", "two");
+    const stream1 = Stream.make("1", "one");
+    const stream2 = Stream.make("2", "two");
 
-		await runMount(
-			<div>
-				{stream1}-{stream2}
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        {stream1}-{stream2}
+      </div>,
+      root,
+    );
 
-		// Stream.make emits all values synchronously, only last values are visible
-		await waitForStream();
-		const finalText = root.textContent ?? "";
-		assert.equal(finalText, "one-two");
-	});
+    // Stream.make emits all values synchronously, only last values are visible
+    await waitForStream();
+    const finalText = root.textContent ?? "";
+    assert.equal(finalText, "one-two");
+  });
 });
 
 // ============================================================================
@@ -864,57 +843,49 @@ describe("AC18: Children Array with Mixed Streams", () => {
 // ============================================================================
 
 describe("AC19: Stream Children - Comment Markers", () => {
-	it("should insert comment markers around stream children", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should insert comment markers around stream children", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream = Stream.make("content");
+    const stream = Stream.make("content");
 
-		await runMount(<div>{stream}</div>, root);
+    await runMount(<div>{stream}</div>, root);
 
-		const div = root.children[0];
-		const nodes = Array.from(div?.childNodes ?? []);
+    const div = root.children[0];
+    const nodes = Array.from(div?.childNodes ?? []);
 
-		// Should have start comment, content, end comment
-		const comments = nodes.filter((n) => n.nodeType === 8); // Comment node
-		assert.ok(
-			comments.length >= 2,
-			"Should have start and end comment markers",
-		);
-	});
+    // Should have start comment, content, end comment
+    const comments = nodes.filter((n) => n.nodeType === 8); // Comment node
+    assert.ok(comments.length >= 2, "Should have start and end comment markers");
+  });
 
-	it("should use unique IDs for different streams", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should use unique IDs for different streams", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream1 = Stream.make("A");
-		const stream2 = Stream.make("B");
+    const stream1 = Stream.make("A");
+    const stream2 = Stream.make("B");
 
-		await runMount(
-			<div>
-				{stream1}
-				{stream2}
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        {stream1}
+        {stream2}
+      </div>,
+      root,
+    );
 
-		const div = root.children[0];
-		const nodes = Array.from(div?.childNodes ?? []);
-		const comments = nodes.filter((n) => n.nodeType === 8) as Comment[];
+    const div = root.children[0];
+    const nodes = Array.from(div?.childNodes ?? []);
+    const comments = nodes.filter((n) => n.nodeType === 8) as Comment[];
 
-		// Each stream should have unique markers
-		const commentTexts = comments.map((c) => c.textContent);
-		const uniqueIds = new Set(
-			commentTexts
-				.filter((t) => t?.includes("stream"))
-				.map((t) => t?.match(/\d+/)?.[0]),
-		);
+    // Each stream should have unique markers
+    const commentTexts = comments.map((c) => c.textContent);
+    const uniqueIds = new Set(
+      commentTexts.filter((t) => t?.includes("stream")).map((t) => t?.match(/\d+/)?.[0]),
+    );
 
-		assert.ok(
-			uniqueIds.size >= 2,
-			"Should have unique IDs for different streams",
-		);
-	});
+    assert.ok(uniqueIds.size >= 2, "Should have unique IDs for different streams");
+  });
 });
 
 // ============================================================================
@@ -922,53 +893,53 @@ describe("AC19: Stream Children - Comment Markers", () => {
 // ============================================================================
 
 describe("AC20: Stream Children - Updates", () => {
-	it("should replace nodes between markers on stream emission", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should replace nodes between markers on stream emission", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream = Stream.make("first", "second");
+    const stream = Stream.make("first", "second");
 
-		await runMount(<div>{stream}</div>, root);
+    await runMount(<div>{stream}</div>, root);
 
-		// Stream.make emits all values synchronously, only last value is visible
-		await waitForStream();
-		assert.ok(root.textContent?.includes("second"));
-		assert.ok(!root.textContent?.includes("first"));
-	});
+    // Stream.make emits all values synchronously, only last value is visible
+    await waitForStream();
+    assert.ok(root.textContent?.includes("second"));
+    assert.ok(!root.textContent?.includes("first"));
+  });
 
-	it("should handle stream emitting arrays", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle stream emitting arrays", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream = Stream.make(["a", "b"], ["c", "d", "e"]);
+    const stream = Stream.make(["a", "b"], ["c", "d", "e"]);
 
-		await runMount(<div>{stream}</div>, root);
+    await runMount(<div>{stream}</div>, root);
 
-		// Stream.make emits all values synchronously, only last array is visible
-		await waitForStream();
-		const text = root.textContent ?? "";
-		assert.equal(text, "cde");
-	});
+    // Stream.make emits all values synchronously, only last array is visible
+    await waitForStream();
+    const text = root.textContent ?? "";
+    assert.equal(text, "cde");
+  });
 
-	it("should handle stream emitting fragments", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle stream emitting fragments", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream = Stream.make(
-			<span>A</span>,
-			<>
-				<span>B</span>
-				<span>C</span>
-			</>,
-		);
+    const stream = Stream.make(
+      <span>A</span>,
+      <>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
 
-		await runMount(<div>{stream}</div>, root);
+    await runMount(<div>{stream}</div>, root);
 
-		// Stream.make emits all values synchronously, only last fragment is visible
-		await waitForStream();
-		const text = root.textContent ?? "";
-		assert.equal(text, "BC");
-	});
+    // Stream.make emits all values synchronously, only last fragment is visible
+    await waitForStream();
+    const text = root.textContent ?? "";
+    assert.equal(text, "BC");
+  });
 });
 
 // ============================================================================
@@ -976,22 +947,22 @@ describe("AC20: Stream Children - Updates", () => {
 // ============================================================================
 
 describe("AC21: Nested Streams in Dynamic Children", () => {
-	it("should set up nested streams when parent stream emits", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set up nested streams when parent stream emits", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const innerStream = Stream.make("inner1", "inner2");
-		const outerStream = Stream.make(<div>{innerStream}</div>);
+    const innerStream = Stream.make("inner1", "inner2");
+    const outerStream = Stream.make(<div>{innerStream}</div>);
 
-		await runMount(<div>{outerStream}</div>, root);
+    await runMount(<div>{outerStream}</div>, root);
 
-		await waitForStream();
-		assert.ok(root.textContent?.includes("inner"));
+    await waitForStream();
+    assert.ok(root.textContent?.includes("inner"));
 
-		await waitForStreamUpdate();
-		// Inner stream should be working
-		assert.ok(root.textContent !== "");
-	});
+    await waitForStreamUpdate();
+    // Inner stream should be working
+    assert.ok(root.textContent !== "");
+  });
 });
 
 // ============================================================================
@@ -999,36 +970,36 @@ describe("AC21: Nested Streams in Dynamic Children", () => {
 // ============================================================================
 
 describe("AC22: Component Returning Stream", () => {
-	it("should handle component returning Stream<JSXNode>", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle component returning Stream<JSXNode>", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function StreamComponent(): Stream.Stream<JSX.Element> {
-			return Stream.make(<div>First</div>, <div>Second</div>);
-		}
+    function StreamComponent(): Stream.Stream<JSX.Element> {
+      return Stream.make(<div>First</div>, <div>Second</div>);
+    }
 
-		await runMount(<StreamComponent />, root);
+    await runMount(<StreamComponent />, root);
 
-		// Stream.make emits all values synchronously, only last value is visible
-		await waitForStream();
-		assert.ok(root.textContent?.includes("Second"));
-	});
+    // Stream.make emits all values synchronously, only last value is visible
+    await waitForStream();
+    assert.ok(root.textContent?.includes("Second"));
+  });
 
-	it("should wrap component stream in comment markers", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should wrap component stream in comment markers", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function StreamComponent(): Stream.Stream<JSX.Element> {
-			return Stream.make(<div>Content</div>);
-		}
+    function StreamComponent(): Stream.Stream<JSX.Element> {
+      return Stream.make(<div>Content</div>);
+    }
 
-		await runMount(<StreamComponent />, root);
+    await runMount(<StreamComponent />, root);
 
-		const nodes = Array.from(root.childNodes);
-		const comments = nodes.filter((n) => n.nodeType === 8);
+    const nodes = Array.from(root.childNodes);
+    const comments = nodes.filter((n) => n.nodeType === 8);
 
-		assert.ok(comments.length >= 2, "Should have comment markers");
-	});
+    assert.ok(comments.length >= 2, "Should have comment markers");
+  });
 });
 
 // ============================================================================
@@ -1036,23 +1007,20 @@ describe("AC22: Component Returning Stream", () => {
 // ============================================================================
 
 describe("AC23: Tagged Errors", () => {
-	it("should throw InvalidElementType for invalid JSXNode type", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should throw InvalidElementType for invalid JSXNode type", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const invalidNode = { type: 123, props: {} };
+    const invalidNode = { type: 123, props: {} };
 
-		await assert.rejects(
-			async () => await runMount(invalidNode as never, root),
-			(error: Error) => {
-				assert.ok(
-					error.message.includes("InvalidElementType") ||
-						error instanceof Error,
-				);
-				return true;
-			},
-		);
-	});
+    await assert.rejects(
+      async () => await runMount(invalidNode as never, root),
+      (error: Error) => {
+        assert.ok(error.message.includes("InvalidElementType") || error instanceof Error);
+        return true;
+      },
+    );
+  });
 });
 
 // ============================================================================
@@ -1060,18 +1028,18 @@ describe("AC23: Tagged Errors", () => {
 // ============================================================================
 
 describe("AC24: Runtime Management", () => {
-	it("should create fresh runtime per mount", async () => {
-		createTestDOM();
-		const root1 = createRoot();
-		const root2 = document.createElement("div");
+  it("should create fresh runtime per mount", async () => {
+    createTestDOM();
+    const root1 = createRoot();
+    const root2 = document.createElement("div");
 
-		// Each mount should work independently
-		await runMount(<div>First</div>, root1);
-		await runMount(<div>Second</div>, root2);
+    // Each mount should work independently
+    await runMount(<div>First</div>, root1);
+    await runMount(<div>Second</div>, root2);
 
-		assert.equal(root1.textContent, "First");
-		assert.equal(root2.textContent, "Second");
-	});
+    assert.equal(root1.textContent, "First");
+    assert.equal(root2.textContent, "Second");
+  });
 });
 
 // ============================================================================
@@ -1079,19 +1047,19 @@ describe("AC24: Runtime Management", () => {
 // ============================================================================
 
 describe("AC25: Scope Management", () => {
-	it("should use Scope for stream subscriptions", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should use Scope for stream subscriptions", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const stream = Stream.make("test");
+    const stream = Stream.make("test");
 
-		// If Scope is properly used, this should not throw
-		await runMount(<div>{stream}</div>, root);
+    // If Scope is properly used, this should not throw
+    await runMount(<div>{stream}</div>, root);
 
-		await waitForStream();
+    await waitForStream();
 
-		assert.ok(root.textContent?.includes("test"));
-	});
+    assert.ok(root.textContent?.includes("test"));
+  });
 });
 
 // ============================================================================
@@ -1099,227 +1067,200 @@ describe("AC25: Scope Management", () => {
 // ============================================================================
 
 describe("AC26: Cleanup and Unmount", () => {
-	it("should stop all stream emissions after unmount", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let emissionCount = 0;
+  it("should stop all stream emissions after unmount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let emissionCount = 0;
 
-		// Create a stream that emits periodically
-		// Use tap to track actual emissions to subscribers
-		const stream = Stream.make("initial").pipe(
-			Stream.concat(
-				Stream.make("delayed").pipe(
-					Stream.schedule(Schedule.spaced("200 millis")),
-				),
-			),
-			Stream.tap(() =>
-				Effect.sync(() => {
-					emissionCount++;
-				}),
-			),
-		);
+    // Create a stream that emits periodically
+    // Use tap to track actual emissions to subscribers
+    const stream = Stream.make("initial").pipe(
+      Stream.concat(Stream.make("delayed").pipe(Stream.schedule(Schedule.spaced("200 millis")))),
+      Stream.tap(() =>
+        Effect.sync(() => {
+          emissionCount++;
+        }),
+      ),
+    );
 
-		const handle = await runMount(<div>{stream}</div>, root);
+    const handle = await runMount(<div>{stream}</div>, root);
 
-		// Wait for initial emission
-		await waitForStream();
-		assert.equal(root.textContent, "initial");
-		const countAfterInitial = emissionCount;
-		assert.ok(countAfterInitial > 0, "Should have initial emission");
+    // Wait for initial emission
+    await waitForStream();
+    assert.equal(root.textContent, "initial");
+    const countAfterInitial = emissionCount;
+    assert.ok(countAfterInitial > 0, "Should have initial emission");
 
-		// Unmount before delayed emission
-		await Effect.runPromise(handle.unmount());
+    // Unmount before delayed emission
+    await Effect.runPromise(handle.unmount());
 
-		// Wait for what would be the delayed emission
-		await waitFor(300);
+    // Wait for what would be the delayed emission
+    await waitFor(300);
 
-		// The delayed emission should NOT have occurred
-		assert.equal(
-			emissionCount,
-			countAfterInitial,
-			"Stream should not emit after unmount",
-		);
-		assert.equal(
-			root.textContent,
-			"initial",
-			"Content should not change after unmount",
-		);
-	});
+    // The delayed emission should NOT have occurred
+    assert.equal(emissionCount, countAfterInitial, "Stream should not emit after unmount");
+    assert.equal(root.textContent, "initial", "Content should not change after unmount");
+  });
 
-	it("should cancel all running stream subscriptions on unmount", async () => {
-		createTestDOM();
-		const root = createRoot();
-		let streamEmissionCount = 0;
-		let attributeEmissionCount = 0;
-		let styleEmissionCount = 0;
+  it("should cancel all running stream subscriptions on unmount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    let streamEmissionCount = 0;
+    let attributeEmissionCount = 0;
+    let styleEmissionCount = 0;
 
-		// Create streams that track emissions
-		const childStream = Stream.make("child1", "child2").pipe(
-			Stream.tap(() =>
-				Effect.sync(() => {
-					streamEmissionCount++;
-				}),
-			),
-		);
+    // Create streams that track emissions
+    const childStream = Stream.make("child1", "child2").pipe(
+      Stream.tap(() =>
+        Effect.sync(() => {
+          streamEmissionCount++;
+        }),
+      ),
+    );
 
-		const attrStream = Stream.make("attr1", "attr2").pipe(
-			Stream.tap(() =>
-				Effect.sync(() => {
-					attributeEmissionCount++;
-				}),
-			),
-		);
+    const attrStream = Stream.make("attr1", "attr2").pipe(
+      Stream.tap(() =>
+        Effect.sync(() => {
+          attributeEmissionCount++;
+        }),
+      ),
+    );
 
-		const styleStream = Stream.make({ color: "red" }, { color: "blue" }).pipe(
-			Stream.tap(() =>
-				Effect.sync(() => {
-					styleEmissionCount++;
-				}),
-			),
-		);
+    const styleStream = Stream.make({ color: "red" }, { color: "blue" }).pipe(
+      Stream.tap(() =>
+        Effect.sync(() => {
+          styleEmissionCount++;
+        }),
+      ),
+    );
 
-		const handle = await runMount(
-			<div data-test={attrStream} style={styleStream}>
-				{childStream}
-			</div>,
-			root,
-		);
+    const handle = await runMount(
+      <div data-test={attrStream} style={styleStream}>
+        {childStream}
+      </div>,
+      root,
+    );
 
-		// Give streams time to emit initial values
-		await waitForStream();
+    // Give streams time to emit initial values
+    await waitForStream();
 
-		// Record initial counts
-		const initialStreamCount = streamEmissionCount;
-		const initialAttrCount = attributeEmissionCount;
-		const initialStyleCount = styleEmissionCount;
+    // Record initial counts
+    const initialStreamCount = streamEmissionCount;
+    const initialAttrCount = attributeEmissionCount;
+    const initialStyleCount = styleEmissionCount;
 
-		// Unmount
-		await Effect.runPromise(handle.unmount());
+    // Unmount
+    await Effect.runPromise(handle.unmount());
 
-		// Try to trigger more emissions (shouldn't work)
-		await waitFor(200);
+    // Try to trigger more emissions (shouldn't work)
+    await waitFor(200);
 
-		// Counts should not have increased after unmount
-		assert.equal(
-			streamEmissionCount,
-			initialStreamCount,
-			"Child stream should stop",
-		);
-		assert.equal(
-			attributeEmissionCount,
-			initialAttrCount,
-			"Attribute stream should stop",
-		);
-		assert.equal(
-			styleEmissionCount,
-			initialStyleCount,
-			"Style stream should stop",
-		);
-	});
+    // Counts should not have increased after unmount
+    assert.equal(streamEmissionCount, initialStreamCount, "Child stream should stop");
+    assert.equal(attributeEmissionCount, initialAttrCount, "Attribute stream should stop");
+    assert.equal(styleEmissionCount, initialStyleCount, "Style stream should stop");
+  });
 
-	it("should properly dispose multiple nested runtimes", async () => {
-		createTestDOM();
-		const root1 = createRoot();
-		const root2 = document.createElement("div");
-		document.body.appendChild(root2);
+  it("should properly dispose multiple nested runtimes", async () => {
+    createTestDOM();
+    const root1 = createRoot();
+    const root2 = document.createElement("div");
+    document.body.appendChild(root2);
 
-		// Mount two separate apps with streams
-		const handle1 = await runMount(<div>{Stream.make("app1")}</div>, root1);
+    // Mount two separate apps with streams
+    const handle1 = await runMount(<div>{Stream.make("app1")}</div>, root1);
 
-		const handle2 = await runMount(<div>{Stream.make("app2")}</div>, root2);
+    const handle2 = await runMount(<div>{Stream.make("app2")}</div>, root2);
 
-		await waitForStream();
-		assert.equal(root1.textContent, "app1");
-		assert.equal(root2.textContent, "app2");
+    await waitForStream();
+    assert.equal(root1.textContent, "app1");
+    assert.equal(root2.textContent, "app2");
 
-		// Unmount first app
-		await Effect.runPromise(handle1.unmount());
+    // Unmount first app
+    await Effect.runPromise(handle1.unmount());
 
-		// Second app should still work
-		assert.equal(root2.textContent, "app2");
+    // Second app should still work
+    assert.equal(root2.textContent, "app2");
 
-		// Unmount second app
-		await Effect.runPromise(handle2.unmount());
+    // Unmount second app
+    await Effect.runPromise(handle2.unmount());
 
-		// Both should be unmounted now
-		await waitFor(100);
-		assert.ok(true, "Both apps unmounted successfully");
-	});
+    // Both should be unmounted now
+    await waitFor(100);
+    assert.ok(true, "Both apps unmounted successfully");
+  });
 
-	it("should handle rapid mount/unmount cycles", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle rapid mount/unmount cycles", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Perform multiple rapid mount/unmount cycles
-		for (let i = 0; i < 5; i++) {
-			const handle = await runMount(
-				<div>{Stream.make(`cycle-${i}`)}</div>,
-				root,
-			);
+    // Perform multiple rapid mount/unmount cycles
+    for (let i = 0; i < 5; i++) {
+      const handle = await runMount(<div>{Stream.make(`cycle-${i}`)}</div>, root);
 
-			await waitFor(10);
-			await Effect.runPromise(handle.unmount());
-		}
+      await waitFor(10);
+      await Effect.runPromise(handle.unmount());
+    }
 
-		// Final mount
-		const finalHandle = await runMount(<div>{Stream.make("final")}</div>, root);
+    // Final mount
+    const finalHandle = await runMount(<div>{Stream.make("final")}</div>, root);
 
-		await waitForStream();
-		assert.equal(root.textContent, "final");
+    await waitForStream();
+    assert.equal(root.textContent, "final");
 
-		// Clean up
-		await Effect.runPromise(finalHandle.unmount());
-	});
+    // Clean up
+    await Effect.runPromise(finalHandle.unmount());
+  });
 
-	it("should make unmount idempotent", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should make unmount idempotent", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const handle = await runMount(<div>test</div>, root);
+    const handle = await runMount(<div>test</div>, root);
 
-		// Unmount multiple times - should not error
-		await Effect.runPromise(handle.unmount());
-		await Effect.runPromise(handle.unmount());
-		await Effect.runPromise(handle.unmount());
+    // Unmount multiple times - should not error
+    await Effect.runPromise(handle.unmount());
+    await Effect.runPromise(handle.unmount());
+    await Effect.runPromise(handle.unmount());
 
-		assert.ok(true, "Multiple unmounts did not cause errors");
-	});
+    assert.ok(true, "Multiple unmounts did not cause errors");
+  });
 
-	it("should cancel long-running async streams on unmount", async () => {
-		createTestDOM();
-		const root = createRoot();
-		const emissions: number[] = [];
+  it("should cancel long-running async streams on unmount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    const emissions: number[] = [];
 
-		// Create a stream that emits numbers over time
-		const numberStream = Stream.iterate(0, (n) => n + 1).pipe(
-			Stream.tap((n) => Effect.sync(() => emissions.push(n))),
-			Stream.schedule(Schedule.spaced("50 millis")),
-			Stream.take(10), // Would emit 10 items if not cancelled
-			Stream.map((n) => String(n)), // Convert to string for rendering
-		);
+    // Create a stream that emits numbers over time
+    const numberStream = Stream.iterate(0, (n) => n + 1).pipe(
+      Stream.tap((n) => Effect.sync(() => emissions.push(n))),
+      Stream.schedule(Schedule.spaced("50 millis")),
+      Stream.take(10), // Would emit 10 items if not cancelled
+      Stream.map((n) => String(n)), // Convert to string for rendering
+    );
 
-		const handle = await runMount(<div>{numberStream}</div>, root);
+    const handle = await runMount(<div>{numberStream}</div>, root);
 
-		// Wait for a couple emissions
-		await waitFor(120);
+    // Wait for a couple emissions
+    await waitFor(120);
 
-		const emissionsBeforeUnmount = emissions.length;
-		assert.ok(emissionsBeforeUnmount > 0, "Should have some emissions");
-		assert.ok(emissionsBeforeUnmount < 10, "Should not have all emissions yet");
+    const emissionsBeforeUnmount = emissions.length;
+    assert.ok(emissionsBeforeUnmount > 0, "Should have some emissions");
+    assert.ok(emissionsBeforeUnmount < 10, "Should not have all emissions yet");
 
-		// Unmount to cancel the stream
-		await Effect.runPromise(handle.unmount());
+    // Unmount to cancel the stream
+    await Effect.runPromise(handle.unmount());
 
-		// Wait for what would be more emissions
-		await waitFor(500);
+    // Wait for what would be more emissions
+    await waitFor(500);
 
-		// No new emissions should have occurred
-		assert.equal(
-			emissions.length,
-			emissionsBeforeUnmount,
-			"Stream should stop emitting after unmount",
-		);
-	});
+    // No new emissions should have occurred
+    assert.equal(
+      emissions.length,
+      emissionsBeforeUnmount,
+      "Stream should stop emitting after unmount",
+    );
+  });
 });
 
 // ============================================================================
@@ -1327,192 +1268,175 @@ describe("AC26: Cleanup and Unmount", () => {
 // ============================================================================
 
 describe("Stream-Based Fallback Pattern", () => {
-	it("should render fallback immediately then update with actual content", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should render fallback immediately then update with actual content", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Component using Stream.concat for fallback pattern
-		// Use 300ms delay to ensure we can check fallback before it resolves
-		function AsyncComponent() {
-			return Stream.concat(
-				Stream.make("Loading..."),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<string>((resolve) =>
-								setTimeout(() => resolve("Actual Content"), 300),
-							),
-					),
-				),
-			);
-		}
+    // Component using Stream.concat for fallback pattern
+    // Use 300ms delay to ensure we can check fallback before it resolves
+    function AsyncComponent() {
+      return Stream.concat(
+        Stream.make("Loading..."),
+        Stream.fromEffect(
+          Effect.promise(
+            () =>
+              new Promise<string>((resolve) => setTimeout(() => resolve("Actual Content"), 300)),
+          ),
+        ),
+      );
+    }
 
-		await runMount(<AsyncComponent />, root);
+    await runMount(<AsyncComponent />, root);
 
-		// Fallback should appear immediately (wait just 50ms for stream setup)
-		await waitFor(50);
-		assert.equal(root.textContent, "Loading...");
+    // Fallback should appear immediately (wait just 50ms for stream setup)
+    await waitFor(50);
+    assert.equal(root.textContent, "Loading...");
 
-		// After delay, actual content should replace fallback
-		await waitFor(350);
-		assert.equal(root.textContent, "Actual Content");
-	});
+    // After delay, actual content should replace fallback
+    await waitFor(350);
+    assert.equal(root.textContent, "Actual Content");
+  });
 
-	it("should handle JSX elements in fallback pattern", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle JSX elements in fallback pattern", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function AsyncComponent() {
-			return Stream.concat(
-				Stream.make(<span class="loading">?</span>),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<JSX.Element>((resolve) =>
-								setTimeout(
-									() => resolve(<span class="loaded">Done</span>),
-									300,
-								),
-							),
-					),
-				),
-			);
-		}
+    function AsyncComponent() {
+      return Stream.concat(
+        Stream.make(<span class="loading">?</span>),
+        Stream.fromEffect(
+          Effect.promise(
+            () =>
+              new Promise<JSX.Element>((resolve) =>
+                setTimeout(() => resolve(<span class="loaded">Done</span>), 300),
+              ),
+          ),
+        ),
+      );
+    }
 
-		await runMount(
-			<div>
-				<AsyncComponent />
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <AsyncComponent />
+      </div>,
+      root,
+    );
 
-		await waitFor(50);
-		const loadingSpan = root.querySelector(".loading");
-		assert.ok(loadingSpan, "Loading span should be present initially");
+    await waitFor(50);
+    const loadingSpan = root.querySelector(".loading");
+    assert.ok(loadingSpan, "Loading span should be present initially");
 
-		await waitFor(350);
-		const loadedSpan = root.querySelector(".loaded");
-		assert.ok(loadedSpan, "Loaded span should replace loading span");
-		assert.ok(
-			!root.querySelector(".loading"),
-			"Loading span should be removed",
-		);
-	});
+    await waitFor(350);
+    const loadedSpan = root.querySelector(".loaded");
+    assert.ok(loadedSpan, "Loaded span should replace loading span");
+    assert.ok(!root.querySelector(".loading"), "Loading span should be removed");
+  });
 
-	it("should work with multiple fallback components independently", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should work with multiple fallback components independently", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function AsyncA() {
-			return Stream.concat(
-				Stream.make("A-loading"),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<string>((resolve) =>
-								setTimeout(() => resolve("A-done"), 150),
-							),
-					),
-				),
-			);
-		}
+    function AsyncA() {
+      return Stream.concat(
+        Stream.make("A-loading"),
+        Stream.fromEffect(
+          Effect.promise(
+            () => new Promise<string>((resolve) => setTimeout(() => resolve("A-done"), 150)),
+          ),
+        ),
+      );
+    }
 
-		function AsyncB() {
-			return Stream.concat(
-				Stream.make("B-loading"),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<string>((resolve) =>
-								setTimeout(() => resolve("B-done"), 400),
-							),
-					),
-				),
-			);
-		}
+    function AsyncB() {
+      return Stream.concat(
+        Stream.make("B-loading"),
+        Stream.fromEffect(
+          Effect.promise(
+            () => new Promise<string>((resolve) => setTimeout(() => resolve("B-done"), 400)),
+          ),
+        ),
+      );
+    }
 
-		await runMount(
-			<div>
-				<AsyncA />-<AsyncB />
-			</div>,
-			root,
-		);
+    await runMount(
+      <div>
+        <AsyncA />-<AsyncB />
+      </div>,
+      root,
+    );
 
-		// Both should show loading initially
-		await waitFor(50);
-		assert.ok(root.textContent?.includes("A-loading"));
-		assert.ok(root.textContent?.includes("B-loading"));
+    // Both should show loading initially
+    await waitFor(50);
+    assert.ok(root.textContent?.includes("A-loading"));
+    assert.ok(root.textContent?.includes("B-loading"));
 
-		// A finishes first
-		await waitFor(200);
-		assert.ok(root.textContent?.includes("A-done"));
-		assert.ok(root.textContent?.includes("B-loading"));
+    // A finishes first
+    await waitFor(200);
+    assert.ok(root.textContent?.includes("A-done"));
+    assert.ok(root.textContent?.includes("B-loading"));
 
-		// B finishes later
-		await waitFor(300);
-		assert.ok(root.textContent?.includes("A-done"));
-		assert.ok(root.textContent?.includes("B-done"));
-	});
+    // B finishes later
+    await waitFor(300);
+    assert.ok(root.textContent?.includes("A-done"));
+    assert.ok(root.textContent?.includes("B-done"));
+  });
 
-	it("should not inherit fallback from parent components", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should not inherit fallback from parent components", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		function Child() {
-			return Stream.concat(
-				Stream.make(<span class="child-loading">Child Loading...</span>),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<JSX.Element>((resolve) =>
-								setTimeout(
-									() => resolve(<span class="child-loaded">Child Done</span>),
-									200,
-								),
-							),
-					),
-				),
-			);
-		}
+    function Child() {
+      return Stream.concat(
+        Stream.make(<span class="child-loading">Child Loading...</span>),
+        Stream.fromEffect(
+          Effect.promise(
+            () =>
+              new Promise<JSX.Element>((resolve) =>
+                setTimeout(() => resolve(<span class="child-loaded">Child Done</span>), 200),
+              ),
+          ),
+        ),
+      );
+    }
 
-		function Parent() {
-			return Stream.concat(
-				Stream.make(<div class="parent-loading">Parent Loading...</div>),
-				Stream.fromEffect(
-					Effect.promise(
-						() =>
-							new Promise<JSX.Element>((resolve) =>
-								setTimeout(
-									() =>
-										resolve(
-											<div class="parent-loaded">
-												<Child />
-											</div>,
-										),
-									100,
-								),
-							),
-					),
-				),
-			);
-		}
+    function Parent() {
+      return Stream.concat(
+        Stream.make(<div class="parent-loading">Parent Loading...</div>),
+        Stream.fromEffect(
+          Effect.promise(
+            () =>
+              new Promise<JSX.Element>((resolve) =>
+                setTimeout(
+                  () =>
+                    resolve(
+                      <div class="parent-loaded">
+                        <Child />
+                      </div>,
+                    ),
+                  100,
+                ),
+              ),
+          ),
+        ),
+      );
+    }
 
-		await runMount(<Parent />, root);
+    await runMount(<Parent />, root);
 
-		// Parent loading appears first
-		await waitFor(50);
-		assert.ok(root.querySelector(".parent-loading"));
+    // Parent loading appears first
+    await waitFor(50);
+    assert.ok(root.querySelector(".parent-loading"));
 
-		// Parent loaded, child loading should appear
-		await waitFor(150);
-		assert.ok(root.querySelector(".child-loading"));
-		assert.ok(!root.querySelector(".parent-loading"));
+    // Parent loaded, child loading should appear
+    await waitFor(150);
+    assert.ok(root.querySelector(".child-loading"));
+    assert.ok(!root.querySelector(".parent-loading"));
 
-		// Child loaded
-		await waitFor(250);
-		assert.ok(root.querySelector(".child-loaded"));
-		assert.ok(!root.querySelector(".child-loading"));
-	});
+    // Child loaded
+    await waitFor(250);
+    assert.ok(root.querySelector(".child-loaded"));
+    assert.ok(!root.querySelector(".child-loading"));
+  });
 });
 
 // ============================================================================
@@ -1520,273 +1444,234 @@ describe("Stream-Based Fallback Pattern", () => {
 // ============================================================================
 
 describe("Ref Handling", () => {
-	it("should set ref to Option.some(element) during element creation", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should set ref to Option.some(element) during element creation", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
 
-		await runMount(<div ref={ref}>test</div>, root);
+    await runMount(<div ref={ref}>test</div>, root);
 
-		const refValue = await Effect.runPromise(Ref.get(ref));
-		assert.ok(Option.isSome(refValue), "Ref should contain Option.some");
-		const element = Option.getOrThrow(refValue);
-		assert.equal(element.tagName, "DIV");
-		assert.equal(element.textContent, "test");
-	});
+    const refValue = await Effect.runPromise(Ref.get(ref));
+    assert.ok(Option.isSome(refValue), "Ref should contain Option.some");
+    const element = Option.getOrThrow(refValue);
+    assert.equal(element.tagName, "DIV");
+    assert.equal(element.textContent, "test");
+  });
 
-	it("should work with SubscriptionRef", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should work with SubscriptionRef", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
-		await runMount(
-			<span ref={ref} class="test-span">
-				content
-			</span>,
-			root,
-		);
+    await runMount(
+      <span ref={ref} class="test-span">
+        content
+      </span>,
+      root,
+    );
 
-		const refValue = await Effect.runPromise(Ref.get(ref));
-		assert.ok(
-			Option.isSome(refValue),
-			"SubscriptionRef should contain Option.some",
-		);
-		const element = Option.getOrThrow(refValue);
-		assert.equal(element.tagName, "SPAN");
-		assert.equal(element.className, "test-span");
-	});
+    const refValue = await Effect.runPromise(Ref.get(ref));
+    assert.ok(Option.isSome(refValue), "SubscriptionRef should contain Option.some");
+    const element = Option.getOrThrow(refValue);
+    assert.equal(element.tagName, "SPAN");
+    assert.equal(element.className, "test-span");
+  });
 
-	it("should emit on SubscriptionRef.changes after mount", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should emit on SubscriptionRef.changes after mount", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// Create the ref and track if we received an element via the stream
-		const captured: { element: HTMLInputElement | null } = { element: null };
+    // Create the ref and track if we received an element via the stream
+    const captured: { element: HTMLInputElement | null } = { element: null };
 
-		await Effect.runPromise(
-			Effect.gen(function* () {
-				const ref = yield* SubscriptionRef.make<
-					Option.Option<HTMLInputElement>
-				>(Option.none());
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
-				// Subscribe to changes and capture the first Option.some emission
-				yield* Effect.fork(
-					Stream.runForEach(Stream.filter(ref.changes, Option.isSome), (opt) =>
-						Effect.sync(() => {
-							if (captured.element === null) {
-								captured.element = Option.getOrThrow(opt);
-							}
-						}),
-					),
-				);
+        // Subscribe to changes and capture the first Option.some emission
+        yield* Effect.fork(
+          Stream.runForEach(Stream.filter(ref.changes, Option.isSome), (opt) =>
+            Effect.sync(() => {
+              if (captured.element === null) {
+                captured.element = Option.getOrThrow(opt);
+              }
+            }),
+          ),
+        );
 
-				// Give the subscription time to start
-				yield* Effect.sleep("50 millis");
+        // Give the subscription time to start
+        yield* Effect.sleep("50 millis");
 
-				// Mount will set the ref
-				return <input ref={ref} type="text" />;
-			}).pipe(
-				Effect.flatMap((jsx) =>
-					Effect.promise(async () => {
-						await runMount(jsx, root);
-					}),
-				),
-			),
-		);
+        // Mount will set the ref
+        return <input ref={ref} type="text" />;
+      }).pipe(
+        Effect.flatMap((jsx) =>
+          Effect.promise(async () => {
+            await runMount(jsx, root);
+          }),
+        ),
+      ),
+    );
 
-		// Wait for emission to be processed
-		await waitForStream();
+    // Wait for emission to be processed
+    await waitForStream();
 
-		// Verify we received the element through the subscription
-		const receivedElement = captured.element;
-		assert.ok(
-			receivedElement !== null,
-			"Should have received element via stream",
-		);
-		assert.equal(receivedElement.tagName, "INPUT");
-		assert.equal(receivedElement.type, "text");
-	});
+    // Verify we received the element through the subscription
+    const receivedElement = captured.element;
+    assert.ok(receivedElement !== null, "Should have received element via stream");
+    assert.equal(receivedElement.tagName, "INPUT");
+    assert.equal(receivedElement.type, "text");
+  });
 
-	it("should work with HTMLElement for div", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should work with HTMLElement for div", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
 
-		await runMount(<div ref={ref} id="my-div" />, root);
+    await runMount(<div ref={ref} id="my-div" />, root);
 
-		const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
-		assert.equal(element.tagName, "DIV");
-		assert.equal(element.id, "my-div");
-	});
+    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    assert.equal(element.tagName, "DIV");
+    assert.equal(element.id, "my-div");
+  });
 
-	it("should work with HTMLInputElement", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should work with HTMLInputElement", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLInputElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLInputElement>>(Option.none()));
 
-		await runMount(
-			<input ref={ref} type="email" value="test@example.com" />,
-			root,
-		);
+    await runMount(<input ref={ref} type="email" value="test@example.com" />, root);
 
-		const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
-		assert.equal(element.tagName, "INPUT");
-		assert.equal(element.type, "email");
-		// Input value is a property, should be set
-		assert.equal(element.value, "test@example.com");
-	});
+    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    assert.equal(element.tagName, "INPUT");
+    assert.equal(element.type, "email");
+    // Input value is a property, should be set
+    assert.equal(element.value, "test@example.com");
+  });
 
-	it("should work with HTMLButtonElement", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should work with HTMLButtonElement", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLButtonElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLButtonElement>>(Option.none()));
 
-		await runMount(
-			<button ref={ref} type="submit" disabled>
-				Click
-			</button>,
-			root,
-		);
+    await runMount(
+      <button ref={ref} type="submit" disabled>
+        Click
+      </button>,
+      root,
+    );
 
-		const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
-		assert.equal(element.tagName, "BUTTON");
-		assert.equal(element.type, "submit");
-		assert.equal(element.disabled, true);
-	});
+    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    assert.equal(element.tagName, "BUTTON");
+    assert.equal(element.type, "submit");
+    assert.equal(element.disabled, true);
+  });
 
-	it("should process other props normally alongside ref", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should process other props normally alongside ref", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
 
-		await runMount(
-			<div
-				ref={ref}
-				id="test-id"
-				class="test-class"
-				data-custom="custom-value"
-				style={{ color: "red" }}
-			>
-				content
-			</div>,
-			root,
-		);
+    await runMount(
+      <div
+        ref={ref}
+        id="test-id"
+        class="test-class"
+        data-custom="custom-value"
+        style={{ color: "red" }}
+      >
+        content
+      </div>,
+      root,
+    );
 
-		const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
-		assert.equal(element.id, "test-id");
-		assert.equal(element.className, "test-class");
-		assert.equal(element.getAttribute("data-custom"), "custom-value");
-		assert.equal(element.style.color, "red");
-		assert.equal(element.textContent, "content");
-	});
+    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    assert.equal(element.id, "test-id");
+    assert.equal(element.className, "test-class");
+    assert.equal(element.getAttribute("data-custom"), "custom-value");
+    assert.equal(element.style.color, "red");
+    assert.equal(element.textContent, "content");
+  });
 
-	it("should not treat non-Ref objects as refs", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should not treat non-Ref objects as refs", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		// An object that looks similar but is not a Ref
-		const notARef = { current: null };
+    // An object that looks similar but is not a Ref
+    const notARef = { current: null };
 
-		await runMount(
-			// @ts-expect-error - testing invalid ref type
-			<div ref={notARef} data-test="value">
-				test
-			</div>,
-			root,
-		);
+    await runMount(
+      // @ts-expect-error - testing invalid ref type
+      <div ref={notARef} data-test="value">
+        test
+      </div>,
+      root,
+    );
 
-		const div = root.children[0] as HTMLElement;
-		// The notARef object should have been ignored or treated as attribute
-		assert.equal(div.getAttribute("data-test"), "value");
-		assert.equal(div.textContent, "test");
-	});
+    const div = root.children[0] as HTMLElement;
+    // The notARef object should have been ignored or treated as attribute
+    assert.equal(div.getAttribute("data-test"), "value");
+    assert.equal(div.textContent, "test");
+  });
 
-	it("should handle multiple refs on different elements independently", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should handle multiple refs on different elements independently", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const divRef = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
-		const spanRef = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
-		const inputRef = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLInputElement>>(Option.none()),
-		);
+    const divRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const spanRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const inputRef = await Effect.runPromise(
+      Ref.make<Option.Option<HTMLInputElement>>(Option.none()),
+    );
 
-		await runMount(
-			<div ref={divRef}>
-				<span ref={spanRef}>text</span>
-				<input ref={inputRef} type="text" />
-			</div>,
-			root,
-		);
+    await runMount(
+      <div ref={divRef}>
+        <span ref={spanRef}>text</span>
+        <input ref={inputRef} type="text" />
+      </div>,
+      root,
+    );
 
-		const divElement = Option.getOrThrow(
-			await Effect.runPromise(Ref.get(divRef)),
-		);
-		const spanElement = Option.getOrThrow(
-			await Effect.runPromise(Ref.get(spanRef)),
-		);
-		const inputElement = Option.getOrThrow(
-			await Effect.runPromise(Ref.get(inputRef)),
-		);
+    const divElement = Option.getOrThrow(await Effect.runPromise(Ref.get(divRef)));
+    const spanElement = Option.getOrThrow(await Effect.runPromise(Ref.get(spanRef)));
+    const inputElement = Option.getOrThrow(await Effect.runPromise(Ref.get(inputRef)));
 
-		assert.equal(divElement.tagName, "DIV");
-		assert.equal(spanElement.tagName, "SPAN");
-		assert.equal(inputElement.tagName, "INPUT");
+    assert.equal(divElement.tagName, "DIV");
+    assert.equal(spanElement.tagName, "SPAN");
+    assert.equal(inputElement.tagName, "INPUT");
 
-		// Verify they're all different elements
-		assert.notEqual(divElement, spanElement);
-		assert.notEqual(spanElement, inputElement);
-		assert.notEqual(divElement, inputElement);
+    // Verify they're all different elements
+    assert.notEqual(divElement, spanElement);
+    assert.notEqual(spanElement, inputElement);
+    assert.notEqual(divElement, inputElement);
 
-		// Verify parent-child relationships
-		assert.equal(spanElement.parentElement, divElement);
-		assert.equal(inputElement.parentElement, divElement);
-	});
+    // Verify parent-child relationships
+    assert.equal(spanElement.parentElement, divElement);
+    assert.equal(inputElement.parentElement, divElement);
+  });
 
-	it("should have Option.none as initial value before mount", async () => {
-		createTestDOM();
-		const root = createRoot();
+  it("should have Option.none as initial value before mount", async () => {
+    createTestDOM();
+    const root = createRoot();
 
-		const ref = await Effect.runPromise(
-			Ref.make<Option.Option<HTMLElement>>(Option.none()),
-		);
+    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
 
-		// Check value before mount
-		const valueBefore = await Effect.runPromise(Ref.get(ref));
-		assert.ok(
-			Option.isNone(valueBefore),
-			"Ref should be Option.none before mount",
-		);
+    // Check value before mount
+    const valueBefore = await Effect.runPromise(Ref.get(ref));
+    assert.ok(Option.isNone(valueBefore), "Ref should be Option.none before mount");
 
-		await runMount(<div ref={ref}>test</div>, root);
+    await runMount(<div ref={ref}>test</div>, root);
 
-		// Check value after mount
-		const valueAfter = await Effect.runPromise(Ref.get(ref));
-		assert.ok(
-			Option.isSome(valueAfter),
-			"Ref should be Option.some after mount",
-		);
-	});
+    // Check value after mount
+    const valueAfter = await Effect.runPromise(Ref.get(ref));
+    assert.ok(Option.isSome(valueAfter), "Ref should be Option.some after mount");
+  });
 });
