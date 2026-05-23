@@ -1,7 +1,7 @@
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Effect, Option, Stream } from "effect";
-import { streamEndText, streamStartText } from "../markers";
+import { streamEndText, streamStartText } from "../client/markers";
 import {
   escapeHtml,
   isStream,

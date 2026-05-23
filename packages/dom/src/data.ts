@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import { Context, Data, ManagedRuntime, Scope } from "effect";
 
 // ============================================================================
 // Error Types
@@ -38,3 +38,16 @@ export class HydrationMismatchError extends Data.TaggedError("HydrationMismatchE
   readonly actual: string;
   readonly path: string;
 }> {}
+
+/**
+ * Service for managing rendering context including runtime, scope, and stream IDs
+ */
+
+export class RenderContext extends Context.Tag("RenderContext")<
+  RenderContext,
+  {
+    readonly runtime: ManagedRuntime.ManagedRuntime<never, never>;
+    readonly scope: Scope.Scope;
+    readonly streamIdCounter: { current: number };
+  }
+>() {}

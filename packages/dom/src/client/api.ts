@@ -1,8 +1,8 @@
 import { Effect, Exit, Layer, ManagedRuntime, Scope } from "effect";
-import { renderNode } from "./render-core";
+import { renderNode } from "~/client/render-core";
 import type { JSXNode } from "@effect-ui/core/types";
-import type { UnsupportedNodeTypeError, RenderError, StreamSubscriptionError } from "./data";
-import { RenderContext } from "./render-context";
+import type { UnsupportedNodeTypeError, RenderError, StreamSubscriptionError } from "~/data";
+import { RenderContext } from "~/data";
 
 /**
  * Mounts a JSX tree to a DOM element with full reactive support.

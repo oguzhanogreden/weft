@@ -7,12 +7,12 @@ import {
   UnsupportedNodeTypeError,
   type RenderError,
   type StreamSubscriptionError,
-} from "./data";
+} from "~/data";
 import { setElementProps } from "./dom";
 import { parseStreamMarker } from "./markers";
-import { RenderContext } from "./render-context";
+import { RenderContext } from "~/data";
 import { updateStreamChild } from "./render-core";
-import { isStream, normalizeToStream } from "./utilities";
+import { isStream, normalizeToStream } from "~/utilities";
 
 /**
  * Continues, on the client, the DOM produced on the server by

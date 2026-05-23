@@ -2,9 +2,9 @@ import * as assert from "node:assert/strict";
 import { Cause, Effect, Exit, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
-import { HydrationMismatchError } from "./data";
+import { HydrationMismatchError } from "~/data";
 import { hydrate } from "./hydrate";
-import { renderToString, renderToStringHydratable } from "./server";
+import { renderToString, renderToStringHydratable } from "~/server";
 import type { JSXNode } from "@effect-ui/core/types";
 
 // ============================================================================

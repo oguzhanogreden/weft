@@ -1,5 +1,5 @@
 import { Effect, Stream } from "effect";
-import { RenderContext } from "./render-context";
+import { RenderContext } from "./data";
 
 /**
  * Generates next unique stream ID

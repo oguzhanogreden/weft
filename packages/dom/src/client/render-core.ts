@@ -2,10 +2,10 @@ import { Effect, Stream } from "effect";
 import { setElementProps } from "./dom";
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
 import type { JSXNode } from "@effect-ui/core/types";
-import { UnsupportedNodeTypeError, type StreamSubscriptionError, type RenderError } from "./data";
+import { UnsupportedNodeTypeError, type StreamSubscriptionError, type RenderError } from "../data";
 import { streamStartText, streamEndText } from "./markers";
-import { RenderContext } from "./render-context";
-import { isStream, normalizeToStream, nextStreamId } from "./utilities";
+import { RenderContext } from "../data";
+import { isStream, normalizeToStream, nextStreamId } from "../utilities";
 
 /**
  * Main rendering function that converts JSXNode to DOM nodes.

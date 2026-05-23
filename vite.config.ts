@@ -22,7 +22,9 @@ export default defineConfig({
       },
     },
   },
-
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     include: ["**/*.test.{ts,tsx}"],
   },
