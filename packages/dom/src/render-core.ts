@@ -3,6 +3,7 @@ import { setElementProps } from "./dom";
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
 import type { JSXNode } from "@effect-ui/core/types";
 import { InvalidElementTypeError, type StreamSubscriptionError, type RenderError } from "./data";
+import { streamStartText, streamEndText } from "./markers";
 import { RenderContext } from "./render-context";
 import { isStream, normalizeToStream, nextStreamId } from "./utilities";
 
@@ -295,15 +296,18 @@ function handleStreamChild(
  * Creates start and end comment markers for stream child
  */
 function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
-  const startMarker = document.createComment(` stream-start-${streamId} `);
-  const endMarker = document.createComment(` stream-end-${streamId} `);
+  const startMarker = document.createComment(streamStartText(streamId));
+  const endMarker = document.createComment(streamEndText(streamId));
   return [startMarker, endMarker];
 }
 
 /**
- * Updates stream child content between markers
+ * Updates stream child content between markers. Removes the nodes currently
+ * between the markers, renders `newNode`, and inserts the result before the end
+ * marker. Exported for reuse by the hydrator, which drives the same update flow
+ * against markers adopted from server HTML rather than freshly created ones.
  */
-function updateStreamChild(
+export function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
   newNode: JSXNode,
@@ -336,9 +340,10 @@ function updateStreamChild(
 }
 
 /**
- * Removes all nodes between start and end markers
+ * Removes all nodes between start and end markers. Exported for reuse by the
+ * hydrator.
  */
-function removeNodesBetweenMarkers(startMarker: Comment, endMarker: Comment): void {
+export function removeNodesBetweenMarkers(startMarker: Comment, endMarker: Comment): void {
   let current = startMarker.nextSibling;
   while (current !== null && current !== endMarker) {
     const next = current.nextSibling;

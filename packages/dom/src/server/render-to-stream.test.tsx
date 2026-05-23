@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import type { JSXNode } from "@effect-ui/core/types";
-import { Chunk, Deferred, Effect, Fiber, Stream } from "effect";
+import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
-import { renderToStream } from "./render-to-stream";
+import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
 import { renderToString } from "./render-to-string";
 
 const run = (node: JSXNode) => Effect.runPromise(Stream.mkString(renderToStream(node)));
@@ -41,9 +41,14 @@ describe("renderToStream - serialization parity", () => {
     );
   });
 
-  it("resolves reactive attributes to their last emission", async () => {
-    assert.equal(await run(<div id={Stream.make("a", "b", "c")} />), '<div id="c"></div>');
+  it("AC-R1/AC-R2: resolves reactive attributes to their first/current emission", async () => {
+    assert.equal(await run(<div id={Stream.make("a", "b", "c")} />), '<div id="a"></div>');
     assert.equal(await run(<div id={Effect.succeed("eff")} />), '<div id="eff"></div>');
+  });
+
+  it("AC-R4: a non-terminating reactive attribute resolves to its current value without hanging", async () => {
+    const ref = await Effect.runPromise(SubscriptionRef.make("live"));
+    assert.equal(await run(<div id={ref.changes} />), '<div id="live"></div>');
   });
 
   it("renders void elements without a closing tag", async () => {
@@ -135,7 +140,7 @@ describe("renderToStream - streaming behavior", () => {
 
   it("AC-ST4: fails the stream on an unsupported node type", async () => {
     const result = await Effect.runPromiseExit(
-      Stream.runDrain(renderToStream({ type: () => null, props: {} } as unknown as JSXNode)),
+      Stream.runDrain(renderToStream({ type: 123, props: {} } as unknown as JSXNode)),
     );
     assert.equal(result._tag, "Failure");
   });
@@ -192,5 +197,52 @@ describe("renderToStream - streaming behavior", () => {
     assert.ok(result.includes('<section id="b">branch B</section>'));
     assert.ok(result.includes("<footer>branch C</footer>"));
     assert.ok(result.indexOf('id="b"') < result.indexOf("branch C"));
+  });
+});
+
+describe("renderToStream - function components", () => {
+  it("AC-FC1/FC2: renders a component returning an element inline", async () => {
+    const Greeting = () => <p>hello</p>;
+    assert.equal(await run(<Greeting />), "<p>hello</p>");
+  });
+
+  it("AC-FC1: passes props verbatim to the component", async () => {
+    const Greeting = ({ name }: { name: string }) => <p>hi {name}</p>;
+    assert.equal(await run(<Greeting name="ada" />), "<p>hi ada</p>");
+  });
+
+  it("AC-FC2: renders a component returning a fragment", async () => {
+    const Pair = () => (
+      <>
+        <span>a</span>
+        <span>b</span>
+      </>
+    );
+    assert.equal(await run(<Pair />), "<span>a</span><span>b</span>");
+  });
+
+  it("AC-FC3: collapses a component returning an Effect/Stream to its first/current emission", async () => {
+    const FromEffect = () => Effect.succeed(<em>e</em>);
+    assert.equal(await run(<FromEffect />), "<em>e</em>");
+
+    const FromStream = () => Stream.make(<em>a</em>, <em>b</em>);
+    assert.equal(await run(<FromStream />), "<em>a</em>");
+  });
+
+  it("AC-FC4: renders nested components", async () => {
+    const Inner = ({ label }: { label: string }) => <span>{label}</span>;
+    const Outer = () => (
+      <div>
+        <Inner label="x" />
+        <Inner label="y" />
+      </div>
+    );
+    assert.equal(await run(<Outer />), "<div><span>x</span><span>y</span></div>");
+  });
+
+  it("AC-FC3: hydratable wraps a component's reactive result in markers", async () => {
+    const Live = () => Stream.make(<em>now</em>);
+    const html = await Effect.runPromise(Stream.mkString(renderToStreamHydratable(<Live />)));
+    assert.equal(html, "<!-- stream-start-1 --><em>now</em><!-- stream-end-1 -->");
   });
 });

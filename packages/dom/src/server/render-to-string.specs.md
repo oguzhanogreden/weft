@@ -17,8 +17,11 @@ and fragments are handled by earlier branches of the same function.
 
 - **Reactive attribute values.** Unlike React, an attribute value may be a
   `Stream` or `Effect` (`AttributeValue<T>`). Because SSR is one-shot, such a
-  value is collapsed to its **last** emission via `Stream.runLast` (mirroring how
-  reactive children are rendered); an empty stream omits the attribute.
+  value is collapsed to its **first/current** emission via `Stream.runHead`
+  (mirroring how reactive children are rendered); an empty stream omits the
+  attribute. The first emission matches the client's initial paint and lets
+  non-terminating streams (e.g. `SubscriptionRef.changes`) resolve immediately
+  instead of hanging.
 - **No prop renaming.** Prop names are emitted verbatim. The client's
   property-vs-attribute decision relies on the live DOM and cannot run on the
   server, so every non-special prop becomes an attribute.
@@ -50,9 +53,11 @@ and fragments are handled by earlier branches of the same function.
 
 ### Reactive attributes
 
-- AC-R1: A `Stream` attribute value resolves to its last emission.
+- AC-R1: A `Stream` attribute value resolves to its first/current emission.
 - AC-R2: An `Effect` attribute value resolves to its success value.
 - AC-R3: An empty stream omits the attribute.
+- AC-R4: A non-terminating `Stream` attribute value (e.g. `SubscriptionRef.changes`)
+  resolves to its current value without hanging.
 
 ### Style
 

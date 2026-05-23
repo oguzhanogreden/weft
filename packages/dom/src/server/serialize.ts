@@ -109,13 +109,16 @@ export function serializeProps(props: Record<string, unknown>): Effect.Effect<st
 }
 
 /**
- * Resolves a possibly Stream/Effect value to its final value, taking the last
- * emission (mirroring how children are rendered). Static values pass through.
+ * Resolves a possibly Stream/Effect value to its first/current emission
+ * (mirroring how children are rendered, and matching the client's initial
+ * paint). Using the first emission also lets non-terminating streams (e.g.
+ * `SubscriptionRef.changes`) resolve immediately instead of hanging. Static
+ * values pass through.
  */
 function resolveValue(value: unknown): Effect.Effect<unknown, Error> {
   if (isStream(value) || Effect.isEffect(value)) {
     return normalizeToStream(value).pipe(
-      Stream.runLast,
+      Stream.runHead,
       Effect.map(Option.getOrElse(() => undefined)),
     );
   }

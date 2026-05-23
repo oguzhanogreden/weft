@@ -27,3 +27,14 @@ export class RenderError extends Data.TaggedError("RenderError")<{
   readonly cause: unknown;
   readonly message: string;
 }> {}
+/**
+ * Error thrown when the existing DOM does not match the JSX tree during
+ * hydration (e.g. expected a text node but found an element, mismatched tag
+ * name, or a missing reactive-region marker).
+ */
+
+export class HydrationMismatchError extends Data.TaggedError("HydrationMismatchError")<{
+  readonly expected: string;
+  readonly actual: string;
+  readonly path: string;
+}> {}

@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Effect, Stream } from "effect";
+import { Effect, Stream, SubscriptionRef } from "effect";
 import type { JSXNode } from "@effect-ui/core/types";
 import { renderToString } from "./render-to-string";
 
@@ -71,19 +71,25 @@ describe("renderToString - style", () => {
 });
 
 describe("renderToString - reactive attributes", () => {
-  it("resolves a Stream attribute to its last value", async () => {
+  it("AC-R1: resolves a Stream attribute to its first/current value", async () => {
     const html = await run(<div id={Stream.make("a", "b", "c")} />);
-    assert.equal(html, '<div id="c"></div>');
+    assert.equal(html, '<div id="a"></div>');
   });
 
-  it("resolves an Effect attribute value", async () => {
+  it("AC-R2: resolves an Effect attribute value", async () => {
     const html = await run(<div id={Effect.succeed("eff")} />);
     assert.equal(html, '<div id="eff"></div>');
   });
 
-  it("resolves a Stream style object property", async () => {
+  it("resolves a Stream style object property to its first/current value", async () => {
     const html = await run(<div style={{ color: Stream.make("red", "green") }} />);
-    assert.equal(html, '<div style="color: green"></div>');
+    assert.equal(html, '<div style="color: red"></div>');
+  });
+
+  it("AC-R4: resolves a non-terminating Stream attribute to its current value without hanging", async () => {
+    const ref = await Effect.runPromise(SubscriptionRef.make("live"));
+    const html = await run(<div id={ref.changes} />);
+    assert.equal(html, '<div id="live"></div>');
   });
 });
 

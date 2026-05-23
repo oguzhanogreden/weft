@@ -1,6 +1,6 @@
 import type { JSXNode } from "@effect-ui/core/types";
 import { type Effect, Stream } from "effect";
-import { renderToStream } from "./render-to-stream";
+import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
 
 /**
  * Serializes an Effect-infused JSX tree (`JSXNode`) into a single HTML string.
@@ -12,3 +12,15 @@ import { renderToStream } from "./render-to-stream";
  */
 export const renderToString = (node: JSXNode): Effect.Effect<string, Error> =>
   renderToStream(node).pipe(Stream.mkString);
+
+/**
+ * Like {@link renderToString}, but emits the reactive-region comment markers
+ * (`<!-- stream-start-N -->` … `<!-- stream-end-N -->`) that the client
+ * `hydrate` needs to locate reactive regions. Use this when the page will be
+ * hydrated on the client; use {@link renderToString} for static, non-hydrated
+ * output.
+ *
+ * Re-derived from {@link renderToStreamHydratable} via `Stream.mkString`.
+ */
+export const renderToStringHydratable = (node: JSXNode): Effect.Effect<string, Error> =>
+  renderToStreamHydratable(node).pipe(Stream.mkString);
