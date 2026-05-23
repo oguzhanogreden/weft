@@ -7,7 +7,7 @@ import { Data } from "effect";
 /**
  * Error thrown when JSXNode has invalid type (not string, FRAGMENT, or function)
  */
-export class InvalidElementTypeError extends Data.TaggedError("InvalidElementTypeError")<{
+export class UnsupportedNodeTypeError extends Data.TaggedError("UnsupportedNodeTypeError")<{
   readonly type: unknown;
   readonly message: string;
 }> {}

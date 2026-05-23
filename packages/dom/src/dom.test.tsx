@@ -13,10 +13,10 @@ import { mount } from "./api";
  */
 function createTestDOM() {
   const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-  global.document = dom.window.document as unknown as Document;
-  global.HTMLElement = dom.window.HTMLElement as unknown as typeof HTMLElement;
-  global.Comment = dom.window.Comment as unknown as typeof Comment;
-  global.Text = dom.window.Text as unknown as typeof Text;
+  global.document = dom.window.document;
+  global.HTMLElement = dom.window.HTMLElement;
+  global.Comment = dom.window.Comment;
+  global.Text = dom.window.Text;
   return dom;
 }
 

@@ -1,6 +1,6 @@
 export {
   HydrationMismatchError,
-  InvalidElementTypeError,
+  UnsupportedNodeTypeError,
   RenderError,
   StreamSubscriptionError,
 } from "./data";

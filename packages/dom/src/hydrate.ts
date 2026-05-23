@@ -4,7 +4,7 @@ import { Effect, Exit, Layer, ManagedRuntime, Scope, Stream } from "effect";
 import type { MountHandle } from "./api";
 import {
   HydrationMismatchError,
-  InvalidElementTypeError,
+  UnsupportedNodeTypeError,
   type RenderError,
   type StreamSubscriptionError,
 } from "./data";
@@ -47,7 +47,7 @@ export function hydrate(
   root: HTMLElement,
 ): Effect.Effect<
   MountHandle,
-  InvalidElementTypeError | StreamSubscriptionError | RenderError | HydrationMismatchError
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError | HydrationMismatchError
 > {
   return Effect.gen(function* () {
     // Capture current Effect context so event handlers can access provided services.
@@ -88,7 +88,7 @@ export function hydrate(
 // ============================================================================
 
 type HydrateError =
-  | InvalidElementTypeError
+  | UnsupportedNodeTypeError
   | StreamSubscriptionError
   | RenderError
   | HydrationMismatchError;
@@ -153,7 +153,7 @@ function hydrateNode(
       }
 
       return yield* Effect.fail(
-        new InvalidElementTypeError({
+        new UnsupportedNodeTypeError({
           type,
           message: `Invalid JSXNode type during hydration at ${path}: expected string, FRAGMENT, or function, got ${typeof type}`,
         }),

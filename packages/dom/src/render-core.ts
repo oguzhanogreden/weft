@@ -2,7 +2,7 @@ import { Effect, Stream } from "effect";
 import { setElementProps } from "./dom";
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
 import type { JSXNode } from "@effect-ui/core/types";
-import { InvalidElementTypeError, type StreamSubscriptionError, type RenderError } from "./data";
+import { UnsupportedNodeTypeError, type StreamSubscriptionError, type RenderError } from "./data";
 import { streamStartText, streamEndText } from "./markers";
 import { RenderContext } from "./render-context";
 import { isStream, normalizeToStream, nextStreamId } from "./utilities";
@@ -15,7 +15,7 @@ export function renderNode(
   node: JSXNode,
 ): Effect.Effect<
   RenderResult,
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -66,7 +66,7 @@ export function renderNode(
 
       // AC23: Invalid element type
       return yield* Effect.fail(
-        new InvalidElementTypeError({
+        new UnsupportedNodeTypeError({
           type,
           message: `Invalid JSXNode type: expected string, FRAGMENT, or function, got ${typeof type}`,
         }),
@@ -111,7 +111,7 @@ function renderChildren(
   children: readonly JSXNode[],
 ): Effect.Effect<
   readonly Node[],
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -148,7 +148,7 @@ function renderFragment(
   props: object,
 ): Effect.Effect<
   readonly Node[],
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -171,7 +171,7 @@ function renderElement(
   props: object,
 ): Effect.Effect<
   HTMLElement,
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -222,7 +222,7 @@ function renderComponent(
   props: object,
 ): Effect.Effect<
   RenderResult,
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -264,7 +264,7 @@ function handleStreamChild(
   _parent: HTMLElement | DocumentFragment,
 ): Effect.Effect<
   readonly Node[],
-  StreamSubscriptionError | RenderError | InvalidElementTypeError,
+  StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
   RenderContext
 > {
   return Effect.gen(function* () {
@@ -313,7 +313,7 @@ export function updateStreamChild(
   newNode: JSXNode,
 ): Effect.Effect<
   void,
-  InvalidElementTypeError | StreamSubscriptionError | RenderError,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
   return Effect.gen(function* () {

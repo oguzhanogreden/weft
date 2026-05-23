@@ -9,6 +9,7 @@ import {
   serializeProps,
   VOID_ELEMENTS,
 } from "./serialize";
+import { UnsupportedNodeTypeError } from "../data";
 
 /**
  * Progressively serializes an Effect-infused JSX tree (`JSXNode`) into a stream
@@ -37,11 +38,10 @@ export const renderToStream = (node: JSXNode): Stream.Stream<string, Error> => {
   // Check for Stream/Effect first (before iterables, since Stream might be iterable).
   // Collapse to the first/current emission, then render that recursively.
   if (isStream(node) || Effect.isEffect(node)) {
-    return Stream.unwrap(
-      normalizeToStream(node).pipe(
-        Stream.runHead,
-        Effect.map(Option.match({ onNone: () => Stream.empty, onSome: renderToStream })),
-      ),
+    return normalizeToStream(node).pipe(
+      Stream.runHead,
+      Effect.map(Option.match({ onNone: () => Stream.empty, onSome: renderToStream })),
+      Stream.unwrap,
     );
   }
 
@@ -80,7 +80,12 @@ export const renderToStream = (node: JSXNode): Stream.Stream<string, Error> => {
     }
   }
 
-  return Stream.fail(new Error(`Unsupported node type: ${typeof node}`));
+  return Stream.fail(
+    new UnsupportedNodeTypeError({
+      type: node.type,
+      message: `Invalid JSXNode type: expected string, FRAGMENT, or function, got ${typeof node.type}`,
+    }),
+  );
 };
 
 function fragmentToStream(props: Record<string, unknown>): Stream.Stream<string, Error> {
@@ -130,21 +135,20 @@ function renderHydratable(node: JSXNode, counter: RegionCounter): Stream.Stream<
 
   // Reactive region: collapse to first/current emission, wrapped in boundary markers.
   if (isStream(node) || Effect.isEffect(node)) {
-    return Stream.unwrap(
-      normalizeToStream(node).pipe(
-        Stream.runHead,
-        Effect.map((first) => {
-          const id = ++counter.current;
-          const inner = Option.match(first, {
-            onNone: () => Stream.empty,
-            onSome: (value: JSXNode) => renderHydratable(value, counter),
-          });
-          return Stream.make(`<!--${streamStartText(id)}-->`).pipe(
-            Stream.concat(inner),
-            Stream.concat(Stream.make(`<!--${streamEndText(id)}-->`)),
-          );
-        }),
-      ),
+    return normalizeToStream(node).pipe(
+      Stream.runHead,
+      Effect.map((first) => {
+        const id = ++counter.current;
+        const inner = Option.match(first, {
+          onNone: () => Stream.empty,
+          onSome: (value: JSXNode) => renderHydratable(value, counter),
+        });
+        return Stream.make(`<!--${streamStartText(id)}-->`).pipe(
+          Stream.concat(inner),
+          Stream.concat(Stream.make(`<!--${streamEndText(id)}-->`)),
+        );
+      }),
+      Stream.unwrap,
     );
   }
 
@@ -182,7 +186,12 @@ function renderHydratable(node: JSXNode, counter: RegionCounter): Stream.Stream<
     }
   }
 
-  return Stream.fail(new Error(`Unsupported node type: ${typeof node}`));
+  return Stream.fail(
+    new UnsupportedNodeTypeError({
+      type: node.type,
+      message: `Invalid JSXNode type: expected string, FRAGMENT, or function, got ${typeof node.type}`,
+    }),
+  );
 }
 
 function fragmentToStreamHydratable(

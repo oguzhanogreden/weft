@@ -1,7 +1,7 @@
 import { Effect, Exit, Layer, ManagedRuntime, Scope } from "effect";
 import { renderNode } from "./render-core";
 import type { JSXNode } from "@effect-ui/core/types";
-import type { InvalidElementTypeError, RenderError, StreamSubscriptionError } from "./data";
+import type { UnsupportedNodeTypeError, RenderError, StreamSubscriptionError } from "./data";
 import { RenderContext } from "./render-context";
 
 /**
@@ -31,7 +31,7 @@ import { RenderContext } from "./render-context";
 export function mount(
   app: JSXNode,
   root: HTMLElement,
-): Effect.Effect<MountHandle, InvalidElementTypeError | StreamSubscriptionError | RenderError> {
+): Effect.Effect<MountHandle, UnsupportedNodeTypeError | StreamSubscriptionError | RenderError> {
   return Effect.gen(function* () {
     // Capture current Effect context (includes any provided services)
     // This allows event handlers to access services provided via Effect.provide(layer)
