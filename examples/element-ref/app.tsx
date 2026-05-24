@@ -29,12 +29,7 @@ const AutoFocusInput = () =>
       inputRef.changes,
       Stream.filter(Option.isSome),
       Stream.take(1),
-      Stream.runForEach((option) =>
-        Effect.sync(() => {
-          const element = Option.getOrThrow(option);
-          element.focus();
-        }),
-      ),
+      Stream.runForEach((option) => Effect.sync(() => option.value.focus())),
       Effect.fork,
     );
 
