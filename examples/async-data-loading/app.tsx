@@ -5,7 +5,7 @@
  * using Effect, with built-in loading states and error handling.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Effect, Stream } from "effect";
 
 // ============================================================================

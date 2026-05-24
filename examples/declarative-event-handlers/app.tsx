@@ -6,7 +6,7 @@
  * through the existing Effect.provide() pattern.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Context, Effect, Layer, Stream } from "effect";
 
 // ============================================================================

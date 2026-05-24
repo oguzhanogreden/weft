@@ -6,7 +6,7 @@
  * style streams for complete style replacement.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Effect, Schedule, Stream } from "effect";
 
 // ============================================================================

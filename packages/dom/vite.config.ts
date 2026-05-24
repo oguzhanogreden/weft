@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   pack: {
-    entry: ["src/index.ts", "src/server/index.ts"],
+    entry: ["src/index.ts", "src/client/index.ts", "src/server/index.ts"],
     outDir: "dist",
     dts: true,
     platform: "browser",

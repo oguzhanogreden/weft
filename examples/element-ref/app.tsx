@@ -10,7 +10,7 @@
  * - Reactive mount detection via SubscriptionRef.changes
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================

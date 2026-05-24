@@ -5,7 +5,7 @@
  * validation, and Effect-powered submit handlers.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================

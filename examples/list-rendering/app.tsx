@@ -5,7 +5,7 @@
  * including static arrays, stream-based lists, and Fragment usage.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Effect, Schedule, Stream } from "effect";
 
 // ============================================================================

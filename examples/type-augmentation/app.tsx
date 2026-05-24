@@ -9,7 +9,7 @@
  * error if a component uses a service not registered in the interface.
  */
 
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 import { Context, Effect, Layer } from "effect";
 
 // Define your services

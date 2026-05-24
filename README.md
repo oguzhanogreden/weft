@@ -53,7 +53,7 @@ Effect's retry and error handling patterns work directly in your UI:
 
 ```tsx
 import { Effect, Stream, Schedule } from "effect";
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 
 const fetchUser = (id: number) =>
   Effect.tryPromise({
@@ -82,7 +82,7 @@ Event handlers can return Effects, which means they have access to services via 
 
 ```tsx
 import { Context, Effect, Layer } from "effect";
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 
 class Analytics extends Context.Tag("Analytics")<
   Analytics,
@@ -117,7 +117,7 @@ SubscriptionRef provides reactive state with automatic stream-based updates:
 
 ```tsx
 import { Effect, SubscriptionRef } from "effect";
-import { mount } from "@effect-ui/dom";
+import { mount } from "@effect-ui/dom/client";
 
 const Counter = () =>
   Effect.gen(function* () {
@@ -173,7 +173,7 @@ export const render = (): Promise<string> => Effect.runPromise(renderToStringHyd
 
 ```tsx
 // entry-client.tsx
-import { hydrate } from "@effect-ui/dom";
+import { hydrate } from "@effect-ui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
