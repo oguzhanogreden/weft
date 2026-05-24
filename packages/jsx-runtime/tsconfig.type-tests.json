@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "jsxImportSource": "@effect-ui/jsx-runtime"
-  },
-  "include": ["src/**/__type-tests__/**/*"],
-  "exclude": []
-}

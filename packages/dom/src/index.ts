@@ -1,3 +1,9 @@
-export { InvalidElementTypeError, RenderError, StreamSubscriptionError } from "@effect-ui/core";
-export type { MountHandle } from "./api";
-export { mount } from "./api";
+export {
+  HydrationMismatchError,
+  UnsupportedNodeTypeError,
+  RenderError,
+  StreamSubscriptionError,
+} from "./data";
+export type { MountHandle } from "./client/api";
+export { mount } from "./client/api";
+export { hydrate } from "./client/hydrate";

@@ -1,0 +1,23 @@
+/**
+ * Client entry: hydrates the server-rendered markup in `#root`.
+ *
+ * `hydrate` adopts the static DOM and resumes the reactive counter region in
+ * place. Once it resolves, the page is interactive — we flip the status
+ * indicator from `[SSR]` to `[hydrated]` so the transition is visible.
+ */
+
+import { hydrate } from "@effect-ui/dom";
+import { Effect } from "effect";
+import { App } from "./app";
+
+const root = document.getElementById("root");
+if (root === null) {
+  throw new Error("#root not found");
+}
+
+void Effect.runPromise(hydrate(<App />, root)).then(() => {
+  const status = document.getElementById("status");
+  if (status !== null) {
+    status.textContent = "[hydrated — interactive]";
+  }
+});

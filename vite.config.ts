@@ -2,8 +2,7 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: {
-    // "*": "vp check --fix",
-    "*": "",
+    "*": "vp check --fix",
   },
   run: {
     tasks: {
@@ -23,14 +22,17 @@ export default defineConfig({
       },
     },
   },
-
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     include: ["**/*.test.{ts,tsx}"],
   },
   fmt: {
-    ignorePatterns: ["dist/**", "*.min.js"],
+    ignorePatterns: ["**/dist/**", "*.min.js"],
   },
   lint: {
+    ignorePatterns: ["**/dist/**", "*.min.js"],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,
