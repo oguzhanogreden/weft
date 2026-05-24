@@ -59,9 +59,8 @@ directly from the current cursor position, adopting the resolved DOM nodes in pl
 
 ## What to observe
 
-- **`curl -s http://localhost:3101`** shows the raw SSR output: fallback HTML +
-  comment markers in the body, then `<template>` + `<script>` patches at the end
-  of the body.
+- **`curl -N --no-buffer http://localhost:3101`** shows the streaming SSR output: fallback HTML +
+  comment markers in the body, then `<template>` + `<script>` patches.
 - **Slow network**: open DevTools Network → CPU throttling + disable cache. The
   page loads with the fallback visible first, then the patches arrive and scripts
   execute, resolving the UI progressively.
