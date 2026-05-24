@@ -1,10 +1,19 @@
-import { Effect, Stream } from "effect";
+import { Effect, Option, Stream, pipe } from "effect";
 import { setElementProps } from "./dom";
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
+import { Suspense, type SuspenseProps } from "@effect-ui/core/suspense";
 import type { JSXNode } from "@effect-ui/core/types";
-import { UnsupportedNodeTypeError, type StreamSubscriptionError, type RenderError } from "../data";
+import {
+  UnsupportedNodeTypeError,
+  type StreamSubscriptionError,
+  type RenderError,
+  RenderContext,
+  SuspenseContext,
+} from "../data";
 import { streamStartText, streamEndText } from "./markers";
-import { RenderContext } from "../data";
+// NOTE: circular import — suspense.ts also imports renderNode from this module.
+// All values are used inside function bodies only (never at module-init time).
+import { renderSuspenseBoundary } from "./suspense";
 import { isStream, normalizeToStream, nextStreamId } from "../utilities";
 
 /**
@@ -52,6 +61,11 @@ export function renderNode(
       // AC6: Fragment
       if (type === FRAGMENT) {
         return yield* renderFragment(props);
+      }
+
+      // Suspense boundary
+      if (type === Suspense) {
+        return yield* renderSuspenseBoundary(props as unknown as SuspenseProps);
       }
 
       // AC4: Element (string type)
@@ -231,14 +245,31 @@ function renderComponent(
 
     // AC5: Handle Effect<JSXNode> or Stream<JSXNode>
     if (isStream(result) || Effect.isEffect(result)) {
-      const stream = normalizeToStream(result);
+      // Check whether this component is inside a Suspense boundary.
+      const suspenseCtx = yield* Effect.serviceOption(SuspenseContext);
+      let stream = normalizeToStream(result);
+
+      if (Option.isSome(suspenseCtx)) {
+        // Register before subscribing so the boundary knows about this child.
+        yield* suspenseCtx.value.register;
+
+        // Wrap the stream so `settle` is called exactly once — on the first
+        // emission — and subsequent emissions pass through unchanged.
+        stream = pipe(
+          stream,
+          Stream.zipWithIndex,
+          Stream.flatMap(([value, index]) =>
+            index === 0
+              ? Stream.fromEffect(Effect.as(suspenseCtx.value.settle, value))
+              : Stream.make(value),
+          ),
+        );
+      }
 
       // AC22: Component returning stream treated as stream child
-      // Create a temporary container to hold markers
       const fragment = document.createDocumentFragment();
       const markers = yield* handleStreamChild(stream, fragment);
 
-      // Return all markers as array
       return markers;
     }
 

@@ -1,3 +1,2 @@
-export default function () {
-  throw new Error("Not implemented");
-}
+export { Suspense } from "./suspense";
+export type { SuspenseProps } from "./suspense";

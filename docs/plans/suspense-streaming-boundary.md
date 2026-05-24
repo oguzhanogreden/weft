@@ -71,14 +71,14 @@ The injected script locates the comment markers via `TreeWalker` (comment nodes 
 
 ### Part 2 — Client-Side Suspense
 
-- [ ] `packages/core/src/suspense/index.ts` — `Suspense` + `SuspenseProps`
-- [ ] `packages/core/src/index.ts` — re-export
-- [ ] `packages/core/package.json` — `"./suspense"` export path
-- [ ] `packages/dom/src/data.ts` — `SuspenseContext` tag
-- [ ] `packages/dom/src/client/suspense.ts` — `renderSuspenseBoundary`
-- [ ] `packages/dom/src/client/render-core.ts` — intercept + `renderComponent` wrapping
-- [ ] `packages/dom/src/utilities.ts` — `nextSuspenseId` alias
-- [ ] `packages/dom/src/client/suspense.test.tsx` — tests for AC1–AC10
+- [x] `packages/core/src/suspense/index.ts` — `Suspense` + `SuspenseProps`
+- [x] `packages/core/src/index.ts` — re-export
+- [x] `packages/core/package.json` — `"./suspense"` export path
+- [x] `packages/dom/src/data.ts` — `SuspenseContext` tag
+- [x] `packages/dom/src/client/suspense.ts` — `renderSuspenseBoundary`
+- [x] `packages/dom/src/client/render-core.ts` — intercept + `renderComponent` wrapping
+- [x] `packages/dom/src/utilities.ts` — `nextSuspenseId` alias
+- [x] `packages/dom/src/client/suspense.test.tsx` — tests for AC1–AC10
 
 ### Part 3 — SSR Streaming Suspense
 

@@ -1,4 +1,4 @@
-import { Context, Data, ManagedRuntime, Scope } from "effect";
+import { Context, Data, Effect, ManagedRuntime, Scope } from "effect";
 
 // ============================================================================
 // Error Types
@@ -38,6 +38,27 @@ export class HydrationMismatchError extends Data.TaggedError("HydrationMismatchE
   readonly actual: string;
   readonly path: string;
 }> {}
+
+/**
+ * Optional service provided by a `<Suspense>` boundary to its subtree.
+ *
+ * Function components returning `Effect`/`Stream` call `register` before their
+ * stream is subscribed and `settle` exactly once when the stream emits its first
+ * value. The boundary waits until all registered children have settled before
+ * swapping the fallback for the resolved content.
+ *
+ * Inner `<Suspense>` boundaries shadow the outer service for their own subtree
+ * via `Effect.provideService`, so children register with the innermost boundary.
+ */
+export class SuspenseContext extends Context.Tag("SuspenseContext")<
+  SuspenseContext,
+  {
+    /** Increment the boundary's pending count. */
+    readonly register: Effect.Effect<void>;
+    /** Decrement the pending count; triggers the swap when it reaches zero. */
+    readonly settle: Effect.Effect<void>;
+  }
+>() {}
 
 /**
  * Service for managing rendering context including runtime, scope, and stream IDs
