@@ -82,17 +82,18 @@ The injected script locates the comment markers via `TreeWalker` (comment nodes 
 
 ### Part 3 — SSR Streaming Suspense
 
-- [ ] `packages/dom/src/server/render-to-stream.ts` — `ServerSuspenseCtx`, `renderSuspenseSSR`, patch stream concat
-- [ ] `packages/dom/src/server/render-to-stream.test.tsx` — tests for AC-SS1–AC-SS7
+- [x] `packages/dom/src/server/render-to-stream.ts` — `ServerSuspenseCtx`, `renderSuspenseSSRInline`, `buildPatch`, patch stream concat
+- [x] `packages/dom/src/server/render-to-stream.test.tsx` — tests for AC-SS1–AC-SS7
+- [x] `packages/dom/src/server/render-to-string.ts` — `renderToString` uses `renderToStreamFallbackOnly` (no patches)
 
 ### Part 4 — Verification & Example
 
-- [ ] Round-trip test (SSR → patch scripts → hydrate)
-- [ ] `examples/suspense/` — example app
+- [x] Round-trip test (SSR → patch scripts → hydrate) — `packages/dom/src/client/suspense.test.tsx`, added `hydrate.ts` Suspense intercept
+- [x] `examples/suspense/` — example app (shared fallback + nested boundaries + SSR + hydration entries)
 
 ### Part 5 — Technical Debt
 
-- [ ] Remove circular dependency between `packages/dom/src/client/render-core.ts` and `packages/dom/src/client/suspense.ts` (each imports from the other; currently safe because all imports are used only inside function bodies, but it should be resolved by extracting shared primitives into a third module)
+- [x] Remove circular dependency between `packages/dom/src/client/render-core.ts` and `packages/dom/src/client/suspense.ts` — resolved via dependency injection: `renderSuspenseBoundary` now accepts `renderNode` and `removeNodesBetweenMarkers` as function parameters; dependency is strictly one-way (`render-core → suspense`)
 
 ---
 
