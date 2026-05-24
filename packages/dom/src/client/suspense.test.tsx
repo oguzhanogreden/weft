@@ -3,8 +3,7 @@ import { describe, it } from "vite-plus/test";
 import { Effect, Stream } from "effect";
 import { Suspense } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
-import { mount } from "./api";
-import { hydrate } from "./hydrate";
+import { mount, hydrate } from "./render";
 import { renderToStringHydratable } from "../server/render-to-string";
 
 // ============================================================================

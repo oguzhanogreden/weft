@@ -3,7 +3,7 @@ import { Cause, Effect, Exit, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { HydrationMismatchError } from "~/data";
-import { hydrate } from "./hydrate";
+import { hydrate } from "./render";
 import { renderToString, renderToStringHydratable } from "~/server";
 import type { JSXNode } from "@effect-ui/core/types";
 

@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { Suspense } from "@effect-ui/core/suspense";
+import { Suspense } from "@effect-ui/core";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";

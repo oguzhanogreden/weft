@@ -1,13 +1,8 @@
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
-import { Suspense, type SuspenseProps } from "@effect-ui/core/suspense";
+import { Suspense, type SuspenseProps } from "@effect-ui/core";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
-import {
-  suspenseEndText,
-  suspenseStartText,
-  streamEndText,
-  streamStartText,
-} from "../client/markers";
+import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "../shared";
 import { UnsupportedNodeTypeError } from "../data";
 import {
   escapeHtml,
