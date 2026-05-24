@@ -61,6 +61,37 @@ The injected script locates the comment markers via `TreeWalker` (comment nodes 
 
 ---
 
+## Progress
+
+### Part 1 — Specs & Vocabulary
+
+- [x] `packages/dom/src/client/suspense.specs.md` — AC1–AC10
+- [x] `packages/dom/src/server/suspense-ssr.specs.md` — AC-SS1–AC-SS7
+- [x] `packages/dom/src/client/markers.ts` — `suspenseStartText`, `suspenseEndText`, `parseSuspenseMarker`
+
+### Part 2 — Client-Side Suspense
+
+- [ ] `packages/core/src/suspense/index.ts` — `Suspense` + `SuspenseProps`
+- [ ] `packages/core/src/index.ts` — re-export
+- [ ] `packages/core/package.json` — `"./suspense"` export path
+- [ ] `packages/dom/src/data.ts` — `SuspenseContext` tag
+- [ ] `packages/dom/src/client/suspense.ts` — `renderSuspenseBoundary`
+- [ ] `packages/dom/src/client/render-core.ts` — intercept + `renderComponent` wrapping
+- [ ] `packages/dom/src/utilities.ts` — `nextSuspenseId` alias
+- [ ] `packages/dom/src/client/suspense.test.tsx` — tests for AC1–AC10
+
+### Part 3 — SSR Streaming Suspense
+
+- [ ] `packages/dom/src/server/render-to-stream.ts` — `ServerSuspenseCtx`, `renderSuspenseSSR`, patch stream concat
+- [ ] `packages/dom/src/server/render-to-stream.test.tsx` — tests for AC-SS1–AC-SS7
+
+### Part 4 — Verification & Example
+
+- [ ] Round-trip test (SSR → patch scripts → hydrate)
+- [ ] `examples/suspense/` — example app
+
+---
+
 ## Part 1 — Specs & Vocabulary
 
 **Goal**: Write acceptance criteria before any implementation. No code changes.
