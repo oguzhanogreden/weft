@@ -9,7 +9,7 @@ JSXNode in the DOM. When **all** pending children have settled — emitted at le
 one value — the boundary performs a single atomic DOM swap: the fallback is removed
 and all resolved children are inserted in its place.
 
-`Suspense` is exported from `@effect-ui/core/suspense`. The rendering implementation
+`Suspense` is exported from `@effect-ui/core`. The rendering implementation
 lives in `@effect-ui/dom`. The boundary is recognised by the renderer via reference
 equality (`type === Suspense`).
 

@@ -9,16 +9,17 @@ A minimal Node.js + TypeScript project template using modern tooling and strict 
 ## Requirements
 
 - Node.js
-- pnpm
 
-See versions in package.json > engines.
+See versions in package.json > engines. Package management and all tooling is handled by `vp` (Vite+).
 
 ## Development Commands
+
+All commands use the `vp` CLI (Vite+). Run `vp help` for a full list.
 
 ### Building
 
 ```bash
-pnpm build
+vp build
 ```
 
 Uses tsdown for fast TypeScript bundling.
@@ -26,20 +27,20 @@ Uses tsdown for fast TypeScript bundling.
 ### Testing
 
 ```bash
-pnpm test                 # Run all tests
-pnpm test.watch           # Run tests in watch mode
+vp test            # Run all tests
+vp test --watch    # Run tests in watch mode
 ```
 
-Uses Node.js native test runner with tsx loader. Test files follow the pattern `src/**/*.test.{ts,tsx}`.
+Uses Vitest (via Vite+). Test files follow the pattern `src/**/*.test.{ts,tsx}`.
 
-### Linting
+### Checking (format + lint + typecheck)
 
 ```bash
-pnpm lint            # Check code with Biome
-pnpm lint.fix        # Auto-fix linting issues
+vp check           # Format, lint, and type-check all files
+vp check --fix     # Auto-fix formatting and lint issues
 ```
 
-**Important:** This project uses Biome for linting and formatting, NOT ESLint. Always use Biome commands and configuration. When adding lint ignore comments, use Biome's syntax (e.g., `
+**Important:** Always run `vp check --fix` after making changes, not individual lint/format commands.
 
 ## Architecture
 
@@ -61,19 +62,17 @@ Path aliases:
 
 ### Code Style
 
-**Linting Tool:** This project uses Biome (NOT ESLint) for all linting and formatting.
+**Toolchain:** This project uses Oxlint (linting) and Oxfmt (formatting) via Vite+, NOT ESLint or Biome.
 
-Biome enforces:
+Oxfmt enforces:
 
 - Tab indentation
 - Double quotes for strings
-- Automatic import organization
-- Recommended linting rules
 
-When ignoring lint rules, use Biome syntax:
+When ignoring lint rules, use Oxlint syntax:
 
-- ✅ Correct: `
-- ❌ Wrong: `// eslint-disable-next-line`
+- ✅ Correct: `// oxlint-disable-next-line <rule-name>`
+- ❌ Wrong: `// eslint-disable-next-line` or `// biome-ignore`
 
 ### Project Structure
 
@@ -159,14 +158,14 @@ Type tests verify compile-time behavior for complex type-level features. They us
 **Running type tests:**
 
 ```bash
-pnpm typecheck.type-tests
+vp run typecheck.type-tests
 ```
 
 **Rules:**
 
 - Type test files use the `.test-d.ts` extension (convention from `tsd` and similar tools)
 - Use `@ts-expect-error` to assert code that should fail to compile
-- Type tests are excluded from the main `pnpm typecheck` to avoid conflicts with other augmentations
+- Type tests are excluded from the main `vp check` typecheck to avoid conflicts with other augmentations
 - Each type test file should be self-contained and test a specific feature
 
 **Example pattern:**
@@ -197,7 +196,7 @@ const _invalid: SomeType = invalidValue;
   - Ensure implementation matches mock signatures exactly
   - Ensure implementation matches co-located specs.md files
   - If implementation reveals mocks/specs need changes: pause implementation and update specs/mocks first (maintain strict spec → mock → test → implement cycle)
-  - After implementation: re-run tests, type checks (`pnpm typecheck`), and linting (`pnpm lint.fix`)
+  - After implementation: run `vp check --fix` and `vp test`
 - Specs MUST include:
   - Feature overview and purpose
   - Detailed acceptance criteria
@@ -248,7 +247,6 @@ const _invalid: SomeType = invalidValue;
 ### Imports
 
 - Use specific imports, avoid `import * as X`
-- Biome handles import organization automatically
 
 ## Meta Rules
 

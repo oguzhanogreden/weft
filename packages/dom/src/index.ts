@@ -4,6 +4,5 @@ export {
   RenderError,
   StreamSubscriptionError,
 } from "./data";
-export type { MountHandle } from "./client/api";
-export { mount } from "./client/api";
-export { hydrate } from "./client/hydrate";
+export type { MountHandle } from "./client/render";
+export { mount, hydrate } from "./client/render";

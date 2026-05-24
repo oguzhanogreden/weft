@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
-import { mount } from "./api";
+import { mount } from "./render";
 import type { JSXNode } from "@effect-ui/core/types";
 
 // ============================================================================

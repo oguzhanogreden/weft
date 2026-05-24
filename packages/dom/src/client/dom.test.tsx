@@ -3,7 +3,7 @@ import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
-import { mount } from "./api";
+import { mount } from "./render";
 
 // ============================================================================
 // Test Setup
