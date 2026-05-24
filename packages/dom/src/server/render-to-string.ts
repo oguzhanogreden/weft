@@ -1,17 +1,18 @@
 import type { JSXNode } from "@effect-ui/core/types";
 import { type Effect, Stream } from "effect";
-import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
+import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-to-stream";
 
 /**
  * Serializes an Effect-infused JSX tree (`JSXNode`) into a single HTML string.
  * The server-side counterpart to the client DOM renderer, intended to produce
  * output isomorphic with what the client renderer creates in the browser.
  *
- * Re-derived from {@link renderToStream} by concatenating its chunks — the
- * string-accumulating destination equivalent.
+ * `<Suspense>` boundaries render their fallback directly — no comment markers
+ * and no `<template>`/`<script>` patches. For streaming Suspense support use
+ * {@link renderToStreamHydratable} / {@link renderToStream} instead.
  */
 export const renderToString = (node: JSXNode): Effect.Effect<string, Error> =>
-  renderToStream(node).pipe(Stream.mkString);
+  renderToStreamFallbackOnly(node).pipe(Stream.mkString);
 
 /**
  * Like {@link renderToString}, but emits the reactive-region comment markers
