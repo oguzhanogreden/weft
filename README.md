@@ -14,7 +14,7 @@ effect-ui is a reactive DOM rendering library that makes Effect and Stream first
 
 ## Features
 
-- **Effect-first architecture**: Services, Layers, and dependency injection in the browser
+- **Effect-first architecture**: Services, Layers, and dependency injection across client and server
 - **Reactive primitives**: Effect and Stream as first-class JSX citizens
 - **Ephemeral components**: Components run once, streams drive updates
 - **SSR + Hydration**: `renderToString`, `renderToStream`, and flash-free `hydrate()` for full-stack apps
