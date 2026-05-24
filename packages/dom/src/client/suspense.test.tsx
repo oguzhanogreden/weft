@@ -4,6 +4,8 @@ import { Effect, Stream } from "effect";
 import { Suspense } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount } from "./api";
+import { hydrate } from "./hydrate";
+import { renderToStringHydratable } from "../server/render-to-string";
 
 // ============================================================================
 // Test Helpers
@@ -455,10 +457,11 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     createTestDOM();
     const root = createRoot();
 
-    let registerCallCount = 0;
-    let settleCallCount = 0;
-
-    // We verify via boundary behaviour: while pending → fallback; after settle → content
+    // Verify register/settle contract through observable boundary behaviour:
+    // - register fires  → boundary becomes pending → fallback shown immediately
+    // - settle fires    → boundary swaps once       → fallback gone, content visible
+    // (SuspenseContext is internal; direct call-count injection would require
+    //  exposing test seams not present in the current API.)
     function EffectChild(): Effect.Effect<JSX.Element> {
       return Effect.promise(
         () =>
@@ -468,7 +471,6 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
       );
     }
 
-    // Use boundary to observe register/settle indirectly
     await runMount(
       <Suspense fallback={<span class="fallback">Waiting</span>}>
         <EffectChild />
@@ -480,12 +482,63 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     assert.ok(root.querySelector(".fallback"), "Boundary must be pending (register was called)");
 
     await waitFor(200);
-    // settle happened → boundary swapped
+    // settle happened → boundary swapped exactly once
     assert.equal(root.querySelector(".fallback"), null, "Boundary must settle (settle was called)");
-    assert.ok(root.querySelector(".content"));
+    assert.ok(root.querySelector(".content"), "Resolved content visible after settle");
+  });
 
-    void registerCallCount;
-    void settleCallCount;
+  it("settle fires exactly once — two Effect siblings each settle independently", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // If register/settle were broken (e.g. settle called twice for one child, or
+    // register skipped for a child), the boundary counter would be wrong and the
+    // swap would fire at the wrong time.  Two children with different delays makes
+    // any register/settle count mismatch observable as a premature or missed swap.
+    function ChildA(): Effect.Effect<JSX.Element> {
+      return Effect.promise(
+        () =>
+          new Promise<JSX.Element>((resolve) =>
+            setTimeout(() => resolve(<span class="a">A</span>), 80),
+          ),
+      );
+    }
+
+    function ChildB(): Effect.Effect<JSX.Element> {
+      return Effect.promise(
+        () =>
+          new Promise<JSX.Element>((resolve) =>
+            setTimeout(() => resolve(<span class="b">B</span>), 200),
+          ),
+      );
+    }
+
+    await runMount(
+      <Suspense fallback={<span class="fallback">Waiting</span>}>
+        <ChildA />
+        <ChildB />
+      </Suspense>,
+      root,
+    );
+
+    // Both registered → boundary pending
+    assert.ok(root.querySelector(".fallback"), "Pending while both children are unresolved");
+
+    // ChildA settled (80ms) but ChildB hasn't — swap must NOT have fired yet.
+    // If settle were called twice for ChildA, pendingCount would go to -1 (≤0)
+    // and allSettled would fire prematurely.
+    await waitFor(130);
+    assert.ok(
+      root.querySelector(".fallback"),
+      "Fallback persists — ChildA settling must not trigger swap while ChildB is pending",
+    );
+
+    // Both settled → single swap
+    await waitFor(150);
+    assert.equal(root.querySelector(".fallback"), null, "Fallback gone after both settle");
+    assert.ok(root.querySelector(".a"), "ChildA content visible");
+    assert.ok(root.querySelector(".b"), "ChildB content visible");
+    assert.equal(getSuspenseComments(root).length, 0, "Markers cleaned up");
   });
 });
 
@@ -736,5 +789,134 @@ describe("AC10: Sentinel prevents premature settlement", () => {
     assert.equal(root.querySelector(".fallback"), null, "No fallback for sync-only children");
     assert.ok(root.querySelector(".sync"), "Sync child rendered directly");
     assert.equal(getSuspenseComments(root).length, 0, "No markers for sync-only boundary");
+  });
+});
+
+// ============================================================================
+// Round-trip: SSR → patch execution → hydrate
+// ============================================================================
+
+describe("Round-trip: SSR → patch script → hydrate", () => {
+  /**
+   * Verifies the complete integration path:
+   * 1. `renderToStringHydratable` emits fallback + comment markers + patch template/script
+   * 2. JSDOM with `runScripts:"dangerously"` executes the patch script (simulates browser)
+   * 3. Patch script replaces the fallback with the resolved children (stream markers intact)
+   * 4. `hydrate` adopts the resolved DOM — no HydrationMismatchError, no flicker
+   */
+  it("SSR emits fallback+patch; script resolves DOM; hydrate adopts without mismatch", async () => {
+    // A component that returns an Effect — triggers SSR suspension in renderToStreamHydratable.
+    function Card(): Effect.Effect<JSX.Element> {
+      return Effect.succeed(<div class="card">Card content</div>);
+    }
+
+    const app = (
+      <Suspense fallback={<span class="fallback">Loading</span>}>
+        <Card />
+      </Suspense>
+    );
+
+    // ── 1. SSR ───────────────────────────────────────────────────────────────
+    const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));
+
+    assert.ok(ssrHtml.includes("<!-- suspense-start-1 -->"), "SSR: start marker emitted");
+    assert.ok(ssrHtml.includes("<!-- suspense-end-1 -->"), "SSR: end marker emitted");
+    assert.ok(ssrHtml.includes("Loading"), "SSR: fallback in initial HTML");
+    assert.ok(ssrHtml.includes('<template id="ef-s-1">'), "SSR: patch template emitted");
+    assert.ok(ssrHtml.includes("Card content"), "SSR: resolved content inside patch template");
+    // Stream markers wrap the async child's content inside the patch template
+    assert.ok(ssrHtml.includes("stream-start-"), "SSR: stream markers inside patch (for hydrate)");
+
+    // ── 2. Inject into JSDOM and run scripts ─────────────────────────────────
+    // Wrap the SSR fragment in a full page so JSDOM can execute inline scripts.
+    const dom = new JSDOM(
+      `<!DOCTYPE html><html><head></head><body><div id="root">${ssrHtml}</div></body></html>`,
+      { runScripts: "dangerously" },
+    );
+
+    // Point Node globals to the JSDOM window so DOM APIs in hydrate() work.
+    global.document = dom.window.document as unknown as Document;
+    global.HTMLElement = dom.window.HTMLElement;
+    global.Comment = dom.window.Comment;
+    global.Text = dom.window.Text;
+
+    const root = dom.window.document.getElementById("root") as HTMLElement;
+
+    // ── 3. Verify DOM is resolved after script execution ──────────────────────
+    assert.equal(root.querySelector(".fallback"), null, "Fallback removed by patch script");
+    assert.ok(root.querySelector(".card"), "Resolved content present in DOM");
+    // Template element was removed by the script
+    assert.equal(
+      root.querySelector('template[id^="ef-s-"]'),
+      null,
+      "Template element removed by patch script",
+    );
+    // No suspense markers remain (they were cleaned up by the script)
+    const suspenseComments = getComments(root).filter((c) => c.data.includes("suspense"));
+    assert.equal(suspenseComments.length, 0, "No suspense comment markers remain");
+    // Stream markers from the resolved children ARE still present (hydrate needs them)
+    const streamComments = getComments(root).filter((c) => c.data.includes("stream-"));
+    assert.ok(streamComments.length >= 2, "Stream-region markers present for hydrate");
+
+    // ── 4. Hydrate — must adopt the resolved DOM without mismatch errors ──────
+    // hydrate walks the JSX tree, sees <Suspense>, treats it as transparent
+    // (boundary already resolved), and hydrates the children against the DOM.
+    const handle = await Effect.runPromise(hydrate(app, root));
+
+    // DOM structure unchanged after hydration (node identity preserved)
+    assert.ok(root.querySelector(".card"), "Card still in DOM after hydrate");
+    assert.equal(root.querySelector(".fallback"), null, "No fallback after hydrate");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("nested boundaries: both patches resolve; hydrate adopts both", async () => {
+    function Inner(): Effect.Effect<JSX.Element> {
+      return Effect.succeed(<p class="inner-content">Inner resolved</p>);
+    }
+    function Outer(): Effect.Effect<JSX.Element> {
+      return Effect.succeed(
+        <div class="outer-content">
+          <Suspense fallback={<span class="inner-fallback">Inner loading</span>}>
+            <Inner />
+          </Suspense>
+        </div>,
+      );
+    }
+
+    const app = (
+      <Suspense fallback={<span class="outer-fallback">Outer loading</span>}>
+        <Outer />
+      </Suspense>
+    );
+
+    // SSR
+    const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));
+    assert.ok(ssrHtml.includes('<template id="ef-s-1">'), "outer patch present");
+    assert.ok(ssrHtml.includes('<template id="ef-s-2">'), "inner patch present");
+
+    // Inject and run scripts
+    const dom = new JSDOM(
+      `<!DOCTYPE html><html><head></head><body><div id="root">${ssrHtml}</div></body></html>`,
+      { runScripts: "dangerously" },
+    );
+    global.document = dom.window.document as unknown as Document;
+    global.HTMLElement = dom.window.HTMLElement;
+    global.Comment = dom.window.Comment;
+    global.Text = dom.window.Text;
+
+    const root = dom.window.document.getElementById("root") as HTMLElement;
+
+    // Both boundaries resolved
+    assert.equal(root.querySelector(".outer-fallback"), null, "Outer fallback removed");
+    assert.equal(root.querySelector(".inner-fallback"), null, "Inner fallback removed");
+    assert.ok(root.querySelector(".inner-content"), "Inner content present");
+    assert.equal(root.querySelectorAll('template[id^="ef-s-"]').length, 0, "All templates removed");
+
+    // Hydrate
+    const handle = await Effect.runPromise(hydrate(app, root));
+    assert.ok(root.querySelector(".inner-content"), "Inner content still present after hydrate");
+
+    await Effect.runPromise(handle.unmount());
   });
 });

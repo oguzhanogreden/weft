@@ -1,4 +1,5 @@
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
+import { Suspense } from "@effect-ui/core/suspense";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Effect, Exit, Layer, ManagedRuntime, Scope, Stream } from "effect";
 import type { MountHandle } from "./api";
@@ -147,6 +148,14 @@ function hydrateNode(
       const { type, props } = element;
 
       if (type === FRAGMENT) {
+        return yield* hydrateChildren(props, cursor, path);
+      }
+
+      if (type === Suspense) {
+        // By the time `hydrate` runs, the SSR patch script has already resolved
+        // the boundary: the fallback is gone and the children are inline in the
+        // DOM. Hydrate the children directly from the current cursor — the
+        // Suspense wrapper is transparent to the DOM walk.
         return yield* hydrateChildren(props, cursor, path);
       }
 
