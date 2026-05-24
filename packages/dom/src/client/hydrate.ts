@@ -62,9 +62,17 @@ export function hydrate(
       streamIdCounter: { current: 0 },
     };
 
+    // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
+    const cleanup = Effect.zipRight(
+      Scope.close(scope, Exit.void),
+      Effect.promise(() => runtime.dispose()),
+    );
+
     // Adopt the existing server DOM rather than clearing the root.
+    // AC28: tapError ensures runtime/scope are disposed if hydrateNode fails
     yield* hydrateNode(app, root.firstChild, "root").pipe(
       Effect.provideService(RenderContext, context),
+      Effect.tapError(() => cleanup),
     );
 
     let unmounted = false;

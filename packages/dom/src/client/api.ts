@@ -48,11 +48,21 @@ export function mount(
       streamIdCounter: { current: 0 },
     };
 
+    // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
+    const cleanup = Effect.zipRight(
+      Scope.close(scope, Exit.void),
+      Effect.promise(() => runtime.dispose()),
+    );
+
     // AC1: Clear root element's existing children
     root.innerHTML = "";
 
     // AC1: Render the JSX tree with the provided context
-    const result = yield* renderNode(app).pipe(Effect.provideService(RenderContext, context));
+    // AC28: tapError ensures runtime/scope are disposed if renderNode fails
+    const result = yield* renderNode(app).pipe(
+      Effect.provideService(RenderContext, context),
+      Effect.tapError(() => cleanup),
+    );
 
     // AC1: Append rendered nodes to root
     if (result !== null) {

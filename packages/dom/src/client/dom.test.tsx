@@ -1,6 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Effect, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
+import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
+import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
 import { mount } from "./api";
 
@@ -1673,5 +1674,51 @@ describe("Ref Handling", () => {
     // Check value after mount
     const valueAfter = await Effect.runPromise(Ref.get(ref));
     assert.ok(Option.isSome(valueAfter), "Ref should be Option.some after mount");
+  });
+});
+
+// ============================================================================
+// AC28: Resource Cleanup on Mount Failure
+// ============================================================================
+
+describe("AC28: Resource Cleanup on Mount Failure", () => {
+  it("should propagate UnsupportedNodeTypeError when renderNode fails", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // An object with a numeric `type` triggers UnsupportedNodeTypeError
+    // (not a string, FRAGMENT, or function — renderNode's invalid type branch)
+    const invalidNode = { type: 42, props: {} };
+    const exit = await Effect.runPromiseExit(mount(invalidNode as unknown as never, root));
+
+    assert.ok(Exit.isFailure(exit));
+    const error = Cause.squash(exit.cause);
+    assert.ok(error instanceof UnsupportedNodeTypeError);
+  });
+
+  it("should leave root mountable after a failed mount (no zombie resources)", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // Fail once
+    const invalidNode = { type: 42, props: {} };
+    await Effect.runPromiseExit(mount(invalidNode as unknown as never, root));
+
+    // A second mount to the same root must succeed without errors
+    const handle = await Effect.runPromise(mount(<div>recovered</div>, root));
+    assert.equal(root.querySelector("div")?.textContent, "recovered");
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("should leave root.innerHTML empty after a failed mount", async () => {
+    createTestDOM();
+    const root = createRoot();
+    root.innerHTML = "<p>old</p>";
+
+    const invalidNode = { type: 42, props: {} };
+    await Effect.runPromiseExit(mount(invalidNode as unknown as never, root));
+
+    // mount clears root.innerHTML before renderNode runs, so it stays empty on failure
+    assert.equal(root.innerHTML, "");
   });
 });

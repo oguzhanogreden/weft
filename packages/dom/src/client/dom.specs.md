@@ -292,6 +292,16 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 - HMR support
 - Keyed children and reconciliation
 
+### AC28: Resource Cleanup on Mount Failure
+
+- **Given** a `mount` call where `renderNode` fails (e.g. unsupported JSXNode type)
+- **When** the failure propagates
+- **Then**:
+  - The internal `ManagedRuntime` is disposed before the error surfaces
+  - The internal `Scope` is closed before the error surfaces
+  - The original error is propagated unchanged
+  - The root element remains mountable (no zombie resources)
+
 ## Constraints
 
 - HTML elements only (no SVG/MathML yet)
