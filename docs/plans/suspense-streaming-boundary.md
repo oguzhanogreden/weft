@@ -90,6 +90,10 @@ The injected script locates the comment markers via `TreeWalker` (comment nodes 
 - [ ] Round-trip test (SSR → patch scripts → hydrate)
 - [ ] `examples/suspense/` — example app
 
+### Part 5 — Technical Debt
+
+- [ ] Remove circular dependency between `packages/dom/src/client/render-core.ts` and `packages/dom/src/client/suspense.ts` (each imports from the other; currently safe because all imports are used only inside function bodies, but it should be resolved by extracting shared primitives into a third module)
+
 ---
 
 ## Part 1 — Specs & Vocabulary
