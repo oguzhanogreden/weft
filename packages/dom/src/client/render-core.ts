@@ -5,14 +5,13 @@ import { Suspense, type SuspenseProps } from "@effect-ui/core/suspense";
 import type { JSXNode } from "@effect-ui/core/types";
 import {
   UnsupportedNodeTypeError,
+  type RenderResult,
   type StreamSubscriptionError,
   type RenderError,
   RenderContext,
   SuspenseContext,
 } from "../data";
 import { streamStartText, streamEndText } from "./markers";
-// NOTE: circular import — suspense.ts also imports renderNode from this module.
-// All values are used inside function bodies only (never at module-init time).
 import { renderSuspenseBoundary } from "./suspense";
 import { isStream, normalizeToStream, nextStreamId } from "../utilities";
 
@@ -42,8 +41,7 @@ export function renderNode(
     if (isStream(node) || Effect.isEffect(node)) {
       // Streams/Effects as direct children need to be wrapped in markers
       const stream = normalizeToStream(node);
-      const fragment = document.createDocumentFragment();
-      const markers = yield* handleStreamChild(stream, fragment);
+      const markers = yield* handleStreamChild(stream);
       return markers;
     }
 
@@ -65,7 +63,11 @@ export function renderNode(
 
       // Suspense boundary
       if (type === Suspense) {
-        return yield* renderSuspenseBoundary(props as unknown as SuspenseProps);
+        return yield* renderSuspenseBoundary(
+          props as unknown as SuspenseProps,
+          renderNode,
+          removeNodesBetweenMarkers,
+        );
       }
 
       // AC4: Element (string type)
@@ -135,8 +137,7 @@ function renderChildren(
       // Check if child is a stream/effect and handle specially
       if (isStream(child) || Effect.isEffect(child)) {
         const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
-        const fragment = document.createDocumentFragment();
-        const markers = yield* handleStreamChild(stream, fragment);
+        const markers = yield* handleStreamChild(stream);
         nodes.push(...markers);
       } else {
         const result = yield* renderNode(child);
@@ -205,7 +206,7 @@ function renderElement(
         // Check if child is a stream/effect
         if (isStream(child) || Effect.isEffect(child)) {
           const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
-          const markers = yield* handleStreamChild(stream, element);
+          const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
             element.appendChild(marker);
           }
@@ -267,8 +268,7 @@ function renderComponent(
       }
 
       // AC22: Component returning stream treated as stream child
-      const fragment = document.createDocumentFragment();
-      const markers = yield* handleStreamChild(stream, fragment);
+      const markers = yield* handleStreamChild(stream);
 
       return markers;
     }
@@ -277,11 +277,6 @@ function renderComponent(
     return yield* renderNode(result);
   });
 }
-
-/**
- * Result of rendering a JSXNode - can be single node, multiple nodes, or null
- */
-type RenderResult = Node | readonly Node[] | null;
 
 // ============================================================================
 // Reactive Children Handling
@@ -292,7 +287,6 @@ type RenderResult = Node | readonly Node[] | null;
  */
 function handleStreamChild(
   stream: Stream.Stream<JSXNode>,
-  _parent: HTMLElement | DocumentFragment,
 ): Effect.Effect<
   readonly Node[],
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,

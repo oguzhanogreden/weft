@@ -3,6 +3,7 @@ import type { JSXNode } from "@effect-ui/core/types";
 import type { SuspenseProps } from "@effect-ui/core/suspense";
 import {
   type RenderError,
+  type RenderResult,
   type StreamSubscriptionError,
   type UnsupportedNodeTypeError,
   RenderContext,
@@ -10,10 +11,19 @@ import {
 } from "../data";
 import { suspenseEndText, suspenseStartText } from "./markers";
 import { nextSuspenseId } from "../utilities";
-// NOTE: circular import — render-core also imports from this module.
-// All values are used inside function bodies only (never at module-init time),
-// so live bindings resolve correctly before any function is called.
-import { removeNodesBetweenMarkers, renderNode } from "./render-core";
+
+/**
+ * Signature of the `renderNode` function injected by `render-core.ts`.
+ * Defined here so `suspense.ts` can reference it without importing from
+ * `render-core.ts`, which would re-introduce the circular dependency.
+ */
+type RenderNodeFn = (
+  node: JSXNode,
+) => Effect.Effect<
+  RenderResult,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+>;
 
 /**
  * Implements the `<Suspense>` boundary for the DOM renderer.
@@ -25,9 +35,14 @@ import { removeNodesBetweenMarkers, renderNode } from "./render-core";
  * A sentinel of `1` is added to `pendingRef` at the start so that a
  * very-fast child cannot complete `allSettled` before all siblings have had a
  * chance to register. The sentinel is released after `renderChildren` returns.
+ *
+ * `renderNode` and `removeNodesBetweenMarkers` are passed in by `render-core.ts`
+ * to avoid a circular module dependency (render-core → suspense → render-core).
  */
 export function renderSuspenseBoundary(
   props: SuspenseProps,
+  renderNode: RenderNodeFn,
+  removeNodesBetweenMarkers: (startMarker: Comment, endMarker: Comment) => void,
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -46,9 +61,7 @@ export function renderSuspenseBoundary(
     const settle: Effect.Effect<void> = pipe(
       Ref.updateAndGet(pendingRef, (n) => n - 1),
       Effect.flatMap((n) =>
-        n <= 0
-          ? Effect.asVoid(Deferred.succeed(allSettled, undefined as unknown as void))
-          : Effect.void,
+        n <= 0 ? Effect.asVoid(Deferred.succeed(allSettled, undefined)) : Effect.void,
       ),
     );
 
@@ -67,9 +80,9 @@ export function renderSuspenseBoundary(
           : [rawChildren as JSXNode];
 
     // renderNode handles arrays via its iterable branch → returns readonly Node[]
-    const childResult = yield* (
-      renderNode(childArray as JSXNode) as ReturnType<typeof renderNode>
-    ).pipe(Effect.provideService(SuspenseContext, suspenseService));
+    const childResult = yield* renderNode(childArray as JSXNode).pipe(
+      Effect.provideService(SuspenseContext, suspenseService),
+    );
 
     const childNodes: readonly Node[] = (() => {
       if (childResult === null) return [];

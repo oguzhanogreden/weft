@@ -61,6 +61,15 @@ export class SuspenseContext extends Context.Tag("SuspenseContext")<
 >() {}
 
 /**
+ * The value produced by rendering a single JSXNode: a single DOM node, an
+ * ordered list of nodes (e.g. for a fragment or array child), or nothing.
+ *
+ * Defined here so both `render-core.ts` and `suspense.ts` can reference it
+ * without a circular import.
+ */
+export type RenderResult = Node | readonly Node[] | null;
+
+/**
  * Service for managing rendering context including runtime, scope, and stream IDs
  */
 
