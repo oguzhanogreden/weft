@@ -6,54 +6,27 @@
  */
 
 import { mount } from "@effect-ui/dom";
-import { Effect, Either, Schema, Stream } from "effect";
-
-// ============================================================================
-// Helper: Create an emitter for form values
-// ============================================================================
-
-function createEmitter<T>(initial: T) {
-  let currentValue = initial;
-  let listener: ((value: T) => void) | null = null;
-
-  const stream = Stream.async<T>((emit) => {
-    void emit.single(currentValue);
-    listener = (value: T) => {
-      currentValue = value;
-      void emit.single(value);
-    };
-    return Effect.sync(() => {
-      listener = null;
-    });
-  });
-
-  const emit = (value: T) => {
-    if (listener) {
-      listener(value);
-    }
-  };
-
-  return [stream, emit] as const;
-}
+import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
 // Example 1: Basic Reactive Input
 // ============================================================================
 
-const BasicInput = () => {
-  const [valueStream, setValue] = createEmitter("");
+const BasicInput = () =>
+  Effect.gen(function* () {
+    const value = yield* SubscriptionRef.make("");
 
-  return (
-    <div>
-      <input
-        type="text"
-        placeholder="Type something..."
-        oninput={(e) => setValue(e.currentTarget.value)}
-      />
-      <div class="preview">You typed: {valueStream}</div>
-    </div>
-  );
-};
+    return (
+      <div>
+        <input
+          type="text"
+          placeholder="Type something..."
+          oninput={(e) => SubscriptionRef.set(value, e.currentTarget.value)}
+        />
+        <div class="preview">You typed: {value.changes}</div>
+      </div>
+    );
+  });
 
 // ============================================================================
 // Example 2: Schema Validation
@@ -68,111 +41,114 @@ const Email = Schema.String.pipe(
   }),
 );
 
-const SchemaEmailInput = () => {
-  const [emailStream, setEmail] = createEmitter("");
+const SchemaEmailInput = () =>
+  Effect.gen(function* () {
+    const email = yield* SubscriptionRef.make("");
 
-  // Validate using Schema.decodeUnknownEither
-  const validationStream = Stream.map(emailStream, (email) => {
-    if (email.length === 0) return { valid: false, error: null };
-    const result = Schema.decodeUnknownEither(Email)(email);
-    return Either.match(result, {
-      onLeft: (e) => ({
-        valid: false,
-        error: e.message.split(":").pop()?.trim() ?? "Invalid",
-      }),
-      onRight: () => ({ valid: true, error: null }),
+    // Validate using Schema.decodeUnknownEither
+    const validationStream = Stream.map(email.changes, (value) => {
+      if (value.length === 0) return { valid: false, error: null };
+      const result = Schema.decodeUnknownEither(Email)(value);
+      return Either.match(result, {
+        onLeft: (e) => ({
+          valid: false,
+          error: e.message.split(":").pop()?.trim() ?? "Invalid",
+        }),
+        onRight: () => ({ valid: true, error: null }),
+      });
     });
-  });
 
-  return (
-    <div class="form-group">
-      {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-      <label>Email (Schema validated)</label>
-      <input
-        type="email"
-        placeholder="user@example.com"
-        oninput={(e) => setEmail((e.target as HTMLInputElement).value)}
-      />
-      <div>
-        {Stream.map(validationStream, ({ valid, error }) =>
-          error ? (
-            <span class="error-text">{error}</span>
-          ) : valid ? (
-            <span class="success-text">Valid email</span>
-          ) : null,
-        )}
+    return (
+      <div class="form-group">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+        <label>Email (Schema validated)</label>
+        <input
+          type="email"
+          placeholder="user@example.com"
+          oninput={(e) => SubscriptionRef.set(email, (e.target as HTMLInputElement).value)}
+        />
+        <div>
+          {Stream.map(validationStream, ({ valid, error }) =>
+            error ? (
+              <span class="error-text">{error}</span>
+            ) : valid ? (
+              <span class="success-text">Valid email</span>
+            ) : null,
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  });
 
 // ============================================================================
 // Example 3: Character Counter
 // ============================================================================
 
-const CharacterCounter = () => {
-  const [textStream, setText] = createEmitter("");
-  const maxLength = 100;
+const CharacterCounter = () =>
+  Effect.gen(function* () {
+    const text = yield* SubscriptionRef.make("");
+    const maxLength = 100;
 
-  const countStream = Stream.map(textStream, (text) => text.length);
-  const remainingStream = Stream.map(countStream, (count) => maxLength - count);
+    const countStream = Stream.map(text.changes, (t) => t.length);
+    const remainingStream = Stream.map(countStream, (count) => maxLength - count);
 
-  return (
-    <div class="form-group">
-      {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-      <label>Bio (max {maxLength} chars)</label>
-      <textarea
-        placeholder="Tell us about yourself..."
-        oninput={(e) => setText((e.target as HTMLTextAreaElement).value)}
-      />
-      <div class="preview">
-        {Stream.map(remainingStream, (remaining) => (
-          <span style={{ color: remaining < 20 ? "#f44336" : "#666" }}>
-            {remaining} characters remaining
-          </span>
-        ))}
+    return (
+      <div class="form-group">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+        <label>Bio (max {maxLength} chars)</label>
+        <textarea
+          placeholder="Tell us about yourself..."
+          oninput={(e) => SubscriptionRef.set(text, (e.target as HTMLTextAreaElement).value)}
+        />
+        <div class="preview">
+          {Stream.map(remainingStream, (remaining) => (
+            <span style={{ color: remaining < 20 ? "#f44336" : "#666" }}>
+              {remaining} characters remaining
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  });
 
 // ============================================================================
 // Example 4: Form Submit with Effect
 // ============================================================================
 
-const LoginForm = () => {
-  const [statusStream, setStatus] = createEmitter<string | null>(null);
+const LoginForm = () =>
+  Effect.gen(function* () {
+    const status = yield* SubscriptionRef.make<string | null>(null);
 
-  return (
-    <form
-      onsubmit={(e) => {
-        e.preventDefault();
-        return Effect.gen(function* () {
-          setStatus("Submitting...");
-          yield* Effect.log("Form submitted");
-          yield* Effect.sleep("1500 millis");
-          setStatus("Login successful!");
-          yield* Effect.log("Login complete");
-        });
-      }}
-    >
-      <div class="form-group">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-        <label>Username</label>
-        <input type="text" placeholder="Enter username" />
-      </div>
-      <div class="form-group">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-        <label>Password</label>
-        <input type="password" placeholder="Enter password" />
-      </div>
-      <button type="submit">Login</button>
-      <div class="preview">
-        {Stream.map(statusStream, (status) => (status ? <span>{status}</span> : null))}
-      </div>
-    </form>
-  );
-};
+    return (
+      <form
+        onsubmit={(e) => {
+          e.preventDefault();
+          return Effect.gen(function* () {
+            yield* SubscriptionRef.set(status, "Submitting...");
+            yield* Effect.log("Form submitted");
+            yield* Effect.sleep("1500 millis");
+            yield* SubscriptionRef.set(status, "Login successful!");
+            yield* Effect.log("Login complete");
+          });
+        }}
+      >
+        <div class="form-group">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+          <label>Username</label>
+          <input type="text" placeholder="Enter username" />
+        </div>
+        <div class="form-group">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+          <label>Password</label>
+          <input type="password" placeholder="Enter password" />
+        </div>
+        <button type="submit">Login</button>
+        <div class="preview">
+          {Stream.map(status.changes, (s) => (s ? <span>{s}</span> : null))}
+        </div>
+      </form>
+    );
+  });
 
 // ============================================================================
 // Example 5: Complete Form with Schema Validation
@@ -221,150 +197,140 @@ const validateField = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
   });
 };
 
-const SchemaForm = () => {
-  // Track current values for validation on submit
-  let currentUsername = "";
-  let currentPassword = "";
-  let currentAge = "";
+const SchemaForm = () =>
+  Effect.gen(function* () {
+    const usernameRef = yield* SubscriptionRef.make("");
+    const passwordRef = yield* SubscriptionRef.make("");
+    const ageRef = yield* SubscriptionRef.make("");
+    const statusRef = yield* SubscriptionRef.make<string | null>(null);
 
-  const [usernameStream, setUsernameStream] = createEmitter("");
-  const [passwordStream, setPasswordStream] = createEmitter("");
-  const [ageStream, setAgeStream] = createEmitter("");
-  const [statusStream, setStatus] = createEmitter<string | null>(null);
+    const usernameError = Stream.map(usernameRef.changes, (v) =>
+      v ? validateField(Username, v) : null,
+    );
+    const passwordError = Stream.map(passwordRef.changes, (v) =>
+      v ? validateField(Password, v) : null,
+    );
+    const ageError = Stream.map(ageRef.changes, (v) => (v ? validateField(Age, v) : null));
 
-  const setUsername = (v: string) => {
-    currentUsername = v;
-    setUsernameStream(v);
-  };
-  const setPassword = (v: string) => {
-    currentPassword = v;
-    setPasswordStream(v);
-  };
-  const setAge = (v: string) => {
-    currentAge = v;
-    setAgeStream(v);
-  };
+    // Check if form is valid (all fields filled and no errors)
+    const isValid = Stream.zipLatestWith(
+      Stream.zipLatestWith(usernameRef.changes, passwordRef.changes, (u, p) => ({ u, p })),
+      ageRef.changes,
+      ({ u, p }, a) =>
+        u.length > 0 &&
+        p.length > 0 &&
+        a.length > 0 &&
+        !validateField(Username, u) &&
+        !validateField(Password, p) &&
+        !validateField(Age, a),
+    );
 
-  const usernameError = Stream.map(usernameStream, (v) => (v ? validateField(Username, v) : null));
-  const passwordError = Stream.map(passwordStream, (v) => (v ? validateField(Password, v) : null));
-  const ageError = Stream.map(ageStream, (v) => (v ? validateField(Age, v) : null));
+    return (
+      <form
+        onsubmit={(e) => {
+          e.preventDefault();
+          return Effect.gen(function* () {
+            yield* SubscriptionRef.set(statusRef, "Validating...");
+            yield* Effect.sleep("500 millis");
 
-  // Check if form is valid (all fields filled and no errors)
-  const isValid = Stream.zipLatestWith(
-    Stream.zipLatestWith(usernameStream, passwordStream, (u, p) => ({
-      u,
-      p,
-    })),
-    ageStream,
-    ({ u, p }, a) =>
-      u.length > 0 &&
-      p.length > 0 &&
-      a.length > 0 &&
-      !validateField(Username, u) &&
-      !validateField(Password, p) &&
-      !validateField(Age, a),
-  );
+            // Read current values
+            const u = yield* SubscriptionRef.get(usernameRef);
+            const p = yield* SubscriptionRef.get(passwordRef);
+            const a = yield* SubscriptionRef.get(ageRef);
 
-  return (
-    <form
-      onsubmit={(e) => {
-        e.preventDefault();
-        return Effect.gen(function* () {
-          setStatus("Validating...");
-          yield* Effect.sleep("500 millis");
+            const errors = [
+              validateField(Username, u),
+              validateField(Password, p),
+              validateField(Age, a),
+            ].filter(Boolean);
 
-          // Validate all fields
-          const errors = [
-            validateField(Username, currentUsername),
-            validateField(Password, currentPassword),
-            validateField(Age, currentAge),
-          ].filter(Boolean);
-
-          if (errors.length > 0 || !currentUsername || !currentPassword || !currentAge) {
-            setStatus("Please fix validation errors");
-          } else {
-            setStatus("Registration successful!");
-          }
-        });
-      }}
-    >
-      <div class="form-group">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-        <label>Username</label>
-        <input
-          type="text"
-          placeholder="min 3 chars, alphanumeric"
-          oninput={(e) => setUsername((e.target as HTMLInputElement).value)}
-        />
-        {Stream.map(usernameError, (err) => (err ? <span class="error-text">{err}</span> : null))}
-      </div>
-      <div class="form-group">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-        <label>Password</label>
-        <input
-          type="password"
-          placeholder="min 8 chars, uppercase + number"
-          oninput={(e) => setPassword((e.target as HTMLInputElement).value)}
-        />
-        {Stream.map(passwordError, (err) => (err ? <span class="error-text">{err}</span> : null))}
-      </div>
-      <div class="form-group">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-        <label>Age</label>
-        <input
-          type="text"
-          placeholder="18+"
-          oninput={(e) => setAge((e.target as HTMLInputElement).value)}
-        />
-        {Stream.map(ageError, (err) => (err ? <span class="error-text">{err}</span> : null))}
-      </div>
-      <button type="submit">
-        {Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields"))}
-      </button>
-      <div class="preview">
-        {Stream.map(statusStream, (status) => (status ? <span>{status}</span> : null))}
-      </div>
-    </form>
-  );
-};
+            yield* SubscriptionRef.set(
+              statusRef,
+              errors.length > 0 || !u || !p || !a
+                ? "Please fix validation errors"
+                : "Registration successful!",
+            );
+          });
+        }}
+      >
+        <div class="form-group">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+          <label>Username</label>
+          <input
+            type="text"
+            placeholder="min 3 chars, alphanumeric"
+            oninput={(e) => SubscriptionRef.set(usernameRef, (e.target as HTMLInputElement).value)}
+          />
+          {Stream.map(usernameError, (err) => (err ? <span class="error-text">{err}</span> : null))}
+        </div>
+        <div class="form-group">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+          <label>Password</label>
+          <input
+            type="password"
+            placeholder="min 8 chars, uppercase + number"
+            oninput={(e) => SubscriptionRef.set(passwordRef, (e.target as HTMLInputElement).value)}
+          />
+          {Stream.map(passwordError, (err) => (err ? <span class="error-text">{err}</span> : null))}
+        </div>
+        <div class="form-group">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
+          <label>Age</label>
+          <input
+            type="text"
+            placeholder="18+"
+            oninput={(e) => SubscriptionRef.set(ageRef, (e.target as HTMLInputElement).value)}
+          />
+          {Stream.map(ageError, (err) => (err ? <span class="error-text">{err}</span> : null))}
+        </div>
+        <button type="submit">
+          {Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields"))}
+        </button>
+        <div class="preview">
+          {Stream.map(statusRef.changes, (s) => (s ? <span>{s}</span> : null))}
+        </div>
+      </form>
+    );
+  });
 
 // ============================================================================
 // Example 6: Live Search Preview
 // ============================================================================
 
-const SearchPreview = () => {
-  const [queryStream, setQuery] = createEmitter("");
+const SearchPreview = () =>
+  Effect.gen(function* () {
+    const query = yield* SubscriptionRef.make("");
 
-  // Simulated search results
-  const resultsStream = Stream.map(queryStream, (query) => {
-    if (query.length < 2) return [];
-    const items = ["Apple", "Banana", "Cherry", "Date", "Elderberry"];
-    return items.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
-  });
+    // Simulated search results
+    const resultsStream = Stream.map(query.changes, (q) => {
+      if (q.length < 2) return [];
+      const items = ["Apple", "Banana", "Cherry", "Date", "Elderberry"];
+      return items.filter((item) => item.toLowerCase().includes(q.toLowerCase()));
+    });
 
-  return (
-    <div>
-      <input
-        type="search"
-        placeholder="Search fruits..."
-        oninput={(e) => setQuery((e.target as HTMLInputElement).value)}
-      />
-      <div class="preview">
-        {Stream.map(resultsStream, (results) =>
-          results.length > 0 ? (
-            <ul>
-              {results.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <span>Type at least 2 characters to search</span>
-          ),
-        )}
+    return (
+      <div>
+        <input
+          type="search"
+          placeholder="Search fruits..."
+          oninput={(e) => SubscriptionRef.set(query, (e.target as HTMLInputElement).value)}
+        />
+        <div class="preview">
+          {Stream.map(resultsStream, (results) =>
+            results.length > 0 ? (
+              <ul>
+                {results.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <span>Type at least 2 characters to search</span>
+            ),
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  });
 
 // ============================================================================
 // App
