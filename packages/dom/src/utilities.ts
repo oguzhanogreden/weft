@@ -2,7 +2,7 @@ import { Effect, Stream } from "effect";
 import { RenderContext } from "./data";
 
 /**
- * Generates next unique stream ID
+ * Generates the next unique stream-region ID.
  */
 export function nextStreamId(): Effect.Effect<number, never, RenderContext> {
   return Effect.gen(function* () {
@@ -10,6 +10,14 @@ export function nextStreamId(): Effect.Effect<number, never, RenderContext> {
     return ++context.streamIdCounter.current;
   });
 }
+
+/**
+ * Generates the next unique Suspense-boundary ID.
+ *
+ * IDs are drawn from the same monotonic counter as stream-region IDs —
+ * they only need to be unique within a single render tree.
+ */
+export const nextSuspenseId = nextStreamId;
 
 /**
  * Checks if value is a Stream.

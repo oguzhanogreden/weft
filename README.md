@@ -264,4 +264,4 @@ vp run -F ssr-hydration dev
 
 ## License
 
-ISC
+MIT

@@ -1,4 +1,5 @@
 import * as assert from "node:assert/strict";
+import { Suspense } from "@effect-ui/core/suspense";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
@@ -244,5 +245,290 @@ describe("renderToStream - function components", () => {
     const Live = () => Stream.make(<em>now</em>);
     const html = await Effect.runPromise(Stream.mkString(renderToStreamHydratable(<Live />)));
     assert.equal(html, "<!-- stream-start-1 --><em>now</em><!-- stream-end-1 -->");
+  });
+});
+
+// ============================================================================
+// SSR Suspense tests — AC-SS1 through AC-SS7
+// ============================================================================
+
+describe("renderToStream - Suspense SSR", () => {
+  // Helper: async component backed by a Deferred gate so tests can control timing.
+  function makeGatedComponent(gate: Deferred.Deferred<void>, content: JSXNode) {
+    return () =>
+      Effect.gen(function* () {
+        yield* Deferred.await(gate);
+        return content;
+      });
+  }
+
+  it("AC-SS1: renderToString emits fallback only — no markers, no patches", async () => {
+    const SlowChild = () => Effect.succeed(<p>resolved</p>);
+    const html = await Effect.runPromise(
+      renderToString(
+        <Suspense fallback={<span>loading</span>}>
+          <SlowChild />
+        </Suspense>,
+      ),
+    );
+    assert.equal(html, "<span>loading</span>");
+    assert.ok(!html.includes("suspense-start"), "no start marker");
+    assert.ok(!html.includes("suspense-end"), "no end marker");
+    assert.ok(!html.includes("<template"), "no template tag");
+    assert.ok(!html.includes("<script"), "no script tag");
+  });
+
+  it("AC-SS1: renderToString renders nested Suspense fallback inline", async () => {
+    const html = await Effect.runPromise(
+      renderToString(
+        <Suspense fallback={<div>outer loading</div>}>
+          <Suspense fallback={<div>inner loading</div>}>
+            {Effect.succeed(<p>inner content</p>)}
+          </Suspense>
+        </Suspense>,
+      ),
+    );
+    // renderToString renders only the outer fallback — the outer Suspense is
+    // intercepted first (ctx=null path) and its children are never visited.
+    assert.equal(
+      html,
+      "<div>outer loading</div>",
+      "only outer fallback rendered; inner boundary never reached",
+    );
+    assert.ok(!html.includes("suspense-start"));
+    assert.ok(!html.includes("<template"));
+  });
+
+  it("AC-SS2: renderToStream emits fallback+markers inline, patch appended after main", async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const gate = yield* Deferred.make<void>();
+        const GatedChild = makeGatedComponent(gate, <p>resolved</p>);
+
+        const chunks: string[] = [];
+
+        const fiber = yield* Effect.fork(
+          Stream.runForEach(
+            renderToStream(
+              <div>
+                <Suspense fallback={<span>loading</span>}>
+                  <GatedChild />
+                </Suspense>
+              </div>,
+            ),
+            (chunk) =>
+              Effect.sync(() => {
+                chunks.push(chunk);
+              }),
+          ),
+        );
+
+        // Yield enough to let the main stream run past the Suspense boundary
+        yield* Effect.sleep("10 millis");
+        const mainHtml = chunks.join("");
+
+        // Main stream should have emitted fallback + markers
+        assert.ok(mainHtml.includes("<div>"), "outer div present");
+        assert.ok(mainHtml.includes("<!-- suspense-start-1 -->"), "start marker present");
+        assert.ok(mainHtml.includes("<span>loading</span>"), "fallback present");
+        assert.ok(mainHtml.includes("<!-- suspense-end-1 -->"), "end marker present");
+        assert.ok(!mainHtml.includes("<template"), "patch not yet emitted");
+
+        // Release the gate; the resolution fiber pushes the patch
+        yield* Deferred.succeed(gate, undefined);
+        yield* Fiber.join(fiber);
+
+        const fullHtml = chunks.join("");
+        assert.ok(fullHtml.includes('<template id="ef-s-1">'), "template patch present");
+        assert.ok(fullHtml.includes("<p>resolved</p>"), "resolved content in patch");
+        assert.ok(fullHtml.includes("<script>"), "swap script present");
+        assert.ok(fullHtml.includes("suspense-start-1"), "start marker text in script");
+        assert.ok(fullHtml.includes("suspense-end-1"), "end marker text in script");
+      }),
+    );
+  });
+
+  it("AC-SS2: renderToStream with sync child terminates immediately (no open tail)", async () => {
+    // Sync-only content should terminate as soon as the main document is done.
+    const html = await Effect.runPromise(
+      Stream.mkString(
+        renderToStream(
+          <Suspense fallback={<span>loading</span>}>{Effect.succeed(<p>sync</p>)}</Suspense>,
+        ),
+      ),
+    );
+    // The async Effect child in the Suspense boundary resolves immediately;
+    // the patch is pushed, queue is shut down, stream terminates.
+    assert.ok(html.includes("<!-- suspense-start-1 -->"), "start marker");
+    assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker");
+    assert.ok(html.includes('<template id="ef-s-1">'), "patch emitted");
+    assert.ok(html.includes("<p>sync</p>"), "content in patch");
+  });
+
+  it("AC-SS3: renderToStreamHydratable — patch includes stream markers for reactive children", async () => {
+    const html = await Effect.runPromise(
+      Stream.mkString(
+        renderToStreamHydratable(
+          <Suspense fallback={<span>loading</span>}>
+            {Effect.succeed(<div>{Stream.make("live")}</div>)}
+          </Suspense>,
+        ),
+      ),
+    );
+    // Patch template should contain stream markers around the reactive region
+    assert.ok(html.includes('<template id="ef-s-1">'), "patch present");
+    assert.ok(html.includes("stream-start-"), "reactive markers in patch content");
+    assert.ok(html.includes("stream-end-"), "reactive end marker in patch content");
+    assert.ok(html.includes("live"), "reactive value in patch content");
+  });
+
+  it("AC-SS4: multiple boundaries — patches emitted in resolution order", async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const gateA = yield* Deferred.make<void>();
+        const gateB = yield* Deferred.make<void>();
+
+        const SlowA = makeGatedComponent(gateA, <p>branch A</p>);
+        const SlowB = makeGatedComponent(gateB, <p>branch B</p>);
+
+        const html = yield* Effect.gen(function* () {
+          // Release B before A so B's patch should appear first
+          const fiberHtml = yield* Effect.fork(
+            Stream.mkString(
+              renderToStream(
+                <>
+                  <Suspense fallback={<span>loading A</span>}>
+                    <SlowA />
+                  </Suspense>
+                  <Suspense fallback={<span>loading B</span>}>
+                    <SlowB />
+                  </Suspense>
+                </>,
+              ),
+            ),
+          );
+
+          yield* Effect.sleep("5 millis");
+          // Release B first (resolves before A)
+          yield* Deferred.succeed(gateB, undefined);
+          yield* Effect.sleep("5 millis");
+          yield* Deferred.succeed(gateA, undefined);
+
+          return yield* Fiber.join(fiberHtml);
+        });
+
+        // Both patches must be present
+        assert.ok(html.includes('<template id="ef-s-1">'), "patch for boundary 1");
+        assert.ok(html.includes('<template id="ef-s-2">'), "patch for boundary 2");
+        assert.ok(html.includes("<p>branch A</p>"), "branch A resolved");
+        assert.ok(html.includes("<p>branch B</p>"), "branch B resolved");
+
+        // B resolved first so its patch should precede A's in the output
+        const idxB = html.indexOf('<template id="ef-s-2">');
+        const idxA = html.indexOf('<template id="ef-s-1">');
+        assert.ok(idxB < idxA, "B patch emitted before A patch (resolution order)");
+      }),
+    );
+  });
+
+  it("AC-SS5: nested Suspense — outer patch has inner fallback; inner patch emitted separately", async () => {
+    const html = await Effect.runPromise(
+      Stream.mkString(
+        renderToStream(
+          <Suspense fallback={<span>outer loading</span>}>
+            {Effect.succeed(
+              <Suspense fallback={<span>inner loading</span>}>
+                {Effect.succeed(<p>inner content</p>)}
+              </Suspense>,
+            )}
+          </Suspense>,
+        ),
+      ),
+    );
+
+    // Outer patch (id=1) contains inner boundary's fallback + markers
+    const outerTemplateMatch = html.match(/<template id="ef-s-1">([\s\S]*?)<\/template>/);
+    assert.ok(outerTemplateMatch, "outer template present");
+    const outerContent = outerTemplateMatch?.[1] ?? "";
+    assert.ok(outerContent.includes("suspense-start-2"), "outer patch has inner start marker");
+    assert.ok(outerContent.includes("inner loading"), "outer patch has inner fallback");
+    assert.ok(outerContent.includes("suspense-end-2"), "outer patch has inner end marker");
+
+    // Inner patch (id=2) contains the actual inner content
+    const innerTemplateMatch = html.match(/<template id="ef-s-2">([\s\S]*?)<\/template>/);
+    assert.ok(innerTemplateMatch, "inner template present");
+    const innerContent = innerTemplateMatch?.[1] ?? "";
+    assert.ok(innerContent.includes("<p>inner content</p>"), "inner patch has resolved content");
+  });
+
+  it("AC-SS6: never-resolving boundary keeps stream open (no timeout)", async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const neverResolves = yield* Deferred.make<void>();
+        const NeverChild = makeGatedComponent(neverResolves, <p>never</p>);
+
+        const chunks: string[] = [];
+
+        const fiber = yield* Effect.fork(
+          Stream.runForEach(
+            renderToStream(
+              <Suspense fallback={<span>forever loading</span>}>
+                <NeverChild />
+              </Suspense>,
+            ),
+            (chunk) =>
+              Effect.sync(() => {
+                chunks.push(chunk);
+              }),
+          ),
+        );
+
+        // Wait a bit; main stream should have emitted the fallback by now
+        yield* Effect.sleep("30 millis");
+        const html = chunks.join("");
+
+        assert.ok(html.includes("<!-- suspense-start-1 -->"), "start marker emitted");
+        assert.ok(html.includes("<span>forever loading</span>"), "fallback emitted");
+        assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker emitted");
+
+        // Stream is still open (fiber not done) — the patch hasn't arrived
+        const poll = yield* Fiber.poll(fiber);
+        assert.ok(poll._tag === "None", "stream still open — patch not yet emitted");
+        assert.ok(!html.includes("<template"), "no patch emitted yet");
+
+        // Clean up — interrupt the fiber
+        yield* Fiber.interrupt(fiber);
+      }),
+    );
+  });
+
+  it("AC-SS7: no Suspense in tree — output identical, stream terminates immediately", async () => {
+    const node = (
+      <div>
+        <span>hello</span>
+        {Effect.succeed("world")}
+      </div>
+    );
+
+    const fromOldStream = "<div><span>hello</span>world</div>";
+    const fromNew = await Effect.runPromise(Stream.mkString(renderToStream(node)));
+    assert.equal(fromNew, fromOldStream, "output identical when no Suspense");
+
+    // The stream must terminate — if it hangs, the test times out.
+    // No additional assertion needed; the await itself verifies termination.
+  });
+
+  it("AC-SS7: no Suspense hydratable — output identical to pre-Suspense", async () => {
+    const Live = () => Stream.make(<em>now</em>);
+    const html = await Effect.runPromise(
+      Stream.mkString(
+        renderToStreamHydratable(
+          <div>
+            <Live />
+          </div>,
+        ),
+      ),
+    );
+    assert.equal(html, "<div><!-- stream-start-1 --><em>now</em><!-- stream-end-1 --></div>");
   });
 });

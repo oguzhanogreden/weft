@@ -1,0 +1,16 @@
+{
+  "name": "suspense",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@effect-ui/core": "workspace:*",
+    "@effect-ui/dom": "workspace:*",
+    "effect": "^3.21.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "vite-plus": "catalog:"
+  }
+}
