@@ -1,4 +1,4 @@
-import { Effect, Stream } from "effect";
+import { Effect } from "effect";
 import { RenderContext } from "./data";
 
 /**
@@ -18,26 +18,3 @@ export function nextStreamId(): Effect.Effect<number, never, RenderContext> {
  * they only need to be unique within a single render tree.
  */
 export const nextSuspenseId = nextStreamId;
-
-/**
- * Checks if value is a Stream.
- * Uses `any` for E and R parameters to allow matching streams with any error/requirements.
- */
-export function isStream(value: unknown): value is Stream.Stream<unknown, any, any> {
-  return typeof value === "object" && value != null && Stream.StreamTypeId in value;
-}
-
-/**
- * Normalizes Effect/Stream to Stream
- */
-export function normalizeToStream<A>(
-  value: A | Effect.Effect<A> | Stream.Stream<A>,
-): Stream.Stream<A> {
-  if (isStream(value)) {
-    return value;
-  }
-  if (Effect.isEffect(value)) {
-    return Stream.fromEffect(value);
-  }
-  return Stream.make(value);
-}

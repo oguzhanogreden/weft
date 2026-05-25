@@ -11,7 +11,7 @@ import {
   pipe,
 } from "effect";
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
-import { Suspense } from "@effect-ui/core";
+import { isStream, Suspense, toStream } from "@effect-ui/core";
 import type { SuspenseProps } from "@effect-ui/core";
 import type { JSXNode } from "@effect-ui/core/types";
 import {
@@ -30,7 +30,7 @@ import {
   suspenseEndText,
   suspenseStartText,
 } from "../shared";
-import { isStream, normalizeToStream, nextStreamId, nextSuspenseId } from "../utilities";
+import { nextStreamId, nextSuspenseId } from "../utilities";
 
 // ============================================================================
 // DOM Prop Handling
@@ -121,7 +121,7 @@ function setProperty(
   return Effect.gen(function* () {
     // AC14: Normalize Effect/Stream
     if (isStream(value) || Effect.isEffect(value)) {
-      const stream = normalizeToStream(value);
+      const stream = toStream(value);
       yield* subscribeToStream(
         stream,
         (val) => {
@@ -154,7 +154,7 @@ function setAttribute(
   return Effect.gen(function* () {
     // AC14: Normalize Effect/Stream
     if (isStream(value) || Effect.isEffect(value)) {
-      const stream = normalizeToStream(value);
+      const stream = toStream(value);
       yield* subscribeToStream(
         stream,
         (val) => {
@@ -222,7 +222,7 @@ function handleStyle(
   return Effect.gen(function* () {
     // AC13: Stream of styles
     if (isStream(value) || Effect.isEffect(value)) {
-      const stream = normalizeToStream(value);
+      const stream = toStream(value);
       yield* subscribeToStream(
         stream,
         (val) => {
@@ -271,7 +271,7 @@ function setStyleFromObject(
     for (const [key, value] of Object.entries(styleObj)) {
       // AC12: Handle stream properties
       if (isStream(value) || Effect.isEffect(value)) {
-        const stream = normalizeToStream(value);
+        const stream = toStream(value);
         yield* subscribeToStream(
           stream,
           (val) => {
@@ -384,7 +384,7 @@ function setEventHandler(
 
     // Handle static vs reactive handlers
     if (isStream(value) || Effect.isEffect(value)) {
-      const stream = normalizeToStream(value);
+      const stream = toStream(value);
       yield* subscribeToStream(stream, (handler) => attachListener(handler), `event:${name}`);
     } else {
       // Static handler
@@ -543,7 +543,7 @@ export function renderNode(
     // Check for Stream/Effect first (before iterables, since Stream might be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
       // Streams/Effects as direct children need to be wrapped in markers
-      const stream = normalizeToStream(node);
+      const stream = toStream(node);
       const markers = yield* handleStreamChild(stream);
       return markers;
     }
@@ -635,7 +635,7 @@ function renderChildren(
     for (const child of children) {
       // Check if child is a stream/effect and handle specially
       if (isStream(child) || Effect.isEffect(child)) {
-        const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
+        const stream = toStream(child) as Stream.Stream<JSXNode>;
         const markers = yield* handleStreamChild(stream);
         nodes.push(...markers);
       } else {
@@ -704,7 +704,7 @@ function renderElement(
       for (const child of childArray) {
         // Check if child is a stream/effect
         if (isStream(child) || Effect.isEffect(child)) {
-          const stream = normalizeToStream(child) as Stream.Stream<JSXNode>;
+          const stream = toStream(child) as Stream.Stream<JSXNode>;
           const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
             element.appendChild(marker);
@@ -747,7 +747,7 @@ function renderComponent(
     if (isStream(result) || Effect.isEffect(result)) {
       // Check whether this component is inside a Suspense boundary.
       const suspenseCtx = yield* Effect.serviceOption(SuspenseContext);
-      let stream = normalizeToStream(result);
+      let stream = toStream(result);
 
       if (Option.isSome(suspenseCtx)) {
         // Register before subscribing so the boundary knows about this child.
@@ -1096,11 +1096,7 @@ function hydrateNode(
 
     // Reactive region (checked before iterables, since a Stream may be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
-      return yield* hydrateReactive(
-        normalizeToStream(node) as Stream.Stream<JSXNode>,
-        cursor,
-        path,
-      );
+      return yield* hydrateReactive(toStream(node) as Stream.Stream<JSXNode>, cursor, path);
     }
 
     // Iterables: hydrate children in order, threading the cursor
