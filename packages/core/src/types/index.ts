@@ -1,4 +1,4 @@
-import type { Effect, Stream } from "effect";
+import type { Effect, Stream, Subscribable } from "effect";
 import type { FRAGMENT } from "~/jsx-runtime";
 
 declare global {
@@ -47,10 +47,16 @@ export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown
 
 /**
  * The caller-facing prop vocabulary: a slot typed `MaybeReactive<T>` accepts a
- * static value, a `Stream`, or an `Effect`, and the caller can switch between
- * them freely. Normalize to a `Stream` with `toStream` from `@effect-ui/core`.
+ * static value, a `Stream`, an `Effect`, or an existing `Subscribable`, and the
+ * caller can switch between them freely. An incoming `Subscribable` is threaded
+ * through by reference (no re-wrap); the rest normalize via `toSubscribable`
+ * from `@effect-ui/core`.
  */
-export type MaybeReactive<T> = T | Stream.Stream<T> | Effect.Effect<T>;
+export type MaybeReactive<T> =
+  | T
+  | Stream.Stream<T>
+  | Effect.Effect<T>
+  | Subscribable.Subscribable<T>;
 
 export * from "./html/aria";
 export * from "./html/attributes";

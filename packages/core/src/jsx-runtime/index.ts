@@ -1,6 +1,8 @@
-import type { HTMLElements, JSXNode, JSXType, SVGElements } from "~/types";
+import type { Component } from "~/component/component";
+import type { HTMLElements, JSXNode, JSXType, MaybeReactive, SVGElements } from "~/types";
 
 export * from "./fragment";
+type PropsIn<T> = { [K in keyof T]: MaybeReactive<T[K]> };
 
 export function jsx(
   type: JSXType,
@@ -39,7 +41,10 @@ declare global {
     type Element = JSXNode;
 
     interface IntrinsicElements extends HTMLElements, SVGElements {}
-
+    // For components defined via `component()`, derive the caller view from the
+    // branded raw prop shape; otherwise wrap the inferred props per-slot.
+    type LibraryManagedAttributes<C, P> =
+      C extends Component<infer Raw> ? PropsIn<Raw> : PropsIn<P>;
     // interface IntrinsicAttributes {}
     // interface ElementChildrenAttribute {}
   }
