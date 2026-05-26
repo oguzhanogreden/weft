@@ -98,6 +98,53 @@ consumers.
 identity); reach for `.changes` only to bind at a terminal leaf (DOM) or to
 transform.
 
+## Scope & Lifetime Model
+
+A `Stream`-sourced prop owns a **pump fiber** (drains the source into a
+`SubscriptionRef`). That fiber needs a lifetime owner — a `Scope` — and its
+lifetime must equal the **component instance's** lifetime: it survives the
+instance's own re-renders but terminates the moment the instance leaves the tree.
+
+### Core requires only the standard `Scope`
+
+`toSubscribable` forks its pump with `forkScoped`, so it requires the ambient
+`Scope.Scope` service and nothing else. `@effect-ui/core` never references the
+renderer's `RenderContext`; the renderer supplies the scope. The same
+`toSubscribable` therefore works under any renderer that provides a `Scope`.
+
+### The renderer provides a child scope per component instance
+
+The active renderer (`@effect-ui/dom`) tracks the **current enclosing reactive
+scope** and re-provides it as it descends the tree. There are exactly two
+scope-forking boundaries:
+
+- **Per component instance.** Entering a component, the renderer forks a child
+  scope off the enclosing scope and provides it as the ambient `Scope` while
+  running the component body. The body's prop pumps `forkScoped` into it, so they
+  run **once** and live exactly as long as the instance.
+- **Per dynamic region emission.** A stream-bound region (`cond ? <A/> : <B/>`)
+  rotates a **content scope** per emission: before rendering the next value it
+  closes the previous content scope, then forks a fresh one and renders into it.
+  The region's _subscription_ fiber stays in the enclosing scope (it outlives any
+  single emission); the per-emission subtree lives in the rotating content scope.
+
+The forked scopes form a tree mirroring the component/region tree
+(`mount ⊃ region-content ⊃ component ⊃ its-regions ⊃ …`), which yields:
+
+- **Transitive teardown** — closing any scope (a region re-emitting, or full
+  unmount) interrupts every descendant pump and nested region fiber in one shot.
+- **Eager cleanup** — rotating the content scope per emission means a region that
+  emits N times holds only the live subtree's scopes, never N dead ones.
+
+### Renderer-provided capabilities are distinct from app requirements
+
+The `Scope` a component body requires is **renderer-provided** — discharged per
+instance by the renderer, not declared by the app author. It is kept distinct
+from app-service requirements (the `JSXRequirements` channel): the JSX return
+contract permits a `Scope` requirement (`… | Scope`) that the renderer satisfies,
+while app services remain the author's to provide. This seam keeps a future
+rework of `JSXRequirements` from entangling with renderer-injected scope.
+
 ## Public API
 
 - `component<P>(render: (props: Reactive<P>) => JSXNode): Component<P>` — define
@@ -147,5 +194,22 @@ transform.
    same emissions and the source runs once (no re-subscription per consumer).
 9. **AC-9 identity pass-through** — `toSubscribable(sub)` for an existing
    `Subscribable` returns that same reference (no new ref/fiber).
-10. **AC-10 lifetime** — the pump fiber terminates when the originating
-    component's scope closes.
+10. **AC-10 instance lifetime** — a component instance's prop pump fibers
+    terminate when that instance's scope closes, and survive the instance's own
+    re-renders.
+11. **AC-11 renderer-agnostic scope** — `toSubscribable` requires only the
+    ambient `Scope.Scope` service (never `RenderContext`); its pump is satisfied
+    by whatever scope the renderer provides for the instance.
+12. **AC-12 prompt teardown on removal** — when a component is removed from the
+    DOM by a dynamic region swap, its prop pumps are interrupted at that point,
+    not deferred to full unmount.
+13. **AC-13 no accumulation across emissions** — a dynamic region that renders N
+    successive subtrees retains only the live subtree's scopes; each prior
+    content scope is closed on the next emission.
+14. **AC-14 transitive teardown** — closing an ancestor scope (region re-render
+    or unmount) interrupts all descendant component pumps and nested region
+    fibers in one shot.
+
+> AC-12 through AC-14 are realized by the renderer (`@effect-ui/dom`); they are
+> specified here because they define the lifetime contract `toSubscribable`
+> relies on.
