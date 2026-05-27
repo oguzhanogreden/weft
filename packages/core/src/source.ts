@@ -7,18 +7,28 @@ import {
   Deferred,
   SubscriptionRef,
   Option,
+  Data,
   identity,
 } from "effect";
-import { NoPropValue } from "~/component/component";
 import { isStream } from "~/stream";
+
+// Re-exported reliable guard, keyed off Subscribable's TypeId.
+export { isSubscribable } from "effect/Subscribable";
+
+/**
+ * Raised by `toSubscribable` when a `Stream`-sourced prop completes without
+ * ever emitting a value. The only source kind that can be legitimately absent.
+ */
+export class NoPropValue extends Data.TaggedError("NoPropValue")<{
+  readonly key?: string;
+}> {}
 
 export namespace Source {
   /**
    * The caller-facing prop vocabulary: a slot typed `Source<T>` accepts a
    * static value, a `Stream`, an `Effect`, or an existing `Subscribable`, and the
    * caller can switch between them freely. An incoming `Subscribable` is threaded
-   * through by reference (no re-wrap); the rest normalize via `toSubscribable`
-   * from `@effect-ui/core`.
+   * through by reference (no re-wrap); the rest normalize via `toSubscribable`.
    */
   export type Source<A, E = never, R = never> =
     | A
@@ -27,7 +37,7 @@ export namespace Source {
     | Subscribable.Subscribable<A, E, R>;
 
   /**
-   * Normalize a Source into an await-first, hot `Subscribable`.
+   * Normalize a `Source<A>` into an await-first, hot `Subscribable`.
    *
    * - existing `Subscribable` → returned by reference (no new ref/fiber);
    * - static `A` → `get` succeeds immediately, `changes` emits once;
@@ -38,8 +48,8 @@ export namespace Source {
    *
    * Scoped: the pump fiber terminates when the enclosing scope closes.
    *
-   * @param source - The caller-supplied prop value.
-   * @param key - Optional prop key carried on `NoPropValue` for diagnostics.
+   * @param source - The caller-supplied value.
+   * @param key - Optional key carried on `NoPropValue` for diagnostics.
    */
   export function toSubscribable<A, E = never, R = never>(
     source: Source.Source<A, E, R>,
@@ -78,7 +88,7 @@ export namespace Source {
           ),
         );
 
-        // Fork pump into the enclosing scope — dies when the instance scope closes.
+        // Fork pump into the enclosing scope — dies when the scope closes.
         yield* Effect.forkScoped(pump);
 
         // get: return latest if available; otherwise await the first emission.

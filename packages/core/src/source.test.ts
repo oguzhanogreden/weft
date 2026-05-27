@@ -1,6 +1,5 @@
 import * as assert from "node:assert/strict";
 import {
-  Cause,
   Chunk,
   Deferred,
   Effect,
@@ -13,14 +12,14 @@ import {
   pipe,
 } from "effect";
 import { describe, it } from "vite-plus/test";
-import { NoPropValue } from "./component";
-import { Source } from "~/source";
+import { NoPropValue, Source } from "~/source";
+import { Cause } from "effect";
 
 // Run an Effect inside a managed Scope (Effect.scoped closes the scope when done).
 const scoped = <A>(eff: Effect.Effect<A, any, Scope.Scope>) =>
   Effect.runPromise(Effect.scoped(eff));
 
-describe("toSubscribable", () => {
+describe("Source.toSubscribable", () => {
   // ─────────────────────────────────────────────────────────────────────────
   // AC-3: static normalization
   // ─────────────────────────────────────────────────────────────────────────
@@ -130,17 +129,9 @@ describe("toSubscribable", () => {
     });
 
     it("get returns last of multiple emitted values", async () => {
-      // `Effect.fork` + resolve races because the forked fiber is not yet
-      // subscribed to the PubSub when the pump runs.  Instead, drive the
-      // drain directly: the PubSub subscription is created synchronously
-      // (no fiber yield) before the pump ever gets CPU, so both messages
-      // are received in order.
       const value = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(Stream.make(1, 2));
-          // Subscription to sub.changes is set up synchronously here, before
-          // the pump fiber is scheduled.  The drain blocks until both PubSub
-          // messages arrive, ensuring the ref holds the latest value (2).
           yield* pipe(sub.changes, Stream.take(2), Stream.runDrain);
           return yield* sub.get;
         }),
@@ -236,14 +227,11 @@ describe("toSubscribable", () => {
   describe("AC-9 identity pass-through", () => {
     it("returns the same Subscribable reference when given an existing one", async () => {
       const existing = await Effect.runPromise(SubscriptionRef.make("x"));
-      // SubscriptionRef implements Subscribable — must come back unchanged.
       const result = await scoped(Source.toSubscribable(existing));
       assert.equal(result, existing);
     });
 
     it("forks no fiber for an existing Subscribable (scope stays clean)", async () => {
-      // If toSubscribable returned the same ref, the scope closing should not
-      // interrupt any pump fiber for this subscribable — there is none to interrupt.
       const existing = await Effect.runPromise(SubscriptionRef.make("y"));
       const exit = await Effect.runPromise(
         pipe(
@@ -266,7 +254,7 @@ describe("toSubscribable", () => {
   // Integration: prop key carried on error
   // ─────────────────────────────────────────────────────────────────────────
 
-  it("NoPropValue carries the supplied prop key on empty stream", async () => {
+  it("NoPropValue carries the supplied key on empty stream", async () => {
     const cause = await Effect.runPromise(
       Effect.scoped(
         pipe(

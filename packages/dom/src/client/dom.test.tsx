@@ -1,8 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
-import { Component } from "@effect-ui/core";
-import type { Reactive } from "@effect-ui/core";
+import { Source } from "@effect-ui/core";
 import type { JSXNode } from "@effect-ui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
@@ -783,7 +782,6 @@ describe("AC17: Stream Errors", () => {
 
     // Should eventually fail
     try {
-      // @ts-expect-error - failingStream is a Stream<never, Error, never>
       await runMount(<div>{failingStream}</div>, root);
       await waitFor(100);
       // If no error thrown yet, that's acceptable - errors may be async
@@ -1727,15 +1725,22 @@ describe("AC28: Resource Cleanup on Mount Failure", () => {
 });
 
 // ============================================================================
-// AC-10/12/13/14: Component.gen prop-pump scope lifetime
+// AC-10/12/13/14: toSubscribable pump scope lifetime
 // ============================================================================
 
-describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
-  // AC-10: The prop pump forked by toSubscribable (via forkScoped) must be
-  // interrupted when the mount is unmounted.
-  it("AC-10: prop pump fiber is interrupted on unmount", async () => {
+describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
+  // A plain function component that normalizes one Source prop via toSubscribable.
+  // The pump fiber (forkScoped) lives in the instance scope provided by renderComponent.
+  const Comp = (props: { val: Source.Source<string> }) =>
+    Effect.gen(function* () {
+      const sub = yield* Source.toSubscribable(props.val);
+      const v = yield* sub.get;
+      return <div>{v}</div>;
+    });
+
+  // AC-10: The pump forked by toSubscribable must be interrupted on unmount.
+  it("AC-10: pump fiber is interrupted on unmount", async () => {
     let cancelled = false;
-    // An infinite stream with a finalizer — fires when the subscription is cancelled.
     const propStream = Stream.concat(Stream.make("v"), Stream.never).pipe(
       Stream.ensuring(
         Effect.sync(() => {
@@ -1744,11 +1749,6 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
       ),
     );
 
-    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
-      const v = yield* props.val.get;
-      return <div>{v}</div>;
-    });
-
     createTestDOM();
     const root = createRoot();
     const handle = await runMount(<Comp val={propStream} />, root);
@@ -1756,13 +1756,11 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
 
     assert.ok(!cancelled, "pump should still be running before unmount");
     await Effect.runPromise(handle.unmount());
-
     assert.ok(cancelled, "pump should be cancelled after unmount");
   });
 
-  // AC-12: The prop pump must be interrupted when the component is dynamically
-  // removed from a reactive region (not only on full unmount).
-  it("AC-12: prop pump is interrupted when component is removed from a dynamic region", async () => {
+  // AC-12: The pump must be interrupted when the component leaves a dynamic region.
+  it("AC-12: pump is interrupted when component is removed from a dynamic region", async () => {
     let cancelled = false;
     const propStream = Stream.concat(Stream.make("a"), Stream.never).pipe(
       Stream.ensuring(
@@ -1772,12 +1770,6 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
       ),
     );
 
-    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
-      const v = yield* props.val.get;
-      return <div>{v}</div>;
-    });
-
-    // A reactive region that initially shows Comp, then swaps to static text.
     const regionRef = await Effect.runPromise(
       SubscriptionRef.make<JSXNode>(<Comp val={propStream} />),
     );
@@ -1794,16 +1786,13 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
     await waitForStreamUpdate();
 
     assert.ok(cancelled, "pump should be cancelled when component is removed from the region");
-
     await Effect.runPromise(handle.unmount());
   });
 
-  // AC-13/14: Each re-emission of a dynamic region must close the previous
-  // content scope rather than leaving it alive. After N re-emits the number
-  // of cancelled pumps must equal N, not 0.
+  // AC-13/14: Each re-emission of a dynamic region closes the previous content
+  // scope. After N re-emits exactly N pumps have been cancelled (no accumulation).
   it("AC-13/14: re-emitting a region rotates the content scope (no accumulation)", async () => {
     let cancelledCount = 0;
-    // Each fresh stream instance observes cancellation independently.
     const makePropStream = () =>
       Stream.concat(Stream.make("v"), Stream.never).pipe(
         Stream.ensuring(
@@ -1812,11 +1801,6 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
           }),
         ),
       );
-
-    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
-      const v = yield* props.val.get;
-      return <div>{v}</div>;
-    });
 
     const regionRef = await Effect.runPromise(
       SubscriptionRef.make<JSXNode>(<Comp val={makePropStream()} />),
@@ -1828,15 +1812,291 @@ describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
     await waitForStream();
     assert.equal(cancelledCount, 0, "no pumps cancelled yet");
 
-    // First re-emit: previous content scope (+ its instanceScope child) closes.
     await Effect.runPromise(SubscriptionRef.set(regionRef, <Comp val={makePropStream()} />));
     await waitForStreamUpdate();
     assert.equal(cancelledCount, 1, "first instance's pump cancelled on re-emit");
 
-    // Second re-emit: again exactly one scope closes — no accumulation.
     await Effect.runPromise(SubscriptionRef.set(regionRef, <Comp val={makePropStream()} />));
     await waitForStreamUpdate();
     assert.equal(cancelledCount, 2, "each re-emit closes exactly one previous scope");
+
+    await Effect.runPromise(handle.unmount());
+  });
+});
+
+// ============================================================================
+// Scope lifetime: advanced cases
+// ============================================================================
+
+describe("scope lifetime: advanced cases", () => {
+  // ──────────────────────────────────────────────────────────────────────────
+  // Survival test: the pump must NOT be killed by an internal region re-emit.
+  // The component's instanceScope outlives its own content re-renders; only
+  // removing the component from the tree (or unmounting) should kill it.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("pump survives when the component's internal reactive region re-emits", async () => {
+    let cancelled = false;
+    const propStream = Stream.concat(Stream.make("initial"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          cancelled = true;
+        }),
+      ),
+    );
+    const internalRef = await Effect.runPromise(SubscriptionRef.make(0));
+
+    const Comp = (props: { val: Source.Source<string> }) =>
+      Effect.gen(function* () {
+        const sub = yield* Source.toSubscribable(props.val);
+        const v = yield* sub.get;
+        // {internalRef.changes} creates a reactive region *inside* the component.
+        // Re-emitting it rotates a child contentScope — the pump in instanceScope
+        // must not be touched.
+        return <div class={v}>{internalRef.changes}</div>;
+      });
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(<Comp val={propStream} />, root);
+    await waitForStream();
+    assert.ok(!cancelled, "pump should be running after mount");
+
+    // Trigger an internal re-emit — rotates a child contentScope, not instanceScope.
+    await Effect.runPromise(SubscriptionRef.update(internalRef, (n) => n + 1));
+    await waitForStreamUpdate();
+    assert.ok(!cancelled, "pump must survive an internal region re-emit");
+
+    // Only unmount should kill the pump.
+    await Effect.runPromise(handle.unmount());
+    assert.ok(cancelled, "pump should be cancelled after unmount");
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Transitive teardown — nested components.
+  // Evicting the outer component must also cancel the inner component's pump
+  // because innerInstanceScope ⊂ contentScope(outer) ⊂ outerInstanceScope.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("evicting an outer component also cancels a nested inner component's pump", async () => {
+    let innerCancelled = false;
+    const innerStream = Stream.concat(Stream.make("inner"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          innerCancelled = true;
+        }),
+      ),
+    );
+
+    const Inner = (props: { val: Source.Source<string> }) =>
+      Effect.gen(function* () {
+        const sub = yield* Source.toSubscribable(props.val);
+        const v = yield* sub.get;
+        return <span>{v}</span>;
+      });
+
+    // Outer doesn't have its own stream prop; it renders Inner as part of its output.
+    // Effect.succeed gives Outer an instanceScope (renderComponent forks one for any
+    // Effect/Stream result), so the full chain is:
+    // contentScope → outerInstanceScope → contentScope(outer) → innerInstanceScope → pump.
+    const Outer = () =>
+      Effect.succeed(
+        (
+          <div>
+            <Inner val={innerStream} />
+          </div>
+        ) as JSXNode,
+      );
+
+    const regionRef = await Effect.runPromise(SubscriptionRef.make<JSXNode>(<Outer />));
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+    assert.ok(!innerCancelled, "inner pump should be running while outer is mounted");
+
+    // Evict Outer: contentScope → outerInstanceScope → contentScope(outer) →
+    // innerInstanceScope → inner pump. All die transitively.
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <span>replaced</span>));
+    await waitForStreamUpdate();
+    assert.ok(innerCancelled, "inner pump must be cancelled when outer is evicted");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Multiple props: every pump forked into the same instanceScope must be
+  // cancelled — not just the first one.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("all pumps are cancelled when a component with multiple Source props is removed", async () => {
+    let aCancelled = false;
+    let bCancelled = false;
+    const streamA = Stream.concat(Stream.make("a"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          aCancelled = true;
+        }),
+      ),
+    );
+    const streamB = Stream.concat(Stream.make("b"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          bCancelled = true;
+        }),
+      ),
+    );
+
+    const Comp = (props: { a: Source.Source<string>; b: Source.Source<string> }) =>
+      Effect.gen(function* () {
+        const subA = yield* Source.toSubscribable(props.a, "a");
+        const subB = yield* Source.toSubscribable(props.b, "b");
+        const vA = yield* subA.get;
+        const vB = yield* subB.get;
+        return (
+          <div>
+            {vA} {vB}
+          </div>
+        );
+      });
+
+    const regionRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp a={streamA} b={streamB} />),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+    assert.ok(!aCancelled && !bCancelled, "both pumps should be running after mount");
+
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <span>replaced</span>));
+    await waitForStreamUpdate();
+    assert.ok(aCancelled, "pump A should be cancelled");
+    assert.ok(bCancelled, "pump B should be cancelled");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Identity pass-through: when a SubscriptionRef is passed as a Source,
+  // toSubscribable returns it by reference — no pump is forked into instanceScope.
+  // Closing instanceScope must NOT interrupt the ref, which lives in an outer scope.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("SubscriptionRef passed as Source is not interrupted when the component is removed", async () => {
+    const sharedRef = await Effect.runPromise(SubscriptionRef.make("alive"));
+
+    const Comp = (props: { val: Source.Source<string> }) =>
+      Effect.gen(function* () {
+        // toSubscribable short-circuits to identity — no pump forked.
+        const sub = yield* Source.toSubscribable(props.val);
+        const v = yield* sub.get;
+        return <div>{v}</div>;
+      });
+
+    const regionRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp val={sharedRef} />),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+
+    // Remove the component — instanceScope closes, but sharedRef is external.
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <span>replaced</span>));
+    await waitForStreamUpdate();
+
+    // sharedRef must still be readable and writable.
+    const val = await Effect.runPromise(SubscriptionRef.get(sharedRef));
+    assert.equal(val, "alive");
+    await Effect.runPromise(SubscriptionRef.set(sharedRef, "still-alive"));
+    const updated = await Effect.runPromise(SubscriptionRef.get(sharedRef));
+    assert.equal(updated, "still-alive");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Stream-returning component: renderComponent forks instanceScope for both
+  // Effect-returning and Stream-returning components. Pump cleanup must work
+  // the same regardless of which form the component takes.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("pump is cancelled when a Stream-returning component is removed", async () => {
+    let cancelled = false;
+    const propStream = Stream.concat(Stream.make("v"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          cancelled = true;
+        }),
+      ),
+    );
+
+    const Comp = (props: { val: Source.Source<string> }) =>
+      Stream.fromEffect(
+        Effect.gen(function* () {
+          const sub = yield* Source.toSubscribable(props.val);
+          const v = yield* sub.get;
+          return (<div>{v}</div>) as JSXNode;
+        }),
+      );
+
+    const regionRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp val={propStream} />),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+    assert.ok(!cancelled, "pump should be running while component is mounted");
+
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <span>replaced</span>));
+    await waitForStreamUpdate();
+    assert.ok(cancelled, "pump should be cancelled when Stream-returning component is removed");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Transitive teardown — two levels of reactive regions above a component.
+  // outerRef.changes wraps a div with innerRef.changes which contains Comp.
+  // Replacing the outer emission must cascade all the way down and kill the pump.
+  // ──────────────────────────────────────────────────────────────────────────
+  it("pump is cancelled through two levels of reactive regions", async () => {
+    let cancelled = false;
+    const propStream = Stream.concat(Stream.make("v"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          cancelled = true;
+        }),
+      ),
+    );
+
+    const Comp = (props: { val: Source.Source<string> }) =>
+      Effect.gen(function* () {
+        const sub = yield* Source.toSubscribable(props.val);
+        const v = yield* sub.get;
+        return <div>{v}</div>;
+      });
+
+    // Two reactive region layers above Comp.
+    const innerRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp val={propStream} />),
+    );
+    const outerRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<div>{innerRef.changes}</div>),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(outerRef.changes, root);
+    await waitForStream();
+    assert.ok(!cancelled, "pump should be running before outer region changes");
+
+    // Replacing the outer emission closes its contentScope, which transitively
+    // closes the inner subscription fiber → contentScope(inner) → instanceScope → pump.
+    await Effect.runPromise(SubscriptionRef.set(outerRef, <span>replaced</span>));
+    await waitForStreamUpdate();
+    assert.ok(cancelled, "pump should be cancelled through two levels of reactive scope");
 
     await Effect.runPromise(handle.unmount());
   });

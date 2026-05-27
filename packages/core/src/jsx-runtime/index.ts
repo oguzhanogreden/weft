@@ -1,4 +1,3 @@
-import type { Component, PropsIn } from "~/component/component";
 import type { HTMLElements, JSXNode, JSXType, SVGElements } from "~/types";
 
 export * from "./fragment";
@@ -40,11 +39,6 @@ declare global {
     type Element = JSXNode;
 
     interface IntrinsicElements extends HTMLElements, SVGElements {}
-    // For components defined via `Component.gen`, derive the caller-facing view
-    // from the branded raw prop shape (each slot widened to Source<T>). Plain
-    // function components are not branded, so their declared prop type P passes
-    // through untouched — brand-only widening.
-    type LibraryManagedAttributes<C, P> = C extends Component<infer Raw> ? PropsIn<Raw> : P;
     // interface IntrinsicAttributes {}
     // interface ElementChildrenAttribute {}
   }
