@@ -16,7 +16,9 @@ import { Effect, SubscriptionRef } from "effect";
  * renders a heading, a static blurb, the reactive count region, and the
  * increment/decrement controls. Requires no services.
  */
-export const App = Component.gen<{ initialValue: number }>(function* (props) {
+export const App = Component.gen<{
+  initialValue: number;
+}>(function* (props) {
   const count = yield* SubscriptionRef.make(
     yield* Effect.orElse(props.initialValue.get, () => Effect.succeed(3)),
   );

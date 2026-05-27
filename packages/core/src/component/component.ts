@@ -1,5 +1,5 @@
 import { Data, Effect, Subscribable } from "effect";
-import type { Scope } from "effect";
+import type { Scope, SubscriptionRef } from "effect";
 import type { YieldWrap } from "effect/Utils";
 import type { JSXNode, JSXRequirements } from "~/types";
 import { Source } from "~/source";
@@ -17,7 +17,9 @@ export { isSubscribable } from "effect/Subscribable";
 export type Subscribables<P> = {
   readonly [K in keyof P]: K extends "children"
     ? P[K]
-    : Subscribable.Subscribable<P[K], NoPropValue>;
+    : P[K] extends SubscriptionRef.SubscriptionRef<any>
+      ? P[K]
+      : Subscribable.Subscribable<P[K], NoPropValue>;
 };
 
 /**
@@ -26,8 +28,12 @@ export type Subscribables<P> = {
  * or an existing `Subscribable`. `children` is exempt — it passes through with
  * its declared type (no `Source` widening).
  */
-export type PropsIn<P> = {
-  [K in keyof P]: K extends "children" ? P[K] : Source.Source<P[K]>;
+export type PropsIn<P extends Record<string, unknown> = Record<string, never>> = {
+  [K in keyof P]: K extends "children"
+    ? P[K]
+    : P[K] extends SubscriptionRef.SubscriptionRef<any>
+      ? P[K]
+      : Source.Source<P[K]>;
 };
 
 declare const RawProps: unique symbol;
@@ -44,7 +50,7 @@ declare const RawProps: unique symbol;
  * error boundary plugs into). This keeps the JSX element type valid since
  * `JSXNode`'s Effect arm uses `never` for errors.
  */
-export interface Component<P> {
+export interface Component<P extends Record<string, unknown> = Record<string, never>> {
   (props: PropsIn<P>): Effect.Effect<JSXNode, never, JSXRequirements | Scope.Scope>;
   readonly [RawProps]?: P;
 }
@@ -64,7 +70,7 @@ export class NoPropValue extends Data.TaggedError("NoPropValue")<{
  * Normalizes all raw props into `Reactive<P>`: children pass through, every
  * other slot is wrapped via `toSubscribable`.
  */
-function normalizeProps<P>(
+function normalizeProps<P extends Record<string, unknown> = Record<string, never>>(
   rawProps: PropsIn<P>,
 ): Effect.Effect<Subscribables<P>, never, Scope.Scope> {
   return Effect.gen(function* () {
@@ -103,7 +109,7 @@ export namespace Component {
    * });
    * ```
    */
-  export function gen<P>(
+  export function gen<P extends Record<string, unknown> = Record<string, never>>(
     body: (
       props: Subscribables<P>,
     ) => Generator<
