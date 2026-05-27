@@ -210,16 +210,30 @@ rework of `JSXRequirements` from entangling with renderer-injected scope.
 - `Component.gen<P>(body)` — define a component from a generator body:
 
   ```ts
-  Component.gen: <P, Eff extends YieldWrap<Effect.Effect<any, any, JSXRequirements | Scope.Scope>>>(
-    body: (props: Reactive<P>) => Generator<Eff, JSXNode, never>,
+  Component.gen: <P>(
+    body: (props: Reactive<P>) => Generator<
+      YieldWrap<Effect.Effect<any, any, JSXRequirements | Scope.Scope>>,
+      JSXNode,
+      never
+    >,
   ) => Component<P>
   ```
 
-  `P` is the **raw** prop shape, written once. The body receives `Reactive<P>`
-  (the inside view) and returns a `JSXNode`; it may `yield*` Effects whose
-  requirements are within `JSXRequirements | Scope`. The result is branded
-  `Component<P>` so JSX can derive the caller view. Mirrors `Effect.gen`'s
-  overload shape; requirements pinned to `JSXRequirements | Scope`.
+  `P` is the **raw** prop shape, written once as the **sole** type argument. The
+  body receives `Reactive<P>` (the inside view) and returns a `JSXNode`; it may
+  `yield*` Effects whose requirements are within `JSXRequirements | Scope`. The
+  result is branded `Component<P>` so JSX can derive the caller view.
+
+  Unlike `Effect.gen`, the body's effect type is **not captured** as a second
+  type parameter: the body channel is erased to `any` (see _Body errors are
+  untyped_) and requirements are fixed to `JSXRequirements | Scope`, so the
+  result is always `Component<P>`. The yielded-effect type is therefore a bare
+  **constraint** on the generator, not an inferred parameter. This is deliberate:
+  TypeScript has no partial type-argument inference, so a second (inferred) param
+  would force the caller to spell out _both_ arguments — `P` cannot be inferred
+  from the body (the `props` parameter is never annotated), making the documented
+  single-argument call `Component.gen<{ name: string }>(body)` impossible. Pinning
+  `P` as the only explicit argument keeps that call shape sound.
 
 - `toSubscribable<A>(source, key?)` — normalize one caller-facing value into an
   await-first, hot `Subscribable`:
