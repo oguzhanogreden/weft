@@ -15,7 +15,7 @@ if (root === null) {
   throw new Error("#root not found");
 }
 
-void Effect.runPromise(hydrate(<App />, root)).then(() => {
+void Effect.runPromise(hydrate(<App initialValue={10} />, root)).then(() => {
   const status = document.getElementById("status");
   if (status !== null) {
     status.textContent = "[hydrated — interactive]";
