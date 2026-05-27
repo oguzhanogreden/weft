@@ -1,6 +1,7 @@
 import {
   Deferred,
   Effect,
+  ExecutionStrategy,
   Exit,
   Layer,
   ManagedRuntime,
@@ -22,15 +23,15 @@ import {
   type StreamSubscriptionError,
   RenderContext,
   SuspenseContext,
-} from "../data";
+} from "~/data";
 import {
   parseStreamMarker,
   streamEndText,
   streamStartText,
   suspenseEndText,
   suspenseStartText,
-} from "../shared";
-import { nextStreamId, nextSuspenseId } from "../utilities";
+} from "~/shared";
+import { nextStreamId, nextSuspenseId } from "~/utilities";
 
 // ============================================================================
 // DOM Prop Handling
@@ -745,6 +746,15 @@ function renderComponent(
 
     // AC5: Handle Effect<JSXNode> or Stream<JSXNode>
     if (isStream(result) || Effect.isEffect(result)) {
+      const context = yield* RenderContext;
+
+      // AC-10/12: Fork a per-instance child scope so that prop pump fibers
+      // (spawned via Effect.forkScoped inside toSubscribable) are tied to this
+      // component instance and not to the mount-level scope. The instance scope
+      // is a child of context.scope — closing context.scope closes it too.
+      const instanceScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const instanceContext = { ...context, scope: instanceScope };
+
       // Check whether this component is inside a Suspense boundary.
       const suspenseCtx = yield* Effect.serviceOption(SuspenseContext);
       let stream = toStream(result);
@@ -766,10 +776,14 @@ function renderComponent(
         );
       }
 
-      // AC22: Component returning stream treated as stream child
-      const markers = yield* handleStreamChild(stream);
-
-      return markers;
+      // AC22: Component returning stream treated as stream child.
+      // Thread instanceScope as both the ambient Scope.Scope (satisfies
+      // forkScoped inside the component body) and RenderContext.scope (so
+      // nested handleStreamChild calls fork into instanceScope).
+      return yield* handleStreamChild(stream).pipe(
+        Effect.provideService(RenderContext, instanceContext),
+        Effect.provideService(Scope.Scope, instanceScope),
+      );
     }
 
     // AC5: Plain JSXNode
@@ -778,7 +792,13 @@ function renderComponent(
 }
 
 /**
- * Handles a child that is a Stream by setting up comment markers and subscriptions
+ * Handles a child that is a Stream by setting up comment markers and subscriptions.
+ *
+ * AC-13/14: A fresh **content scope** is forked from `context.scope` for each
+ * emission. The previous content scope is closed before the new one is opened,
+ * so nested fibers/pumps from the previous emission are cancelled on re-emit
+ * rather than accumulating. The subscription fiber itself lives in
+ * `context.scope` (the enclosing scope), not in the content scope.
  */
 function handleStreamChild(
   stream: Stream.Stream<JSXNode>,
@@ -794,21 +814,36 @@ function handleStreamChild(
     const streamId = yield* nextStreamId();
     const [startMarker, endMarker] = createStreamMarkers(streamId);
 
-    // AC20: Set up subscription to update content through the runtime
-    const effect = Stream.runForEach(stream, (value) => {
-      // Update the stream child for each emission
-      // Need to provide the context to updateStreamChild
-      return updateStreamChild(startMarker, endMarker, value).pipe(
-        Effect.provideService(RenderContext, context),
-      );
-    });
+    // Mutable slot: the content scope from the most recent emission.
+    // Closed before each new emission so nested fibers don't accumulate.
+    let currentContentScope: Scope.CloseableScope | null = null;
 
-    // Fork the effect in the scope so it's automatically interrupted when scope closes
+    // AC20: Set up subscription — one fiber per stream, content scope per emission.
+    const effect = Stream.runForEach(stream, (value) =>
+      Effect.gen(function* () {
+        // Close the previous content scope (cancels any nested fibers/pumps).
+        if (currentContentScope !== null) {
+          yield* Scope.close(currentContentScope, Exit.void);
+        }
+        // Fork a fresh child scope for this emission from the enclosing scope.
+        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        const contentContext = { ...context, scope: currentContentScope };
+
+        // Render under the content scope: RenderContext.scope and Scope.Scope
+        // both point at currentContentScope per the governing rule.
+        yield* updateStreamChild(startMarker, endMarker, value).pipe(
+          Effect.provideService(RenderContext, contentContext),
+          Effect.provideService(Scope.Scope, currentContentScope),
+        );
+      }),
+    );
+
+    // Subscription fiber lives in the enclosing context.scope (not content scope).
     yield* Effect.forkIn(effect, context.scope);
 
-    // AC19: Return markers to be inserted
-    // Note: Content will be updated asynchronously by the daemon fiber
-    return [startMarker, endMarker];
+    // AC19: Return markers to be inserted.
+    // Content will be updated asynchronously by the daemon fiber.
+    return [startMarker, endMarker] as const;
   });
 }
 
@@ -940,10 +975,14 @@ export function mount(
     // AC1: Clear root element's existing children
     root.innerHTML = "";
 
-    // AC1: Render the JSX tree with the provided context
-    // AC28: tapError ensures runtime/scope are disposed if renderNode fails
+    // AC1: Render the JSX tree with the provided context.
+    // AC28: tapError ensures runtime/scope are disposed if renderNode fails.
+    // Scope.Scope is provided alongside RenderContext so that any top-level
+    // Component.gen body (which calls forkScoped) has an ambient scope to
+    // fork its prop-pump fibers into.
     const result = yield* renderNode(app).pipe(
       Effect.provideService(RenderContext, context),
+      Effect.provideService(Scope.Scope, scope),
       Effect.tapError(() => cleanup),
     );
 
@@ -1042,9 +1081,11 @@ export function hydrate(
     );
 
     // Adopt the existing server DOM rather than clearing the root.
-    // AC28: tapError ensures runtime/scope are disposed if hydrateNode fails
+    // AC28: tapError ensures runtime/scope are disposed if hydrateNode fails.
+    // Scope.Scope provided alongside RenderContext — same rule as mount.
     yield* hydrateNode(app, root.firstChild, "root").pipe(
       Effect.provideService(RenderContext, context),
+      Effect.provideService(Scope.Scope, scope),
       Effect.tapError(() => cleanup),
     );
 
@@ -1217,13 +1258,27 @@ function hydrateReactive(
 
     // The first emission was server-rendered: hydrate it against the adopted
     // content (flash-free). Later emissions are client-rendered: patch via the
-    // shared update flow. Forked into the mount scope.
+    // shared update flow. Content scope is rotated per emission (same rule as
+    // handleStreamChild) so nested fibers don't accumulate across re-emits.
     let isFirst = true;
+    let currentContentScope: Scope.CloseableScope | null = null;
     const effect = Stream.runForEach(stream, (value) =>
-      (isFirst
-        ? ((isFirst = false), hydrateFirstEmission(value, startMarker, endMarker, path))
-        : updateStreamChild(startMarker, endMarker, value)
-      ).pipe(Effect.provideService(RenderContext, context)),
+      Effect.gen(function* () {
+        if (currentContentScope !== null) {
+          yield* Scope.close(currentContentScope, Exit.void);
+        }
+        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        const contentContext = { ...context, scope: currentContentScope };
+
+        yield* (
+          isFirst
+            ? ((isFirst = false), hydrateFirstEmission(value, startMarker, endMarker, path))
+            : updateStreamChild(startMarker, endMarker, value)
+        ).pipe(
+          Effect.provideService(RenderContext, contentContext),
+          Effect.provideService(Scope.Scope, currentContentScope),
+        );
+      }),
     );
     yield* Effect.forkIn(effect, context.scope);
 

@@ -1,4 +1,4 @@
-import type { Effect, Stream, Subscribable } from "effect";
+import type { Effect, Scope, Stream, Subscribable } from "effect";
 import type { FRAGMENT } from "~/jsx-runtime";
 
 declare global {
@@ -39,8 +39,8 @@ export type JSXNode =
   | bigint
   | boolean
   | Iterable<JSXNode>
-  | Stream.Stream<JSXNode, never, JSXRequirements>
-  | Effect.Effect<JSXNode, never, JSXRequirements>
+  | Stream.Stream<JSXNode, never, JSXRequirements | Scope.Scope>
+  | Effect.Effect<JSXNode, never, JSXRequirements | Scope.Scope>
   | { type: JSXType; props: Record<string, unknown> };
 
 export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown>) => JSXNode);

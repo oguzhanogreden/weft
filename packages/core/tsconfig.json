@@ -6,11 +6,6 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "../dom/src/utilities.ts",
-    "../dom/src/render-context.ts",
-    "../dom/src/data.ts"
-  ],
+  "include": ["src"],
   "exclude": ["dist"]
 }

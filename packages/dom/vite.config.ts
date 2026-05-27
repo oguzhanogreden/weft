@@ -19,4 +19,7 @@ export default defineConfig({
       neverBundle: ["effect", /^@effect-ui\//],
     },
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
 });

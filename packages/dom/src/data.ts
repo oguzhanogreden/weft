@@ -77,6 +77,12 @@ export class RenderContext extends Context.Tag("RenderContext")<
   RenderContext,
   {
     readonly runtime: ManagedRuntime.ManagedRuntime<never, never>;
+    /**
+     * The current enclosing reactive scope. All forked fibers and prop pumps
+     * within this region are children of this scope. Provided alongside the
+     * ambient `Scope.Scope` service at every scope boundary — the two always
+     * point at the same scope.
+     */
     readonly scope: Scope.Scope;
     readonly streamIdCounter: { current: number };
   }

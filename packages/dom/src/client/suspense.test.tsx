@@ -4,7 +4,7 @@ import { Effect, Stream } from "effect";
 import { Suspense } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount, hydrate } from "./render";
-import { renderToStringHydratable } from "../server/render-to-string";
+import { renderToStringHydratable } from "~/server/render-to-string";
 
 // ============================================================================
 // Test Helpers

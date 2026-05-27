@@ -1,6 +1,9 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
+import { Component } from "@effect-ui/core";
+import type { Reactive } from "@effect-ui/core";
+import type { JSXNode } from "@effect-ui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
@@ -1720,5 +1723,121 @@ describe("AC28: Resource Cleanup on Mount Failure", () => {
 
     // mount clears root.innerHTML before renderNode runs, so it stays empty on failure
     assert.equal(root.innerHTML, "");
+  });
+});
+
+// ============================================================================
+// AC-10/12/13/14: Component.gen prop-pump scope lifetime
+// ============================================================================
+
+describe("AC-10/12/13/14: Component.gen prop-pump scope lifetime", () => {
+  // AC-10: The prop pump forked by toSubscribable (via forkScoped) must be
+  // interrupted when the mount is unmounted.
+  it("AC-10: prop pump fiber is interrupted on unmount", async () => {
+    let cancelled = false;
+    // An infinite stream with a finalizer — fires when the subscription is cancelled.
+    const propStream = Stream.concat(Stream.make("v"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          cancelled = true;
+        }),
+      ),
+    );
+
+    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
+      const v = yield* props.val.get;
+      return <div>{v}</div>;
+    });
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(<Comp val={propStream} />, root);
+    await waitForStream();
+
+    assert.ok(!cancelled, "pump should still be running before unmount");
+    await Effect.runPromise(handle.unmount());
+
+    assert.ok(cancelled, "pump should be cancelled after unmount");
+  });
+
+  // AC-12: The prop pump must be interrupted when the component is dynamically
+  // removed from a reactive region (not only on full unmount).
+  it("AC-12: prop pump is interrupted when component is removed from a dynamic region", async () => {
+    let cancelled = false;
+    const propStream = Stream.concat(Stream.make("a"), Stream.never).pipe(
+      Stream.ensuring(
+        Effect.sync(() => {
+          cancelled = true;
+        }),
+      ),
+    );
+
+    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
+      const v = yield* props.val.get;
+      return <div>{v}</div>;
+    });
+
+    // A reactive region that initially shows Comp, then swaps to static text.
+    const regionRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp val={propStream} />),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+
+    assert.ok(!cancelled, "pump should be running while component is mounted");
+
+    // Replace the component with static content — the old content scope closes.
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <span>static</span>));
+    await waitForStreamUpdate();
+
+    assert.ok(cancelled, "pump should be cancelled when component is removed from the region");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  // AC-13/14: Each re-emission of a dynamic region must close the previous
+  // content scope rather than leaving it alive. After N re-emits the number
+  // of cancelled pumps must equal N, not 0.
+  it("AC-13/14: re-emitting a region rotates the content scope (no accumulation)", async () => {
+    let cancelledCount = 0;
+    // Each fresh stream instance observes cancellation independently.
+    const makePropStream = () =>
+      Stream.concat(Stream.make("v"), Stream.never).pipe(
+        Stream.ensuring(
+          Effect.sync(() => {
+            cancelledCount++;
+          }),
+        ),
+      );
+
+    const Comp = Component.gen<{ val: string }>(function* (props: Reactive<{ val: string }>) {
+      const v = yield* props.val.get;
+      return <div>{v}</div>;
+    });
+
+    const regionRef = await Effect.runPromise(
+      SubscriptionRef.make<JSXNode>(<Comp val={makePropStream()} />),
+    );
+
+    createTestDOM();
+    const root = createRoot();
+    const handle = await runMount(regionRef.changes, root);
+    await waitForStream();
+    assert.equal(cancelledCount, 0, "no pumps cancelled yet");
+
+    // First re-emit: previous content scope (+ its instanceScope child) closes.
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <Comp val={makePropStream()} />));
+    await waitForStreamUpdate();
+    assert.equal(cancelledCount, 1, "first instance's pump cancelled on re-emit");
+
+    // Second re-emit: again exactly one scope closes — no accumulation.
+    await Effect.runPromise(SubscriptionRef.set(regionRef, <Comp val={makePropStream()} />));
+    await waitForStreamUpdate();
+    assert.equal(cancelledCount, 2, "each re-emit closes exactly one previous scope");
+
+    await Effect.runPromise(handle.unmount());
   });
 });
