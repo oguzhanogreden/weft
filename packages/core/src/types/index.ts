@@ -1,4 +1,4 @@
-import type { Effect, Scope, Stream, Subscribable } from "effect";
+import { Effect, Scope, Stream } from "effect";
 import type { FRAGMENT } from "~/jsx-runtime";
 
 declare global {
@@ -44,15 +44,6 @@ export type JSXNode =
   | { type: JSXType; props: Record<string, unknown> };
 
 export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown>) => JSXNode);
-
-/**
- * The caller-facing prop vocabulary: a slot typed `Source<T>` accepts a
- * static value, a `Stream`, an `Effect`, or an existing `Subscribable`, and the
- * caller can switch between them freely. An incoming `Subscribable` is threaded
- * through by reference (no re-wrap); the rest normalize via `toSubscribable`
- * from `@effect-ui/core`.
- */
-export type Source<T> = T | Stream.Stream<T> | Effect.Effect<T> | Subscribable.Subscribable<T>;
 
 export * from "./html/aria";
 export * from "./html/attributes";

@@ -18,7 +18,8 @@ import {
   type PropsOf,
   type Subscribables,
 } from "~/component/component";
-import type { JSXNode, JSXRequirements, Source } from "~/types";
+import type { JSXNode, JSXRequirements } from "~/types";
+import type { Source } from "~/source";
 
 // =============================================================================
 // AC-1: Author face — every non-children slot is Subscribable<T, NoPropValue>

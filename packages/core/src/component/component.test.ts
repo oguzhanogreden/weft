@@ -13,7 +13,8 @@ import {
   pipe,
 } from "effect";
 import { describe, it } from "vite-plus/test";
-import { NoPropValue, toSubscribable } from "./component";
+import { NoPropValue } from "./component";
+import { Source } from "~/source";
 
 // Run an Effect inside a managed Scope (Effect.scoped closes the scope when done).
 const scoped = <A>(eff: Effect.Effect<A, any, Scope.Scope>) =>
@@ -28,7 +29,7 @@ describe("toSubscribable", () => {
     it("get succeeds with the static value", async () => {
       const value = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable("hello");
+          const sub = yield* Source.toSubscribable("hello");
           return yield* sub.get;
         }),
       );
@@ -38,7 +39,7 @@ describe("toSubscribable", () => {
     it("changes emits the value exactly once then completes", async () => {
       const values = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(42);
+          const sub = yield* Source.toSubscribable(42);
           return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
         }),
       );
@@ -49,7 +50,7 @@ describe("toSubscribable", () => {
       const exit = await Effect.runPromise(
         Effect.scoped(
           Effect.gen(function* () {
-            const sub = yield* toSubscribable("x");
+            const sub = yield* Source.toSubscribable("x");
             return yield* Effect.exit(sub.get);
           }),
         ),
@@ -66,7 +67,7 @@ describe("toSubscribable", () => {
     it("resolves get to the effect value", async () => {
       const value = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(Effect.succeed("from-effect"));
+          const sub = yield* Source.toSubscribable(Effect.succeed("from-effect"));
           return yield* sub.get;
         }),
       );
@@ -76,7 +77,7 @@ describe("toSubscribable", () => {
     it("changes emits the resolved value exactly once", async () => {
       const values = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(Effect.succeed(7));
+          const sub = yield* Source.toSubscribable(Effect.succeed(7));
           return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
         }),
       );
@@ -92,7 +93,7 @@ describe("toSubscribable", () => {
 
       await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(source);
+          const sub = yield* Source.toSubscribable(source);
           // Consume via get twice and via changes once.
           const v1 = yield* sub.get;
           const v2 = yield* sub.get;
@@ -119,7 +120,7 @@ describe("toSubscribable", () => {
       const source = Stream.make("first");
       const value = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(source);
+          const sub = yield* Source.toSubscribable(source);
           // Drain the first emission so the ref is populated.
           yield* pipe(sub.changes, Stream.take(1), Stream.runDrain);
           return yield* sub.get;
@@ -136,7 +137,7 @@ describe("toSubscribable", () => {
       // are received in order.
       const value = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(Stream.make(1, 2));
+          const sub = yield* Source.toSubscribable(Stream.make(1, 2));
           // Subscription to sub.changes is set up synchronously here, before
           // the pump fiber is scheduled.  The drain blocks until both PubSub
           // messages arrive, ensuring the ref holds the latest value (2).
@@ -159,7 +160,7 @@ describe("toSubscribable", () => {
 
       const value = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(source);
+          const sub = yield* Source.toSubscribable(source);
           // Fork get — it should park because the gate is not yet open.
           const getFiber = yield* Effect.fork(sub.get);
           // Open the gate, supplying the first (and only) value.
@@ -179,7 +180,7 @@ describe("toSubscribable", () => {
     it("get fails with NoPropValue when source completes without emitting", async () => {
       const error = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(Stream.empty, "myProp");
+          const sub = yield* Source.toSubscribable(Stream.empty, "myProp");
           return yield* Effect.flip(sub.get);
         }),
       );
@@ -190,7 +191,7 @@ describe("toSubscribable", () => {
     it("NoPropValue carries no key when key is omitted", async () => {
       const error = await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(Stream.empty);
+          const sub = yield* Source.toSubscribable(Stream.empty);
           return yield* Effect.flip(sub.get);
         }),
       );
@@ -215,7 +216,7 @@ describe("toSubscribable", () => {
 
       await scoped(
         Effect.gen(function* () {
-          const sub = yield* toSubscribable(source);
+          const sub = yield* Source.toSubscribable(source);
           // Wait for the pump to process the single emission.
           yield* pipe(sub.changes, Stream.take(1), Stream.runDrain);
           const v1 = yield* sub.get;
@@ -236,7 +237,7 @@ describe("toSubscribable", () => {
     it("returns the same Subscribable reference when given an existing one", async () => {
       const existing = await Effect.runPromise(SubscriptionRef.make("x"));
       // SubscriptionRef implements Subscribable — must come back unchanged.
-      const result = await scoped(toSubscribable(existing));
+      const result = await scoped(Source.toSubscribable(existing));
       assert.equal(result, existing);
     });
 
@@ -248,7 +249,7 @@ describe("toSubscribable", () => {
         pipe(
           Effect.scoped(
             Effect.gen(function* () {
-              const sub = yield* toSubscribable(existing);
+              const sub = yield* Source.toSubscribable(existing);
               assert.equal(sub, existing);
               return yield* sub.get;
             }),
@@ -270,7 +271,8 @@ describe("toSubscribable", () => {
       Effect.scoped(
         pipe(
           Effect.gen(function* () {
-            const sub = yield* toSubscribable(Stream.empty, "label");
+            const sub = yield* Source.toSubscribable(Stream.empty, "label");
+            // @effect-diagnostics-next-line missingReturnYieldStar:off
             yield* sub.get;
           }),
           Effect.sandbox,

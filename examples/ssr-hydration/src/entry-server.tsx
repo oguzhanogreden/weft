@@ -12,4 +12,4 @@ import { App } from "./app";
 
 /** Renders the app to a hydratable HTML string. */
 export const render = (): Promise<string> =>
-  Effect.runPromise(renderToStringHydratable(<App initialValue={10} />));
+  Effect.runPromise(renderToStringHydratable(<App initialValue={3} />));

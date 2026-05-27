@@ -1,17 +1,8 @@
-import {
-  Data,
-  Deferred,
-  Effect,
-  Option,
-  Stream,
-  Subscribable,
-  SubscriptionRef,
-  pipe,
-} from "effect";
+import { Data, Effect, Subscribable } from "effect";
 import type { Scope } from "effect";
 import type { YieldWrap } from "effect/Utils";
-import type { JSXNode, JSXRequirements, Source } from "~/types";
-import { isStream } from "~/stream";
+import type { JSXNode, JSXRequirements } from "~/types";
+import { Source } from "~/source";
 
 // Re-exported reliable guard, keyed off Subscribable's TypeId.
 export { isSubscribable } from "effect/Subscribable";
@@ -36,7 +27,7 @@ export type Subscribables<P> = {
  * its declared type (no `Source` widening).
  */
 export type PropsIn<P> = {
-  [K in keyof P]: K extends "children" ? P[K] : Source<P[K]>;
+  [K in keyof P]: K extends "children" ? P[K] : Source.Source<P[K]>;
 };
 
 declare const RawProps: unique symbol;
@@ -70,99 +61,6 @@ export class NoPropValue extends Data.TaggedError("NoPropValue")<{
 }> {}
 
 /**
- * Normalize one caller-facing value into an await-first, hot `Subscribable`.
- *
- * - existing `Subscribable` → returned by reference (no new ref/fiber);
- * - static `T` → `get` succeeds immediately, `changes` emits once;
- * - `Effect<T>` → memoized (runs once), `changes` emits the resolved value once;
- * - `Stream<T>` → forks a scoped pump fiber holding the latest value in a
- *   `SubscriptionRef`; `get` is await-first and fails `NoPropValue` if the
- *   source ends before emitting.
- *
- * Scoped: the pump fiber terminates when the enclosing scope closes.
- *
- * @param source - The caller-supplied prop value.
- * @param key - Optional prop key carried on `NoPropValue` for diagnostics.
- */
-export function toSubscribable<A>(
-  source: Source<A>,
-  key?: string,
-): Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope> {
-  // Identity: already a Subscribable — return by reference, no new ref/fiber.
-  if (Subscribable.isSubscribable(source)) {
-    return Effect.succeed(source as unknown as Subscribable.Subscribable<A, NoPropValue>);
-  }
-
-  // Stream: hot/shared pump via SubscriptionRef + first-value latch.
-  if (isStream(source)) {
-    return Effect.gen(function* () {
-      const ref = yield* SubscriptionRef.make(Option.none<A>());
-      const latch = yield* Deferred.make<A, NoPropValue>();
-
-      // Pump: drain source into ref and resolve the first-value latch.
-      const pump = pipe(
-        Stream.runForEach(source as Stream.Stream<A>, (value) =>
-          pipe(
-            SubscriptionRef.set(ref, Option.some(value)),
-            Effect.zipRight(Deferred.succeed(latch, value)),
-            Effect.asVoid,
-          ),
-        ),
-        // On completion: if no value was ever emitted, fail the latch.
-        Effect.ensuring(
-          pipe(
-            SubscriptionRef.get(ref),
-            Effect.flatMap((opt) =>
-              Option.isNone(opt)
-                ? Effect.asVoid(Deferred.fail(latch, new NoPropValue({ key })))
-                : Effect.void,
-            ),
-          ),
-        ),
-      );
-
-      // Fork pump into the enclosing scope — dies when the instance scope closes.
-      yield* Effect.forkScoped(pump);
-
-      // get: return latest if available; otherwise await the first emission.
-      const get: Effect.Effect<A, NoPropValue> = pipe(
-        SubscriptionRef.get(ref),
-        Effect.flatMap((opt) =>
-          Option.isSome(opt) ? Effect.succeed(opt.value) : Deferred.await(latch),
-        ),
-      );
-
-      // changes: filter the SubscriptionRef's broadcast stream to present values.
-      const changes: Stream.Stream<A, NoPropValue> = pipe(
-        ref.changes,
-        Stream.filterMap((opt) => opt),
-      ) as Stream.Stream<A, NoPropValue>;
-
-      return Subscribable.make({ get, changes });
-    }) as Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;
-  }
-
-  // Effect: memoize so the source runs at most once across all consumers.
-  if (Effect.isEffect(source)) {
-    return Effect.gen(function* () {
-      const memoized = yield* Effect.cached(source as Effect.Effect<A, never, never>);
-      const get = memoized as Effect.Effect<A, NoPropValue>;
-      const changes = Stream.fromEffect(memoized) as Stream.Stream<A, NoPropValue>;
-      return Subscribable.make({ get, changes });
-    }) as Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;
-  }
-
-  // Static value: succeed immediately, emit once, no fiber.
-  const value = source as A;
-  return Effect.succeed(
-    Subscribable.make({
-      get: Effect.succeed(value) as Effect.Effect<A, NoPropValue>,
-      changes: Stream.make(value) as Stream.Stream<A, NoPropValue>,
-    }),
-  ) as Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;
-}
-
-/**
  * Normalizes all raw props into `Reactive<P>`: children pass through, every
  * other slot is wrapped via `toSubscribable`.
  */
@@ -176,7 +74,7 @@ function normalizeProps<P>(
         result[key] = (rawProps as Record<string, unknown>)[key];
       } else {
         const value = (rawProps as Record<string, unknown>)[key];
-        result[key] = yield* toSubscribable(value as Source<unknown>, key);
+        result[key] = yield* Source.toSubscribable(value as Source.Source<unknown>, key);
       }
     }
     return result as Subscribables<P>;
