@@ -1,6 +1,6 @@
 import type { Option, Ref } from "effect";
 import type { DOMAttributes } from "./dom";
-import type { AttributeValue, StyleAttributeValue } from "./attributes";
+import type { HTMLAttributeSource, StyleAttributeValue } from "./attributes";
 import type { JSXNode } from "..";
 
 type SVGPreserveAspectRatio =
@@ -65,67 +65,67 @@ type ImagePreserveAspectRatio =
 type SVGUnits = "userSpaceOnUse" | "objectBoundingBox";
 export interface SVGAttributes<T> extends DOMAttributes<T> {
   // effect-ui internals ========================================================
-  children?: AttributeValue<JSXNode>;
+  children?: HTMLAttributeSource<JSXNode>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================
 
-  id?: AttributeValue<string>;
-  lang?: AttributeValue<string>;
+  id?: HTMLAttributeSource<string>;
+  lang?: HTMLAttributeSource<string>;
   /**
    * A space-separated list of the part names of the element. Part names allows CSS to select and style specific elements in a shadow tree via the ::part pseudo-element.
    */
-  part?: AttributeValue<string>;
+  part?: HTMLAttributeSource<string>;
   /**
    * An integer attribute indicating if the element can take input focus (is focusable), if it should participate to sequential keyboard navigation, and if so, at what position. It can take several values: a negative value means that the element should be focusable, but should not be reachable via sequential keyboard navigation; 0 means that the element should be focusable and reachable via sequential keyboard navigation, but its relative order is defined by the platform convention; a positive value means that the element should be focusable and reachable via sequential keyboard navigation; the order in which the elements are focused is the increasing value of the tabindex. If several elements share the same tabindex, their relative order follows their relative positions in the document.
    */
-  tabindex?: AttributeValue<number | string>;
+  tabindex?: HTMLAttributeSource<number | string>;
 }
 interface StylableSVGAttributes {
-  class?: AttributeValue<string>;
-  style?: AttributeValue<StyleAttributeValue>;
+  class?: HTMLAttributeSource<string>;
+  style?: HTMLAttributeSource<StyleAttributeValue>;
 }
 interface TransformableSVGAttributes {
-  transform?: AttributeValue<string>;
+  transform?: HTMLAttributeSource<string>;
 }
 interface ConditionalProcessingSVGAttributes {
-  requiredExtensions?: AttributeValue<string>;
-  requiredFeatures?: AttributeValue<string>;
-  systemLanguage?: AttributeValue<string>;
+  requiredExtensions?: HTMLAttributeSource<string>;
+  requiredFeatures?: HTMLAttributeSource<string>;
+  systemLanguage?: HTMLAttributeSource<string>;
 }
 interface ExternalResourceSVGAttributes {
-  externalResourcesRequired?: AttributeValue<"true" | "false">;
+  externalResourcesRequired?: HTMLAttributeSource<"true" | "false">;
 }
 interface AnimationTimingSVGAttributes {
-  begin?: AttributeValue<number | string>;
-  dur?: AttributeValue<number | string>;
-  end?: AttributeValue<number | string>;
-  min?: AttributeValue<number | string>;
-  max?: AttributeValue<number | string>;
-  restart?: AttributeValue<"always" | "whenNotActive" | "never">;
-  repeatCount?: AttributeValue<number | (string & {}) | "indefinite">;
-  repeatDur?: AttributeValue<number | string>;
-  fill?: AttributeValue<"freeze" | "remove">;
+  begin?: HTMLAttributeSource<number | string>;
+  dur?: HTMLAttributeSource<number | string>;
+  end?: HTMLAttributeSource<number | string>;
+  min?: HTMLAttributeSource<number | string>;
+  max?: HTMLAttributeSource<number | string>;
+  restart?: HTMLAttributeSource<"always" | "whenNotActive" | "never">;
+  repeatCount?: HTMLAttributeSource<number | (string & {}) | "indefinite">;
+  repeatDur?: HTMLAttributeSource<number | string>;
+  fill?: HTMLAttributeSource<"freeze" | "remove">;
 }
 interface AnimationValueSVGAttributes {
-  calcMode?: AttributeValue<"discrete" | "linear" | "paced" | "spline">;
-  values?: AttributeValue<string>;
-  keyTimes?: AttributeValue<string>;
-  keySplines?: AttributeValue<string>;
-  from?: AttributeValue<number | string>;
-  to?: AttributeValue<number | string>;
-  by?: AttributeValue<number | string>;
+  calcMode?: HTMLAttributeSource<"discrete" | "linear" | "paced" | "spline">;
+  values?: HTMLAttributeSource<string>;
+  keyTimes?: HTMLAttributeSource<string>;
+  keySplines?: HTMLAttributeSource<string>;
+  from?: HTMLAttributeSource<number | string>;
+  to?: HTMLAttributeSource<number | string>;
+  by?: HTMLAttributeSource<number | string>;
 }
 interface AnimationAdditionSVGAttributes {
-  attributeName?: AttributeValue<string>;
-  additive?: AttributeValue<"replace" | "sum">;
-  accumulate?: AttributeValue<"none" | "sum">;
+  attributeName?: HTMLAttributeSource<string>;
+  additive?: HTMLAttributeSource<"replace" | "sum">;
+  accumulate?: HTMLAttributeSource<"none" | "sum">;
 }
 interface AnimationAttributeTargetSVGAttributes {
-  attributeName?: AttributeValue<string>;
-  attributeType?: AttributeValue<"CSS" | "XML" | "auto">;
+  attributeName?: HTMLAttributeSource<string>;
+  attributeType?: HTMLAttributeSource<"CSS" | "XML" | "auto">;
 }
 interface PresentationSVGAttributes {
-  "alignment-baseline"?: AttributeValue<
+  "alignment-baseline"?: HTMLAttributeSource<
     | "auto"
     | "baseline"
     | "before-edge"
@@ -140,19 +140,19 @@ interface PresentationSVGAttributes {
     | "mathematical"
     | "inherit"
   >;
-  "baseline-shift"?: AttributeValue<number | string>;
-  clip?: AttributeValue<string>;
-  "clip-path"?: AttributeValue<string>;
-  "clip-rule"?: AttributeValue<"nonzero" | "evenodd" | "inherit">;
-  color?: AttributeValue<string>;
-  "color-interpolation"?: AttributeValue<"auto" | "sRGB" | "linearRGB" | "inherit">;
-  "color-interpolation-filters"?: AttributeValue<"auto" | "sRGB" | "linearRGB" | "inherit">;
-  "color-profile"?: AttributeValue<string>;
-  "color-rendering"?: AttributeValue<"auto" | "optimizeSpeed" | "optimizeQuality" | "inherit">;
-  cursor?: AttributeValue<string>;
-  direction?: AttributeValue<"ltr" | "rtl" | "inherit">;
-  display?: AttributeValue<string>;
-  "dominant-baseline"?: AttributeValue<
+  "baseline-shift"?: HTMLAttributeSource<number | string>;
+  clip?: HTMLAttributeSource<string>;
+  "clip-path"?: HTMLAttributeSource<string>;
+  "clip-rule"?: HTMLAttributeSource<"nonzero" | "evenodd" | "inherit">;
+  color?: HTMLAttributeSource<string>;
+  "color-interpolation"?: HTMLAttributeSource<"auto" | "sRGB" | "linearRGB" | "inherit">;
+  "color-interpolation-filters"?: HTMLAttributeSource<"auto" | "sRGB" | "linearRGB" | "inherit">;
+  "color-profile"?: HTMLAttributeSource<string>;
+  "color-rendering"?: HTMLAttributeSource<"auto" | "optimizeSpeed" | "optimizeQuality" | "inherit">;
+  cursor?: HTMLAttributeSource<string>;
+  direction?: HTMLAttributeSource<"ltr" | "rtl" | "inherit">;
+  display?: HTMLAttributeSource<string>;
+  "dominant-baseline"?: HTMLAttributeSource<
     | "auto"
     | "text-bottom"
     | "alphabetic"
@@ -164,33 +164,33 @@ interface PresentationSVGAttributes {
     | "text-top"
     | "inherit"
   >;
-  "enable-background"?: AttributeValue<string>;
-  fill?: AttributeValue<string>;
-  "fill-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
-  "fill-rule"?: AttributeValue<"nonzero" | "evenodd" | "inherit">;
-  filter?: AttributeValue<string>;
-  "flood-color"?: AttributeValue<string>;
-  "flood-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
-  "font-family"?: AttributeValue<string>;
-  "font-size"?: AttributeValue<number | string>;
-  "font-size-adjust"?: AttributeValue<number | string>;
-  "font-stretch"?: AttributeValue<string>;
-  "font-style"?: AttributeValue<"normal" | "italic" | "oblique" | "inherit">;
-  "font-variant"?: AttributeValue<string>;
-  "font-weight"?: AttributeValue<number | string>;
-  "glyph-orientation-horizontal"?: AttributeValue<string>;
-  "glyph-orientation-vertical"?: AttributeValue<string>;
-  "image-rendering"?: AttributeValue<"auto" | "optimizeQuality" | "optimizeSpeed" | "inherit">;
-  kerning?: AttributeValue<string>;
-  "letter-spacing"?: AttributeValue<number | string>;
-  "lighting-color"?: AttributeValue<string>;
-  "marker-end"?: AttributeValue<string>;
-  "marker-mid"?: AttributeValue<string>;
-  "marker-start"?: AttributeValue<string>;
-  mask?: AttributeValue<string>;
-  opacity?: AttributeValue<number | (string & {}) | "inherit">;
-  overflow?: AttributeValue<"visible" | "hidden" | "scroll" | "auto" | "inherit">;
-  "pointer-events"?: AttributeValue<
+  "enable-background"?: HTMLAttributeSource<string>;
+  fill?: HTMLAttributeSource<string>;
+  "fill-opacity"?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  "fill-rule"?: HTMLAttributeSource<"nonzero" | "evenodd" | "inherit">;
+  filter?: HTMLAttributeSource<string>;
+  "flood-color"?: HTMLAttributeSource<string>;
+  "flood-opacity"?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  "font-family"?: HTMLAttributeSource<string>;
+  "font-size"?: HTMLAttributeSource<number | string>;
+  "font-size-adjust"?: HTMLAttributeSource<number | string>;
+  "font-stretch"?: HTMLAttributeSource<string>;
+  "font-style"?: HTMLAttributeSource<"normal" | "italic" | "oblique" | "inherit">;
+  "font-variant"?: HTMLAttributeSource<string>;
+  "font-weight"?: HTMLAttributeSource<number | string>;
+  "glyph-orientation-horizontal"?: HTMLAttributeSource<string>;
+  "glyph-orientation-vertical"?: HTMLAttributeSource<string>;
+  "image-rendering"?: HTMLAttributeSource<"auto" | "optimizeQuality" | "optimizeSpeed" | "inherit">;
+  kerning?: HTMLAttributeSource<string>;
+  "letter-spacing"?: HTMLAttributeSource<number | string>;
+  "lighting-color"?: HTMLAttributeSource<string>;
+  "marker-end"?: HTMLAttributeSource<string>;
+  "marker-mid"?: HTMLAttributeSource<string>;
+  "marker-start"?: HTMLAttributeSource<string>;
+  mask?: HTMLAttributeSource<string>;
+  opacity?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  overflow?: HTMLAttributeSource<"visible" | "hidden" | "scroll" | "auto" | "inherit">;
+  "pointer-events"?: HTMLAttributeSource<
     | "bounding-box"
     | "visiblePainted"
     | "visibleFill"
@@ -204,32 +204,34 @@ interface PresentationSVGAttributes {
     | "none"
     | "inherit"
   >;
-  "shape-rendering"?: AttributeValue<
+  "shape-rendering"?: HTMLAttributeSource<
     "auto" | "optimizeSpeed" | "crispEdges" | "geometricPrecision" | "inherit"
   >;
-  "stop-color"?: AttributeValue<string>;
-  "stop-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
-  stroke?: AttributeValue<string>;
-  "stroke-dasharray"?: AttributeValue<string>;
-  "stroke-dashoffset"?: AttributeValue<number | string>;
-  "stroke-linecap"?: AttributeValue<"butt" | "round" | "square" | "inherit">;
-  "stroke-linejoin"?: AttributeValue<
+  "stop-color"?: HTMLAttributeSource<string>;
+  "stop-opacity"?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  stroke?: HTMLAttributeSource<string>;
+  "stroke-dasharray"?: HTMLAttributeSource<string>;
+  "stroke-dashoffset"?: HTMLAttributeSource<number | string>;
+  "stroke-linecap"?: HTMLAttributeSource<"butt" | "round" | "square" | "inherit">;
+  "stroke-linejoin"?: HTMLAttributeSource<
     "arcs" | "bevel" | "miter" | "miter-clip" | "round" | "inherit"
   >;
-  "stroke-miterlimit"?: AttributeValue<number | (string & {}) | "inherit">;
-  "stroke-opacity"?: AttributeValue<number | (string & {}) | "inherit">;
-  "stroke-width"?: AttributeValue<number | string>;
-  "text-anchor"?: AttributeValue<"start" | "middle" | "end" | "inherit">;
-  "text-decoration"?: AttributeValue<
+  "stroke-miterlimit"?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  "stroke-opacity"?: HTMLAttributeSource<number | (string & {}) | "inherit">;
+  "stroke-width"?: HTMLAttributeSource<number | string>;
+  "text-anchor"?: HTMLAttributeSource<"start" | "middle" | "end" | "inherit">;
+  "text-decoration"?: HTMLAttributeSource<
     "none" | "underline" | "overline" | "line-through" | "blink" | "inherit"
   >;
-  "text-rendering"?: AttributeValue<
+  "text-rendering"?: HTMLAttributeSource<
     "auto" | "optimizeSpeed" | "optimizeLegibility" | "geometricPrecision" | "inherit"
   >;
-  "unicode-bidi"?: AttributeValue<string>;
-  visibility?: AttributeValue<"visible" | "hidden" | "collapse" | "inherit">;
-  "word-spacing"?: AttributeValue<number | string>;
-  "writing-mode"?: AttributeValue<"lr-tb" | "rl-tb" | "tb-rl" | "lr" | "rl" | "tb" | "inherit">;
+  "unicode-bidi"?: HTMLAttributeSource<string>;
+  visibility?: HTMLAttributeSource<"visible" | "hidden" | "collapse" | "inherit">;
+  "word-spacing"?: HTMLAttributeSource<number | string>;
+  "writing-mode"?: HTMLAttributeSource<
+    "lr-tb" | "rl-tb" | "tb-rl" | "lr" | "rl" | "tb" | "inherit"
+  >;
 }
 interface AnimationElementSVGAttributes<T>
   extends SVGAttributes<T>, ExternalResourceSVGAttributes, ConditionalProcessingSVGAttributes {}
@@ -249,28 +251,28 @@ interface ContainerElementSVGAttributes<T>
     > {}
 interface FilterPrimitiveElementSVGAttributes<T>
   extends SVGAttributes<T>, Pick<PresentationSVGAttributes, "color-interpolation-filters"> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  result?: AttributeValue<string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  result?: HTMLAttributeSource<string>;
 }
 interface SingleInputFilterSVGAttributes {
-  in?: AttributeValue<string>;
+  in?: HTMLAttributeSource<string>;
 }
 interface DoubleInputFilterSVGAttributes {
-  in?: AttributeValue<string>;
-  in2?: AttributeValue<string>;
+  in?: HTMLAttributeSource<string>;
+  in2?: HTMLAttributeSource<string>;
 }
 interface FitToViewBoxSVGAttributes {
-  viewBox?: AttributeValue<string>;
-  preserveAspectRatio?: AttributeValue<SVGPreserveAspectRatio>;
+  viewBox?: HTMLAttributeSource<string>;
+  preserveAspectRatio?: HTMLAttributeSource<SVGPreserveAspectRatio>;
 }
 interface GradientElementSVGAttributes<T>
   extends SVGAttributes<T>, ExternalResourceSVGAttributes, StylableSVGAttributes {
-  gradientUnits?: AttributeValue<SVGUnits>;
-  gradientTransform?: AttributeValue<string>;
-  spreadMethod?: AttributeValue<"pad" | "reflect" | "repeat">;
+  gradientUnits?: HTMLAttributeSource<SVGUnits>;
+  gradientTransform?: HTMLAttributeSource<string>;
+  spreadMethod?: HTMLAttributeSource<"pad" | "reflect" | "repeat">;
 }
 interface GraphicsElementSVGAttributes<T>
   extends
@@ -291,7 +293,7 @@ interface GraphicsElementSVGAttributes<T>
 interface LightSourceElementSVGAttributes<T> extends SVGAttributes<T> {}
 interface NewViewportSVGAttributes<T>
   extends SVGAttributes<T>, Pick<PresentationSVGAttributes, "overflow" | "clip"> {
-  viewBox?: AttributeValue<string>;
+  viewBox?: HTMLAttributeSource<string>;
 }
 interface ShapeElementSVGAttributes<T>
   extends
@@ -348,7 +350,7 @@ interface TextContentElementSVGAttributes<T>
       | "word-spacing"
     > {}
 interface ZoomAndPanSVGAttributes {
-  zoomAndPan?: AttributeValue<"disable" | "magnify">;
+  zoomAndPan?: HTMLAttributeSource<"disable" | "magnify">;
 }
 interface AnimateSVGAttributes<T>
   extends
@@ -364,10 +366,10 @@ interface AnimateMotionSVGAttributes<T>
     AnimationTimingSVGAttributes,
     AnimationValueSVGAttributes,
     AnimationAdditionSVGAttributes {
-  path?: AttributeValue<string>;
-  keyPoints?: AttributeValue<string>;
-  rotate?: AttributeValue<number | "auto" | "auto-reverse" | (string & {})>;
-  origin?: AttributeValue<"default">;
+  path?: HTMLAttributeSource<string>;
+  keyPoints?: HTMLAttributeSource<string>;
+  rotate?: HTMLAttributeSource<number | "auto" | "auto-reverse" | (string & {})>;
+  origin?: HTMLAttributeSource<"default">;
 }
 interface AnimateTransformSVGAttributes<T>
   extends
@@ -376,7 +378,7 @@ interface AnimateTransformSVGAttributes<T>
     AnimationTimingSVGAttributes,
     AnimationValueSVGAttributes,
     AnimationAdditionSVGAttributes {
-  type?: AttributeValue<"translate" | "scale" | "rotate" | "skewX" | "skewY">;
+  type?: HTMLAttributeSource<"translate" | "scale" | "rotate" | "skewX" | "skewY">;
 }
 interface CircleSVGAttributes<T>
   extends
@@ -385,9 +387,9 @@ interface CircleSVGAttributes<T>
     ConditionalProcessingSVGAttributes,
     StylableSVGAttributes,
     TransformableSVGAttributes {
-  cx?: AttributeValue<number | string>;
-  cy?: AttributeValue<number | string>;
-  r?: AttributeValue<number | string>;
+  cx?: HTMLAttributeSource<number | string>;
+  cy?: HTMLAttributeSource<number | string>;
+  r?: HTMLAttributeSource<number | string>;
 }
 interface ClipPathSVGAttributes<T>
   extends
@@ -397,7 +399,7 @@ interface ClipPathSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "clip-path"> {
-  clipPathUnits?: AttributeValue<SVGUnits>;
+  clipPathUnits?: HTMLAttributeSource<SVGUnits>;
 }
 interface DefsSVGAttributes<T>
   extends
@@ -415,25 +417,25 @@ interface EllipseSVGAttributes<T>
     ExternalResourceSVGAttributes,
     StylableSVGAttributes,
     TransformableSVGAttributes {
-  cx?: AttributeValue<number | string>;
-  cy?: AttributeValue<number | string>;
-  rx?: AttributeValue<number | string>;
-  ry?: AttributeValue<number | string>;
+  cx?: HTMLAttributeSource<number | string>;
+  cy?: HTMLAttributeSource<number | string>;
+  rx?: HTMLAttributeSource<number | string>;
+  ry?: HTMLAttributeSource<number | string>;
 }
 interface FeBlendSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     DoubleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  mode?: AttributeValue<"normal" | "multiply" | "screen" | "darken" | "lighten">;
+  mode?: HTMLAttributeSource<"normal" | "multiply" | "screen" | "darken" | "lighten">;
 }
 interface FeColorMatrixSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  type?: AttributeValue<"matrix" | "saturate" | "hueRotate" | "luminanceToAlpha">;
-  values?: AttributeValue<string>;
+  type?: HTMLAttributeSource<"matrix" | "saturate" | "hueRotate" | "luminanceToAlpha">;
+  values?: HTMLAttributeSource<string>;
 }
 interface FeComponentTransferSVGAttributes<T>
   extends
@@ -445,26 +447,26 @@ interface FeCompositeSVGAttributes<T>
     FilterPrimitiveElementSVGAttributes<T>,
     DoubleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  operator?: AttributeValue<"over" | "in" | "out" | "atop" | "xor" | "arithmetic">;
-  k1?: AttributeValue<number | string>;
-  k2?: AttributeValue<number | string>;
-  k3?: AttributeValue<number | string>;
-  k4?: AttributeValue<number | string>;
+  operator?: HTMLAttributeSource<"over" | "in" | "out" | "atop" | "xor" | "arithmetic">;
+  k1?: HTMLAttributeSource<number | string>;
+  k2?: HTMLAttributeSource<number | string>;
+  k3?: HTMLAttributeSource<number | string>;
+  k4?: HTMLAttributeSource<number | string>;
 }
 interface FeConvolveMatrixSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  order?: AttributeValue<number | string>;
-  kernelMatrix?: AttributeValue<string>;
-  divisor?: AttributeValue<number | string>;
-  bias?: AttributeValue<number | string>;
-  targetX?: AttributeValue<number | string>;
-  targetY?: AttributeValue<number | string>;
-  edgeMode?: AttributeValue<"duplicate" | "wrap" | "none">;
-  kernelUnitLength?: AttributeValue<number | string>;
-  preserveAlpha?: AttributeValue<"true" | "false">;
+  order?: HTMLAttributeSource<number | string>;
+  kernelMatrix?: HTMLAttributeSource<string>;
+  divisor?: HTMLAttributeSource<number | string>;
+  bias?: HTMLAttributeSource<number | string>;
+  targetX?: HTMLAttributeSource<number | string>;
+  targetY?: HTMLAttributeSource<number | string>;
+  edgeMode?: HTMLAttributeSource<"duplicate" | "wrap" | "none">;
+  kernelUnitLength?: HTMLAttributeSource<number | string>;
+  preserveAlpha?: HTMLAttributeSource<"true" | "false">;
 }
 interface FeDiffuseLightingSVGAttributes<T>
   extends
@@ -472,22 +474,22 @@ interface FeDiffuseLightingSVGAttributes<T>
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes,
     Pick<PresentationSVGAttributes, "color" | "lighting-color"> {
-  surfaceScale?: AttributeValue<number | string>;
-  diffuseConstant?: AttributeValue<number | string>;
-  kernelUnitLength?: AttributeValue<number | string>;
+  surfaceScale?: HTMLAttributeSource<number | string>;
+  diffuseConstant?: HTMLAttributeSource<number | string>;
+  kernelUnitLength?: HTMLAttributeSource<number | string>;
 }
 interface FeDisplacementMapSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     DoubleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  scale?: AttributeValue<number | string>;
-  xChannelSelector?: AttributeValue<"R" | "G" | "B" | "A">;
-  yChannelSelector?: AttributeValue<"R" | "G" | "B" | "A">;
+  scale?: HTMLAttributeSource<number | string>;
+  xChannelSelector?: HTMLAttributeSource<"R" | "G" | "B" | "A">;
+  yChannelSelector?: HTMLAttributeSource<"R" | "G" | "B" | "A">;
 }
 interface FeDistantLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-  azimuth?: AttributeValue<number | string>;
-  elevation?: AttributeValue<number | string>;
+  azimuth?: HTMLAttributeSource<number | string>;
+  elevation?: HTMLAttributeSource<number | string>;
 }
 interface FeFloodSVGAttributes<T>
   extends
@@ -495,20 +497,20 @@ interface FeFloodSVGAttributes<T>
     StylableSVGAttributes,
     Pick<PresentationSVGAttributes, "color" | "flood-color" | "flood-opacity"> {}
 interface FeFuncSVGAttributes<T> extends SVGAttributes<T> {
-  type?: AttributeValue<"identity" | "table" | "discrete" | "linear" | "gamma">;
-  tableValues?: AttributeValue<string>;
-  slope?: AttributeValue<number | string>;
-  intercept?: AttributeValue<number | string>;
-  amplitude?: AttributeValue<number | string>;
-  exponent?: AttributeValue<number | string>;
-  offset?: AttributeValue<number | string>;
+  type?: HTMLAttributeSource<"identity" | "table" | "discrete" | "linear" | "gamma">;
+  tableValues?: HTMLAttributeSource<string>;
+  slope?: HTMLAttributeSource<number | string>;
+  intercept?: HTMLAttributeSource<number | string>;
+  amplitude?: HTMLAttributeSource<number | string>;
+  exponent?: HTMLAttributeSource<number | string>;
+  offset?: HTMLAttributeSource<number | string>;
 }
 interface FeGaussianBlurSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  stdDeviation?: AttributeValue<number | string>;
+  stdDeviation?: HTMLAttributeSource<number | string>;
 }
 interface FeImageSVGAttributes<T>
   extends
@@ -525,21 +527,21 @@ interface FeMorphologySVGAttributes<T>
     FilterPrimitiveElementSVGAttributes<T>,
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  operator?: AttributeValue<"erode" | "dilate">;
-  radius?: AttributeValue<number | string>;
+  operator?: HTMLAttributeSource<"erode" | "dilate">;
+  radius?: HTMLAttributeSource<number | string>;
 }
 interface FeOffsetSVGAttributes<T>
   extends
     FilterPrimitiveElementSVGAttributes<T>,
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes {
-  dx?: AttributeValue<number | string>;
-  dy?: AttributeValue<number | string>;
+  dx?: HTMLAttributeSource<number | string>;
+  dy?: HTMLAttributeSource<number | string>;
 }
 interface FePointLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  z?: AttributeValue<number | string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  z?: HTMLAttributeSource<number | string>;
 }
 interface FeSpecularLightingSVGAttributes<T>
   extends
@@ -547,20 +549,20 @@ interface FeSpecularLightingSVGAttributes<T>
     SingleInputFilterSVGAttributes,
     StylableSVGAttributes,
     Pick<PresentationSVGAttributes, "color" | "lighting-color"> {
-  surfaceScale?: AttributeValue<number | string>;
-  specularConstant?: AttributeValue<number | string>;
-  specularExponent?: AttributeValue<number | string>;
-  kernelUnitLength?: AttributeValue<number | string>;
+  surfaceScale?: HTMLAttributeSource<number | string>;
+  specularConstant?: HTMLAttributeSource<number | string>;
+  specularExponent?: HTMLAttributeSource<number | string>;
+  kernelUnitLength?: HTMLAttributeSource<number | string>;
 }
 interface FeSpotLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  z?: AttributeValue<number | string>;
-  pointsAtX?: AttributeValue<number | string>;
-  pointsAtY?: AttributeValue<number | string>;
-  pointsAtZ?: AttributeValue<number | string>;
-  specularExponent?: AttributeValue<number | string>;
-  limitingConeAngle?: AttributeValue<number | string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  z?: HTMLAttributeSource<number | string>;
+  pointsAtX?: HTMLAttributeSource<number | string>;
+  pointsAtY?: HTMLAttributeSource<number | string>;
+  pointsAtZ?: HTMLAttributeSource<number | string>;
+  specularExponent?: HTMLAttributeSource<number | string>;
+  limitingConeAngle?: HTMLAttributeSource<number | string>;
 }
 interface FeTileSVGAttributes<T>
   extends
@@ -569,21 +571,21 @@ interface FeTileSVGAttributes<T>
     StylableSVGAttributes {}
 interface FeTurbulanceSVGAttributes<T>
   extends FilterPrimitiveElementSVGAttributes<T>, StylableSVGAttributes {
-  baseFrequency?: AttributeValue<number | string>;
-  numOctaves?: AttributeValue<number | string>;
-  seed?: AttributeValue<number | string>;
-  stitchTiles?: AttributeValue<"stitch" | "noStitch">;
-  type?: AttributeValue<"fractalNoise" | "turbulence">;
+  baseFrequency?: HTMLAttributeSource<number | string>;
+  numOctaves?: HTMLAttributeSource<number | string>;
+  seed?: HTMLAttributeSource<number | string>;
+  stitchTiles?: HTMLAttributeSource<"stitch" | "noStitch">;
+  type?: HTMLAttributeSource<"fractalNoise" | "turbulence">;
 }
 interface FilterSVGAttributes<T>
   extends SVGAttributes<T>, ExternalResourceSVGAttributes, StylableSVGAttributes {
-  filterUnits?: AttributeValue<SVGUnits>;
-  primitiveUnits?: AttributeValue<SVGUnits>;
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  filterRes?: AttributeValue<number | string>;
+  filterUnits?: HTMLAttributeSource<SVGUnits>;
+  primitiveUnits?: HTMLAttributeSource<SVGUnits>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  filterRes?: HTMLAttributeSource<number | string>;
 }
 interface ForeignObjectSVGAttributes<T>
   extends
@@ -593,10 +595,10 @@ interface ForeignObjectSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "display" | "visibility"> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
 }
 interface GSVGAttributes<T>
   extends
@@ -614,11 +616,11 @@ interface ImageSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "color-profile" | "image-rendering"> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  preserveAspectRatio?: AttributeValue<ImagePreserveAspectRatio>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  preserveAspectRatio?: HTMLAttributeSource<ImagePreserveAspectRatio>;
 }
 interface LineSVGAttributes<T>
   extends
@@ -629,16 +631,16 @@ interface LineSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "marker-start" | "marker-mid" | "marker-end"> {
-  x1?: AttributeValue<number | string>;
-  y1?: AttributeValue<number | string>;
-  x2?: AttributeValue<number | string>;
-  y2?: AttributeValue<number | string>;
+  x1?: HTMLAttributeSource<number | string>;
+  y1?: HTMLAttributeSource<number | string>;
+  x2?: HTMLAttributeSource<number | string>;
+  y2?: HTMLAttributeSource<number | string>;
 }
 interface LinearGradientSVGAttributes<T> extends GradientElementSVGAttributes<T> {
-  x1?: AttributeValue<number | string>;
-  x2?: AttributeValue<number | string>;
-  y1?: AttributeValue<number | string>;
-  y2?: AttributeValue<number | string>;
+  x1?: HTMLAttributeSource<number | string>;
+  x2?: HTMLAttributeSource<number | string>;
+  y1?: HTMLAttributeSource<number | string>;
+  y2?: HTMLAttributeSource<number | string>;
 }
 interface MarkerSVGAttributes<T>
   extends
@@ -647,12 +649,12 @@ interface MarkerSVGAttributes<T>
     StylableSVGAttributes,
     FitToViewBoxSVGAttributes,
     Pick<PresentationSVGAttributes, "overflow" | "clip"> {
-  markerUnits?: AttributeValue<"strokeWidth" | "userSpaceOnUse">;
-  refX?: AttributeValue<number | string>;
-  refY?: AttributeValue<number | string>;
-  markerWidth?: AttributeValue<number | string>;
-  markerHeight?: AttributeValue<number | string>;
-  orient?: AttributeValue<string>;
+  markerUnits?: HTMLAttributeSource<"strokeWidth" | "userSpaceOnUse">;
+  refX?: HTMLAttributeSource<number | string>;
+  refY?: HTMLAttributeSource<number | string>;
+  markerWidth?: HTMLAttributeSource<number | string>;
+  markerHeight?: HTMLAttributeSource<number | string>;
+  orient?: HTMLAttributeSource<string>;
 }
 interface MaskSVGAttributes<T>
   extends
@@ -660,12 +662,12 @@ interface MaskSVGAttributes<T>
     ConditionalProcessingSVGAttributes,
     ExternalResourceSVGAttributes,
     StylableSVGAttributes {
-  maskUnits?: AttributeValue<SVGUnits>;
-  maskContentUnits?: AttributeValue<SVGUnits>;
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
+  maskUnits?: HTMLAttributeSource<SVGUnits>;
+  maskContentUnits?: HTMLAttributeSource<SVGUnits>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
 }
 interface MetadataSVGAttributes<T> extends SVGAttributes<T> {}
 interface PathSVGAttributes<T>
@@ -677,8 +679,8 @@ interface PathSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "marker-start" | "marker-mid" | "marker-end"> {
-  d?: AttributeValue<string>;
-  pathLength?: AttributeValue<number | string>;
+  d?: HTMLAttributeSource<string>;
+  pathLength?: HTMLAttributeSource<number | string>;
 }
 interface PatternSVGAttributes<T>
   extends
@@ -688,13 +690,13 @@ interface PatternSVGAttributes<T>
     StylableSVGAttributes,
     FitToViewBoxSVGAttributes,
     Pick<PresentationSVGAttributes, "overflow" | "clip"> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  patternUnits?: AttributeValue<SVGUnits>;
-  patternContentUnits?: AttributeValue<SVGUnits>;
-  patternTransform?: AttributeValue<string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  patternUnits?: HTMLAttributeSource<SVGUnits>;
+  patternContentUnits?: HTMLAttributeSource<SVGUnits>;
+  patternTransform?: HTMLAttributeSource<string>;
 }
 interface PolygonSVGAttributes<T>
   extends
@@ -705,7 +707,7 @@ interface PolygonSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "marker-start" | "marker-mid" | "marker-end"> {
-  points?: AttributeValue<string>;
+  points?: HTMLAttributeSource<string>;
 }
 interface PolylineSVGAttributes<T>
   extends
@@ -716,14 +718,14 @@ interface PolylineSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "marker-start" | "marker-mid" | "marker-end"> {
-  points?: AttributeValue<string>;
+  points?: HTMLAttributeSource<string>;
 }
 interface RadialGradientSVGAttributes<T> extends GradientElementSVGAttributes<T> {
-  cx?: AttributeValue<number | string>;
-  cy?: AttributeValue<number | string>;
-  r?: AttributeValue<number | string>;
-  fx?: AttributeValue<number | string>;
-  fy?: AttributeValue<number | string>;
+  cx?: HTMLAttributeSource<number | string>;
+  cy?: HTMLAttributeSource<number | string>;
+  r?: HTMLAttributeSource<number | string>;
+  fx?: HTMLAttributeSource<number | string>;
+  fy?: HTMLAttributeSource<number | string>;
 }
 interface RectSVGAttributes<T>
   extends
@@ -733,19 +735,19 @@ interface RectSVGAttributes<T>
     ExternalResourceSVGAttributes,
     StylableSVGAttributes,
     TransformableSVGAttributes {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  rx?: AttributeValue<number | string>;
-  ry?: AttributeValue<number | string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  rx?: HTMLAttributeSource<number | string>;
+  ry?: HTMLAttributeSource<number | string>;
 }
 interface StopSVGAttributes<T>
   extends
     SVGAttributes<T>,
     StylableSVGAttributes,
     Pick<PresentationSVGAttributes, "color" | "stop-color" | "stop-opacity"> {
-  offset?: AttributeValue<number | string>;
+  offset?: HTMLAttributeSource<number | string>;
 }
 interface SvgSVGAttributes<T>
   extends
@@ -757,15 +759,15 @@ interface SvgSVGAttributes<T>
     FitToViewBoxSVGAttributes,
     ZoomAndPanSVGAttributes,
     PresentationSVGAttributes {
-  version?: AttributeValue<string>;
-  "base-profile"?: AttributeValue<string>;
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
-  contentScriptType?: AttributeValue<string>;
-  contentStyleType?: AttributeValue<string>;
-  xmlns?: AttributeValue<string>;
+  version?: HTMLAttributeSource<string>;
+  "base-profile"?: HTMLAttributeSource<string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
+  contentScriptType?: HTMLAttributeSource<string>;
+  contentStyleType?: HTMLAttributeSource<string>;
+  xmlns?: HTMLAttributeSource<string>;
 }
 interface SwitchSVGAttributes<T>
   extends
@@ -791,13 +793,13 @@ interface TextSVGAttributes<T>
     StylableSVGAttributes,
     TransformableSVGAttributes,
     Pick<PresentationSVGAttributes, "writing-mode" | "text-rendering"> {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  dx?: AttributeValue<number | string>;
-  dy?: AttributeValue<number | string>;
-  rotate?: AttributeValue<number | string>;
-  textLength?: AttributeValue<number | string>;
-  lengthAdjust?: AttributeValue<"spacing" | "spacingAndGlyphs">;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  dx?: HTMLAttributeSource<number | string>;
+  dy?: HTMLAttributeSource<number | string>;
+  rotate?: HTMLAttributeSource<number | string>;
+  textLength?: HTMLAttributeSource<number | string>;
+  lengthAdjust?: HTMLAttributeSource<"spacing" | "spacingAndGlyphs">;
 }
 interface TextPathSVGAttributes<T>
   extends
@@ -809,9 +811,9 @@ interface TextPathSVGAttributes<T>
       PresentationSVGAttributes,
       "alignment-baseline" | "baseline-shift" | "display" | "visibility"
     > {
-  startOffset?: AttributeValue<number | string>;
-  method?: AttributeValue<"align" | "stretch">;
-  spacing?: AttributeValue<"auto" | "exact">;
+  startOffset?: HTMLAttributeSource<number | string>;
+  method?: HTMLAttributeSource<"align" | "stretch">;
+  spacing?: HTMLAttributeSource<"auto" | "exact">;
 }
 interface TSpanSVGAttributes<T>
   extends
@@ -823,13 +825,13 @@ interface TSpanSVGAttributes<T>
       PresentationSVGAttributes,
       "alignment-baseline" | "baseline-shift" | "display" | "visibility"
     > {
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  dx?: AttributeValue<number | string>;
-  dy?: AttributeValue<number | string>;
-  rotate?: AttributeValue<number | string>;
-  textLength?: AttributeValue<number | string>;
-  lengthAdjust?: AttributeValue<"spacing" | "spacingAndGlyphs">;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  dx?: HTMLAttributeSource<number | string>;
+  dy?: HTMLAttributeSource<number | string>;
+  rotate?: HTMLAttributeSource<number | string>;
+  textLength?: HTMLAttributeSource<number | string>;
+  lengthAdjust?: HTMLAttributeSource<"spacing" | "spacingAndGlyphs">;
 }
 interface UseSVGAttributes<T>
   extends
@@ -838,11 +840,11 @@ interface UseSVGAttributes<T>
     ExternalResourceSVGAttributes,
     StylableSVGAttributes,
     TransformableSVGAttributes {
-  href?: AttributeValue<string>;
-  x?: AttributeValue<number | string>;
-  y?: AttributeValue<number | string>;
-  width?: AttributeValue<number | string>;
-  height?: AttributeValue<number | string>;
+  href?: HTMLAttributeSource<string>;
+  x?: HTMLAttributeSource<number | string>;
+  y?: HTMLAttributeSource<number | string>;
+  width?: HTMLAttributeSource<number | string>;
+  height?: HTMLAttributeSource<number | string>;
 }
 interface ViewSVGAttributes<T>
   extends
@@ -850,7 +852,7 @@ interface ViewSVGAttributes<T>
     ExternalResourceSVGAttributes,
     FitToViewBoxSVGAttributes,
     ZoomAndPanSVGAttributes {
-  viewTarget?: AttributeValue<string>;
+  viewTarget?: HTMLAttributeSource<string>;
 }
 export interface SVGElements {
   animate: AnimateSVGAttributes<SVGAnimateElement>;
