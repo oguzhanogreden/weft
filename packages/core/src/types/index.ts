@@ -46,17 +46,13 @@ export type JSXNode =
 export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown>) => JSXNode);
 
 /**
- * The caller-facing prop vocabulary: a slot typed `MaybeReactive<T>` accepts a
+ * The caller-facing prop vocabulary: a slot typed `Source<T>` accepts a
  * static value, a `Stream`, an `Effect`, or an existing `Subscribable`, and the
  * caller can switch between them freely. An incoming `Subscribable` is threaded
  * through by reference (no re-wrap); the rest normalize via `toSubscribable`
  * from `@effect-ui/core`.
  */
-export type MaybeReactive<T> =
-  | T
-  | Stream.Stream<T>
-  | Effect.Effect<T>
-  | Subscribable.Subscribable<T>;
+export type Source<T> = T | Stream.Stream<T> | Effect.Effect<T> | Subscribable.Subscribable<T>;
 
 export * from "./html/aria";
 export * from "./html/attributes";

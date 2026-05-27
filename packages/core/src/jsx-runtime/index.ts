@@ -1,8 +1,8 @@
 import type { Component } from "~/component/component";
-import type { HTMLElements, JSXNode, JSXType, MaybeReactive, SVGElements } from "~/types";
+import type { HTMLElements, JSXNode, JSXType, Source, SVGElements } from "~/types";
 
 export * from "./fragment";
-type PropsIn<T> = { [K in keyof T]: MaybeReactive<T[K]> };
+type PropsIn<T> = { [K in keyof T]: Source<T[K]> };
 
 export function jsx(
   type: JSXType,

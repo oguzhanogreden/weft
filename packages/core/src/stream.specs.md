@@ -10,8 +10,8 @@ equivalent of Vue's `unref`.
 
 ## Purpose
 
-Components accept reactive inputs typed `MaybeReactive<T>` (see
-`types/index.ts`). The renderer already auto-subscribes to a `MaybeReactive<T>`
+Components accept reactive inputs typed `Source<T>` (see
+`types/index.ts`). The renderer already auto-subscribes to a `Source<T>`
 dropped straight into a slot. `toStream` exists for the remaining case: when an
 author wants to **compute with** a prop internally (derive, branch) rather than
 forward it, they normalize once and stay in `Stream`-land:
@@ -32,15 +32,15 @@ pipe(
 
 ## Consumption Vocabulary (guidance)
 
-| Need                          | What to do                                                                               | New API?             |
-| ----------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
-| Render a `MaybeReactive` prop | Pass `props.x` straight into JSX — renderer auto-subscribes                              | none                 |
-| Derive / compute internally   | `pipe(toStream(props.x), Stream.map(…))`                                                 | `toStream`           |
-| Read current value / two-way  | Type the prop `Subscribable<T>` / `SubscriptionRef<T>`; use `.get` / `.changes` / `.set` | none (Effect stdlib) |
-| Output / event                | Plain callback prop `(v) => void \| Effect<void>`                                        | none                 |
+| Need                         | What to do                                                                               | New API?             |
+| ---------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
+| Render a `Source` prop       | Pass `props.x` straight into JSX — renderer auto-subscribes                              | none                 |
+| Derive / compute internally  | `pipe(toStream(props.x), Stream.map(…))`                                                 | `toStream`           |
+| Read current value / two-way | Type the prop `Subscribable<T>` / `SubscriptionRef<T>`; use `.get` / `.changes` / `.set` | none (Effect stdlib) |
+| Output / event               | Plain callback prop `(v) => void \| Effect<void>`                                        | none                 |
 
 **One-way by default (convention, not enforced):** model inputs as
-`MaybeReactive<T>` and outputs as callbacks. `Ref`/`SubscriptionRef` already
+`Source<T>` and outputs as callbacks. `Ref`/`SubscriptionRef` already
 encapsulate safe, controlled mutation, so passing one to a child for two-way
 flow is legitimate capability-passing — reach for it deliberately, not by
 default. The framework enforces nothing.
@@ -57,6 +57,6 @@ default. The framework enforces nothing.
    plain values, Effects, `null`, and non-objects.
 5. **AC-5 single source of truth** — `isStream`/`toStream` are defined only in
    `@effect-ui/core`; no duplicate definitions remain in `@effect-ui/dom`.
-6. **AC-6 MaybeReactive** — `MaybeReactive<T>` (renamed from `Prop<T>`) accepts
+6. **AC-6 Source** — `Source<T>` (renamed from `Prop<T>`) accepts
    static `T`, `Stream<T>`, and `Effect<T>` and is the documented caller-facing
    prop vocabulary.

@@ -1,6 +1,6 @@
 import type { Effect, Scope, Subscribable } from "effect";
 import { Data } from "effect";
-import type { JSXNode, MaybeReactive } from "~/types";
+import type { JSXNode, Source } from "~/types";
 
 // Re-exported reliable guard, keyed off Subscribable's TypeId.
 export { isSubscribable } from "effect/Subscribable";
@@ -19,7 +19,7 @@ declare const RawProps: unique symbol;
 /**
  * A defined component. Brands the render function with its raw prop shape `P`
  * so `JSX.LibraryManagedAttributes` can derive the caller-facing view
- * (`MaybeReactive` per slot) without lossily inverting `Subscribable`.
+ * (`Source` per slot) without lossily inverting `Subscribable`.
  */
 export interface Component<P> {
   (props: Reactive<P>): JSXNode;
@@ -63,5 +63,5 @@ export declare function component<P>(render: (props: Reactive<P>) => JSXNode): C
  * Scoped: the pump fiber terminates when the enclosing scope closes.
  */
 export declare function toSubscribable<A>(
-  source: MaybeReactive<A>,
+  source: Source<A>,
 ): Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;

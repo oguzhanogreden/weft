@@ -2,26 +2,27 @@
 
 ## Overview
 
-`component()` defines a component from a render function. It exists to make the
-two faces of a prop type magically asymmetric:
+`Component.gen` defines a component from an `Effect.gen`-style generator body. It
+exists to make the two faces of a prop type magically asymmetric:
 
-- **Caller / JSX side** — every slot accepts `MaybeReactive<T>`, so a prop
+- **Caller / JSX side** — every slot accepts `Source<T>`, so a prop
   declared `name: string` accepts `"x"`, `Stream<string>`, `Effect<string>`, or
   an existing `Subscribable<string>` interchangeably.
-- **Author / inside side** — the render function receives the same props mapped
-  to `Subscribable<T>`: read-only handles that expose both a live stream
-  (`.changes`) and an await-first current value (`.get`).
+- **Author / inside side** — the generator body receives the same props mapped
+  to `Subscribable<T, NoPropValue>`: read-only handles that expose both a live
+  stream (`.changes`) and an await-first current value (`.get`).
 
-The author writes the raw prop shape **once** (as the `component()` type
-argument); both faces are derived from it.
+The author writes the raw prop shape **once** (as the `Component.gen` type
+argument); both faces are derived from it. `children` is the sole exception — it
+is exempt from wrapping on both faces (see _Children are exempt on both faces_).
 
 ## Purpose
 
 A component declared as
 
 ```tsx
-const Greeting = component<{ name: string }>((props) => {
-  // props.name: Subscribable<string>
+const Greeting = Component.gen<{ name: string }>(function* (props) {
+  // props.name: Subscribable<string, NoPropValue>
   return <div>{props.name.changes}</div>;
 });
 ```
@@ -35,9 +36,18 @@ is callable as any of:
 <Greeting name={someSubscribable} />
 ```
 
-`toSubscribable` is the runtime glue that normalizes each incoming
-`MaybeReactive<T>` value into one uniform await-first `Subscribable<T>` that the
-framework assembles into the `Reactive<P>` object handed to the render function.
+The body is a generator: it may `yield*` Effects — including `props.x.get` to read
+a current value — and `return`s the `JSXNode`. `Component.gen` normalizes each
+incoming `Source<T>` prop into a uniform await-first
+`Subscribable<T, NoPropValue>` (via `toSubscribable`) and assembles them into the
+`Reactive<P>` object handed to the body:
+
+```tsx
+const Greeting = Component.gen<{ name: string }>(function* (props) {
+  const name = yield* props.name.get; // current value, await-first
+  return <div>Hello, {name}</div>;
+});
+```
 
 ## Design Decisions
 
@@ -64,7 +74,7 @@ Rationale: one rule across all three sources — _"`get` yields a value or
 fails"_ — true regardless of how the caller supplied the prop. The alternative
 ("snapshot": fail immediately if nothing yet) makes behavior depend on a
 mount-vs-emit race the author cannot see, since the source kind is hidden behind
-`MaybeReactive`. Await-first removes the race; waiting is visible in the types
+`Source`. Await-first removes the race; waiting is visible in the types
 (`get` is an `Effect`) and tameable with timeouts / Suspense / interruption.
 
 ### Absence lives in the error channel, not in `Option`
@@ -84,7 +94,7 @@ when a prop came from an `Effect`).
 
 ### Identity pass-through (zero re-wrap cost)
 
-`MaybeReactive<T>` includes `Subscribable<T>`, and `toSubscribable`
+`Source<T>` includes `Subscribable<T>`, and `toSubscribable`
 short-circuits to identity when handed one. Therefore a prop threaded down
 untouched (`<Child name={props.name} />`) flows as the **same `Subscribable`
 reference** through arbitrary depth — one ref, one fiber, shared by every level
@@ -98,12 +108,62 @@ consumers.
 identity); reach for `.changes` only to bind at a terminal leaf (DOM) or to
 transform.
 
+### Children are exempt on both faces
+
+`children` is never wrapped in a `Subscribable`. Its declared type passes through
+untouched on **both** the caller face (`PropsIn<P>`) and the author face
+(`Reactive<P>`). This is correct because reactive children already flow through
+`JSXNode`'s own `Stream`/`Effect` arms: a `children: JSXNode` prop accepts a
+static node _or_ a `Stream<JSXNode>` with no extra wrapping.
+
+Narrowing `children` away from `JSXNode` forfeits those arms but still passes
+raw — which is exactly what enables render-prop / headless patterns. The author
+owns the render-prop protocol; the framework just passes the function through, so
+a headless component can hand its child a `Subscribable<T>` of internal state:
+
+```tsx
+const Counter = Component.gen<{
+  children: (count: Subscribable<number>) => JSXNode;
+}>(function* (props) {
+  const count = yield* makeCounter(); // Subscribable<number>
+  return <div>{props.children(count)}</div>;
+});
+
+<Counter>{(count) => <span>{count.changes}</span>}</Counter>;
+```
+
+### Body errors are untyped (for now)
+
+A `Component.gen` body's error channel is erased to `any` so the produced effect
+fits `JSXNode`'s `E = never` arm (`any ⊑ never`). This erases the **entire**
+channel, not just `NoPropValue`: any unhandled author error — a failing service
+call, an unhandled `NoPropValue` from `.get` — surfaces as a fiber failure at the
+enclosing region rather than a type error. Handling `.get` is therefore optional,
+not forced. A typed body channel is a deliberate non-goal at this stage; it
+arrives with the error boundary and the broader JSX error-signature rework.
+
+### Render timing: `.get` parks, `.changes` streams
+
+Because `.get` is await-first, reading a not-yet-emitted prop during body setup
+**withholds the component's first render** until that prop emits: the renderer
+places the region markers immediately and the content streams in once the value
+arrives (under `<Suspense>`, the fallback shows until then). Binding `.changes` in
+the returned JSX instead renders immediately and updates in place as the prop
+emits.
+
+- `yield* props.x.get` at the top → the component waits for `x`.
+- `{props.x.changes}` in the output → renders now, fills in on emit.
+
+(`.changes` completes after one value for static / `Effect`-sourced props, and is
+infinite for `Stream`-sourced props.)
+
 ## Scope & Lifetime Model
 
 A `Stream`-sourced prop owns a **pump fiber** (drains the source into a
 `SubscriptionRef`). That fiber needs a lifetime owner — a `Scope` — and its
 lifetime must equal the **component instance's** lifetime: it survives the
-instance's own re-renders but terminates the moment the instance leaves the tree.
+instance's internal region re-emissions but terminates the moment the instance
+leaves the tree.
 
 ### Core requires only the standard `Scope`
 
@@ -147,36 +207,89 @@ rework of `JSXRequirements` from entangling with renderer-injected scope.
 
 ## Public API
 
-- `component<P>(render: (props: Reactive<P>) => JSXNode): Component<P>` — define
-  a component from a render function. `P` is the **raw** prop shape, written
-  once; `Reactive<P>` is the inside view, `Component<P>` carries `P` so JSX can
-  derive the caller view.
-- `toSubscribable<A>(source: MaybeReactive<A>): Effect.Effect<Subscribable<A, NoPropValue>, never, Scope>`
-  — normalize one caller-facing value into an await-first, hot `Subscribable`.
+- `Component.gen<P>(body)` — define a component from a generator body:
+
+  ```ts
+  Component.gen: <P, Eff extends YieldWrap<Effect.Effect<any, any, JSXRequirements | Scope.Scope>>>(
+    body: (props: Reactive<P>) => Generator<Eff, JSXNode, never>,
+  ) => Component<P>
+  ```
+
+  `P` is the **raw** prop shape, written once. The body receives `Reactive<P>`
+  (the inside view) and returns a `JSXNode`; it may `yield*` Effects whose
+  requirements are within `JSXRequirements | Scope`. The result is branded
+  `Component<P>` so JSX can derive the caller view. Mirrors `Effect.gen`'s
+  overload shape; requirements pinned to `JSXRequirements | Scope`.
+
+- `toSubscribable<A>(source, key?)` — normalize one caller-facing value into an
+  await-first, hot `Subscribable`:
+
+  ```ts
+  toSubscribable: <A>(source: Source<A>, key?: string) =>
+    Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;
+  ```
+
   Forks a scoped pump fiber only for `Stream` sources; identity for an existing
-  `Subscribable`; cheap for static / `Effect`.
+  `Subscribable`; cheap for static / `Effect`. The optional `key` is carried on
+  `NoPropValue`; `Component.gen` supplies each prop's key while normalizing.
+
 - `NoPropValue` — tagged error (`_tag: "NoPropValue"`) carrying the offending
   prop `key`, raised by `get` when a stream source ends without emitting.
+
 - `isSubscribable` — re-exported from Effect; reliable guard keyed off
   Subscribable's `TypeId`.
 
 ### Types
 
-- `Reactive<P>` — `{ readonly [K in keyof P]: Subscribable<P[K]> }`. The inside
-  (author-facing) view of props.
-- `Component<P>` — branded `(props: Reactive<P>) => JSXNode` carrying raw `P` so
-  `JSX.LibraryManagedAttributes` can map back to the caller view.
-- `MaybeReactive<T>` — widened to
-  `T | Stream<T> | Effect<T> | Subscribable<T>` (caller view, `types/index.ts`).
+- `Reactive<P>` — the inside (author-facing) view of props. Each non-`children`
+  slot becomes `Subscribable<P[K], NoPropValue>`; `children` passes through:
+
+  ```ts
+  type Reactive<P> = {
+    readonly [K in keyof P]: K extends "children"
+      ? P[K]
+      : Subscribable.Subscribable<P[K], NoPropValue>;
+  };
+  ```
+
+- `PropsIn<P>` — the caller-facing view of props. Each non-`children` slot widens
+  to `Source<P[K]>`; `children` passes through:
+
+  ```ts
+  type PropsIn<P> = {
+    [K in keyof P]: K extends "children" ? P[K] : Source<P[K]>;
+  };
+  ```
+
+- `Component<P>` — a branded component. The call signature matches runtime
+  (caller props in, the gen's effect out); the `[RawProps]` brand carries `P` and
+  is what `JSX.LibraryManagedAttributes` reads to reconstruct the caller view
+  (the call signature is _not_ used for that inference):
+
+  ```ts
+  interface Component<P> {
+    (props: PropsIn<P>): Effect.Effect<JSXNode, any, JSXRequirements | Scope.Scope>;
+    readonly [RawProps]?: P;
+  }
+  ```
+
+- `PropsOf<C>` — extracts the raw prop shape `P` a `Component` was defined with.
+
+- `Source<T>` — `T | Stream<T> | Effect<T> | Subscribable<T>` (caller
+  vocabulary, `types/index.ts`). The `Stream`/`Effect` arms are pinned to `never`
+  error / requirements for now (widening is part of the deferred JSX-signature
+  rework).
 
 ## Acceptance Criteria
 
-1. **AC-1 raw shape written once** — `component<{ name: string }>(render)` types
-   `props.name` as `Subscribable<string>` inside `render` with no annotation on
-   the `props` parameter.
+1. **AC-1 raw shape written once** — `Component.gen<{ name: string }>(body)` types
+   `props.name` as `Subscribable<string, NoPropValue>` inside `body` with no
+   annotation on the `props` parameter. A declared `children` slot appears on the
+   author face with its declared type, **not** wrapped in a `Subscribable`.
 2. **AC-2 caller widening** — JSX `<C name={x} />` type-accepts `x` as `string`,
    `Stream<string>`, `Effect<string>`, and `Subscribable<string>`; rejects
-   unrelated types.
+   unrelated types. `children` is **not** widened — it is accepted with its
+   declared type (no `Source`).
 3. **AC-3 static normalization** — `toSubscribable("x")`: `get` succeeds with
    `"x"` immediately; `changes` emits `"x"` once; never `NoPropValue`; forks no
    fiber.
@@ -195,8 +308,9 @@ rework of `JSXRequirements` from entangling with renderer-injected scope.
 9. **AC-9 identity pass-through** — `toSubscribable(sub)` for an existing
    `Subscribable` returns that same reference (no new ref/fiber).
 10. **AC-10 instance lifetime** — a component instance's prop pump fibers
-    terminate when that instance's scope closes, and survive the instance's own
-    re-renders.
+    terminate when that instance's scope closes, and survive the instance's
+    internal region re-emissions (the body runs once; its dynamic regions
+    re-emit without tearing down the instance).
 11. **AC-11 renderer-agnostic scope** — `toSubscribable` requires only the
     ambient `Scope.Scope` service (never `RenderContext`); its pump is satisfied
     by whatever scope the renderer provides for the instance.
@@ -209,6 +323,15 @@ rework of `JSXRequirements` from entangling with renderer-injected scope.
 14. **AC-14 transitive teardown** — closing an ancestor scope (region re-render
     or unmount) interrupts all descendant component pumps and nested region
     fibers in one shot.
+15. **AC-15 children render-prop** — a `children: (s) => JSXNode` prop passes
+    through raw on both faces: the caller supplies the function as-is, and the
+    body receives it callable (no `Subscribable` wrapping, no `Source`
+    widening).
+16. **AC-16 honest signature** — calling a `Component<P>` directly
+    (`MyComp(callerProps)`) type-accepts `PropsIn<P>` and yields a `JSXNode` (an
+    `Effect<JSXNode, …>`); JSX usage is unaffected because
+    `LibraryManagedAttributes` reads the `[RawProps]` brand, not the call
+    signature.
 
 > AC-12 through AC-14 are realized by the renderer (`@effect-ui/dom`); they are
 > specified here because they define the lifetime contract `toSubscribable`
