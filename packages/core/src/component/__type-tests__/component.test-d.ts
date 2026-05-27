@@ -16,7 +16,7 @@ import {
   NoPropValue,
   type PropsIn,
   type PropsOf,
-  type Reactive,
+  type Subscribables,
 } from "~/component/component";
 import type { JSXNode, JSXRequirements, Source } from "~/types";
 
@@ -25,7 +25,7 @@ import type { JSXNode, JSXRequirements, Source } from "~/types";
 // =============================================================================
 
 type WithName = { name: string };
-declare const reactiveWithName: Reactive<WithName>;
+declare const reactiveWithName: Subscribables<WithName>;
 
 // name must be Subscribable<string, NoPropValue>
 const _ac1_name: Subscribable.Subscribable<string, NoPropValue> = reactiveWithName.name;
@@ -35,13 +35,13 @@ const _ac1_changes: Stream.Stream<string, NoPropValue> = reactiveWithName.name.c
 
 // Multiple non-children slots
 type MultiSlot = { a: string; b: number };
-declare const reactiveMulti: Reactive<MultiSlot>;
+declare const reactiveMulti: Subscribables<MultiSlot>;
 const _ac1_a: Subscribable.Subscribable<string, NoPropValue> = reactiveMulti.a;
 const _ac1_b: Subscribable.Subscribable<number, NoPropValue> = reactiveMulti.b;
 
 // AC-1: children passes through unchanged — not wrapped in Subscribable
 type WithChildrenJSX = { children: JSXNode };
-declare const reactiveChildrenJSX: Reactive<WithChildrenJSX>;
+declare const reactiveChildrenJSX: Subscribables<WithChildrenJSX>;
 // Must be JSXNode, not Subscribable<JSXNode, NoPropValue>
 const _ac1_children_jsx: JSXNode = reactiveChildrenJSX.children;
 
@@ -52,7 +52,7 @@ const _ac1_children_jsx: JSXNode = reactiveChildrenJSX.children;
 type WithRenderProp = {
   children: (count: Subscribable.Subscribable<number>) => JSXNode;
 };
-declare const reactiveRenderProp: Reactive<WithRenderProp>;
+declare const reactiveRenderProp: Subscribables<WithRenderProp>;
 // Author sees the exact function type — not wrapped
 const _ac15_renderProp: (count: Subscribable.Subscribable<number>) => JSXNode =
   reactiveRenderProp.children;

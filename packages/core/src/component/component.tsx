@@ -23,7 +23,7 @@ export { isSubscribable } from "effect/Subscribable";
  * declared type so reactive children flow via `JSXNode`'s own arms and
  * render-prop/headless patterns keep their raw callable shape.
  */
-export type Reactive<P> = {
+export type Subscribables<P> = {
   readonly [K in keyof P]: K extends "children"
     ? P[K]
     : Subscribable.Subscribable<P[K], NoPropValue>;
@@ -166,7 +166,9 @@ export function toSubscribable<A>(
  * Normalizes all raw props into `Reactive<P>`: children pass through, every
  * other slot is wrapped via `toSubscribable`.
  */
-function normalizeProps<P>(rawProps: PropsIn<P>): Effect.Effect<Reactive<P>, never, Scope.Scope> {
+function normalizeProps<P>(
+  rawProps: PropsIn<P>,
+): Effect.Effect<Subscribables<P>, never, Scope.Scope> {
   return Effect.gen(function* () {
     const result: Record<string, unknown> = {};
     for (const key of Object.keys(rawProps as Record<string, unknown>)) {
@@ -177,7 +179,7 @@ function normalizeProps<P>(rawProps: PropsIn<P>): Effect.Effect<Reactive<P>, nev
         result[key] = yield* toSubscribable(value as Source<unknown>, key);
       }
     }
-    return result as Reactive<P>;
+    return result as Subscribables<P>;
   });
 }
 
@@ -205,7 +207,7 @@ export namespace Component {
    */
   export function gen<P>(
     body: (
-      props: Reactive<P>,
+      props: Subscribables<P>,
     ) => Generator<
       YieldWrap<Effect.Effect<any, any, JSXRequirements | Scope.Scope>>,
       JSXNode,
