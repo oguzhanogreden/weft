@@ -1,3 +1,5 @@
+> NOT IN USE -- just here for "if maybe in the future". effect-ui currently does not support jsx.
+
 # `@effect-ui/jsx-runtime` — Runtime Entry Points
 
 ## Overview
@@ -43,7 +45,7 @@ The package exposes three subpaths, all pointing at the same dist bundle:
    `jsx`/`jsxs`/`Fragment` from `@effect-ui/jsx-runtime/jsx-runtime` succeeds.
 2. The automatic runtime resolves in **development** mode: importing
    `jsxDEV`/`Fragment` from `@effect-ui/jsx-runtime/jsx-dev-runtime` succeeds
-   (this is what `vp test` exercises when transforming `.tsx` test files).
+   (this is what `vp test` exercises when transforming `.ts` test files).
 3. `jsxDEV(type, props)` produces the same `{ type, props }` node as
    `jsx(type, props)` for equivalent input.
 4. The classic transform path (playground `jsxInject`) remains unaffected.

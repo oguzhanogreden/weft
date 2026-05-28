@@ -163,7 +163,7 @@ const Dashboard = () =>
 Render to HTML on the server, then resume reactivity on the client without re-rendering:
 
 ```tsx
-// entry-server.tsx
+// entry-server.ts
 import { renderToStringHydratable } from "@effect-ui/dom/server";
 import { Effect } from "effect";
 import { App } from "./app";
@@ -172,7 +172,7 @@ export const render = (): Promise<string> => Effect.runPromise(renderToStringHyd
 ```
 
 ```tsx
-// entry-client.tsx
+// entry-client.ts
 import { hydrate } from "@effect-ui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";

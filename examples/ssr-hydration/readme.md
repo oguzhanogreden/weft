@@ -19,11 +19,11 @@ Then open <http://localhost:3100>.
 
 ## How it works
 
-- **Server** (`server.ts` → `src/entry-server.tsx`): `renderToStringHydratable(<App/>)`
+- **Server** (`server.ts` → `src/entry-server.ts`): `renderToStringHydratable(<App/>)`
   produces HTML that includes `<!-- stream-start-N -->` / `<!-- stream-end-N -->`
   comment markers around the reactive `{count.changes}` region. The server renders
   the stream's first emission — `0` — between those markers.
-- **Client** (`src/entry-client.tsx`): `hydrate(<App/>, #root)` walks the JSX tree
+- **Client** (`src/entry-client.ts`): `hydrate(<App/>, #root)` walks the JSX tree
   in lockstep with the existing DOM, adopting nodes in place and attaching event
   handlers. It locates the reactive region via the markers and hydrates the
   stream's first emission (`0`) against the adopted node. Because server and client

@@ -267,7 +267,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 
 ### Architecture
 
-- Keep implementation in `src/dom.tsx` initially
+- Keep implementation in `src/dom.ts` initially
 - Split into multiple files if implementation grows large
 - Use Effect patterns throughout (avoid try/catch unless ergonomics suffer)
 - Follow strict TypeScript config: use type guards, careful narrowing
