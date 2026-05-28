@@ -1,34 +1,5 @@
-import { Effect, Scope, Stream } from "effect";
+import { Effect, Stream } from "effect";
 import type { FRAGMENT } from "~/jsx-runtime";
-
-declare global {
-  namespace JSX {
-    /**
-     * Augment this interface with your app's Effect context requirements.
-     *
-     * @example
-     * ```ts
-     * declare global {
-     *   namespace JSX {
-     *     interface Requirements {
-     *       _: Context.Tag.Service<typeof MyServiceTag>;
-     *     }
-     *   }
-     * }
-     * ```
-     */
-    interface Requirements {}
-  }
-}
-
-/**
- * Computes JSX context requirements from the augmented JSX.Requirements interface.
- * - When empty (not augmented): defaults to `any` to accept all streams/effects
- * - When augmented: union of all registered service types
- */
-export type JSXRequirements = keyof JSX.Requirements extends never
-  ? any
-  : JSX.Requirements[keyof JSX.Requirements];
 
 export type JSXNode =
   | void
@@ -39,8 +10,8 @@ export type JSXNode =
   | bigint
   | boolean
   | Iterable<JSXNode>
-  | Stream.Stream<JSXNode, never, JSXRequirements | Scope.Scope>
-  | Effect.Effect<JSXNode, never, JSXRequirements | Scope.Scope>
+  | Stream.Stream<JSXNode, any, any>
+  | Effect.Effect<JSXNode, any, any>
   | { type: JSXType; props: Record<string, unknown> };
 
 export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown>) => JSXNode);
