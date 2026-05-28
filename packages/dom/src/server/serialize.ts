@@ -1,27 +1,5 @@
+import { isStream, toStream } from "@effect-ui/core";
 import { Effect, Option, Stream } from "effect";
-
-/**
- * Type guard for Effect `Stream` values.
- */
-export function isStream(value: unknown): value is Stream.Stream<unknown, any, any> {
-  return typeof value === "object" && value != null && Stream.StreamTypeId in value;
-}
-
-/**
- * Normalizes a static value, `Effect`, or `Stream` into a `Stream`. Static
- * values become a single-element stream; Effects become a one-shot stream.
- */
-export function normalizeToStream<A>(
-  value: A | Effect.Effect<A> | Stream.Stream<A>,
-): Stream.Stream<A> {
-  if (isStream(value)) {
-    return value;
-  }
-  if (Effect.isEffect(value)) {
-    return Stream.fromEffect(value);
-  }
-  return Stream.make(value);
-}
 
 /**
  * Determines whether a prop name is an event handler (`on` + lowercase letter),
@@ -117,10 +95,7 @@ export function serializeProps(props: Record<string, unknown>): Effect.Effect<st
  */
 function resolveValue(value: unknown): Effect.Effect<unknown, Error> {
   if (isStream(value) || Effect.isEffect(value)) {
-    return normalizeToStream(value).pipe(
-      Stream.runHead,
-      Effect.map(Option.getOrElse(() => undefined)),
-    );
+    return toStream(value).pipe(Stream.runHead, Effect.map(Option.getOrElse(() => undefined)));
   }
   return Effect.succeed(value);
 }

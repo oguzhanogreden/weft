@@ -11,13 +11,13 @@
 import { Effect, SubscriptionRef } from "effect";
 
 /**
- * Root component. Returns an Effect that owns a `SubscriptionRef` counter and
- * renders a heading, a static blurb, the reactive count region, and the
+ * Root component. Owns a `SubscriptionRef` counter seeded from `initialValue`
+ * and renders a heading, a static blurb, the reactive count region, and the
  * increment/decrement controls. Requires no services.
  */
-export const App = () =>
+export const App = (props: { initialValue: number }) =>
   Effect.gen(function* () {
-    const count = yield* SubscriptionRef.make(3);
+    const count = yield* SubscriptionRef.make(props.initialValue);
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 

@@ -1,16 +1,10 @@
 import { FRAGMENT } from "@effect-ui/core/jsx-runtime";
-import { Suspense, type SuspenseProps } from "@effect-ui/core";
+import { isStream, Suspense, type SuspenseProps, toStream } from "@effect-ui/core";
 import type { JSXNode } from "@effect-ui/core/types";
 import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
-import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "../shared";
-import { UnsupportedNodeTypeError } from "../data";
-import {
-  escapeHtml,
-  isStream,
-  normalizeToStream,
-  serializeProps,
-  VOID_ELEMENTS,
-} from "./serialize";
+import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
+import { UnsupportedNodeTypeError } from "~/data";
+import { escapeHtml, serializeProps, VOID_ELEMENTS } from "./serialize";
 
 // ============================================================================
 // Internal types
@@ -159,7 +153,7 @@ function renderSSRNode(node: JSXNode, ctx: ServerSuspenseCtx | null): Stream.Str
   }
 
   if (isStream(node) || Effect.isEffect(node)) {
-    return normalizeToStream(node).pipe(
+    return toStream(node).pipe(
       Stream.runHead,
       Effect.map(
         Option.match({
@@ -243,7 +237,7 @@ function renderHydratableSSRNode(
   }
 
   if (isStream(node) || Effect.isEffect(node)) {
-    return normalizeToStream(node).pipe(
+    return toStream(node).pipe(
       Stream.runHead,
       Effect.map((first) => {
         const id = ++counter.current;

@@ -10,10 +10,10 @@ export default defineConfig({
     },
   },
   pack: {
-    entry: ["src/index.ts", "src/client/index.ts", "src/server/index.ts"],
+    entry: ["src/index.tsx"],
     outDir: "dist",
     dts: true,
-    platform: "browser",
+    platform: "neutral",
     minify: true,
     deps: {
       neverBundle: ["effect", /^@effect-ui\//],

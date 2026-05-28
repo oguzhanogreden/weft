@@ -39,7 +39,6 @@ declare global {
     type Element = JSXNode;
 
     interface IntrinsicElements extends HTMLElements, SVGElements {}
-
     // interface IntrinsicAttributes {}
     // interface ElementChildrenAttribute {}
   }
