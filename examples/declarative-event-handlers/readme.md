@@ -2,7 +2,7 @@
 
 ## Overview
 
-This recipe demonstrates how to use event handlers in effect-ui. Handlers follow the same reactive pattern as other props - they can be static, Stream-based, or Effect-based.
+This example demonstrates how to use event handlers in effect-ui. Handlers follow the same reactive pattern as other props — they can be static callbacks, Effect-returning, or Stream-based.
 
 ## Problem
 
@@ -17,22 +17,32 @@ Traditional event handlers are limited to plain callbacks. When building Effect-
 effect-ui event handlers support three patterns:
 
 ```typescript
+import { h } from "@effect-ui/core";
+import { Effect, Stream } from "effect";
+
 // 1. Plain callback (sync)
-<button onclick={() => console.log("clicked")} />
+h.button({ onclick: () => console.log("clicked") }, "Click");
 
 // 2. Effect-returning callback (async, with services)
-<button onclick={() => Effect.gen(function* () {
-  const analytics = yield* Analytics;
-  yield* analytics.track("click");
-})} />
+h.button(
+  {
+    onclick: () =>
+      Effect.gen(function* () {
+        const analytics = yield* Analytics;
+        yield* analytics.track("click");
+      }),
+  },
+  "Tracked Click",
+);
 
 // 3. Reactive handler (changes over time)
-<button onclick={handlerStream} />
+const handlerStream = Stream.make(handlerA, handlerB);
+h.button({ onclick: handlerStream }, "Reactive Handler");
 ```
 
 ## How It Works
 
-1. Event props (starting with "on" + lowercase letter) are detected during rendering
+1. Event props (starting with `on` + lowercase letter) are detected during rendering
 2. Static handlers are attached directly via `addEventListener`
 3. Effect-returning handlers are detected at runtime and run via `runFork`
 4. Stream/Effect-wrapped handlers are subscribed to, updating the listener on each emission
@@ -40,7 +50,7 @@ effect-ui event handlers support three patterns:
 
 ## Benefits
 
-- **Unified patterns**: Handlers follow the same `AttributeValue` pattern as other props
+- **Unified patterns**: Handlers follow the same `Source` pattern as other props
 - **Service access**: Use dependency injection in event handlers
 - **Error resilience**: Effect errors are logged, UI stays responsive
 - **Reactive**: Handlers can change dynamically via Streams
@@ -51,38 +61,51 @@ effect-ui event handlers support three patterns:
 ### Plain Callback
 
 ```typescript
-<button onclick={() => { count++; }} />
+h.button(
+  {
+    onclick: () => {
+      count++;
+    },
+  },
+  "Click",
+);
 ```
 
 ### Effect Handler
 
 ```typescript
-<button onclick={() => Effect.log("clicked")} />
+h.button({ onclick: () => Effect.log("clicked") }, "Log");
 ```
 
 ### Handler with Services
 
 ```typescript
-<button onclick={() => Effect.gen(function* () {
-  const db = yield* Database;
-  yield* db.save({ action: "click" });
-})} />
+h.button(
+  {
+    onclick: () =>
+      Effect.gen(function* () {
+        const db = yield* Database;
+        yield* db.save({ action: "click" });
+      }),
+  },
+  "Save",
+);
 
 // At mount:
-mount(<App />, root).pipe(Effect.provide(DatabaseLive))
+mount(App(), root).pipe(Effect.provide(DatabaseLive));
 ```
 
 ### Conditional Handler
 
 ```typescript
-<button onclick={isEnabled ? handler : null} />
+h.button({ onclick: isEnabled ? handler : null }, isEnabled ? "Click" : "Disabled");
 ```
 
 ### Reactive Handler
 
 ```typescript
 const handlerStream = Stream.make(handlerA, handlerB);
-<button onclick={handlerStream} />
+h.button({ onclick: handlerStream }, "Click (handler changes)");
 ```
 
 ## When to Use

@@ -2,41 +2,46 @@
 
 ## Overview
 
-This recipe demonstrates how to build components that fetch data asynchronously using Effect, with built-in loading states and error handling.
+This example demonstrates how to build components that fetch data asynchronously using Effect, with built-in loading states and error handling.
 
 ## Problem
 
-Async data loading typically requires managing loading states, error states, and the actual data. Traditional approaches use useState/useEffect hooks with complex conditional rendering.
+Async data loading typically requires managing loading states, error states, and the actual data. Traditional approaches use state hooks with complex conditional rendering.
 
 ## Solution
 
 effect-ui components can return `Effect` or `Stream` directly, making async patterns first-class:
 
 ```typescript
+import { h } from "@effect-ui/core";
+import { Effect, Stream } from "effect";
+
 // Loading → Data pattern with Stream.concat
 const AsyncComponent = () =>
   Stream.concat(
-    Stream.make(<Loading />),
-    Stream.fromEffect(fetchData().pipe(
-      Effect.map(data => <Data value={data} />),
-      Effect.catchAll(err => Effect.succeed(<Error message={err} />))
-    ))
+    Stream.make(h.span({}, "Loading...")),
+    Stream.fromEffect(
+      fetchData().pipe(
+        Effect.flatMap((data) => h.div({}, data.value)),
+        Effect.catchAll((err) => h.div({ class: "error" }, err.message)),
+      ),
+    ),
   );
 
 // Direct Effect-returning component
 const DelayedComponent = () =>
   Effect.gen(function* () {
     const data = yield* fetchData();
-    return <div>{data}</div>;
+    return yield* h.div({}, data.value);
   });
 ```
 
 ## How It Works
 
-1. Components can return `Effect<JSXChild>` or `Stream<JSXChild>`
-2. `Stream.concat` sequences multiple JSX outputs (loading → data)
+1. Components return `Effect<Node>` or `Stream<Node>` — both are rendered reactively
+2. `Stream.concat` sequences multiple outputs (loading → data)
 3. `Stream.fromEffect` converts an Effect to a single-element Stream
-4. `Effect.catchAll` converts errors to fallback JSX
+4. `Effect.catchAll` converts errors to fallback nodes
 5. Multiple async components render in parallel by default
 
 ## Benefits
@@ -54,10 +59,8 @@ const DelayedComponent = () =>
 ```typescript
 const LoadingData = () =>
   Stream.concat(
-    Stream.make(<span>Loading...</span>),
-    Stream.fromEffect(fetchData().pipe(
-      Effect.map(data => <div>{data}</div>)
-    ))
+    Stream.make(h.span({}, "Loading...")),
+    Stream.fromEffect(fetchData().pipe(Effect.flatMap((data) => h.div({}, data.value)))),
   );
 ```
 
@@ -66,15 +69,13 @@ const LoadingData = () =>
 ```typescript
 const SafeData = () =>
   Stream.concat(
-    Stream.make(<span>Loading...</span>),
+    Stream.make(h.span({}, "Loading...")),
     Stream.fromEffect(
       fetchData().pipe(
-        Effect.map(data => <div class="success">{data}</div>),
-        Effect.catchAll(error =>
-          Effect.succeed(<div class="error">{error.message}</div>)
-        )
-      )
-    )
+        Effect.flatMap((data) => h.div({ class: "success" }, data.value)),
+        Effect.catchAll((error) => h.div({ class: "error" }, error.message)),
+      ),
+    ),
   );
 ```
 
@@ -84,7 +85,7 @@ const SafeData = () =>
 const UserProfile = ({ id }: { id: number }) =>
   Effect.gen(function* () {
     const user = yield* fetchUser(id);
-    return <div>{user.name}</div>;
+    return yield* h.div({}, user.name);
   });
 ```
 
@@ -92,10 +93,9 @@ const UserProfile = ({ id }: { id: number }) =>
 
 ```typescript
 const MultiStep = () =>
-  Stream.concat(
-    Stream.make(<span>Step 1...</span>),
-    Stream.fromEffect(step1().pipe(Effect.map(() => <span>Step 2...</span>))),
-    Stream.fromEffect(step2().pipe(Effect.map(() => <span>Done!</span>)))
+  Stream.make(h.span({}, "Step 1...")).pipe(
+    Stream.concat(Stream.fromEffect(step1().pipe(Effect.flatMap(() => h.span({}, "Step 2..."))))),
+    Stream.concat(Stream.fromEffect(step2().pipe(Effect.flatMap(() => h.span({}, "Done!"))))),
   );
 ```
 

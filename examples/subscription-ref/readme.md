@@ -2,46 +2,46 @@
 
 ## Overview
 
-This recipe demonstrates using Effect's SubscriptionRef as a reactive state primitive, similar to signals in SolidJS or stores in Svelte.
+This example demonstrates using Effect's `SubscriptionRef` as a reactive state primitive, similar to signals in SolidJS or stores in Svelte.
 
 ## Problem
 
-Reactive state management typically requires external libraries (Redux, MobX, Zustand) or framework-specific solutions. Effect provides SubscriptionRef as a built-in reactive primitive that integrates naturally with the Effect ecosystem.
+Reactive state management typically requires external libraries (Redux, MobX, Zustand) or framework-specific solutions. Effect provides `SubscriptionRef` as a built-in reactive primitive that integrates naturally with the Effect ecosystem.
 
 ## Solution
 
-SubscriptionRef provides a mutable reference with a `.changes` stream:
+`SubscriptionRef` provides a mutable reference with a `.changes` stream you pass directly as a child or prop:
 
 ```typescript
+import { h } from "@effect-ui/core";
+import { Effect, SubscriptionRef } from "effect";
+
 const Counter = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    const increment = () =>
-      SubscriptionRef.update(count, n => n + 1);
+    const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
-    return (
-      <div>
-        <span>{count.changes}</span>
-        <button onclick={() => increment()}>+</button>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.span({}, [count.changes]),
+      h.button({ onclick: () => increment() }, "+"),
+    ]);
   });
 ```
 
 ## How It Works
 
 1. `SubscriptionRef.make(initial)` creates a ref with initial value
-2. `.changes` is a Stream that emits the current value and all future updates
-3. `SubscriptionRef.set(ref, value)` sets a new value
-4. `SubscriptionRef.update(ref, fn)` updates based on current value
-5. Derived streams use `Stream.map` on `.changes`
+2. `.changes` is a `Stream` that emits the current value and all future updates
+3. `SubscriptionRef.set(ref, value)` replaces the current value
+4. `SubscriptionRef.update(ref, fn)` derives the next value from the current one
+5. Derived streams use `Stream.map` or other Stream operators on `.changes`
 
 ## Benefits
 
 - **Effect-native**: Built into Effect, no external dependencies
 - **Type-safe**: Full TypeScript support for state shape
-- **Composable**: Combine refs with Stream operators
+- **Composable**: Combine refs with all Stream operators
 - **Efficient**: Only subscribers receive updates
 - **Familiar**: Similar mental model to SolidJS signals
 
@@ -50,24 +50,24 @@ const Counter = () =>
 ### Basic Counter
 
 ```typescript
-const count = yield* SubscriptionRef.make(0);
+const count = yield * SubscriptionRef.make(0);
 
 // Display current value
-<span>{count.changes}</span>
+h.span({}, [count.changes]);
 
 // Update
-onclick={() => SubscriptionRef.update(count, n => n + 1)}
+h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+");
 ```
 
 ### Derived State
 
 ```typescript
-const count = yield* SubscriptionRef.make(0);
-const doubled = Stream.map(count.changes, n => n * 2);
-const isEven = Stream.map(count.changes, n => n % 2 === 0);
+const count = yield * SubscriptionRef.make(0);
+const doubled = Stream.map(count.changes, (n) => n * 2);
+const isEven = Stream.map(count.changes, (n) => (n % 2 === 0 ? "Yes" : "No"));
 
-<span>Doubled: {doubled}</span>
-<span>Even: {isEven}</span>
+h.p({}, ["Doubled: ", doubled]);
+h.p({}, ["Even: ", isEven]);
 ```
 
 ### Object State with Schema Validation
@@ -75,12 +75,10 @@ const isEven = Stream.map(count.changes, n => n % 2 === 0);
 ```typescript
 import { Schema, Either } from "effect";
 
-// Define schemas
 const Name = Schema.String.pipe(
   Schema.filter((s) => s.length >= 2, { message: () => "Min 2 chars" }),
 );
 
-// Helper to validate
 const validate = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
   if (!value) return null;
   const result = Schema.decodeUnknownEither(schema)(value);
@@ -90,11 +88,12 @@ const validate = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
   });
 };
 
-// Form state includes values and errors
-const form = yield* SubscriptionRef.make({
-  name: "",
-  errors: { name: null as string | null },
-});
+const form =
+  yield *
+  SubscriptionRef.make({
+    name: "",
+    errors: { name: null as string | null },
+  });
 
 const updateName = (name: string) =>
   SubscriptionRef.update(form, (state) => ({
@@ -103,25 +102,21 @@ const updateName = (name: string) =>
     errors: { ...state.errors, name: validate(Name, name) },
   }));
 
-<input oninput={(e) => updateName(e.target.value)} />
-{Stream.map(form.changes, (s) =>
-  s.errors.name ? <span class="error">{s.errors.name}</span> : null
-)}
+h.input({ oninput: (e) => updateName((e.target as HTMLInputElement).value) });
+Stream.map(form.changes, (s) => (s.errors.name ? h.span({ class: "error" }, s.errors.name) : null));
 ```
 
 ### Combining Multiple Refs
 
 ```typescript
-const firstName = yield* SubscriptionRef.make("");
-const lastName = yield* SubscriptionRef.make("");
+const firstName = yield * SubscriptionRef.make("");
+const lastName = yield * SubscriptionRef.make("");
 
-const fullName = Stream.zipLatestWith(
-  firstName.changes,
-  lastName.changes,
-  (first, last) => `${first} ${last}`.trim()
+const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) =>
+  `${first} ${last}`.trim(),
 );
 
-<span>Full name: {fullName}</span>
+h.span({}, ["Full name: ", fullName]);
 ```
 
 ### Array State

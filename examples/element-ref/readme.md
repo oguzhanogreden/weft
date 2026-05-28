@@ -2,7 +2,7 @@
 
 ## Overview
 
-This recipe demonstrates using Effect's `Ref` and `SubscriptionRef` to get direct references to DOM elements after they are mounted. Element refs enable imperative DOM operations like focusing inputs, measuring dimensions, drawing on canvas, or triggering scroll behavior.
+This example demonstrates using Effect's `SubscriptionRef` to get direct references to DOM elements after they are mounted. Element refs enable imperative DOM operations like focusing inputs, measuring dimensions, drawing on canvas, or triggering scroll behavior.
 
 ## Problem
 
@@ -14,47 +14,36 @@ Sometimes you need direct access to a DOM element to perform operations that can
 - Scrolling an element into view
 - Integrating with third-party libraries that require DOM nodes
 
-React-style refs solve this by providing a mutable container, but Effect provides a more powerful pattern using `Ref` and `SubscriptionRef`.
-
 ## Solution
 
 Use `SubscriptionRef<Option<HTMLElement>>` to hold an optional reference to the DOM element:
 
 ```typescript
+import { h } from "@effect-ui/core";
+import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
+
 const AutoFocusInput = () =>
   Effect.gen(function* () {
-    const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(
-      Option.none()
-    );
+    const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
-    // Subscribe to ref changes and focus when element is mounted
     yield* pipe(
       inputRef.changes,
       Stream.filter(Option.isSome),
       Stream.take(1),
-      Stream.runForEach((option) =>
-        Effect.sync(() => {
-          const element = Option.getOrThrow(option);
-          element.focus();
-        })
-      ),
-      Effect.fork
+      Stream.runForEach((option) => Effect.sync(() => Option.getOrThrow(option).focus())),
+      Effect.fork,
     );
 
-    return <input ref={inputRef} type="text" />;
+    return yield* h.input({ ref: inputRef, type: "text" });
   });
 ```
 
 ## How It Works
 
 1. **Create the ref**: `SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none())` creates a ref initialized to `Option.none()`
-
 2. **Attach to element**: The `ref` prop accepts a `Ref` or `SubscriptionRef`. When the element is created, the ref is set to `Option.some(element)`
-
-3. **React to mount**: Using `SubscriptionRef`, you can subscribe to `.changes` and react when the element becomes available
-
-4. **Type safety**: The element type is preserved - `Ref<Option<HTMLInputElement>>` ensures you get an `HTMLInputElement` with all its properties
-
+3. **React to mount**: Use `SubscriptionRef.changes` and `Stream.filter(Option.isSome)` to react when the element becomes available
+4. **Type safety**: The element type is preserved — `Ref<Option<HTMLInputElement>>` ensures you get an `HTMLInputElement`
 5. **Single emission**: The ref is set exactly once during element creation
 
 ## When to Use
@@ -75,21 +64,17 @@ Use element refs when you need to:
 ```typescript
 const AutoFocus = () =>
   Effect.gen(function* () {
-    const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(
-      Option.none()
-    );
+    const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
       ref.changes,
       Stream.filter(Option.isSome),
       Stream.take(1),
-      Stream.runForEach((opt) =>
-        Effect.sync(() => Option.getOrThrow(opt).focus())
-      ),
-      Effect.fork
+      Stream.runForEach((opt) => Effect.sync(() => Option.getOrThrow(opt).focus())),
+      Effect.fork,
     );
 
-    return <input ref={ref} />;
+    return yield* h.input({ ref });
   });
 ```
 
@@ -98,9 +83,7 @@ const AutoFocus = () =>
 ```typescript
 const Measure = () =>
   Effect.gen(function* () {
-    const ref = yield* SubscriptionRef.make<Option.Option<HTMLDivElement>>(
-      Option.none()
-    );
+    const ref = yield* SubscriptionRef.make<Option.Option<HTMLDivElement>>(Option.none());
     const size = yield* SubscriptionRef.make("...");
 
     yield* pipe(
@@ -111,17 +94,15 @@ const Measure = () =>
         Effect.gen(function* () {
           const rect = Option.getOrThrow(opt).getBoundingClientRect();
           yield* SubscriptionRef.set(size, `${rect.width}x${rect.height}`);
-        })
+        }),
       ),
-      Effect.fork
+      Effect.fork,
     );
 
-    return (
-      <div>
-        <div ref={ref} style={{ width: "200px", height: "100px" }}>Box</div>
-        <p>Size: {size.changes}</p>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.div({ ref, style: { width: "200px", height: "100px" } }, "Box"),
+      h.p({}, ["Size: ", size.changes]),
+    ]);
   });
 ```
 
@@ -130,9 +111,7 @@ const Measure = () =>
 ```typescript
 const ScrollToElement = () =>
   Effect.gen(function* () {
-    const targetRef = yield* SubscriptionRef.make<Option.Option<HTMLDivElement>>(
-      Option.none()
-    );
+    const targetRef = yield* SubscriptionRef.make<Option.Option<HTMLDivElement>>(Option.none());
 
     const scrollTo = () =>
       Effect.gen(function* () {
@@ -142,12 +121,10 @@ const ScrollToElement = () =>
         }
       });
 
-    return (
-      <div>
-        <button onclick={() => scrollTo()}>Scroll to Target</button>
-        <div ref={targetRef}>Target Element</div>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.button({ onclick: () => scrollTo() }, "Scroll to Target"),
+      h.div({ ref: targetRef }, "Target Element"),
+    ]);
   });
 ```
 
@@ -156,9 +133,7 @@ const ScrollToElement = () =>
 ```typescript
 const CanvasExample = () =>
   Effect.gen(function* () {
-    const canvasRef = yield* SubscriptionRef.make<Option.Option<HTMLCanvasElement>>(
-      Option.none()
-    );
+    const canvasRef = yield* SubscriptionRef.make<Option.Option<HTMLCanvasElement>>(Option.none());
 
     yield* pipe(
       canvasRef.changes,
@@ -171,12 +146,12 @@ const CanvasExample = () =>
             ctx.fillStyle = "#000";
             ctx.fillRect(10, 10, 50, 50);
           }
-        })
+        }),
       ),
-      Effect.fork
+      Effect.fork,
     );
 
-    return <canvas ref={canvasRef} width={200} height={100} />;
+    return yield* h.canvas({ ref: canvasRef, width: 200, height: 100 });
   });
 ```
 
