@@ -2,6 +2,9 @@ import { Effect } from "effect";
 import type { DOMNode, Node, PropsE, PropsR } from "./types";
 import type { YieldWrap } from "effect/Utils";
 
+// TODO: props + children signature
+// TODO: jsdocs on `make`
+// TODO: documentation
 export namespace Component {
   /**
    * Factory for generator components that preserves E/R propagation from caller props.
