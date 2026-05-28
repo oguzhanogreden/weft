@@ -10,12 +10,7 @@ export default defineConfig({
     },
   },
   pack: {
-    entry: [
-      "src/index.ts",
-      "src/jsx-runtime/index.ts",
-      "src/types/index.ts",
-      "src/suspense/index.ts",
-    ],
+    entry: ["src/index.ts", "src/types/index.ts", "src/suspense/index.ts"],
     outDir: "dist",
     dts: true,
     platform: "neutral",

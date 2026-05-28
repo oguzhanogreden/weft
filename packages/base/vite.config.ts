@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   pack: {
-    entry: ["src/index.tsx"],
+    entry: ["src/index.ts"],
     outDir: "dist",
     dts: true,
     platform: "neutral",

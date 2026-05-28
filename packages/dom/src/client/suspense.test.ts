@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Effect, Stream } from "effect";
-import { Suspense } from "@effect-ui/core";
+import { h, Suspense } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount, hydrate } from "./render";
 import { renderToStringHydratable } from "~/server/render-to-string";
@@ -60,9 +60,9 @@ describe("AC1: Synchronous children — no fallback rendered", () => {
     const root = createRoot();
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <div class="content">Hello</div>
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [
+        h.div({ class: "content" }, "Hello"),
+      ]),
       root,
     );
 
@@ -82,10 +82,10 @@ describe("AC1: Synchronous children — no fallback rendered", () => {
     const root = createRoot();
 
     await runMount(
-      <Suspense fallback={<span>Loading</span>}>
-        <div class="a">A</div>
-        <div class="b">B</div>
-      </Suspense>,
+      Suspense({ fallback: h.span({}, "Loading") }, [
+        h.div({ class: "a" }, "A"),
+        h.div({ class: "b" }, "B"),
+      ]),
       root,
     );
 
@@ -104,19 +104,17 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
     createTestDOM();
     const root = createRoot();
 
-    function AsyncChild(): Effect.Effect<JSX.Element> {
+    function AsyncChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="resolved">Done</p>), 150),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "resolved" }, "Done")), 150),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <AsyncChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
       root,
     );
 
@@ -147,12 +145,12 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
 
     // V1 at +100ms; V2 at +100ms+200ms = +300ms.
     // Check V1 at +160ms (after swap, before V2 replaces it).
-    function AsyncChild(): Stream.Stream<JSX.Element> {
-      return Stream.async<JSX.Element>((emit) => {
+    function AsyncChild() {
+      return Stream.async<unknown>((emit) => {
         setTimeout(() => {
-          emit.single(<span class="v1">V1</span>);
+          emit.single(h.span({ class: "v1" }, "V1"));
           setTimeout(() => {
-            emit.single(<span class="v2">V2</span>);
+            emit.single(h.span({ class: "v2" }, "V2"));
             emit.end();
           }, 200); // 200ms gap so V1 is observable before V2 replaces it
         }, 100);
@@ -160,9 +158,7 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <AsyncChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
       root,
     );
 
@@ -195,29 +191,26 @@ describe("AC3: Multiple async siblings — shared fallback, single swap", () => 
     createTestDOM();
     const root = createRoot();
 
-    function FastChild(): Effect.Effect<JSX.Element> {
+    function FastChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="fast">Fast</span>), 80),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "fast" }, "Fast")), 80),
           ),
       );
     }
 
-    function SlowChild(): Effect.Effect<JSX.Element> {
+    function SlowChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="slow">Slow</span>), 250),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "slow" }, "Slow")), 250),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <FastChild />
-        <SlowChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [FastChild(), SlowChild()]),
       root,
     );
 
@@ -244,29 +237,26 @@ describe("AC3: Multiple async siblings — shared fallback, single swap", () => 
 
     const snapshots: string[] = [];
 
-    function ChildA(): Effect.Effect<JSX.Element> {
+    function ChildA() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="a">A</span>), 100),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "a" }, "A")), 100),
           ),
       );
     }
 
-    function ChildB(): Effect.Effect<JSX.Element> {
+    function ChildB() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="b">B</span>), 200),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "b" }, "B")), 200),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <ChildA />
-        <ChildB />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [ChildA(), ChildB()]),
       root,
     );
 
@@ -298,31 +288,31 @@ describe("AC4: Nested Suspense — independent boundaries", () => {
     createTestDOM();
     const root = createRoot();
 
-    function InnerChild(): Effect.Effect<JSX.Element> {
+    function InnerChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="inner-done">Inner</p>), 100),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "inner-done" }, "Inner")), 100),
           ),
       );
     }
 
-    function OuterChild(): Effect.Effect<JSX.Element> {
+    function OuterChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="outer-done">Outer</p>), 300),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "outer-done" }, "Outer")), 300),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="outer-fallback">Outer Loading</span>}>
-        <OuterChild />
-        <Suspense fallback={<span class="inner-fallback">Inner Loading</span>}>
-          <InnerChild />
-        </Suspense>
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
+        OuterChild(),
+        Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
+          InnerChild(),
+        ]),
+      ]),
       root,
     );
 
@@ -347,23 +337,23 @@ describe("AC4: Nested Suspense — independent boundaries", () => {
     createTestDOM();
     const root = createRoot();
 
-    function InnerChild(): Effect.Effect<JSX.Element> {
+    function InnerChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="inner-done">Inner</p>), 150),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "inner-done" }, "Inner")), 150),
           ),
       );
     }
 
     await runMount(
       // Outer has only sync children (inner Suspense is not an async component)
-      <Suspense fallback={<span class="outer-fallback">Outer Loading</span>}>
-        <span class="sync">Sync</span>
-        <Suspense fallback={<span class="inner-fallback">Inner Loading</span>}>
-          <InnerChild />
-        </Suspense>
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
+        h.span({ class: "sync" }, "Sync"),
+        Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
+          InnerChild(),
+        ]),
+      ]),
       root,
     );
 
@@ -387,22 +377,16 @@ describe("AC5: Null fallback — only markers while pending", () => {
     createTestDOM();
     const root = createRoot();
 
-    function AsyncChild(): Effect.Effect<JSX.Element> {
+    function AsyncChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="done">Done</p>), 100),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "done" }, "Done")), 100),
           ),
       );
     }
 
-    await runMount(
-      // biome-ignore lint/suspicious/noExplicitAny: testing null fallback
-      <Suspense fallback={null as any}>
-        <AsyncChild />
-      </Suspense>,
-      root,
-    );
+    await runMount(Suspense({ fallback: null }, [AsyncChild()]), root);
 
     // Only markers, no visible content
     assert.equal(
@@ -423,21 +407,16 @@ describe("AC5: Null fallback — only markers while pending", () => {
     createTestDOM();
     const root = createRoot();
 
-    function AsyncChild(): Effect.Effect<JSX.Element> {
+    function AsyncChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<p class="done">Done</p>), 100),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.p({ class: "done" }, "Done")), 100),
           ),
       );
     }
 
-    await runMount(
-      <Suspense>
-        <AsyncChild />
-      </Suspense>,
-      root,
-    );
+    await runMount(Suspense({}, [AsyncChild()]), root);
 
     assert.equal(root.textContent?.trim(), "", "No visible content");
     assert.equal(getSuspenseComments(root).length, 2);
@@ -461,19 +440,17 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     // - settle fires    → boundary swaps once       → fallback gone, content visible
     // (SuspenseContext is internal; direct call-count injection would require
     //  exposing test seams not present in the current API.)
-    function EffectChild(): Effect.Effect<JSX.Element> {
+    function EffectChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) => {
-            setTimeout(() => resolve(<span class="content">OK</span>), 100);
+          new Promise<unknown>((resolve) => {
+            setTimeout(() => resolve(h.span({ class: "content" }, "OK")), 100);
           }),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Waiting</span>}>
-        <EffectChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [EffectChild()]),
       root,
     );
 
@@ -494,29 +471,26 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     // register skipped for a child), the boundary counter would be wrong and the
     // swap would fire at the wrong time.  Two children with different delays makes
     // any register/settle count mismatch observable as a premature or missed swap.
-    function ChildA(): Effect.Effect<JSX.Element> {
+    function ChildA() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="a">A</span>), 80),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "a" }, "A")), 80),
           ),
       );
     }
 
-    function ChildB(): Effect.Effect<JSX.Element> {
+    function ChildB() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="b">B</span>), 200),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "b" }, "B")), 200),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Waiting</span>}>
-        <ChildA />
-        <ChildB />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [ChildA(), ChildB()]),
       root,
     );
 
@@ -551,18 +525,16 @@ describe("AC7: Function component returning Stream<JSXNode> triggers suspension"
     const root = createRoot();
 
     // Stream that emits multiple values over time
-    function StreamChild(): Stream.Stream<JSX.Element> {
-      return Stream.async<JSX.Element>((emit) => {
-        setTimeout(() => emit.single(<span class="v1">V1</span>), 100);
-        setTimeout(() => emit.single(<span class="v2">V2</span>), 250);
+    function StreamChild() {
+      return Stream.async<unknown>((emit) => {
+        setTimeout(() => emit.single(h.span({ class: "v1" }, "V1")), 100);
+        setTimeout(() => emit.single(h.span({ class: "v2" }, "V2")), 250);
         setTimeout(() => emit.end(), 300);
       });
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Waiting</span>}>
-        <StreamChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [StreamChild()]),
       root,
     );
 
@@ -604,20 +576,20 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
     });
 
     // AsyncComponent DOES trigger suspension
-    function AsyncComponent(): Effect.Effect<JSX.Element> {
+    function AsyncComponent() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="async">Async</span>), 200),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "async" }, "Async")), 200),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Waiting</span>}>
-        <div>{inlineStream}</div>
-        <AsyncComponent />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
+        h.div({}, [inlineStream]),
+        AsyncComponent(),
+      ]),
       root,
     );
 
@@ -652,9 +624,9 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
 
     // Without any async function component child, the boundary should fast-path
     await runMount(
-      <Suspense fallback={<span class="fallback">Waiting</span>}>
-        <div class={classStream}>Content</div>
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
+        h.div({ class: classStream }, "Content"),
+      ]),
       root,
     );
 
@@ -673,15 +645,13 @@ describe("AC9: Scope close while pending — clean interruption", () => {
     createTestDOM();
     const root = createRoot();
 
-    function NeverSettles(): Effect.Effect<JSX.Element> {
+    function NeverSettles() {
       // An Effect that never resolves
-      return Effect.never as unknown as Effect.Effect<JSX.Element>;
+      return Effect.never as unknown as Effect.Effect<unknown>;
     }
 
     const handle = await runMount(
-      <Suspense fallback={<span class="fallback">Forever loading</span>}>
-        <NeverSettles />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Forever loading") }, [NeverSettles()]),
       root,
     );
 
@@ -699,17 +669,14 @@ describe("AC9: Scope close while pending — clean interruption", () => {
     createTestDOM();
     const root = createRoot();
 
-    function SlowChild(): Effect.Effect<JSX.Element> {
+    function SlowChild() {
       return Effect.promise(
-        () =>
-          new Promise<JSX.Element>((resolve) => setTimeout(() => resolve(<span>Done</span>), 500)),
+        () => new Promise<unknown>((resolve) => setTimeout(() => resolve(h.span({}, "Done")), 500)),
       );
     }
 
     const handle = await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <SlowChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [SlowChild()]),
       root,
     );
 
@@ -733,25 +700,22 @@ describe("AC10: Sentinel prevents premature settlement", () => {
     const root = createRoot();
 
     // FastChild resolves synchronously via Effect.sync
-    function FastChild(): Effect.Effect<JSX.Element> {
-      return Effect.sync(() => <span class="fast">Fast</span>);
+    function FastChild() {
+      return Effect.sync(() => h.span({ class: "fast" }, "Fast"));
     }
 
     // SlowChild is genuinely async
-    function SlowChild(): Effect.Effect<JSX.Element> {
+    function SlowChild() {
       return Effect.promise(
         () =>
-          new Promise<JSX.Element>((resolve) =>
-            setTimeout(() => resolve(<span class="slow">Slow</span>), 150),
+          new Promise<unknown>((resolve) =>
+            setTimeout(() => resolve(h.span({ class: "slow" }, "Slow")), 150),
           ),
       );
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <FastChild />
-        <SlowChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [FastChild(), SlowChild()]),
       root,
     );
 
@@ -773,14 +737,12 @@ describe("AC10: Sentinel prevents premature settlement", () => {
     createTestDOM();
     const root = createRoot();
 
-    function SyncChild(): JSX.Element {
-      return <span class="sync">Sync</span>;
+    function SyncChild() {
+      return h.span({ class: "sync" }, "Sync");
     }
 
     await runMount(
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <SyncChild />
-      </Suspense>,
+      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [SyncChild()]),
       root,
     );
 
@@ -804,16 +766,15 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
    * 4. `hydrate` adopts the resolved DOM — no HydrationMismatchError, no flicker
    */
   it("SSR emits fallback+patch; script resolves DOM; hydrate adopts without mismatch", async () => {
-    // A component that returns an Effect — triggers SSR suspension in renderToStreamHydratable.
-    function Card(): Effect.Effect<JSX.Element> {
-      return Effect.succeed(<div class="card">Card content</div>);
+    // A component that returns an async Effect — triggers SSR suspension in renderToStreamHydratable.
+    function Card() {
+      return Effect.gen(function* () {
+        yield* Effect.sleep("0 millis"); // ensures async path for SSR stream markers
+        return yield* h.div({ class: "card" }, "Card content");
+      });
     }
 
-    const app = (
-      <Suspense fallback={<span class="fallback">Loading</span>}>
-        <Card />
-      </Suspense>
-    );
+    const app = Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [Card()]);
 
     // ── 1. SSR ───────────────────────────────────────────────────────────────
     const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));
@@ -834,7 +795,7 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
     );
 
     // Point Node globals to the JSDOM window so DOM APIs in hydrate() work.
-    global.document = dom.window.document as unknown as Document;
+    global.document = dom.window.document;
     global.HTMLElement = dom.window.HTMLElement;
     global.Comment = dom.window.Comment;
     global.Text = dom.window.Text;
@@ -870,24 +831,20 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
   });
 
   it("nested boundaries: both patches resolve; hydrate adopts both", async () => {
-    function Inner(): Effect.Effect<JSX.Element> {
-      return Effect.succeed(<p class="inner-content">Inner resolved</p>);
+    function Inner() {
+      return Effect.succeed(h.p({ class: "inner-content" }, "Inner resolved"));
     }
-    function Outer(): Effect.Effect<JSX.Element> {
+    function Outer() {
       return Effect.succeed(
-        <div class="outer-content">
-          <Suspense fallback={<span class="inner-fallback">Inner loading</span>}>
-            <Inner />
-          </Suspense>
-        </div>,
+        h.div({ class: "outer-content" }, [
+          Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner loading") }, [Inner()]),
+        ]),
       );
     }
 
-    const app = (
-      <Suspense fallback={<span class="outer-fallback">Outer loading</span>}>
-        <Outer />
-      </Suspense>
-    );
+    const app = Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer loading") }, [
+      Outer(),
+    ]);
 
     // SSR
     const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));

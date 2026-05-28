@@ -1,40 +1,47 @@
-import type { JSXNode } from "~/types";
+import type { RenderNode } from "~/types";
+import type { Child, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
 /**
- * Props for the {@link Suspense} boundary component.
+ * Props for the {@link Suspense} boundary — used by renderers to access
+ * `fallback` and `children` from the node descriptor.
  */
 export interface SuspenseProps {
   /**
    * Shown in the DOM while async children are pending. Pass `null` or omit to
    * render nothing (only the comment markers) while pending.
    */
-  readonly fallback?: JSXNode;
+  readonly fallback?: RenderNode;
   /** The children to render inside the boundary. */
-  readonly children?: JSXNode | readonly JSXNode[];
+  readonly children?: RenderNode | readonly RenderNode[];
 }
 
 /**
- * Suspense boundary. Shows `fallback` while async function-component children
- * are pending (have not yet emitted their first value), then atomically swaps
- * to the resolved children once **all** pending children have settled.
+ * Creates a Suspense boundary node.
  *
- * Rendering behaviour is implemented by the active renderer (`@effect-ui/dom`).
- * This export is a **sentinel/marker** function recognised by the renderer via
- * reference equality (`type === Suspense`). It must never be called directly.
+ * Shows `fallback` while async children are pending (have not yet emitted
+ * their first value), then atomically swaps to the resolved children once
+ * **all** pending children have settled.
+ *
+ * The renderer (`@effect-ui/dom`) identifies boundaries via `type === Suspense`
+ * reference equality — the same function reference is embedded as `type`.
  *
  * @example
- * ```tsx
+ * ```ts
  * import { Suspense } from "@effect-ui/core";
  *
- * <Suspense fallback={<Spinner />}>
- *   <AsyncCard />
- *   <AsyncSidebar />
- * </Suspense>
+ * Suspense({ fallback: h.div({}, "Loading…") }, [AsyncCard({}), AsyncSidebar({})])
  * ```
  */
-export function Suspense(_props: SuspenseProps): JSXNode {
-  throw new Error(
-    "[effect-ui] Suspense must be rendered inside a mount() or hydrate() call. " +
-      "Make sure @effect-ui/dom is configured as your renderer.",
-  );
+export function Suspense<C extends readonly Child[]>(
+  props: { readonly fallback?: Child },
+  children: C,
+): Node<ChildrenE<C>, ChildrenR<C>> {
+  // Return a plain descriptor (not an Effect) so the renderer processes it
+  // synchronously via the {type, props} branch — same path as JSX <Suspense>.
+  // The `as unknown` cast is necessary because ElementType requires a
+  // single-arg function, but Suspense takes two args.
+  return {
+    type: Suspense as unknown as (props: Record<string, unknown>) => unknown,
+    props: { ...props, children } as Record<string, unknown>,
+  } as unknown as Node<ChildrenE<C>, ChildrenR<C>>;
 }

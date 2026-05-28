@@ -1,7 +1,7 @@
 import type { Option, Ref } from "effect";
 import type { DOMAttributes } from "./dom";
 import type { HTMLAttributeSource, StyleAttributeValue } from "./attributes";
-import type { JSXNode } from "..";
+import type { RenderNode } from "..";
 
 type SVGPreserveAspectRatio =
   | "none"
@@ -65,7 +65,7 @@ type ImagePreserveAspectRatio =
 type SVGUnits = "userSpaceOnUse" | "objectBoundingBox";
 export interface SVGAttributes<T> extends DOMAttributes<T> {
   // effect-ui internals ========================================================
-  children?: HTMLAttributeSource<JSXNode>;
+  children?: HTMLAttributeSource<RenderNode>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================
 

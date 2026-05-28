@@ -1,7 +1,14 @@
 import { Effect, Stream } from "effect";
-import type { FRAGMENT } from "~/jsx-runtime";
 
-export type JSXNode =
+/** The tag type for renderable element descriptors. */
+export type ElementType = symbol | string | ((props: Record<string, unknown>) => unknown);
+
+/**
+ * Every value the renderer can process: primitives, iterables, reactive
+ * streams/effects, and element descriptors produced by `h`, `hFragment`, or
+ * `Suspense`.
+ */
+export type RenderNode =
   | void
   | null
   | undefined
@@ -9,12 +16,10 @@ export type JSXNode =
   | number
   | bigint
   | boolean
-  | Iterable<JSXNode>
-  | Stream.Stream<JSXNode, any, any>
-  | Effect.Effect<JSXNode, any, any>
-  | { type: JSXType; props: Record<string, unknown> };
-
-export type JSXType = typeof FRAGMENT | string | ((props: Record<string, unknown>) => JSXNode);
+  | Iterable<RenderNode>
+  | Stream.Stream<RenderNode, any, any>
+  | Effect.Effect<RenderNode, any, any>
+  | { type: ElementType; props: Record<string, unknown> };
 
 export * from "./html/aria";
 export * from "./html/attributes";

@@ -1,12 +1,12 @@
 import * as assert from "node:assert/strict";
-import { Suspense } from "@effect-ui/core";
-import type { JSXNode } from "@effect-ui/core/types";
+import { Suspense, h, hFragment } from "@effect-ui/core";
+import type { RenderNode } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
 import { renderToString } from "./render-to-string";
 
-const run = (node: JSXNode) => Effect.runPromise(Stream.mkString(renderToStream(node)));
+const run = (node: RenderNode) => Effect.runPromise(Stream.mkString(renderToStream(node)));
 
 // Set OBSERVE_STREAM=1 to watch the HTML accumulate chunk-by-chunk in real time.
 const OBSERVE = process.env.OBSERVE_STREAM === "1";
@@ -14,57 +14,50 @@ const OBSERVE = process.env.OBSERVE_STREAM === "1";
 describe("renderToStream - serialization parity", () => {
   it("renders elements, attributes, and escaped text", async () => {
     assert.equal(
-      await run(<p>{"hello <b> & 'world'"}</p>),
+      await run(h.p({}, "hello <b> & 'world'")),
       "<p>hello &lt;b&gt; &amp; &#x27;world&#x27;</p>",
     );
-    assert.equal(await run(<div />), "<div></div>");
+    assert.equal(await run(h.div({})), "<div></div>");
+    assert.equal(await run(h.div({}, [h.span({}, "a"), "b"])), "<div><span>a</span>b</div>");
     assert.equal(
-      await run(
-        <div>
-          <span>a</span>b
-        </div>,
-      ),
-      "<div><span>a</span>b</div>",
-    );
-    assert.equal(
-      await run(<a href={'x"&<>y'}>link</a>),
+      await run(h.a({ href: 'x"&<>y' }, "link")),
       '<a href="x&quot;&amp;&lt;&gt;y">link</a>',
     );
-    assert.equal(await run(<input disabled={true} />), '<input disabled="">');
-    assert.equal(await run(<input disabled={false} />), "<input>");
+    assert.equal(await run(h.input({ disabled: true })), '<input disabled="">');
+    assert.equal(await run(h.input({ disabled: false })), "<input>");
   });
 
   it("serializes style strings and objects", async () => {
-    assert.equal(await run(<div style="color: red" />), '<div style="color: red"></div>');
+    assert.equal(await run(h.div({ style: "color: red" })), '<div style="color: red"></div>');
     assert.equal(
-      await run(<div style={{ backgroundColor: "blue", fontWeight: 700 }} />),
+      await run(h.div({ style: { backgroundColor: "blue", fontWeight: 700 } })),
       '<div style="background-color: blue; font-weight: 700"></div>',
     );
   });
 
   it("AC-R1/AC-R2: resolves reactive attributes to their first/current emission", async () => {
-    assert.equal(await run(<div id={Stream.make("a", "b", "c")} />), '<div id="a"></div>');
-    assert.equal(await run(<div id={Effect.succeed("eff")} />), '<div id="eff"></div>');
+    assert.equal(await run(h.div({ id: Stream.make("a", "b", "c") })), '<div id="a"></div>');
+    assert.equal(await run(h.div({ id: Effect.succeed("eff") })), '<div id="eff"></div>');
   });
 
   it("AC-R4: a non-terminating reactive attribute resolves to its current value without hanging", async () => {
     const ref = await Effect.runPromise(SubscriptionRef.make("live"));
-    assert.equal(await run(<div id={ref.changes} />), '<div id="live"></div>');
+    assert.equal(await run(h.div({ id: ref.changes })), '<div id="live"></div>');
   });
 
   it("renders void elements without a closing tag", async () => {
-    assert.equal(await run(<br />), "<br>");
-    assert.equal(await run(<img src="/a.png" />), '<img src="/a.png">');
+    assert.equal(await run(h.br({})), "<br>");
+    assert.equal(await run(h.img({ src: "/a.png" })), '<img src="/a.png">');
   });
 
   it("AC-EQ1: stream output equals renderToString output", async () => {
-    const node = (
-      <div id={Stream.make("x", "y")}>
-        <span>a</span>
-        {[1, 2, 3]}
-        {Effect.succeed(<em>e</em>)}
-      </div>
-    );
+    const node = h.div({ id: Stream.make("x", "y") }, [
+      h.span({}, "a"),
+      1,
+      2,
+      3,
+      Effect.succeed(h.em({}, "e")),
+    ]);
     const fromStream = await Effect.runPromise(Stream.mkString(renderToStream(node)));
     const fromString = await Effect.runPromise(renderToString(node));
     assert.equal(fromStream, fromString);
@@ -74,13 +67,7 @@ describe("renderToStream - serialization parity", () => {
 describe("renderToStream - streaming behavior", () => {
   it("AC-ST1: emits chunks in document order", async () => {
     const chunks = await Effect.runPromise(
-      Stream.runCollect(
-        renderToStream(
-          <div>
-            <span>a</span>b
-          </div>,
-        ),
-      ),
+      Stream.runCollect(renderToStream(h.div({}, [h.span({}, "a"), "b"]))),
     );
     assert.deepEqual(Chunk.toReadonlyArray(chunks), [
       "<div>",
@@ -93,7 +80,7 @@ describe("renderToStream - streaming behavior", () => {
   });
 
   it("AC-ST2: empty/boolean/null nodes contribute no chunks", async () => {
-    for (const node of [null, undefined, true, false] as JSXNode[]) {
+    for (const node of [null, undefined, true, false] as RenderNode[]) {
       const chunks = await Effect.runPromise(Stream.runCollect(renderToStream(node)));
       assert.equal(Chunk.size(chunks), 0);
     }
@@ -112,12 +99,7 @@ describe("renderToStream - streaming behavior", () => {
           return "late";
         });
 
-        const node = (
-          <div>
-            <span>shell</span>
-            {slow}
-          </div>
-        );
+        const node = h.div({}, [h.span({}, "shell"), slow]);
 
         const fiber = yield* Effect.fork(
           Stream.runForEach(renderToStream(node), (chunk) =>
@@ -141,37 +123,30 @@ describe("renderToStream - streaming behavior", () => {
 
   it("AC-ST4: fails the stream on an unsupported node type", async () => {
     const result = await Effect.runPromiseExit(
-      Stream.runDrain(renderToStream({ type: 123, props: {} } as unknown as JSXNode)),
+      Stream.runDrain(renderToStream({ type: 123, props: {} } as unknown as RenderNode)),
     );
     assert.equal(result._tag, "Failure");
   });
 
   it("AC-ST5: builds a large tree with staggered async branches in document order", async () => {
-    const delayed = (millis: number, node: JSXNode): JSXNode =>
+    const delayed = (millis: number, node: RenderNode) =>
       Effect.succeed(node).pipe(Effect.delay(`${millis} millis`));
 
-    const tree = (
-      <html>
-        <head>
-          <title>Streaming demo</title>
-        </head>
-        <body>
-          <header>
-            <h1>Shell</h1>
-          </header>
-          <main>
-            {delayed(40, <section id="a">branch A</section>)}
-            {delayed(120, <section id="b">branch B</section>)}
-            <ul>
-              {[1, 2, 3].map((n) => (
-                <li>item {n}</li>
-              ))}
-            </ul>
-            {delayed(80, <footer>branch C</footer>)}
-          </main>
-        </body>
-      </html>
-    );
+    const tree = h.html({}, [
+      h.head({}, [h.title({}, "Streaming demo")]),
+      h.body({}, [
+        h.header({}, [h.h1({}, "Shell")]),
+        h.main({}, [
+          delayed(40, h.section({ id: "a" }, "branch A")),
+          delayed(120, h.section({ id: "b" }, "branch B")),
+          h.ul(
+            {},
+            [1, 2, 3].map((n) => h.li({}, `item ${n}`)),
+          ),
+          delayed(80, h.footer({}, "branch C")),
+        ]),
+      ]),
+    ]);
 
     let html = "";
     const result = await Effect.runPromise(
@@ -189,9 +164,6 @@ describe("renderToStream - streaming behavior", () => {
       ),
     );
 
-    // Rendering is document-order (sequential flatMap, concurrency 1), so branch B's
-    // 120ms delay blocks footer C even though C is "faster" — order is by tree
-    // position, not completion time.
     assert.equal(result, html);
     assert.ok(result.startsWith("<html>") && result.endsWith("</html>"));
     assert.ok(result.includes('<section id="a">branch A</section>'));
@@ -203,47 +175,37 @@ describe("renderToStream - streaming behavior", () => {
 
 describe("renderToStream - function components", () => {
   it("AC-FC1/FC2: renders a component returning an element inline", async () => {
-    const Greeting = () => <p>hello</p>;
-    assert.equal(await run(<Greeting />), "<p>hello</p>");
+    const Greeting = () => h.p({}, "hello");
+    assert.equal(await run(Greeting()), "<p>hello</p>");
   });
 
   it("AC-FC1: passes props verbatim to the component", async () => {
-    const Greeting = ({ name }: { name: string }) => <p>hi {name}</p>;
-    assert.equal(await run(<Greeting name="ada" />), "<p>hi ada</p>");
+    const Greeting = ({ name }: { name: string }) => h.p({}, `hi ${name}`);
+    assert.equal(await run(Greeting({ name: "ada" })), "<p>hi ada</p>");
   });
 
   it("AC-FC2: renders a component returning a fragment", async () => {
-    const Pair = () => (
-      <>
-        <span>a</span>
-        <span>b</span>
-      </>
-    );
-    assert.equal(await run(<Pair />), "<span>a</span><span>b</span>");
+    const Pair = () => hFragment([h.span({}, "a"), h.span({}, "b")]);
+    assert.equal(await run(Pair()), "<span>a</span><span>b</span>");
   });
 
   it("AC-FC3: collapses a component returning an Effect/Stream to its first/current emission", async () => {
-    const FromEffect = () => Effect.succeed(<em>e</em>);
-    assert.equal(await run(<FromEffect />), "<em>e</em>");
+    const FromEffect = () => Effect.succeed(h.em({}, "e"));
+    assert.equal(await run(FromEffect()), "<em>e</em>");
 
-    const FromStream = () => Stream.make(<em>a</em>, <em>b</em>);
-    assert.equal(await run(<FromStream />), "<em>a</em>");
+    const FromStream = () => Stream.make(h.em({}, "a"), h.em({}, "b"));
+    assert.equal(await run(FromStream()), "<em>a</em>");
   });
 
   it("AC-FC4: renders nested components", async () => {
-    const Inner = ({ label }: { label: string }) => <span>{label}</span>;
-    const Outer = () => (
-      <div>
-        <Inner label="x" />
-        <Inner label="y" />
-      </div>
-    );
-    assert.equal(await run(<Outer />), "<div><span>x</span><span>y</span></div>");
+    const Inner = ({ label }: { label: string }) => h.span({}, label);
+    const Outer = () => h.div({}, [Inner({ label: "x" }), Inner({ label: "y" })]);
+    assert.equal(await run(Outer()), "<div><span>x</span><span>y</span></div>");
   });
 
   it("AC-FC3: hydratable wraps a component's reactive result in markers", async () => {
-    const Live = () => Stream.make(<em>now</em>);
-    const html = await Effect.runPromise(Stream.mkString(renderToStreamHydratable(<Live />)));
+    const Live = () => Stream.make(h.em({}, "now"));
+    const html = await Effect.runPromise(Stream.mkString(renderToStreamHydratable(Live())));
     assert.equal(html, "<!-- stream-start-1 --><em>now</em><!-- stream-end-1 -->");
   });
 });
@@ -254,7 +216,7 @@ describe("renderToStream - function components", () => {
 
 describe("renderToStream - Suspense SSR", () => {
   // Helper: async component backed by a Deferred gate so tests can control timing.
-  function makeGatedComponent(gate: Deferred.Deferred<void>, content: JSXNode) {
+  function makeGatedComponent(gate: Deferred.Deferred<void>, content: RenderNode) {
     return () =>
       Effect.gen(function* () {
         yield* Deferred.await(gate);
@@ -263,13 +225,9 @@ describe("renderToStream - Suspense SSR", () => {
   }
 
   it("AC-SS1: renderToString emits fallback only — no markers, no patches", async () => {
-    const SlowChild = () => Effect.succeed(<p>resolved</p>);
+    const SlowChild = () => Effect.succeed(h.p({}, "resolved"));
     const html = await Effect.runPromise(
-      renderToString(
-        <Suspense fallback={<span>loading</span>}>
-          <SlowChild />
-        </Suspense>,
-      ),
+      renderToString(Suspense({ fallback: h.span({}, "loading") }, [SlowChild()])),
     );
     assert.equal(html, "<span>loading</span>");
     assert.ok(!html.includes("suspense-start"), "no start marker");
@@ -281,15 +239,13 @@ describe("renderToStream - Suspense SSR", () => {
   it("AC-SS1: renderToString renders nested Suspense fallback inline", async () => {
     const html = await Effect.runPromise(
       renderToString(
-        <Suspense fallback={<div>outer loading</div>}>
-          <Suspense fallback={<div>inner loading</div>}>
-            {Effect.succeed(<p>inner content</p>)}
-          </Suspense>
-        </Suspense>,
+        Suspense({ fallback: h.div({}, "outer loading") }, [
+          Suspense({ fallback: h.div({}, "inner loading") }, [
+            Effect.succeed(h.p({}, "inner content")),
+          ]),
+        ]),
       ),
     );
-    // renderToString renders only the outer fallback — the outer Suspense is
-    // intercepted first (ctx=null path) and its children are never visited.
     assert.equal(
       html,
       "<div>outer loading</div>",
@@ -303,18 +259,14 @@ describe("renderToStream - Suspense SSR", () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const gate = yield* Deferred.make<void>();
-        const GatedChild = makeGatedComponent(gate, <p>resolved</p>);
+        const GatedChild = makeGatedComponent(gate, h.p({}, "resolved"));
 
         const chunks: string[] = [];
 
         const fiber = yield* Effect.fork(
           Stream.runForEach(
             renderToStream(
-              <div>
-                <Suspense fallback={<span>loading</span>}>
-                  <GatedChild />
-                </Suspense>
-              </div>,
+              h.div({}, [Suspense({ fallback: h.span({}, "loading") }, [GatedChild()])]),
             ),
             (chunk) =>
               Effect.sync(() => {
@@ -323,18 +275,15 @@ describe("renderToStream - Suspense SSR", () => {
           ),
         );
 
-        // Yield enough to let the main stream run past the Suspense boundary
         yield* Effect.sleep("10 millis");
         const mainHtml = chunks.join("");
 
-        // Main stream should have emitted fallback + markers
         assert.ok(mainHtml.includes("<div>"), "outer div present");
         assert.ok(mainHtml.includes("<!-- suspense-start-1 -->"), "start marker present");
         assert.ok(mainHtml.includes("<span>loading</span>"), "fallback present");
         assert.ok(mainHtml.includes("<!-- suspense-end-1 -->"), "end marker present");
         assert.ok(!mainHtml.includes("<template"), "patch not yet emitted");
 
-        // Release the gate; the resolution fiber pushes the patch
         yield* Deferred.succeed(gate, undefined);
         yield* Fiber.join(fiber);
 
@@ -349,16 +298,13 @@ describe("renderToStream - Suspense SSR", () => {
   });
 
   it("AC-SS2: renderToStream with sync child terminates immediately (no open tail)", async () => {
-    // Sync-only content should terminate as soon as the main document is done.
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStream(
-          <Suspense fallback={<span>loading</span>}>{Effect.succeed(<p>sync</p>)}</Suspense>,
+          Suspense({ fallback: h.span({}, "loading") }, [Effect.succeed(h.p({}, "sync"))]),
         ),
       ),
     );
-    // The async Effect child in the Suspense boundary resolves immediately;
-    // the patch is pushed, queue is shut down, stream terminates.
     assert.ok(html.includes("<!-- suspense-start-1 -->"), "start marker");
     assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker");
     assert.ok(html.includes('<template id="ef-s-1">'), "patch emitted");
@@ -369,13 +315,12 @@ describe("renderToStream - Suspense SSR", () => {
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStreamHydratable(
-          <Suspense fallback={<span>loading</span>}>
-            {Effect.succeed(<div>{Stream.make("live")}</div>)}
-          </Suspense>,
+          Suspense({ fallback: h.span({}, "loading") }, [
+            Effect.succeed(h.div({}, [Stream.make("live")])),
+          ]),
         ),
       ),
     );
-    // Patch template should contain stream markers around the reactive region
     assert.ok(html.includes('<template id="ef-s-1">'), "patch present");
     assert.ok(html.includes("stream-start-"), "reactive markers in patch content");
     assert.ok(html.includes("stream-end-"), "reactive end marker in patch content");
@@ -388,28 +333,22 @@ describe("renderToStream - Suspense SSR", () => {
         const gateA = yield* Deferred.make<void>();
         const gateB = yield* Deferred.make<void>();
 
-        const SlowA = makeGatedComponent(gateA, <p>branch A</p>);
-        const SlowB = makeGatedComponent(gateB, <p>branch B</p>);
+        const SlowA = makeGatedComponent(gateA, h.p({}, "branch A"));
+        const SlowB = makeGatedComponent(gateB, h.p({}, "branch B"));
 
         const html = yield* Effect.gen(function* () {
-          // Release B before A so B's patch should appear first
           const fiberHtml = yield* Effect.fork(
             Stream.mkString(
               renderToStream(
-                <>
-                  <Suspense fallback={<span>loading A</span>}>
-                    <SlowA />
-                  </Suspense>
-                  <Suspense fallback={<span>loading B</span>}>
-                    <SlowB />
-                  </Suspense>
-                </>,
+                hFragment([
+                  Suspense({ fallback: h.span({}, "loading A") }, [SlowA()]),
+                  Suspense({ fallback: h.span({}, "loading B") }, [SlowB()]),
+                ]),
               ),
             ),
           );
 
           yield* Effect.sleep("5 millis");
-          // Release B first (resolves before A)
           yield* Deferred.succeed(gateB, undefined);
           yield* Effect.sleep("5 millis");
           yield* Deferred.succeed(gateA, undefined);
@@ -417,13 +356,11 @@ describe("renderToStream - Suspense SSR", () => {
           return yield* Fiber.join(fiberHtml);
         });
 
-        // Both patches must be present
         assert.ok(html.includes('<template id="ef-s-1">'), "patch for boundary 1");
         assert.ok(html.includes('<template id="ef-s-2">'), "patch for boundary 2");
         assert.ok(html.includes("<p>branch A</p>"), "branch A resolved");
         assert.ok(html.includes("<p>branch B</p>"), "branch B resolved");
 
-        // B resolved first so its patch should precede A's in the output
         const idxB = html.indexOf('<template id="ef-s-2">');
         const idxA = html.indexOf('<template id="ef-s-1">');
         assert.ok(idxB < idxA, "B patch emitted before A patch (resolution order)");
@@ -435,18 +372,17 @@ describe("renderToStream - Suspense SSR", () => {
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStream(
-          <Suspense fallback={<span>outer loading</span>}>
-            {Effect.succeed(
-              <Suspense fallback={<span>inner loading</span>}>
-                {Effect.succeed(<p>inner content</p>)}
-              </Suspense>,
-            )}
-          </Suspense>,
+          Suspense({ fallback: h.span({}, "outer loading") }, [
+            Effect.succeed(
+              Suspense({ fallback: h.span({}, "inner loading") }, [
+                Effect.succeed(h.p({}, "inner content")),
+              ]),
+            ),
+          ]),
         ),
       ),
     );
 
-    // Outer patch (id=1) contains inner boundary's fallback + markers
     const outerTemplateMatch = html.match(/<template id="ef-s-1">([\s\S]*?)<\/template>/);
     assert.ok(outerTemplateMatch, "outer template present");
     const outerContent = outerTemplateMatch?.[1] ?? "";
@@ -454,7 +390,6 @@ describe("renderToStream - Suspense SSR", () => {
     assert.ok(outerContent.includes("inner loading"), "outer patch has inner fallback");
     assert.ok(outerContent.includes("suspense-end-2"), "outer patch has inner end marker");
 
-    // Inner patch (id=2) contains the actual inner content
     const innerTemplateMatch = html.match(/<template id="ef-s-2">([\s\S]*?)<\/template>/);
     assert.ok(innerTemplateMatch, "inner template present");
     const innerContent = innerTemplateMatch?.[1] ?? "";
@@ -465,17 +400,13 @@ describe("renderToStream - Suspense SSR", () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const neverResolves = yield* Deferred.make<void>();
-        const NeverChild = makeGatedComponent(neverResolves, <p>never</p>);
+        const NeverChild = makeGatedComponent(neverResolves, h.p({}, "never"));
 
         const chunks: string[] = [];
 
         const fiber = yield* Effect.fork(
           Stream.runForEach(
-            renderToStream(
-              <Suspense fallback={<span>forever loading</span>}>
-                <NeverChild />
-              </Suspense>,
-            ),
+            renderToStream(Suspense({ fallback: h.span({}, "forever loading") }, [NeverChild()])),
             (chunk) =>
               Effect.sync(() => {
                 chunks.push(chunk);
@@ -483,7 +414,6 @@ describe("renderToStream - Suspense SSR", () => {
           ),
         );
 
-        // Wait a bit; main stream should have emitted the fallback by now
         yield* Effect.sleep("30 millis");
         const html = chunks.join("");
 
@@ -491,43 +421,27 @@ describe("renderToStream - Suspense SSR", () => {
         assert.ok(html.includes("<span>forever loading</span>"), "fallback emitted");
         assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker emitted");
 
-        // Stream is still open (fiber not done) — the patch hasn't arrived
         const poll = yield* Fiber.poll(fiber);
         assert.ok(poll._tag === "None", "stream still open — patch not yet emitted");
         assert.ok(!html.includes("<template"), "no patch emitted yet");
 
-        // Clean up — interrupt the fiber
         yield* Fiber.interrupt(fiber);
       }),
     );
   });
 
   it("AC-SS7: no Suspense in tree — output identical, stream terminates immediately", async () => {
-    const node = (
-      <div>
-        <span>hello</span>
-        {Effect.succeed("world")}
-      </div>
-    );
+    const node = h.div({}, [h.span({}, "hello"), Effect.succeed("world")]);
 
     const fromOldStream = "<div><span>hello</span>world</div>";
     const fromNew = await Effect.runPromise(Stream.mkString(renderToStream(node)));
     assert.equal(fromNew, fromOldStream, "output identical when no Suspense");
-
-    // The stream must terminate — if it hangs, the test times out.
-    // No additional assertion needed; the await itself verifies termination.
   });
 
   it("AC-SS7: no Suspense hydratable — output identical to pre-Suspense", async () => {
-    const Live = () => Stream.make(<em>now</em>);
+    const Live = () => Stream.make(h.em({}, "now"));
     const html = await Effect.runPromise(
-      Stream.mkString(
-        renderToStreamHydratable(
-          <div>
-            <Live />
-          </div>,
-        ),
-      ),
+      Stream.mkString(renderToStreamHydratable(h.div({}, [Live()]))),
     );
     assert.equal(html, "<div><!-- stream-start-1 --><em>now</em><!-- stream-end-1 --></div>");
   });

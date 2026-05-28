@@ -6,6 +6,7 @@
  * style streams for complete style replacement.
  */
 
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Effect, Schedule, Stream } from "effect";
 
@@ -14,23 +15,21 @@ import { Effect, Schedule, Stream } from "effect";
 // ============================================================================
 
 const AnimatedHue = () => {
-  // Create a stream that cycles through hue values
-  const hueStream = Stream.iterate(0, (h) => (h + 2) % 360).pipe(
+  const hueStream = Stream.iterate(0, (hue) => (hue + 2) % 360).pipe(
     Stream.schedule(Schedule.spaced("50 millis")),
   );
 
-  const backgroundStream = Stream.map(hueStream, (h) => `hsl(${h}, 70%, 60%)`);
+  const backgroundStream = Stream.map(hueStream, (hue) => `hsl(${hue}, 70%, 60%)`);
 
-  return (
-    <div
-      class="demo-box"
-      style={{
+  return h.div(
+    {
+      class: "demo-box",
+      style: {
         backgroundColor: backgroundStream,
         transition: "background-color 0.05s",
-      }}
-    >
-      Hue
-    </div>
+      },
+    },
+    "Hue",
   );
 };
 
@@ -38,17 +37,17 @@ const AnimatedHue = () => {
 // Example 2: Object Form Styles (Static)
 // ============================================================================
 
-const ObjectStyleBox = () => (
-  <div
-    class="demo-box"
-    style={{
-      backgroundColor: "#667eea",
-      boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
-    }}
-  >
-    Object
-  </div>
-);
+const ObjectStyleBox = () =>
+  h.div(
+    {
+      class: "demo-box",
+      style: {
+        backgroundColor: "#667eea",
+        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
+      },
+    },
+    "Object",
+  );
 
 // ============================================================================
 // Example 3: Entire Style Object as Stream
@@ -70,16 +69,15 @@ const StyleSwitcher = () => {
     },
   ).pipe(Stream.schedule(Schedule.spaced("1 second")), Stream.forever);
 
-  return (
-    <div
-      class="demo-box"
-      style={{
+  return h.div(
+    {
+      class: "demo-box",
+      style: {
         ...styleStream,
         transition: "all 0.3s ease",
-      }}
-    >
-      Switch
-    </div>
+      },
+    },
+    "Switch",
   );
 };
 
@@ -93,17 +91,16 @@ const PulsingBox = () => {
     Stream.forever,
   );
 
-  return (
-    <div
-      class="demo-box"
-      style={{
+  return h.div(
+    {
+      class: "demo-box",
+      style: {
         backgroundColor: "#764ba2",
         opacity: opacityStream,
         transition: "opacity 0.4s ease-in-out",
-      }}
-    >
-      Pulse
-    </div>
+      },
+    },
+    "Pulse",
   );
 };
 
@@ -116,18 +113,17 @@ const GrowingBox = () => {
     Stream.schedule(Schedule.spaced("200 millis")),
   );
 
-  return (
-    <div
-      class="demo-box"
-      style={{
+  return h.div(
+    {
+      class: "demo-box",
+      style: {
         backgroundColor: "#4CAF50",
         width: Stream.map(sizeStream, (s) => `${s}px`),
         height: Stream.map(sizeStream, (s) => `${s}px`),
         transition: "width 0.2s, height 0.2s",
-      }}
-    >
-      Grow
-    </div>
+      },
+    },
+    "Grow",
   );
 };
 
@@ -135,40 +131,39 @@ const GrowingBox = () => {
 // App
 // ============================================================================
 
-const App = () => (
-  <div>
-    <h1>Reactive Styles</h1>
+const App = () =>
+  h.div({}, [
+    h.h1({}, "Reactive Styles"),
 
-    <section>
-      <h2>1. Animated Hue (Individual Property Stream)</h2>
-      <p>Background color cycles through the color wheel.</p>
-      <AnimatedHue />
-    </section>
+    h.section({}, [
+      h.h2({}, "1. Animated Hue (Individual Property Stream)"),
+      h.p({}, "Background color cycles through the color wheel."),
+      AnimatedHue(),
+    ]),
 
-    <section>
-      <h2>2. Object Form Styles (Static)</h2>
-      <p>Standard object syntax for style properties.</p>
-      <ObjectStyleBox />
-    </section>
+    h.section({}, [
+      h.h2({}, "2. Object Form Styles (Static)"),
+      h.p({}, "Standard object syntax for style properties."),
+      ObjectStyleBox(),
+    ]),
 
-    <section>
-      <h2>3. Style Object Stream</h2>
-      <p>Entire style object changes over time.</p>
-      <StyleSwitcher />
-    </section>
+    h.section({}, [
+      h.h2({}, "3. Style Object Stream"),
+      h.p({}, "Entire style object changes over time."),
+      StyleSwitcher(),
+    ]),
 
-    <section>
-      <h2>4. Pulsing Opacity</h2>
-      <p>Opacity alternates between values.</p>
-      <PulsingBox />
-    </section>
+    h.section({}, [
+      h.h2({}, "4. Pulsing Opacity"),
+      h.p({}, "Opacity alternates between values."),
+      PulsingBox(),
+    ]),
 
-    <section>
-      <h2>5. Growing Size</h2>
-      <p>Width and height animate via streams.</p>
-      <GrowingBox />
-    </section>
-  </div>
-);
+    h.section({}, [
+      h.h2({}, "5. Growing Size"),
+      h.p({}, "Width and height animate via streams."),
+      GrowingBox(),
+    ]),
+  ]);
 
-void Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(App(), document.getElementById("root")!));

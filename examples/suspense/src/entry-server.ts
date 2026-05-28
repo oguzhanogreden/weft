@@ -20,4 +20,4 @@ import type { Stream } from "effect";
 import { App } from "./app";
 
 /** Returns the live Effect Stream of HTML chunks. */
-export const renderStream = (): Stream.Stream<string, Error> => renderToStreamHydratable(<App />);
+export const renderStream = (): Stream.Stream<string, Error> => renderToStreamHydratable(App());
