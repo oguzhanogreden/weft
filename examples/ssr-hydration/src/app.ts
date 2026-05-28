@@ -32,6 +32,7 @@ export const App = (props: { initialValue: number }) =>
       h.div({ class: "count" }, [count.changes]),
       h.button({ type: "button", onclick: () => decrement() }, "-"),
       h.button({ type: "button", onclick: () => increment() }, "+"),
+
       h.div({}, [h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
     ]);
   });

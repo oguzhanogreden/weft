@@ -30,7 +30,7 @@ export namespace Source {
    * caller can switch between them freely. An incoming `Subscribable` is threaded
    * through by reference (no re-wrap); the rest normalize via `toSubscribable`.
    */
-  export type Source<A, E = never, R = never> =
+  export type Source<A, E = any, R = any> =
     | A
     | Stream.Stream<A, E, R>
     | Effect.Effect<A, E, R>

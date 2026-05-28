@@ -7,8 +7,9 @@
  */
 
 import { Effect, Stream } from "effect";
-import { defineComponent, h } from "../index";
-import type { DOMNode, Node } from "../index";
+import { h } from "../element";
+import type { DOMNode, Node } from "../types";
+import { Component } from "../component";
 
 // =============================================================================
 // Type equality helper
@@ -88,9 +89,9 @@ interface TextFieldProps {
   onChange?: (value: string) => void;
 }
 
-const TextField = defineComponent<TextFieldProps, never, never>(({ name: _name }) =>
-  h.div({ class: "field" }),
-);
+const TextField = Component.gen(function* (_: TextFieldProps) {
+  return yield* h.div({ class: "field" });
+});
 
 const _t10 = TextField({ name: "email", value: userStream });
 type _T10 = Expect<Equal<typeof _t10, Node<never, UserService>>>;
@@ -105,9 +106,37 @@ interface ThemeService2 {
 }
 declare const themeStream2: Stream.Stream<string, never, ThemeService2>;
 
-const ThemedField = defineComponent<TextFieldProps, never, ThemeService2>((_props) =>
-  h.div({ class: themeStream2 }),
-);
+const ThemedField = Component.gen(function* (_props: TextFieldProps) {
+  return yield* h.div({ class: themeStream2 });
+});
 
 const _t12 = ThemedField({ name: "email", value: userStream });
 type _T12 = Expect<Equal<typeof _t12, Node<never, UserService | ThemeService2>>>;
+
+// Test 13: Component.make — static props, Node<never, never>
+const MakeField = Component.make((_props: TextFieldProps) => h.div({ class: "field" }));
+
+const _t13 = MakeField({ name: "email", value: "static" });
+type _T13 = Expect<Equal<typeof _t13, Node<never, never>>>;
+
+// Test 14: Component.make — reactive prop R propagates out
+const _t14 = MakeField({ name: "email", value: userStream });
+type _T14 = Expect<Equal<typeof _t14, Node<never, UserService>>>;
+
+// Test 15: Component.make — internal R unioned with caller's prop R
+const MakeThemedField = Component.make((_props: TextFieldProps) => h.div({ class: themeStream2 }));
+
+const _t15 = MakeThemedField({ name: "email", value: userStream });
+type _T15 = Expect<Equal<typeof _t15, Node<never, UserService | ThemeService2>>>;
+
+// Test 16: Component.make — E from internal effect propagates out
+const MakeErrorField = Component.make((_props: TextFieldProps) =>
+  Effect.flatMap(dbEffect, (val) => h.div({}, val)),
+);
+
+const _t16 = MakeErrorField({ name: "email" });
+type _T16 = Expect<Equal<typeof _t16, Node<DbError, DbService>>>;
+
+// Test 17: Component.make — E and R from both props and body unioned
+const _t17 = MakeErrorField({ name: "email", value: userStream });
+type _T17 = Expect<Equal<typeof _t17, Node<DbError, UserService | DbService>>>;

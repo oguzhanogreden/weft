@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
-import { h, hFragment, Source } from "@effect-ui/core";
+import { Component, h, hFragment, Source } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
@@ -74,7 +74,9 @@ describe("AC1: Mount Function API", () => {
     const root = createRoot();
     root.innerHTML = "<div>existing</div><span>content</span>";
 
-    await runMount(h.div({}, "new"), root);
+    const TheComponent = Component.make(() => h.div({}, "new"));
+
+    await runMount(TheComponent({}), root);
 
     assert.equal(root.children.length, 1);
     assert.equal(root.children[0]?.tagName, "DIV");
