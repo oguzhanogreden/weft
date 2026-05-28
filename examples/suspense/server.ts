@@ -49,7 +49,7 @@ const server = createHttpServer((req, res) => {
       // Split the template so we can stream the app HTML in between.
       const [before, after] = template.split("<!--ssr-outlet-->");
 
-      const { renderStream } = (await vite.ssrLoadModule("/src/entry-server.tsx")) as {
+      const { renderStream } = (await vite.ssrLoadModule("/src/entry-server.ts")) as {
         renderStream: () => Stream.Stream<string, Error>;
       };
 

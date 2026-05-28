@@ -6,7 +6,6 @@
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "lib": ["esnext", "dom"],
-    "jsx": "react-jsx",
     "noEmit": true,
     "stripInternal": true,
     "strict": true,

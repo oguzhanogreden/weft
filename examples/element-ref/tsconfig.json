@@ -3,5 +3,5 @@
   "compilerOptions": {
     "jsxImportSource": "@effect-ui/core"
   },
-  "include": ["app.tsx"]
+  "include": ["app.ts"]
 }

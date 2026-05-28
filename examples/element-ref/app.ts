@@ -10,6 +10,7 @@
  * - Reactive mount detection via SubscriptionRef.changes
  */
 
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
@@ -24,7 +25,6 @@ const AutoFocusInput = () =>
   Effect.gen(function* () {
     const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
-    // Subscribe to ref changes and focus when element is mounted
     yield* pipe(
       inputRef.changes,
       Stream.filter(Option.isSome),
@@ -33,17 +33,15 @@ const AutoFocusInput = () =>
       Effect.fork,
     );
 
-    return (
-      <div>
-        <p>This input is automatically focused on mount:</p>
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="I'm focused!"
-          style={{ padding: "0.5rem", fontSize: "1rem" }}
-        />
-      </div>
-    );
+    return yield* h.div({}, [
+      h.p({}, "This input is automatically focused on mount:"),
+      h.input({
+        ref: inputRef,
+        type: "text",
+        placeholder: "I'm focused!",
+        style: { padding: "0.5rem", fontSize: "1rem" },
+      }),
+    ]);
   });
 
 // ============================================================================
@@ -58,7 +56,6 @@ const MeasureElement = () =>
     const boxRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
     const dimensions = yield* SubscriptionRef.make("Measuring...");
 
-    // Measure dimensions when element is mounted
     yield* pipe(
       boxRef.changes,
       Stream.filter(Option.isSome),
@@ -76,11 +73,11 @@ const MeasureElement = () =>
       Effect.fork,
     );
 
-    return (
-      <div>
-        <div
-          ref={boxRef}
-          style={{
+    return yield* h.div({}, [
+      h.div(
+        {
+          ref: boxRef,
+          style: {
             width: "200px",
             height: "100px",
             background: "#f0f0f0",
@@ -88,15 +85,12 @@ const MeasureElement = () =>
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-          }}
-        >
-          Measured Box
-        </div>
-        <p style={{ marginTop: "0.5rem" }}>
-          Dimensions: <strong>{dimensions.changes}</strong>
-        </p>
-      </div>
-    );
+          },
+        },
+        "Measured Box",
+      ),
+      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong({}, [dimensions.changes])]),
+    ]);
   });
 
 // ============================================================================
@@ -110,7 +104,6 @@ const CanvasDrawing = () =>
   Effect.gen(function* () {
     const canvasRef = yield* SubscriptionRef.make<Option.Option<HTMLCanvasElement>>(Option.none());
 
-    // Draw on canvas when mounted
     yield* pipe(
       canvasRef.changes,
       Stream.filter(Option.isSome),
@@ -121,7 +114,6 @@ const CanvasDrawing = () =>
           const ctx = canvas.getContext("2d");
           if (!ctx) return;
 
-          // Draw a simple pattern
           ctx.fillStyle = "#000";
           ctx.fillRect(10, 10, 80, 80);
 
@@ -142,17 +134,15 @@ const CanvasDrawing = () =>
       Effect.fork,
     );
 
-    return (
-      <div>
-        <p>Shapes drawn on canvas after mount:</p>
-        <canvas
-          ref={canvasRef}
-          width={300}
-          height={100}
-          style={{ border: "1px solid #000", background: "#fff" }}
-        />
-      </div>
-    );
+    return yield* h.div({}, [
+      h.p({}, "Shapes drawn on canvas after mount:"),
+      h.canvas({
+        ref: canvasRef,
+        width: 300,
+        height: 100,
+        style: { border: "1px solid #000", background: "#fff" },
+      }),
+    ]);
   });
 
 // ============================================================================
@@ -177,76 +167,78 @@ const ScrollIntoView = () =>
         }
       });
 
-    return (
-      <div>
-        <button type="button" onclick={() => scrollToTarget()}>
-          Scroll to Target
-        </button>
-        <div
-          style={{
+    return yield* h.div({}, [
+      h.button({ type: "button", onclick: () => scrollToTarget() }, "Scroll to Target"),
+      h.div(
+        {
+          style: {
             height: "200px",
             overflow: "auto",
             border: "1px solid #ccc",
             marginTop: "0.5rem",
-          }}
-        >
-          <div style={{ height: "150px", background: "#f9f9f9", padding: "1rem" }}>
-            Scroll down to find the target...
-          </div>
-          <div style={{ height: "150px", background: "#f0f0f0", padding: "1rem" }}>
-            Keep scrolling...
-          </div>
-          <div
-            ref={targetRef}
-            style={{
-              padding: "1rem",
-              background: "#000",
-              color: "#fff",
-              textAlign: "center",
-            }}
-          >
-            Target Element
-          </div>
-          <div style={{ height: "150px", background: "#f0f0f0", padding: "1rem" }}>
-            More content below...
-          </div>
-        </div>
-      </div>
-    );
+          },
+        },
+        [
+          h.div(
+            { style: { height: "150px", background: "#f9f9f9", padding: "1rem" } },
+            "Scroll down to find the target...",
+          ),
+          h.div(
+            { style: { height: "150px", background: "#f0f0f0", padding: "1rem" } },
+            "Keep scrolling...",
+          ),
+          h.div(
+            {
+              ref: targetRef,
+              style: {
+                padding: "1rem",
+                background: "#000",
+                color: "#fff",
+                textAlign: "center",
+              },
+            },
+            "Target Element",
+          ),
+          h.div(
+            { style: { height: "150px", background: "#f0f0f0", padding: "1rem" } },
+            "More content below...",
+          ),
+        ],
+      ),
+    ]);
   });
 
 // ============================================================================
 // App
 // ============================================================================
 
-const App = () => (
-  <div>
-    <h1>Element Ref</h1>
+const App = () =>
+  h.div({}, [
+    h.h1({}, "Element Ref"),
 
-    <section>
-      <h2>1. Auto-focus Input</h2>
-      <p>Focus an input element immediately after mount.</p>
-      <AutoFocusInput />
-    </section>
+    h.section({}, [
+      h.h2({}, "1. Auto-focus Input"),
+      h.p({}, "Focus an input element immediately after mount."),
+      AutoFocusInput(),
+    ]),
 
-    <section>
-      <h2>2. Measure Element Dimensions</h2>
-      <p>Get element dimensions using getBoundingClientRect().</p>
-      <MeasureElement />
-    </section>
+    h.section({}, [
+      h.h2({}, "2. Measure Element Dimensions"),
+      h.p({}, "Get element dimensions using getBoundingClientRect()."),
+      MeasureElement(),
+    ]),
 
-    <section>
-      <h2>3. Canvas Drawing</h2>
-      <p>Draw on a canvas element after mount.</p>
-      <CanvasDrawing />
-    </section>
+    h.section({}, [
+      h.h2({}, "3. Canvas Drawing"),
+      h.p({}, "Draw on a canvas element after mount."),
+      CanvasDrawing(),
+    ]),
 
-    <section>
-      <h2>4. Scroll Into View</h2>
-      <p>Scroll to an element using scrollIntoView().</p>
-      <ScrollIntoView />
-    </section>
-  </div>
-);
+    h.section({}, [
+      h.h2({}, "4. Scroll Into View"),
+      h.p({}, "Scroll to an element using scrollIntoView()."),
+      ScrollIntoView(),
+    ]),
+  ]);
 
-void Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(App(), document.getElementById("root")!));

@@ -10,6 +10,7 @@
  * - Integration with Effect's ecosystem
  */
 
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
@@ -23,17 +24,11 @@ const Counter = () =>
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 
-    return (
-      <div>
-        <div class="counter">{count.changes}</div>
-        <button type="button" onclick={() => decrement()}>
-          -
-        </button>
-        <button type="button" onclick={() => increment()}>
-          +
-        </button>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.div({ class: "counter" }, [count.changes]),
+      h.button({ type: "button", onclick: () => decrement() }, "-"),
+      h.button({ type: "button", onclick: () => increment() }, "+"),
+    ]);
   });
 
 // ============================================================================
@@ -44,39 +39,25 @@ const DerivedState = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    // Derived streams computed from the base state
     const doubled = Stream.map(count.changes, (n) => n * 2);
     const squared = Stream.map(count.changes, (n) => n * n);
     const isEven = Stream.map(count.changes, (n) => (n % 2 === 0 ? "Yes" : "No"));
 
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
-    return (
-      <div>
-        <p>
-          Count: <strong>{count.changes}</strong>
-        </p>
-        <p>
-          Doubled: <span class="derived">{doubled}</span>
-        </p>
-        <p>
-          Squared: <span class="derived">{squared}</span>
-        </p>
-        <p>
-          Is Even: <span class="derived">{isEven}</span>
-        </p>
-        <button type="button" onclick={() => increment()}>
-          Increment
-        </button>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.p({}, ["Count: ", h.strong({}, [count.changes])]),
+      h.p({}, ["Doubled: ", h.span({ class: "derived" }, [doubled])]),
+      h.p({}, ["Squared: ", h.span({ class: "derived" }, [squared])]),
+      h.p({}, ["Is Even: ", h.span({ class: "derived" }, [isEven])]),
+      h.button({ type: "button", onclick: () => increment() }, "Increment"),
+    ]);
   });
 
 // ============================================================================
 // Example 3: Object State with Schema Validation
 // ============================================================================
 
-// Define schemas for form fields
 const Name = Schema.String.pipe(
   Schema.filter((s) => s.length >= 2, { message: () => "Min 2 characters" }),
 );
@@ -86,14 +67,12 @@ const Email = Schema.String.pipe(
   Schema.filter((s) => s.includes("."), { message: () => "Must have domain" }),
 );
 
-// Form state includes both values and validation errors
 interface FormState {
   name: string;
   email: string;
   errors: { name: string | null; email: string | null };
 }
 
-// Helper to validate and extract error message
 const validate = <A, I>(schema: Schema.Schema<A, I>, value: I): string | null => {
   if (!value) return null;
   const result = Schema.decodeUnknownEither(schema)(value);
@@ -125,52 +104,48 @@ const ObjectState = () =>
         errors: { ...state.errors, email: validate(Email, email) },
       }));
 
-    // Derived: check if form is valid
     const isValid = Stream.map(
       form.changes,
       (s) => s.name.length > 0 && s.email.length > 0 && !s.errors.name && !s.errors.email,
     );
 
-    return (
-      <div>
-        <div style={{ marginBottom: "0.5rem" }}>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-          <label>Name: </label>
-          <input
-            type="text"
-            placeholder="Min 2 characters"
-            oninput={(e) => updateName((e.target as HTMLInputElement).value)}
-          />
-          {Stream.map(form.changes, (s) =>
-            s.errors.name ? (
-              <span style={{ color: "#c00", marginLeft: "0.5rem" }}>{s.errors.name}</span>
-            ) : null,
-          )}
-        </div>
-        <div style={{ marginBottom: "0.5rem" }}>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: input is sibling */}
-          <label>Email: </label>
-          <input
-            type="email"
-            placeholder="user@example.com"
-            oninput={(e) => updateEmail((e.target as HTMLInputElement).value)}
-          />
-          {Stream.map(form.changes, (s) =>
-            s.errors.email ? (
-              <span style={{ color: "#c00", marginLeft: "0.5rem" }}>{s.errors.email}</span>
-            ) : null,
-          )}
-        </div>
-        <div class="preview">
-          {Stream.map(form.changes, (s) =>
-            s.name || s.email ? `Name: ${s.name}\nEmail: ${s.email}` : "(empty)",
-          )}
-        </div>
-        <p style={{ marginTop: "0.5rem" }}>
-          Valid: <strong>{Stream.map(isValid, (v) => (v ? "Yes" : "No"))}</strong>
-        </p>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.div({ style: { marginBottom: "0.5rem" } }, [
+        h.label({}, "Name: "),
+        h.input({
+          type: "text",
+          placeholder: "Min 2 characters",
+          oninput: (e) => updateName((e.target as HTMLInputElement).value),
+        }),
+        Stream.map(form.changes, (s) =>
+          s.errors.name
+            ? h.span({ style: { color: "#c00", marginLeft: "0.5rem" } }, s.errors.name)
+            : null,
+        ),
+      ]),
+      h.div({ style: { marginBottom: "0.5rem" } }, [
+        h.label({}, "Email: "),
+        h.input({
+          type: "email",
+          placeholder: "user@example.com",
+          oninput: (e) => updateEmail((e.target as HTMLInputElement).value),
+        }),
+        Stream.map(form.changes, (s) =>
+          s.errors.email
+            ? h.span({ style: { color: "#c00", marginLeft: "0.5rem" } }, s.errors.email)
+            : null,
+        ),
+      ]),
+      h.div({ class: "preview" }, [
+        Stream.map(form.changes, (s) =>
+          s.name || s.email ? `Name: ${s.name}\nEmail: ${s.email}` : "(empty)",
+        ),
+      ]),
+      h.p({ style: { marginTop: "0.5rem" } }, [
+        "Valid: ",
+        h.strong({}, [Stream.map(isValid, (v) => (v ? "Yes" : "No"))]),
+      ]),
+    ]);
   });
 
 // ============================================================================
@@ -197,35 +172,31 @@ const TodoList = () =>
       );
 
     const completedCount = Stream.map(todos.changes, (list) => list.filter((t) => t.done).length);
-
     const totalCount = Stream.map(todos.changes, (list) => list.length);
 
-    return (
-      <div>
-        <p>
-          Completed: <span class="derived">{completedCount}</span> / {totalCount}
-        </p>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {Stream.map(todos.changes, (list) =>
-            list.map((todo) => (
-              <li
-                style={{
+    return yield* h.div({}, [
+      h.p({}, ["Completed: ", h.span({ class: "derived" }, [completedCount]), " / ", totalCount]),
+      h.ul({ style: { listStyle: "none", padding: 0 } }, [
+        Stream.map(todos.changes, (list) =>
+          list.map((todo) =>
+            h.li(
+              {
+                style: {
                   padding: "0.5rem",
                   margin: "0.25rem 0",
                   background: todo.done ? "#e8f5e9" : "#fff",
                   borderRadius: "4px",
                   cursor: "pointer",
                   textDecoration: todo.done ? "line-through" : "none",
-                }}
-                onclick={() => toggle(todo.id)}
-              >
-                {todo.text}
-              </li>
-            )),
-          )}
-        </ul>
-      </div>
-    );
+                },
+                onclick: () => toggle(todo.id),
+              },
+              todo.text,
+            ),
+          ),
+        ),
+      ]),
+    ]);
   });
 
 // ============================================================================
@@ -237,73 +208,67 @@ const CoordinatedRefs = () =>
     const firstName = yield* SubscriptionRef.make("");
     const lastName = yield* SubscriptionRef.make("");
 
-    // Combine two refs into a derived stream
     const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) => {
       if (!first && !last) return "(empty)";
       return `${first} ${last}`.trim();
     });
 
-    return (
-      <div>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <input
-            type="text"
-            placeholder="First name"
-            oninput={(e) => SubscriptionRef.set(firstName, (e.target as HTMLInputElement).value)}
-          />
-        </div>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <input
-            type="text"
-            placeholder="Last name"
-            oninput={(e) => SubscriptionRef.set(lastName, (e.target as HTMLInputElement).value)}
-          />
-        </div>
-        <p>
-          Full name: <strong>{fullName}</strong>
-        </p>
-      </div>
-    );
+    return yield* h.div({}, [
+      h.div({ style: { marginBottom: "0.5rem" } }, [
+        h.input({
+          type: "text",
+          placeholder: "First name",
+          oninput: (e) => SubscriptionRef.set(firstName, (e.target as HTMLInputElement).value),
+        }),
+      ]),
+      h.div({ style: { marginBottom: "0.5rem" } }, [
+        h.input({
+          type: "text",
+          placeholder: "Last name",
+          oninput: (e) => SubscriptionRef.set(lastName, (e.target as HTMLInputElement).value),
+        }),
+      ]),
+      h.p({}, ["Full name: ", h.strong({}, [fullName])]),
+    ]);
   });
 
 // ============================================================================
 // App
 // ============================================================================
 
-const App = () => (
-  <div>
-    <h1>SubscriptionRef</h1>
+const App = () =>
+  h.div({}, [
+    h.h1({}, "SubscriptionRef"),
 
-    <section>
-      <h2>1. Basic Counter</h2>
-      <p>Simple counter with increment/decrement.</p>
-      <Counter />
-    </section>
+    h.section({}, [
+      h.h2({}, "1. Basic Counter"),
+      h.p({}, "Simple counter with increment/decrement."),
+      Counter(),
+    ]),
 
-    <section>
-      <h2>2. Derived State</h2>
-      <p>Compute derived values from base state.</p>
-      <DerivedState />
-    </section>
+    h.section({}, [
+      h.h2({}, "2. Derived State"),
+      h.p({}, "Compute derived values from base state."),
+      DerivedState(),
+    ]),
 
-    <section>
-      <h2>3. Object State with Schema</h2>
-      <p>Form state with Schema validation.</p>
-      <ObjectState />
-    </section>
+    h.section({}, [
+      h.h2({}, "3. Object State with Schema"),
+      h.p({}, "Form state with Schema validation."),
+      ObjectState(),
+    ]),
 
-    <section>
-      <h2>4. Todo List</h2>
-      <p>Array state with toggle functionality.</p>
-      <TodoList />
-    </section>
+    h.section({}, [
+      h.h2({}, "4. Todo List"),
+      h.p({}, "Array state with toggle functionality."),
+      TodoList(),
+    ]),
 
-    <section>
-      <h2>5. Coordinated Refs</h2>
-      <p>Combine multiple refs into derived state.</p>
-      <CoordinatedRefs />
-    </section>
-  </div>
-);
+    h.section({}, [
+      h.h2({}, "5. Coordinated Refs"),
+      h.p({}, "Combine multiple refs into derived state."),
+      CoordinatedRefs(),
+    ]),
+  ]);
 
-void Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(App(), document.getElementById("root")!));

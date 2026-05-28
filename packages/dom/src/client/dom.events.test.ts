@@ -2,8 +2,9 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
+import { h } from "@effect-ui/core";
+import type { RenderNode } from "@effect-ui/core/types";
 import { mount } from "./render";
-import type { JSXNode } from "@effect-ui/core/types";
 
 // ============================================================================
 // Test Setup
@@ -36,7 +37,7 @@ function createRoot(): HTMLElement {
 /**
  * Helper to run mount and wait for initial render
  */
-async function runMount(app: JSXNode, root: HTMLElement) {
+async function runMount(app: RenderNode, root: HTMLElement) {
   const handle = await Effect.runPromise(mount(app, root));
   return handle;
 }
@@ -66,14 +67,15 @@ describe("AC1: Static Plain Callback Handler", () => {
     let clicked = false;
 
     await runMount(
-      <button
-        type="button"
-        onclick={() => {
-          clicked = true;
-        }}
-      >
-        Click me
-      </button>,
+      h.button(
+        {
+          type: "button",
+          onclick: () => {
+            clicked = true;
+          },
+        },
+        "Click me",
+      ),
       root,
     );
 
@@ -90,14 +92,15 @@ describe("AC1: Static Plain Callback Handler", () => {
     let receivedEvent: Event | null = null;
 
     await runMount(
-      <button
-        type="button"
-        onclick={(e) => {
-          receivedEvent = e;
-        }}
-      >
-        Click me
-      </button>,
+      h.button(
+        {
+          type: "button",
+          onclick: (e) => {
+            receivedEvent = e;
+          },
+        },
+        "Click me",
+      ),
       root,
     );
 
@@ -114,15 +117,15 @@ describe("AC1: Static Plain Callback Handler", () => {
     const events: string[] = [];
 
     await runMount(
-      <input
-        type="text"
-        onfocus={() => {
+      h.input({
+        type: "text",
+        onfocus: () => {
           events.push("focus");
-        }}
-        onblur={() => {
+        },
+        onblur: () => {
           events.push("blur");
-        }}
-      />,
+        },
+      }),
       root,
     );
 
@@ -145,16 +148,16 @@ describe("AC2: Static Effect Handler", () => {
     let effectRan = false;
 
     await runMount(
-      <button
-        type="button"
-        onclick={() =>
-          Effect.sync(() => {
-            effectRan = true;
-          })
-        }
-      >
-        Click me
-      </button>,
+      h.button(
+        {
+          type: "button",
+          onclick: () =>
+            Effect.sync(() => {
+              effectRan = true;
+            }),
+        },
+        "Click me",
+      ),
       root,
     );
 
@@ -172,17 +175,17 @@ describe("AC2: Static Effect Handler", () => {
     const logs: string[] = [];
 
     await runMount(
-      <button
-        type="button"
-        onclick={() =>
-          Effect.gen(function* () {
-            logs.push("step1");
-            yield* Effect.sync(() => logs.push("step2"));
-          })
-        }
-      >
-        Click me
-      </button>,
+      h.button(
+        {
+          type: "button",
+          onclick: () =>
+            Effect.gen(function* () {
+              logs.push("step1");
+              yield* Effect.sync(() => logs.push("step2"));
+            }),
+        },
+        "Click me",
+      ),
       root,
     );
 
@@ -221,17 +224,17 @@ describe("AC3: Effect Handler with Services", () => {
     // Mount with service provided
     const handle = await Effect.runPromise(
       mount(
-        <button
-          type="button"
-          onclick={() =>
-            Effect.gen(function* () {
-              const counter = yield* CounterService;
-              yield* counter.increment();
-            })
-          }
-        >
-          Increment
-        </button>,
+        h.button(
+          {
+            type: "button",
+            onclick: () =>
+              Effect.gen(function* () {
+                const counter = yield* CounterService;
+                yield* counter.increment();
+              }),
+          },
+          "Increment",
+        ),
         root,
       ).pipe(Effect.provide(CounterServiceLive)),
     );
@@ -262,20 +265,22 @@ describe("AC4: Effect Handler Error Handling", () => {
     let clickCount = 0;
 
     await runMount(
-      <div>
-        <button type="button" id="failing" onclick={() => Effect.fail(new Error("Test error"))}>
-          Fail
-        </button>
-        <button
-          type="button"
-          id="working"
-          onclick={() => {
-            clickCount++;
-          }}
-        >
-          Work
-        </button>
-      </div>,
+      h.div({}, [
+        h.button(
+          { type: "button", id: "failing", onclick: () => Effect.fail(new Error("Test error")) },
+          "Fail",
+        ),
+        h.button(
+          {
+            type: "button",
+            id: "working",
+            onclick: () => {
+              clickCount++;
+            },
+          },
+          "Work",
+        ),
+      ]),
       root,
     );
 
@@ -311,12 +316,7 @@ describe("AC5: Reactive Handler (Stream)", () => {
       },
     );
 
-    await runMount(
-      <button type="button" onclick={handlerStream}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: handlerStream }, "Click me"), root);
 
     await waitForStream();
 
@@ -341,12 +341,7 @@ describe("AC5: Reactive Handler (Stream)", () => {
       },
     );
 
-    await runMount(
-      <button type="button" onclick={handlerStream}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: handlerStream }, "Click me"), root);
 
     await waitForStream();
 
@@ -373,12 +368,7 @@ describe("AC6: Reactive Handler (Effect)", () => {
       clicked = true;
     });
 
-    await runMount(
-      <button type="button" onclick={handlerEffect}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: handlerEffect }, "Click me"), root);
 
     await waitForStream();
 
@@ -398,12 +388,7 @@ describe("AC7: Null/False Handler Values", () => {
     createTestDOM();
     const root = createRoot();
 
-    await runMount(
-      <button type="button" onclick={null}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: null }, "Click me"), root);
 
     const button = root.querySelector("button");
     // Should not throw or cause issues
@@ -415,12 +400,7 @@ describe("AC7: Null/False Handler Values", () => {
     createTestDOM();
     const root = createRoot();
 
-    await runMount(
-      <button type="button" onclick={false}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: false }, "Click me"), root);
 
     const button = root.querySelector("button");
     button?.click();
@@ -439,12 +419,7 @@ describe("AC7: Null/False Handler Values", () => {
       null as (() => void) | null,
     );
 
-    await runMount(
-      <button type="button" onclick={handlerStream}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: handlerStream }, "Click me"), root);
 
     await waitForStream();
 
@@ -480,12 +455,7 @@ describe("AC8: Handler Change Cleanup", () => {
       },
     );
 
-    await runMount(
-      <button type="button" onclick={handlerStream}>
-        Click me
-      </button>,
-      root,
-    );
+    await runMount(h.button({ type: "button", onclick: handlerStream }, "Click me"), root);
 
     await waitForStream();
 
@@ -508,14 +478,15 @@ describe("AC9: Cleanup on Unmount", () => {
     let clickCount = 0;
 
     const handle = await runMount(
-      <button
-        type="button"
-        onclick={() => {
-          clickCount++;
-        }}
-      >
-        Click me
-      </button>,
+      h.button(
+        {
+          type: "button",
+          onclick: () => {
+            clickCount++;
+          },
+        },
+        "Click me",
+      ),
       root,
     );
 
@@ -541,9 +512,7 @@ describe("AC9: Cleanup on Unmount", () => {
     });
 
     const handle = await runMount(
-      <button type="button" onclick={handlerStream}>
-        Click me
-      </button>,
+      h.button({ type: "button", onclick: handlerStream }, "Click me"),
       root,
     );
 
@@ -571,22 +540,23 @@ describe("AC10: Event Handler Detection", () => {
     const events: string[] = [];
 
     await runMount(
-      <div>
-        <button
-          type="button"
-          onclick={() => {
-            events.push("click");
-          }}
-        >
-          Button
-        </button>
-        <input
-          type="text"
-          onchange={() => {
+      h.div({}, [
+        h.button(
+          {
+            type: "button",
+            onclick: () => {
+              events.push("click");
+            },
+          },
+          "Button",
+        ),
+        h.input({
+          type: "text",
+          onchange: () => {
             events.push("change");
-          }}
-        />
-      </div>,
+          },
+        }),
+      ]),
       root,
     );
 
@@ -605,10 +575,8 @@ describe("AC10: Event Handler Detection", () => {
 
     // "on" prefix but not followed by lowercase - these should be attributes
     await runMount(
-      // @ts-expect-error - testing invalid prop handling
-      <div onX="value" on123="test">
-        Content
-      </div>,
+      // oxlint-disable-next-line
+      h.div({ onX: "value", on123: "test" }, "Content"),
       root,
     );
 

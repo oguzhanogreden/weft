@@ -1,9 +1,10 @@
 /**
  * Client entry: hydrates the server-rendered markup in `#root`.
  *
- * `hydrate` adopts the static DOM and resumes the reactive counter region in
- * place. Once it resolves, the page is interactive — we flip the status
- * indicator from `[SSR]` to `[hydrated]` so the transition is visible.
+ * By the time this script runs, the SSR patch scripts have already executed —
+ * each `<Suspense>` boundary is fully resolved in the DOM. `hydrate` adopts the
+ * resolved structure in place, attaches event handlers and reactive subscriptions,
+ * and leaves node identity unchanged (no flash).
  */
 
 import { hydrate } from "@effect-ui/dom/client";
@@ -15,7 +16,7 @@ if (root === null) {
   throw new Error("#root not found");
 }
 
-void Effect.runPromise(hydrate(<App initialValue={3} />, root)).then(() => {
+void Effect.runPromise(hydrate(App(), root)).then(() => {
   const status = document.getElementById("status");
   if (status !== null) {
     status.textContent = "[hydrated — interactive]";

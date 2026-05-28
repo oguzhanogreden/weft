@@ -5,7 +5,7 @@ import { Context, Data, Effect, ManagedRuntime, Scope } from "effect";
 // ============================================================================
 
 /**
- * Error thrown when JSXNode has invalid type (not string, FRAGMENT, or function)
+ * Error thrown when RenderNode has invalid type (not string, FRAGMENT, or function)
  */
 export class UnsupportedNodeTypeError extends Data.TaggedError("UnsupportedNodeTypeError")<{
   readonly type: unknown;
@@ -61,7 +61,7 @@ export class SuspenseContext extends Context.Tag("SuspenseContext")<
 >() {}
 
 /**
- * The value produced by rendering a single JSXNode: a single DOM node, an
+ * The value produced by rendering a single RenderNode: a single DOM node, an
  * ordered list of nodes (e.g. for a fragment or array child), or nothing.
  *
  * Defined here so both `render-core.ts` and `suspense.ts` can reference it

@@ -14,7 +14,7 @@ import type {
   HTMLReferrerPolicy,
 } from "./dom";
 import type { HTMLAttributeSource, StyleAttributeValue } from "./attributes";
-import type { JSXNode } from "..";
+import type { RenderNode } from "..";
 export type HTMLRole =
   | "alert"
   | "alertdialog"
@@ -112,7 +112,7 @@ export type HTMLRole =
   | "window";
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // effect-ui internals ========================================================
-  children?: HTMLAttributeSource<JSXNode>;
+  children?: HTMLAttributeSource<RenderNode>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================
 

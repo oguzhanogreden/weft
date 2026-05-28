@@ -5,6 +5,7 @@
  * using Effect, with built-in loading states and error handling.
  */
 
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Effect, Stream } from "effect";
 
@@ -14,13 +15,11 @@ import { Effect, Stream } from "effect";
 
 const LoadingThenData = () =>
   Stream.concat(
-    // First: show loading state immediately
-    Stream.make(<span class="loading">Loading...</span>),
-    // Then: fetch data and show result
+    Stream.make(h.span({ class: "loading" }, "Loading...")),
     Stream.fromEffect(
       Effect.gen(function* () {
-        yield* Effect.sleep("1500 millis"); // Simulate network delay
-        return <span class="data">Data loaded successfully!</span>;
+        yield* Effect.sleep("1500 millis");
+        return yield* h.span({ class: "data" }, "Data loaded successfully!");
       }),
     ),
   );
@@ -37,9 +36,8 @@ interface User {
 
 const fetchUser = (id: number): Effect.Effect<User, Error> =>
   Effect.gen(function* () {
-    yield* Effect.sleep("1000 millis"); // Simulate network delay
+    yield* Effect.sleep("1000 millis");
 
-    // Simulate occasional errors
     if (id === 3) {
       return yield* Effect.fail(new Error("User not found"));
     }
@@ -53,21 +51,14 @@ const fetchUser = (id: number): Effect.Effect<User, Error> =>
 
 const UserCard = ({ id }: { id: number }) =>
   Stream.concat(
-    Stream.make(<div class="loading">Loading user {id}...</div>),
+    Stream.make(h.div({ class: "loading" }, `Loading user ${id}...`)),
     Stream.fromEffect(
       fetchUser(id).pipe(
-        Effect.map((user) => (
-          <div class="user-card">
-            <h3>{user.name}</h3>
-            <p>{user.email}</p>
-          </div>
-        )),
+        Effect.flatMap((user) =>
+          h.div({ class: "user-card" }, [h.h3({}, user.name), h.p({}, user.email)]),
+        ),
         Effect.catchAll((error) =>
-          Effect.succeed(
-            <div class="error">
-              Error loading user {id}: {error.message}
-            </div>,
-          ),
+          h.div({ class: "error" }, `Error loading user ${id}: ${error.message}`),
         ),
       ),
     ),
@@ -80,32 +71,31 @@ const UserCard = ({ id }: { id: number }) =>
 const DelayedGreeting = ({ name }: { name: string }) =>
   Effect.gen(function* () {
     yield* Effect.sleep("800 millis");
-    return <span class="data">Hello, {name}!</span>;
+    return yield* h.span({ class: "data" }, `Hello, ${name}!`);
   });
 
 // ============================================================================
 // Example 4: Parallel Loading
 // ============================================================================
 
-const Dashboard = () => (
-  <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-    <UserCard id={1} />
-    <UserCard id={2} />
-    <UserCard id={3} />
-  </div>
-);
+const Dashboard = () =>
+  h.div({ style: { display: "flex", gap: "1rem", flexWrap: "wrap" } }, [
+    UserCard({ id: 1 }),
+    UserCard({ id: 2 }),
+    UserCard({ id: 3 }),
+  ]);
 
 // ============================================================================
 // Example 5: Sequential Loading with Dependencies
 // ============================================================================
 
 const SequentialLoad = () =>
-  Stream.make(<span class="loading">Step 1: Initializing...</span>).pipe(
+  Stream.make(h.span({ class: "loading" }, "Step 1: Initializing...")).pipe(
     Stream.concat(
       Stream.fromEffect(
         Effect.gen(function* () {
           yield* Effect.sleep("1000 millis");
-          return <span class="loading">Step 2: Fetching data...</span>;
+          return yield* h.span({ class: "loading" }, "Step 2: Fetching data...");
         }),
       ),
     ),
@@ -113,7 +103,7 @@ const SequentialLoad = () =>
       Stream.fromEffect(
         Effect.gen(function* () {
           yield* Effect.sleep("1000 millis");
-          return <span class="loading">Step 3: Processing...</span>;
+          return yield* h.span({ class: "loading" }, "Step 3: Processing...");
         }),
       ),
     ),
@@ -121,7 +111,7 @@ const SequentialLoad = () =>
       Stream.fromEffect(
         Effect.gen(function* () {
           yield* Effect.sleep("1000 millis");
-          return <span class="data">Complete!</span>;
+          return yield* h.span({ class: "data" }, "Complete!");
         }),
       ),
     ),
@@ -131,42 +121,33 @@ const SequentialLoad = () =>
 // App
 // ============================================================================
 
-const App = () => (
-  <div>
-    <h1>Async Data Loading</h1>
+const App = () =>
+  h.div({}, [
+    h.h1({}, "Async Data Loading"),
 
-    <section>
-      <h2>1. Loading State Pattern</h2>
-      <p>Shows loading, then data after delay.</p>
-      <div style={{ marginTop: "0.5rem" }}>
-        <LoadingThenData />
-      </div>
-    </section>
+    h.section({}, [
+      h.h2({}, "1. Loading State Pattern"),
+      h.p({}, "Shows loading, then data after delay."),
+      h.div({ style: { marginTop: "0.5rem" } }, [LoadingThenData()]),
+    ]),
 
-    <section>
-      <h2>2. Effect Component (Direct)</h2>
-      <p>Component returns Effect directly.</p>
-      <div style={{ marginTop: "0.5rem" }}>
-        <DelayedGreeting name="World" />
-      </div>
-    </section>
+    h.section({}, [
+      h.h2({}, "2. Effect Component (Direct)"),
+      h.p({}, "Component returns Effect directly."),
+      h.div({ style: { marginTop: "0.5rem" } }, [DelayedGreeting({ name: "World" })]),
+    ]),
 
-    <section>
-      <h2>3. Parallel Loading with Error Handling</h2>
-      <p>Multiple users load in parallel. User 3 will fail.</p>
-      <div style={{ marginTop: "0.5rem" }}>
-        <Dashboard />
-      </div>
-    </section>
+    h.section({}, [
+      h.h2({}, "3. Parallel Loading with Error Handling"),
+      h.p({}, "Multiple users load in parallel. User 3 will fail."),
+      h.div({ style: { marginTop: "0.5rem" } }, [Dashboard()]),
+    ]),
 
-    <section>
-      <h2>4. Sequential Loading Steps</h2>
-      <p>Multi-step process with status updates.</p>
-      <div style={{ marginTop: "0.5rem" }}>
-        <SequentialLoad />
-      </div>
-    </section>
-  </div>
-);
+    h.section({}, [
+      h.h2({}, "4. Sequential Loading Steps"),
+      h.p({}, "Multi-step process with status updates."),
+      h.div({ style: { marginTop: "0.5rem" } }, [SequentialLoad()]),
+    ]),
+  ]);
 
-void Effect.runPromise(mount(<App />, document.getElementById("root")!));
+void Effect.runPromise(mount(App(), document.getElementById("root")!));

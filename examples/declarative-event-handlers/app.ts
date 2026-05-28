@@ -6,6 +6,7 @@
  * through the existing Effect.provide() pattern.
  */
 
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Context, Effect, Layer, Stream } from "effect";
 
@@ -23,74 +24,59 @@ import { Context, Effect, Layer, Stream } from "effect";
  */
 const StreamCounter = () =>
   Effect.sync(() => {
-    // Generate unique IDs for this instance
     const incId = `inc-${Math.random().toString(36).slice(2, 8)}`;
     const decId = `dec-${Math.random().toString(36).slice(2, 8)}`;
 
-    // Build a reactive count stream using composition
     const clickStream = Stream.fromEffect(
-      // Wait for DOM to be ready (next microtask after mount)
       Effect.andThen(
         Effect.promise(() => Promise.resolve(true)),
         () =>
           Effect.sync(() => ({
             incBtn: document.getElementById(incId)!,
-
             decBtn: document.getElementById(decId)!,
           })),
       ),
     ).pipe(
-      // Create click streams and merge them with +1/-1 values
       Stream.flatMap(({ incBtn, decBtn }) =>
         Stream.merge(
           Stream.fromEventListener(incBtn, "click").pipe(Stream.map(() => 1)),
           Stream.fromEventListener(decBtn, "click").pipe(Stream.map(() => -1)),
         ),
       ),
-      // Accumulate the count
       Stream.scan(0, (acc, delta) => acc + delta),
     );
 
-    // Prepend initial value of 0
     const count = Stream.concat(Stream.make(0), clickStream);
 
-    return (
-      <div>
-        <span class="counter">{count}</span>
-        <button type="button" id={decId}>
-          -
-        </button>
-        <button type="button" id={incId}>
-          +
-        </button>
-      </div>
-    );
+    return h.div({}, [
+      h.span({ class: "counter" }, [count]),
+      h.button({ type: "button", id: decId }, "-"),
+      h.button({ type: "button", id: incId }, "+"),
+    ]);
   });
 
 // ============================================================================
 // Example 2: Effect-Returning Handlers
 // ============================================================================
 
-const LoggingButton = () => (
-  <button
-    type="button"
-    onclick={() =>
-      Effect.gen(function* () {
-        yield* Effect.log("Button clicked!");
-        yield* Effect.sleep("100 millis");
-        yield* Effect.log("Action completed");
-      })
-    }
-  >
-    Click to Log
-  </button>
-);
+const LoggingButton = () =>
+  h.button(
+    {
+      type: "button",
+      onclick: () =>
+        Effect.gen(function* () {
+          yield* Effect.log("Button clicked!");
+          yield* Effect.sleep("100 millis");
+          yield* Effect.log("Action completed");
+        }),
+    },
+    "Click to Log",
+  );
 
 // ============================================================================
 // Example 3: Handlers with Service Access
 // ============================================================================
 
-// Define an analytics service
 class Analytics extends Context.Tag("Analytics")<
   Analytics,
   {
@@ -105,95 +91,76 @@ const AnalyticsLive = Layer.succeed(Analytics, {
     }),
 });
 
-const TrackedButton = () => (
-  <button
-    type="button"
-    onclick={() =>
-      Effect.gen(function* () {
-        const analytics = yield* Analytics;
-        yield* analytics.track("button_clicked");
-      })
-    }
-  >
-    Tracked Click
-  </button>
-);
+const TrackedButton = () =>
+  h.button(
+    {
+      type: "button",
+      onclick: () =>
+        Effect.gen(function* () {
+          const analytics = yield* Analytics;
+          yield* analytics.track("button_clicked");
+        }),
+    },
+    "Tracked Click",
+  );
 
 // ============================================================================
 // Example 4: Reactive Handlers (Stream-based)
 // ============================================================================
 
 const ToggleHandler = () => {
-  // Handler that alternates between two behaviors
   const handlers = Stream.make(
     () => console.log("Mode A: Hello!"),
     () => console.log("Mode B: Goodbye!"),
   );
 
-  return (
-    <button type="button" onclick={handlers}>
-      Click (handler changes)
-    </button>
-  );
+  return h.button({ type: "button", onclick: handlers }, "Click (handler changes)");
 };
 
 // ============================================================================
 // Example 5: Conditional Handlers
 // ============================================================================
 
-const ConditionalButton = ({ enabled }: { enabled: boolean }) => (
-  <button
-    type="button"
-    onclick={
-      enabled
+const ConditionalButton = ({ enabled }: { enabled: boolean }) =>
+  h.button(
+    {
+      type: "button",
+      onclick: enabled
         ? () => {
             console.log("Action performed!");
           }
-        : null
-    }
-  >
-    {enabled ? "Click Me" : "Disabled"}
-  </button>
-);
+        : null,
+    },
+    enabled ? "Click Me" : "Disabled",
+  );
 
 // ============================================================================
 // App
 // ============================================================================
 
-const App = () => (
-  <div>
-    <h1>Event Handler Examples</h1>
+const App = () =>
+  h.div({}, [
+    h.h1({}, "Event Handler Examples"),
 
-    <section>
-      <h2>1. Stream Composition Counter</h2>
-      <p>Built from Stream.fromEventListener, merge, and scan.</p>
-      <StreamCounter />
-    </section>
+    h.section({}, [
+      h.h2({}, "1. Stream Composition Counter"),
+      h.p({}, "Built from Stream.fromEventListener, merge, and scan."),
+      StreamCounter(),
+    ]),
 
-    <section>
-      <h2>2. Effect-Returning Handler</h2>
-      <LoggingButton />
-    </section>
+    h.section({}, [h.h2({}, "2. Effect-Returning Handler"), LoggingButton()]),
 
-    <section>
-      <h2>3. Service Access in Handler</h2>
-      <TrackedButton />
-    </section>
+    h.section({}, [h.h2({}, "3. Service Access in Handler"), TrackedButton()]),
 
-    <section>
-      <h2>4. Reactive Handler</h2>
-      <ToggleHandler />
-    </section>
+    h.section({}, [h.h2({}, "4. Reactive Handler"), ToggleHandler()]),
 
-    <section>
-      <h2>5. Conditional Handler</h2>
-      <ConditionalButton enabled={true} />
-      <ConditionalButton enabled={false} />
-    </section>
-  </div>
-);
+    h.section({}, [
+      h.h2({}, "5. Conditional Handler"),
+      ConditionalButton({ enabled: true }),
+      ConditionalButton({ enabled: false }),
+    ]),
+  ]);
 
-// Mount with services provided
 void Effect.runPromise(
-  mount(<App />, document.getElementById("root")!).pipe(Effect.provide(AnalyticsLive)),
+  mount(App(), document.getElementById("root")!).pipe(Effect.provide(AnalyticsLive)),
 );

@@ -79,7 +79,7 @@ When ignoring lint rules, use Oxlint syntax:
 - `src/` - Source TypeScript files
 - `dist/` - Build output (excluded from TypeScript compilation)
 - `playground/` - Development playground and examples
-  - `app.tsx` - Main playground entry point
+  - `app.ts` - Main playground entry point
   - `recipes/` - Standalone example recipes demonstrating patterns
 - ES modules only (`"type": "module"` in package.json)
 
@@ -91,7 +91,7 @@ The `playground/recipes/` folder contains standalone examples demonstrating spec
 
 - Every recipe must have a co-located README file named `{recipe-name}.readme.md`
 - Recipe files should be self-contained and runnable
-- Include a JSDoc header comment in the `.tsx` file explaining the recipe's purpose
+- Include a JSDoc header comment in the `.ts` file explaining the recipe's purpose
 - READMEs should include: Overview, Problem, Solution, How It Works, and When to Use sections
 
 ## Coding Standards

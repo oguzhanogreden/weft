@@ -2,9 +2,9 @@
  * Dev SSR server for the ssr-hydration example.
  *
  * Runs Vite in middleware mode and, per request, renders `<App/>` to hydratable
- * HTML via `entry-server.tsx`, splices it into `index.html`'s `<!--ssr-outlet-->`
+ * HTML via `entry-server.ts`, splices it into `index.html`'s `<!--ssr-outlet-->`
  * placeholder, and serves it. The browser then hydrates the markup with
- * `entry-client.tsx`.
+ * `entry-client.ts`.
  */
 
 import { readFile } from "node:fs/promises";
@@ -38,7 +38,7 @@ const server = createHttpServer((req, res) => {
         await readFile(resolve(__dirname, "index.html"), "utf-8"),
       );
 
-      const { render } = await vite.ssrLoadModule("/src/entry-server.tsx");
+      const { render } = await vite.ssrLoadModule("/src/entry-server.ts");
       const appHtml: string = await render();
 
       const html = template.replace("<!--ssr-outlet-->", appHtml);
