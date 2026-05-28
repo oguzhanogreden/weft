@@ -2,65 +2,64 @@
 
 ## Overview
 
-This recipe demonstrates reactive form handling with stream-based inputs, validation, and Effect-powered submit handlers.
+This example demonstrates reactive form handling with stream-based inputs, Schema validation, and Effect-powered submit handlers.
 
 ## Problem
 
-Form handling in web apps requires managing input state, validation, and async submission. Traditional approaches use controlled components with useState, leading to verbose code and prop drilling.
+Form handling in web apps requires managing input state, validation, and async submission. Traditional approaches use controlled components with state hooks, leading to verbose code and prop drilling.
 
 ## Solution
 
-effect-ui enables reactive form patterns using streams:
+effect-ui enables reactive form patterns using `SubscriptionRef` and streams:
 
 ```typescript
-// Create an emitter for form values
-const [valueStream, setValue] = createEmitter("");
+import { h } from "@effect-ui/core";
+import { Effect, SubscriptionRef, Stream } from "effect";
 
-// Input updates the stream
-<input oninput={(e) => setValue(e.target.value)} />
+const ReactiveInput = () =>
+  Effect.gen(function* () {
+    const value = yield* SubscriptionRef.make("");
 
-// Derived streams for validation
-const validationStream = Stream.map(valueStream, validate);
-
-// Display reactive feedback
-<span>{validationStream}</span>
+    return yield* h.div({}, [
+      h.input({
+        type: "text",
+        oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
+      }),
+      h.div({}, ["You typed: ", value.changes]),
+    ]);
+  });
 ```
 
 ## How It Works
 
-1. `createEmitter` creates a stream and an emit function
-2. Input events call the emit function with new values
-3. Derived streams compute validation, character counts, etc.
-4. UI reacts to stream changes automatically
+1. `SubscriptionRef.make(initial)` creates reactive state for each field
+2. `oninput` handler updates the ref on every keystroke
+3. `.changes` streams the current value into the UI reactively
+4. Derived streams compute validation, character counts, etc.
 5. Form submit handlers can return Effects for async operations
 
 ## Benefits
 
 - **Reactive by design**: No manual state synchronization
-- **Derived state**: Compute validations declaratively
+- **Derived state**: Compute validations declaratively from streams
 - **Effect integration**: Submit handlers with async operations
 - **Type-safe**: Full TypeScript support
 - **Composable**: Combine streams for complex validation logic
 
 ## Usage Patterns
 
-### Basic Emitter Pattern
+### Basic Reactive Input
 
 ```typescript
-function createEmitter<T>(initial: T) {
-  let listener: ((value: T) => void) | null = null;
+const value = yield * SubscriptionRef.make("");
 
-  const stream = Stream.async<T>((emit) => {
-    emit.single(initial);
-    listener = (value) => emit.single(value);
-    return Effect.sync(() => {
-      listener = null;
-    });
-  });
+h.input({
+  type: "text",
+  oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
+});
 
-  const emit = (value: T) => listener?.(value);
-  return [stream, emit] as const;
-}
+// Show current value reactively
+h.div({}, ["You typed: ", value.changes]);
 ```
 
 ### Schema Validation
@@ -68,50 +67,58 @@ function createEmitter<T>(initial: T) {
 ```typescript
 import { Schema, Either } from "effect";
 
-// Define validation rules with Schema
 const Email = Schema.String.pipe(
   Schema.filter((s) => s.includes("@"), { message: () => "Must contain @" }),
   Schema.filter((s) => s.includes("."), { message: () => "Must have domain" }),
 );
 
-const [emailStream, setEmail] = createEmitter("");
+const email = yield * SubscriptionRef.make("");
 
-// Validate using Schema.decodeUnknownEither
-const validationStream = Stream.map(emailStream, (email) => {
-  if (!email) return null;
-  const result = Schema.decodeUnknownEither(Email)(email);
+const validationStream = Stream.map(email.changes, (value) => {
+  if (!value) return null;
+  const result = Schema.decodeUnknownEither(Email)(value);
   return Either.match(result, {
     onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
     onRight: () => null,
   });
 });
 
-<input oninput={(e) => setEmail(e.target.value)} />
-<span class="error">{validationStream}</span>
+h.input({
+  type: "email",
+  oninput: (e) => SubscriptionRef.set(email, (e.target as HTMLInputElement).value),
+});
+Stream.map(validationStream, (err) => (err ? h.span({ class: "error" }, err) : null));
 ```
 
 ### Character Counter
 
 ```typescript
-const [textStream, setText] = createEmitter("");
-const countStream = Stream.map(textStream, (t) => t.length);
+const text = yield * SubscriptionRef.make("");
+const countStream = Stream.map(text.changes, (t) => t.length);
 const remainingStream = Stream.map(countStream, (c) => 100 - c);
 
-<textarea oninput={(e) => setText(e.target.value)} />
-<span>{remainingStream} characters remaining</span>
+h.textarea({
+  oninput: (e) => SubscriptionRef.set(text, (e.target as HTMLTextAreaElement).value),
+});
+h.span({}, [remainingStream, " characters remaining"]);
 ```
 
 ### Effect Submit Handler
 
 ```typescript
-<form onsubmit={(e) => {
-  e.preventDefault();
-  return Effect.gen(function* () {
-    yield* Effect.log("Submitting...");
-    yield* submitForm();
-    yield* Effect.log("Done!");
-  });
-}}>
+h.form(
+  {
+    onsubmit: (e) => {
+      e.preventDefault();
+      return Effect.gen(function* () {
+        yield* Effect.log("Submitting...");
+        yield* submitForm();
+        yield* Effect.log("Done!");
+      });
+    },
+  },
+  [...fields],
+);
 ```
 
 ## When to Use

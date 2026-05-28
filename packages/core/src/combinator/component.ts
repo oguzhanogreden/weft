@@ -8,6 +8,5 @@ import type { Node, PropsE, PropsR } from "./types";
 export function defineComponent<BaseProps, CompE, CompR>(
   render: (props: BaseProps) => Node<CompE, CompR>,
 ): <P extends BaseProps>(props: P) => Node<PropsE<P> | CompE, PropsR<P> | CompR> {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  return (props) => render(props) as any;
+  return render;
 }

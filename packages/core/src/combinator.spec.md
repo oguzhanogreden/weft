@@ -2,11 +2,7 @@
 
 ## Overview
 
-A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. Exists alongside JSX — JSX remains the ergonomic default, the combinator API is the opt-in escape hatch for when type safety over requirements and errors actually matters.
-
-### Why JSX can't do this
-
-`JSX.Element` is a sealed black box in TypeScript. The docs explicitly state: _"It is not possible to retrieve type information about the element, attributes or children of the JSX from this interface."_ Every component return type collapses to `JSX.Element`, and `R`/`E` are lost at that boundary. This is a hard TypeScript limitation, not something fixable with generics, plugins, or component factories. The combinator API sidesteps the JSX transform entirely.
+A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. `Node<E, R>` IS `Effect.Effect<DOMNode, E, R>`, so requirements and errors accumulate through the full tree and are visible to the type system end-to-end.
 
 ---
 
