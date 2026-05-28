@@ -79,7 +79,7 @@ When ignoring lint rules, use Oxlint syntax:
 - `src/` - Source TypeScript files
 - `dist/` - Build output (excluded from TypeScript compilation)
 - `playground/` - Development playground and examples
-  - `app.tsx` - Main playground entry point
+  - `app.ts` - Main playground entry point
   - `recipes/` - Standalone example recipes demonstrating patterns
 - ES modules only (`"type": "module"` in package.json)
 
