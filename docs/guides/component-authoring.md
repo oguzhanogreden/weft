@@ -44,12 +44,15 @@ const Counter = () =>
 
 The return type here is `Effect.Effect<Node, never, never>` — itself a valid `Node`, so it composes naturally with other tree-building calls.
 
-## `defineComponent` for reusable components
+## `Component.gen` / `Component.make` for reusable components
 
-When you want the caller's reactive prop types to flow into the returned node's type, use `defineComponent`:
+When you want the caller's reactive prop types to flow into the returned node's type, use one of the `Component` factories. Both have the same call semantics; pick the body style that fits:
+
+- **`Component.make`** — body is a plain function returning any `Effect` (typically a `Node`). Use for one-liners and pipe compositions.
+- **`Component.gen`** — body is a generator. Use when you need `yield*` to set up local state or pull from services.
 
 ```typescript
-import { defineComponent, h } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 interface CardProps {
@@ -57,7 +60,7 @@ interface CardProps {
   body?: string | Stream.Stream<string>;
 }
 
-const Card = defineComponent<CardProps, never, never>((props) =>
+const Card = Component.make((props: CardProps) =>
   h.div({ class: "card" }, [
     h.h3({ class: "card-title" }, [props.title]),
     props.body ? h.p({ class: "card-body" }, [props.body]) : null,
@@ -74,19 +77,36 @@ declare const titleStream: Stream.Stream<string, never, I18nService>;
 const card = Card({ title: titleStream });
 ```
 
-Without `defineComponent`, the return type of a plain function is fixed at definition time and won't reflect the caller's reactive prop types.
+Without a `Component` factory, a plain function's return type is fixed at definition time and won't reflect the caller's reactive prop types.
 
-### The generic params
+### Body `E`/`R` inference
+
+You don't declare the body's `E`/`R` channels explicitly — they're inferred from the returned (or yielded) effect:
+
+- The body's `E`/`R` come from whatever effects appear inside.
+- The caller's reactive prop channels and reactive children channels are unioned on top at the call site.
+- Static prop values (`string`, `number`, plain functions) contribute `never`.
+
+### Children: array or function
+
+Both factories accept an optional second `children` argument, typed as:
 
 ```typescript
-defineComponent<BaseProps, CompE, CompR>(render);
+type Component.Children<Input = never> =
+  | readonly Child[]
+  | ((input: Input) => readonly Child[]);
 ```
 
-- **`BaseProps`** — the props interface, with reactive fields typed as their widest form (`string | Stream.Stream<string>`)
-- **`CompE`** — the error type the component's own render function can raise (often `never`)
-- **`CompR`** — the services the component's own render function requires (often `never`)
+The function form is the render-prop / slot pattern — the component invokes the function with whatever input it chooses, and the returned array's `E`/`R` propagate out:
 
-The caller's prop channels are unioned on top of `CompE`/`CompR` at the call site.
+```typescript
+const List = Component.make(
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+    h.ul({}, props.items.flatMap(renderItem)),
+);
+
+List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+```
 
 ## Props typing
 
@@ -127,16 +147,13 @@ Children arrays accumulate `E`/`R` from all their members. The parent node's typ
 If a component's render function uses a service via `yield*`, that service appears in the component's `CompR` parameter:
 
 ```typescript
-import { defineComponent, h } from "@effect-ui/core";
-import { Effect } from "effect";
+import { Component, h } from "@effect-ui/core";
 
-const UserAvatar = defineComponent<{ userId: string }, never, UserService>((props) =>
-  Effect.gen(function* () {
-    const userService = yield* UserService;
-    const user = yield* userService.getUser(props.userId);
-    return yield* h.img({ src: user.avatarUrl, alt: user.name });
-  }),
-);
+const UserAvatar = Component.gen(function* (props: { userId: string }) {
+  const userService = yield* UserService;
+  const user = yield* userService.getUser(props.userId);
+  return yield* h.img({ src: user.avatarUrl, alt: user.name });
+});
 
 // Node<never, UserService> — regardless of what the caller passes
 const avatar = UserAvatar({ userId: "123" });

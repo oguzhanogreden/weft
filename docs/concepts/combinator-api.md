@@ -97,12 +97,12 @@ const TableRow = ({ user }: { user: User }) =>
   h.fragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
 ```
 
-## Custom components with `defineComponent`
+## Custom components with `Component.gen` / `Component.make`
 
-Plain functions work fine for simple components, but `defineComponent` provides type-level wiring so the caller's reactive prop types contribute their `E`/`R` to the returned node:
+Plain functions work fine for simple components, but the `Component` factories provide type-level wiring so the caller's reactive prop types contribute their `E`/`R` to the returned node. Pick `Component.make` for a plain-function body and `Component.gen` for a generator body (when you need `yield*` to set up local state or pull from services).
 
 ```typescript
-import { defineComponent } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 interface ButtonProps {
@@ -110,7 +110,7 @@ interface ButtonProps {
   onclick?: () => void;
 }
 
-const Button = defineComponent<ButtonProps, never, never>((props) =>
+const Button = Component.make((props: ButtonProps) =>
   h.button({ onclick: props.onclick }, [props.label]),
 );
 
@@ -121,7 +121,9 @@ declare const labelStream: Stream.Stream<string, never, I18nService>;
 const btn = Button({ label: labelStream });
 ```
 
-Without `defineComponent`, a plain function's return type is fixed at definition time and doesn't reflect the caller's reactive prop types.
+Components also accept an optional `children` argument, either as `readonly Child[]` or as a `(input) => readonly Child[]` function (render-prop pattern). `E`/`R` from children — including the array returned by a function-children call — accumulate on the resulting node.
+
+Without `Component`, a plain function's return type is fixed at definition time and doesn't reflect the caller's reactive prop types.
 
 See [component-authoring.md](../guides/component-authoring.md) for a full walkthrough.
 

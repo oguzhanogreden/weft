@@ -119,8 +119,8 @@ void Effect.runPromise(mount(AsyncGreeting({ name: "World" }), document.getEleme
 
 ## Next steps
 
-- [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `defineComponent`
+- [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
 - [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
-- [Component Authoring](./component-authoring.md) — writing reusable components with `defineComponent`
+- [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
 - [API Reference](../api/core.md) — complete `@effect-ui/core` API reference
 - [examples/](../../examples/) — nine runnable examples covering common patterns

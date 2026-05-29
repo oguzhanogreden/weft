@@ -16,14 +16,15 @@ h.ul(children)
 // ...any HTML or SVG tag
 ```
 
-Each builder has four overloads:
+Each builder has five overloads:
 
-| Signature                               | Description                  |
-| --------------------------------------- | ---------------------------- |
-| `h.tag(props, children: Node[])`        | Props + array of child nodes |
-| `h.tag(props, child: string \| number)` | Props + single static child  |
-| `h.tag(props)`                          | Props only, no children      |
-| `h.tag(children: Node[])`               | Children only, no props      |
+| Signature                               | Description                 |
+| --------------------------------------- | --------------------------- |
+| `h.tag(props, children: Child[])`       | Props + array of children   |
+| `h.tag(props, child: string \| number)` | Props + single static child |
+| `h.tag(props)`                          | Props only, no children     |
+| `h.tag(children: Child[])`              | Children only, no props     |
+| `h.tag()`                               | No arguments                |
 
 **Return type**: `Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>`
 
@@ -41,27 +42,36 @@ h.fragment(children: Node[]): Node<ChildrenE, ChildrenR>
 
 Use when a component needs to return multiple sibling elements.
 
-### `defineComponent`
+### `Component`
 
-Factory for reusable components with caller-propagating reactive prop types:
+Namespace exposing two factories for reusable components with caller-propagating reactive prop types: `Component.gen` (generator body) and `Component.make` (plain-function body). Both return a callable that is generic over the caller's specific `props`/`children`, so reactive prop values and reactive children contribute their `E`/`R` at the call site.
 
 ```typescript
-import { defineComponent } from "@effect-ui/core";
+import { Component } from "@effect-ui/core";
 
-defineComponent<BaseProps, CompE, CompR>(
-  render: (props: BaseProps) => Node<CompE, CompR>
-): <P extends BaseProps>(props: P) => Node<PropsE<P> | CompE, PropsR<P> | CompR>
+Component.gen<BaseProps, C>(
+  body: (props: BaseProps, children: C) => Generator<YieldedEffect, DOMNode, never>
+): <GenP extends BaseProps, GenC extends C>(
+  props: GenP,
+  children?: GenC,
+) => Node<PropsE<GenP> | ChildrenE<…> | BodyE, PropsR<GenP> | ChildrenR<…> | BodyR>;
+
+Component.make<BaseProps, C>(
+  body: (props: BaseProps, children: C) => Effect<DOMNode, E, R>
+): /* same call signature as above */;
 ```
 
-**Generic params**:
+**`Children`** — the optional `children` argument may be either form:
 
-- `BaseProps` — the component's props interface
-- `CompE` — the error type raised by the component's own render function
-- `CompR` — the services required by the component's own render function
+```typescript
+type Component.Children<Input = never> =
+  | readonly Child[]
+  | ((input: Input) => readonly Child[]);
+```
 
-The returned function is generic over `P extends BaseProps`, so the caller's specific reactive prop types contribute their channels at the call site.
+For function-children, `ChildrenE`/`ChildrenR` are extracted from the function's `ReturnType`, not from the function itself. The component's body invokes the function with whatever input it chooses.
 
-**Example**:
+**Example — `Component.gen`**:
 
 ```typescript
 interface TextFieldProps {
@@ -69,12 +79,23 @@ interface TextFieldProps {
   onChange?: (v: string) => void;
 }
 
-const TextField = defineComponent<TextFieldProps, never, never>((props) =>
-  h.input({
+const TextField = Component.gen(function* (props: TextFieldProps) {
+  return yield* h.input({
     value: props.value,
     oninput: (e) => props.onChange?.((e.target as HTMLInputElement).value),
-  }),
+  });
+});
+```
+
+**Example — `Component.make` with function-children**:
+
+```typescript
+const List = Component.make(
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+    h.ul({}, props.items.flatMap(renderItem)),
 );
+
+List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
 ```
 
 ### `Suspense`
@@ -161,7 +182,7 @@ type PropsE<P> = { [K in keyof P]: P[K] extends Stream.Stream<any, infer E, any>
 type PropsR<P> = { [K in keyof P]: P[K] extends Stream.Stream<any, any, infer R> ? R : ... }[keyof P]
 ```
 
-These are used internally by `h` and `defineComponent` to accumulate channels from props. You generally don't need to reference them directly unless building utilities over the combinator API.
+These are used internally by `h` and `Component` to accumulate channels from props. You generally don't need to reference them directly unless building utilities over the combinator API.
 
 ---
 
