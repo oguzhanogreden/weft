@@ -75,7 +75,6 @@ describe("AC1: Mount Function API", () => {
     root.innerHTML = "<div>existing</div><span>content</span>";
 
     const TheComponent = Component.make(() => h.div({}, "new"));
-
     await runMount(TheComponent({}), root);
 
     assert.equal(root.children.length, 1);
