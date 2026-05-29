@@ -1,12 +1,133 @@
-import type { Node, PropsE, PropsR } from "./types";
+import { Effect } from "effect";
+import type { Child, ChildrenE, ChildrenR, DOMNode, Node, PropsE, PropsR } from "./types";
+import type { YieldWrap } from "effect/Utils";
 
 /**
- * Factory for custom components that preserves E/R propagation from caller props.
- * The returned function is generic over `P extends BaseProps` — TypeScript infers
- * the caller's specific reactive prop values and extracts E/R from them automatically.
+ * Factories for building custom components whose returned `Node`s carry the
+ * caller's prop `E`/`R` channels and the component's own internal `E`/`R`.
+ *
+ * Two flavours are provided:
+ *
+ * - `Component.gen` — body is a generator (use `yield*` like `Effect.gen`).
+ * - `Component.make` — body is a plain function returning any `Effect`.
+ *
+ * Both accept an optional second `children` argument which may be either an
+ * array of {@link Child} or a function `(input) => readonly Child[]` (the
+ * render-prop / function-children pattern).
  */
-export function defineComponent<BaseProps, CompE, CompR>(
-  render: (props: BaseProps) => Node<CompE, CompR>,
-): <P extends BaseProps>(props: P) => Node<PropsE<P> | CompE, PropsR<P> | CompR> {
-  return render;
+export namespace Component {
+  /**
+   * Shape of the optional `children` argument to a {@link Component}.
+   *
+   * - `readonly Child[]` — a flat list of children, the common case.
+   * - `(input: Input) => readonly Child[]` — function-children: the component
+   *   supplies `input` (some scoped value) and the caller returns the children
+   *   array. Useful for render-prop / slot patterns.
+   */
+  export type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+
+  /**
+   * The callable shape returned by {@link gen} and {@link make}. Generic over
+   * the caller's specific `GenP`/`GenC` so reactive prop values and reactive
+   * children contribute their `E`/`R` to the resulting `Node` at the call site.
+   *
+   * For function-children, `ChildrenE`/`ChildrenR` are extracted from the
+   * function's `ReturnType` — the array the caller would produce — not from
+   * the function itself.
+   */
+  export type Component<P, C extends Children, E, R> = <GenP extends P, GenC extends C>(
+    props: GenP,
+    children?: GenC,
+  ) => Node<
+    PropsE<GenP> | ChildrenE<GenC extends (...args: any[]) => any ? ReturnType<GenC> : GenC> | E,
+    PropsR<GenP> | ChildrenR<GenC extends (...args: any[]) => any ? ReturnType<GenC> : GenC> | R
+  >;
+
+  /**
+   * Defines a component whose body is an `Effect.gen`-style generator.
+   *
+   * The internal `E`/`R` are inferred from any `yield*`ed effects. Caller prop
+   * `E`/`R` and children `E`/`R` are unioned in at the call site.
+   *
+   * @example
+   * ```ts
+   * const TextField = Component.gen(function* (props: { name: string; value?: Stream.Stream<string, any, any> }) {
+   *   return yield* h.input({ name: props.name, value: props.value });
+   * });
+   *
+   * TextField({ name: "email", value: userStream });
+   * //   ^? Node<never, UserService>
+   * ```
+   *
+   * @example Function-children (render-prop pattern)
+   * ```ts
+   * const Tooltip = Component.gen(function* (
+   *   _props: { label: string },
+   *   children: (anchorId: string) => readonly Child[],
+   * ) {
+   *   return yield* h.div({ class: "tooltip" }, children("anchor-42"));
+   * });
+   *
+   * Tooltip({ label: "Help" }, (id) => [h.span({ id }, "?")]);
+   * ```
+   */
+  export function gen<
+    Eff extends YieldWrap<Effect.Effect<any, any, any>>,
+    BaseProps = Record<string, never>,
+    C extends Children = readonly Child[],
+  >(
+    f: (props: BaseProps, children: C) => Generator<Eff, DOMNode, never>,
+  ): Component.Component<
+    BaseProps,
+    C,
+    Eff extends YieldWrap<Effect.Effect<any, infer E, any>> ? E : never,
+    Eff extends YieldWrap<Effect.Effect<any, any, infer R>> ? R : never
+  > {
+    return (props: any, children: any = []) =>
+      Effect.gen(function* () {
+        return yield* f(props, children) as any;
+      }) as any;
+  }
+
+  /**
+   * Defines a component whose body is a plain function returning any `Effect`
+   * (typically a {@link Node}). Use when the implementation is a one-liner or
+   * a pipe composition — no generator overhead.
+   *
+   * Same `E`/`R` propagation semantics as {@link gen}: internal `E`/`R` come
+   * from the returned effect, caller props and children contribute at the
+   * call site, and function-children are supported via the optional second
+   * argument.
+   *
+   * @example
+   * ```ts
+   * const Avatar = Component.make((props: { src: string }) =>
+   *   h.img({ src: props.src, alt: "" }),
+   * );
+   * ```
+   *
+   * @example With function-children
+   * ```ts
+   * const List = Component.make(
+   *   (
+   *     props: { items: readonly string[] },
+   *     children: (item: string) => readonly Child[],
+   *   ) => h.ul({}, props.items.flatMap(children)),
+   * );
+   * ```
+   */
+  export function make<
+    Eff extends Effect.Effect<any, any, any>,
+    BaseProps = Record<string, never>,
+    C extends Children = readonly Child[],
+  >(
+    f: (props: BaseProps, children: C) => Eff,
+  ): Component<
+    BaseProps,
+    C,
+    Eff extends Effect.Effect<any, infer E, any> ? E : never,
+    Eff extends Effect.Effect<any, any, infer R> ? R : never
+  > {
+    return f as any;
+  }
 }

@@ -1,17 +1,60 @@
 import { Effect } from "effect";
 import { FRAGMENT } from "./fragment";
 import type { HTMLElements, SVGElements } from "~/types";
-import type { Child, ChildrenE, ChildrenR, CombinatorialProps, ElementFn, Node } from "./types";
-import type { Source } from "~/source";
+import type {
+  Child,
+  ChildrenE,
+  ChildrenR,
+  CombinatorialProps,
+  Node,
+  PropsE,
+  PropsR,
+} from "./types";
+import type { Source } from "~/source/source";
 
 /** Augmentable interface for user-defined custom element tags and props. */
 export interface CustomElements {}
+
+/**
+ * Callable type for an element builder (one per tag — `h.div`, `h.span`, …).
+ *
+ * Four call shapes are supported; each preserves the caller's prop and child
+ * `E`/`R` channels on the returned {@link Node}:
+ *
+ * - `el(props, children)` — props plus an array of children.
+ * - `el(props, child)` — props plus a single `string | number` child.
+ * - `el(props)` — props only, no children.
+ * - `el(children)` — children only, no props.
+ * - `el()` — no arguments; yields a `Node<never, never>`.
+ */
+export interface ElementFn<Props> {
+  <P extends Props, C extends readonly Child[]>(
+    props: P,
+    children: C,
+  ): Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>;
+  <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
+  <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
+  <C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  (): Node<never, never>;
+}
 
 type DataAttributes = {
   [attr: `data-${string}`]: Source.Source<string | number | undefined>;
 };
 
 type H = {
+  /**
+   * Builds a fragment node containing the given children — children are rendered
+   * inline, with no wrapping element. Equivalent to `<>…</>` in JSX. `E`/`R`
+   * from the children accumulate on the returned {@link Node}.
+   *
+   * @example
+   * ```ts
+   * h.fragment([h.span({}, "left"), h.span({}, "right")]);
+   * ```
+   */
+  fragment<C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+} & {
   [K in keyof HTMLElements]: ElementFn<CombinatorialProps<HTMLElements[K] & DataAttributes>>;
 } & {
   [K in keyof SVGElements]: ElementFn<CombinatorialProps<SVGElements[K] & DataAttributes>>;
@@ -20,7 +63,7 @@ type H = {
 };
 
 function createElementFn(tag: string): ElementFn<any> {
-  return (propsOrChildren?: unknown, children?: unknown): Node<any, any> => {
+  return ((propsOrChildren?: unknown, children?: unknown): Node<any, any> => {
     let props: Record<string, unknown> = {};
     let kids: unknown = undefined;
 
@@ -33,29 +76,29 @@ function createElementFn(tag: string): ElementFn<any> {
 
     const finalProps = kids !== undefined ? { ...props, children: kids } : props;
     return Effect.succeed({ type: tag, props: finalProps }) as Node<any, any>;
-  };
+  }) as ElementFn<any>;
 }
-
-const cache = new Map<string, ElementFn<any>>();
-
-/** Proxy-based element namespace. Access any HTML, SVG, or custom element as `h.tagName(props, children)`. */
-export const h = new Proxy({} as H, {
-  get(_, tag: string) {
-    let fn = cache.get(tag);
-    if (!fn) {
-      fn = createElementFn(tag);
-      cache.set(tag, fn);
-    }
-    return fn;
-  },
-});
 
 /**
- * Creates a fragment node containing the given children.
- * Equivalent to `<>...</>` in JSX.
+ * Builds an `h` proxy backed by the given cache. Each tag access lazily creates
+ * an `ElementFn` and memoizes it in the cache, so repeat accesses return the
+ * same function reference. Exposed primarily to allow tests to observe an
+ * isolated cache; production code should use the module-level `h`.
  */
-export function hFragment<C extends readonly Child[]>(
-  children: C,
-): Node<ChildrenE<C>, ChildrenR<C>> {
-  return Effect.sync(() => ({ type: FRAGMENT, props: { children } })) as Node<any, any>;
+export function makeH(cache: Map<string, ElementFn<any>> = new Map()): H {
+  return new Proxy<H>(
+    {
+      fragment<C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>> {
+        return Effect.sync(() => ({ type: FRAGMENT, props: { children } })) as Node<any, any>;
+      },
+    } as H,
+    {
+      get(self, tag: string) {
+        if (tag in self) return self[tag as keyof H];
+        return cache.get(tag) ?? cache.set(tag, createElementFn(tag)).get(tag)!;
+      },
+    },
+  );
 }
+
+export const h = makeH(new Map());

@@ -12,9 +12,6 @@ import {
 } from "effect";
 import { isStream } from "~/stream";
 
-// Re-exported reliable guard, keyed off Subscribable's TypeId.
-export { isSubscribable } from "effect/Subscribable";
-
 /**
  * Raised by `toSubscribable` when a `Stream`-sourced prop completes without
  * ever emitting a value. The only source kind that can be legitimately absent.
@@ -30,7 +27,7 @@ export namespace Source {
    * caller can switch between them freely. An incoming `Subscribable` is threaded
    * through by reference (no re-wrap); the rest normalize via `toSubscribable`.
    */
-  export type Source<A, E = never, R = never> =
+  export type Source<A, E = any, R = any> =
     | A
     | Stream.Stream<A, E, R>
     | Effect.Effect<A, E, R>

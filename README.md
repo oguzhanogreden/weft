@@ -15,7 +15,7 @@ effect-ui is a reactive DOM rendering library built on Effect's combinator API. 
 ## Features
 
 - **Effect-first architecture**: Services, Layers, and dependency injection across client and server
-- **Combinator API**: Build trees with `h`, `hFragment`, and `defineComponent` — no JSX, no build-tool plugins
+- **Combinator API**: Build trees with `h`, `h.fragment`, and `Component.gen` / `Component.make` — no JSX, no build-tool plugins
 - **Type-safe channels**: Effect's `E` and `R` channels propagate through the full component tree
 - **Ephemeral components**: Components run once, streams drive all updates
 - **SSR + Hydration**: `renderToString`, `renderToStream`, and flash-free `hydrate()` for full-stack apps
@@ -25,7 +25,7 @@ effect-ui is a reactive DOM rendering library built on Effect's combinator API. 
 
 effect-ui is a monorepo with two packages:
 
-- **`@effect-ui/core`**: Combinator builders and type definitions. Exports `h`, `hFragment`, `defineComponent`, `Suspense`, and the `Node<E, R>` / `Source<A, E, R>` types.
+- **`@effect-ui/core`**: Combinator builders and type definitions. Exports `h`, `h.fragment`, `Component` (with `Component.gen` / `Component.make`), `Suspense`, and the `Node<E, R>` / `Source<A, E, R>` types.
 - **`@effect-ui/dom`**: The renderer. `mount` and `hydrate` for the browser; `renderToString`, `renderToStringHydratable`, `renderToStream`, and `renderToStreamHydratable` for the server (imported from `@effect-ui/dom/server`).
 
 ## Installation
@@ -211,6 +211,32 @@ const Counter = () =>
     const count = yield* SubscriptionRef.make(0);
     return yield* h.span({}, [count.changes]);
   });
+```
+
+**Defined components**: `Component.gen` and `Component.make` wrap the same patterns and propagate caller-prop `E`/`R` automatically. Both accept an optional `children` argument as either an array or a function (render-prop style):
+
+```typescript
+import { Component, h } from "@effect-ui/core";
+import type { Child } from "@effect-ui/core";
+
+// Generator body — use yield*
+const TextField = Component.gen(function* (props: {
+  name: string;
+  value?: Stream.Stream<string, any, any>;
+}) {
+  return yield* h.input({ name: props.name, value: props.value });
+});
+
+// Plain function body
+const Avatar = Component.make((props: { src: string }) => h.img({ src: props.src, alt: "" }));
+
+// Function-children (render-prop pattern)
+const List = Component.make(
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+    h.ul({}, props.items.flatMap(renderItem)),
+);
+
+List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
 ```
 
 ## SSR & Hydration

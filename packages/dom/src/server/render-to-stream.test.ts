@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { Suspense, h, hFragment } from "@effect-ui/core";
+import { h, Suspense } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
@@ -185,7 +185,7 @@ describe("renderToStream - function components", () => {
   });
 
   it("AC-FC2: renders a component returning a fragment", async () => {
-    const Pair = () => hFragment([h.span({}, "a"), h.span({}, "b")]);
+    const Pair = () => h.fragment([h.span({}, "a"), h.span({}, "b")]);
     assert.equal(await run(Pair()), "<span>a</span><span>b</span>");
   });
 
@@ -340,7 +340,7 @@ describe("renderToStream - Suspense SSR", () => {
           const fiberHtml = yield* Effect.fork(
             Stream.mkString(
               renderToStream(
-                hFragment([
+                h.fragment([
                   Suspense({ fallback: h.span({}, "loading A") }, [SlowA()]),
                   Suspense({ fallback: h.span({}, "loading B") }, [SlowB()]),
                 ]),

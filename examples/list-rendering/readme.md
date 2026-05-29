@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example demonstrates patterns for rendering lists in effect-ui, including static arrays, stream-based lists, and `hFragment` usage.
+This example demonstrates patterns for rendering lists in effect-ui, including static arrays, stream-based lists, and `h.fragment` usage.
 
 ## Problem
 
@@ -13,7 +13,7 @@ Lists are fundamental to web UIs. Understanding how effect-ui handles arrays, it
 effect-ui supports multiple list rendering patterns:
 
 ```typescript
-import { h, hFragment } from "@effect-ui/core";
+import { h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 // Static array mapping
@@ -24,7 +24,7 @@ h.ul(
 
 // Fragment for multiple elements without a wrapper
 const TableRow = ({ user }: { user: User }) =>
-  hFragment([h.td({}, user.name), h.td({}, user.role)]);
+  h.fragment([h.td({}, user.name), h.td({}, user.role)]);
 
 // Stream of arrays — entire list re-renders on each emission
 const itemsStream = Stream.iterate([], (items) => [...items, newItem]);
@@ -34,7 +34,7 @@ h.ul({}, [Stream.map(itemsStream, (items) => items.map((i) => h.li({}, i)))]);
 ## How It Works
 
 1. Arrays are flattened during rendering — nested arrays work naturally
-2. `hFragment` renders children without a wrapper element
+2. `h.fragment` renders children without a wrapper element
 3. Streams of arrays replace the entire list on each emission
 4. Individual list items can have their own reactive streams
 5. Comment markers track stream positions for efficient updates
@@ -63,7 +63,7 @@ h.ul(
 
 ```typescript
 const TableRow = ({ data }: { data: { name: string; value: string } }) =>
-  hFragment([h.td({}, data.name), h.td({}, data.value)]);
+  h.fragment([h.td({}, data.name), h.td({}, data.value)]);
 
 h.table({}, [
   h.tbody(
@@ -124,7 +124,7 @@ h.div(
 
 ```typescript
 const TagList = ({ tags }: { tags: string[] }) =>
-  hFragment(tags.map((tag) => h.span({ class: "badge" }, tag)));
+  h.fragment(tags.map((tag) => h.span({ class: "badge" }, tag)));
 ```
 
 ## When to Use

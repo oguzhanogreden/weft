@@ -79,17 +79,6 @@ export type ChildrenR<T extends readonly Child[]> = {
       : never;
 }[number];
 
-/** Per-element call signature with four overloads. */
-export type ElementFn<Props> = {
-  <P extends Props, C extends readonly Child[]>(
-    props: P,
-    children: C,
-  ): Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>;
-  <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
-  <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
-  <C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
-};
-
 /**
  * Strip `children` from HTML prop types and widen all Source prop types to
  * allow any E/R — so callers can pass `Stream<T, E, R>` with real requirements.
