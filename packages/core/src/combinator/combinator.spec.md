@@ -2,7 +2,11 @@
 
 ## Overview
 
-A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. `Node<E, R>` IS `Effect.Effect<DOMNode, E, R>`, so requirements and errors accumulate through the full tree and are visible to the type system end-to-end.
+A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. `Node<E, R>` IS `Effect.Effect<DOMNode, E, R>`, so requirements and errors accumulate through the full tree and are visible to the type system end-to-end. Three building blocks make up the surface:
+
+- `h.<tag>(...)` — HTML, SVG, and user-extended custom elements via a proxy namespace.
+- `h.fragment(children)` — group children without a wrapping element.
+- `Component.gen` / `Component.make` — factories for custom components.
 
 ---
 
@@ -12,18 +16,18 @@ A typed tree-building API that preserves Effect's `E` and `R` channels through t
 
 `Node<E, R>` is a type alias for `Effect.Effect<DOMNode, E, R>`. This means:
 
-- `yield* h.div(...)` works natively in `Effect.gen` and propagates `R`
-- `() => h.div(...)` preserves `R` on the return type
-- All Effect combinators (`Effect.provide`, `Effect.map`, `pipe`, etc.) work on nodes
-- No parallel type system — nodes are first-class Effects
+- `yield* h.div(...)` works natively in `Effect.gen` and propagates `R`.
+- `() => h.div(...)` preserves `R` on the return type.
+- All Effect combinators (`Effect.provide`, `Effect.map`, `pipe`, etc.) work on nodes.
+- No parallel type system — nodes are first-class Effects.
 
 ### Plain config objects for everything
 
 Both HTML elements and custom components take a plain props object. No attr-function pattern (`className("foo")`), no separate attr namespace. Consistent call signature across the entire API:
 
 ```ts
-h.div({ className: "container" }, [
-  h.span({ className: "title" }, "Hello"),
+h.div({ class: "container" }, [
+  h.span({ class: "title" }, "Hello"),
   TextField({ name: "email", value: userStream }),
 ]);
 ```
@@ -38,52 +42,62 @@ All intrinsic elements live under `h` to avoid polluting the local scope and to 
 h.div, h.span, h.input, h.button, h.form, ...
 ```
 
-Custom components are imported and called directly without a namespace prefix.
+Custom components are imported and called directly without a namespace prefix. The `h` proxy lazily creates and caches an `ElementFn` per tag — repeat accesses return the same function reference. `makeH(cache?)` is exposed for tests that need an isolated cache.
 
-### Children as last argument
+### Effects and Streams are children directly
 
-The second argument (or first, if props are omitted) is either:
-
-- `Node[]` — children array with accumulated `E`/`R`
-- `string | number` — single static child
-- Omitted — no children
-
-### `node()` as escape hatch
-
-`node(effect | stream)` lifts any `Effect` or `Stream` directly into the tree. This is the primary mechanism for introducing `E` and `R` into a subtree when not coming from a prop value.
-
-### `defineComponent` for custom components
-
-Custom components are defined with a plain TypeScript interface for props and a render function. The factory returns a generic function so the caller's specific reactive prop values contribute their `E`/`R` to the returned node:
+`Child` includes `Effect.Effect<unknown, any, any>` and `Stream.Stream<unknown, any, any>` (alongside primitives, other `Node`s, `null`/`undefined`, and `Iterable<Child>`). There is no `node()` lifting helper — `E`/`R` propagate from these children automatically.
 
 ```ts
-interface TextFieldProps {
-  name: string
-  value?: string | Stream.Stream<string, any, any>
-  onChange?: (value: string) => void
-}
-
-const TextField = defineComponent<TextFieldProps, never, never>(
-  (props) => h.div({ className: "field" }, [...])
-)
-
-TextField({ name: "email", value: userStream })
-// Node<never, UserService>
+h.div({}, [userStream, dbEffect, h.span({}, "static")]);
+//  ^? Node<DbError, UserService | DbService>
 ```
 
-The component's own internal `E`/`R` (from its render function) unions with the caller's props `E`/`R`.
+### Element call shapes
 
-No `Prop.fn()`, `Prop.source()`, or descriptor system — plain TypeScript interfaces handle both value and function props.
+`ElementFn` supports five call shapes; each preserves the caller's prop and child `E`/`R`:
 
-### Scoped children (`$`) — deferred
+- `el(props, children)` — props plus a `readonly Child[]`.
+- `el(props, child)` — props plus a single `string | number`.
+- `el(props)` — props only.
+- `el(children)` — children only.
+- `el()` — empty.
 
-A Jetpack Compose-inspired scoped callback (`$ => [$.span(...)]`) was explored and validated but deferred. It enables:
+### `Component.gen` and `Component.make`
 
-- Per-element child vocabulary (only valid children for a given element)
-- Custom component scopes (Radix/Base-UI-style slot patterns)
-- Render prop / callback children with typed state
+Two factories with identical semantics, differing only in body shape:
 
-Deferring because it cascades into component factory design decisions that aren't ready yet. The plain array form is compatible — the scope can be layered on later as an additional overload.
+```ts
+const TextField = Component.gen(function* (props: TextFieldProps) {
+  return yield* h.input({ name: props.name, value: props.value });
+});
+
+const Avatar = Component.make((props: { src: string }) => h.img({ src: props.src, alt: "" }));
+```
+
+The returned function is generic over the caller's specific `GenP extends BaseProps`, so the caller's reactive prop values contribute additional `E`/`R` at the call site. The component's own internal `E`/`R` (from the body) unions in. No `Prop.fn()` / `Prop.source()` descriptor system — plain TypeScript interfaces handle both value and function props.
+
+### Children: array or function
+
+Components accept an optional `children` argument typed as:
+
+```ts
+type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+```
+
+- **Array children** — the common case; flows straight into the body.
+- **Function children** — render-prop / slot pattern. The component invokes the function with whatever input it chooses (a scoped value, an id, an iteration item) and uses the returned array.
+
+For function-children, `ChildrenE`/`ChildrenR` are extracted from the function's `ReturnType`, not from the function itself.
+
+```ts
+const List = Component.make(
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+    h.ul({}, props.items.flatMap(renderItem)),
+);
+
+List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+```
 
 ### `toView` / headless pattern — deferred
 
@@ -92,11 +106,11 @@ Foldkit-inspired pattern where a component exposes its managed attributes (aria,
 ```ts
 Button({
   onClick: handleSave,
-  toView: (attrs) => h.button({ ...attrs.button, className: "btn" }, ["Save"]),
+  toView: (attrs) => h.button({ ...attrs.button, class: "btn" }, ["Save"]),
 });
 ```
 
-The component owns behaviour and accessibility; the caller owns structure and style. `toView` returning a `Node<E, R>` means R from the caller's render function flows into the component's type naturally. Deferred alongside scoped children.
+The component owns behaviour and accessibility; the caller owns structure and style. `toView` returning a `Node<E, R>` means `R` from the caller's render function flows into the component's type naturally. Deferred until function-children patterns have settled in real apps.
 
 ---
 
@@ -104,74 +118,103 @@ The component owns behaviour and accessibility; the caller owns structure and st
 
 ### Core type accumulation
 
-- `Node<E, R>` must be assignable to `Effect.Effect<DOMNode, E, R>`
-- Reactive prop values (Stream, Effect, Subscribable) contribute their `R` to the node's `R`
-- Reactive prop values contribute their `E` to the node's `E`
-- `R` from `node(stream)` children accumulates into the parent node's `R`
-- `E` from `node(effect)` children accumulates into the parent node's `E`
-- `R` and `E` accumulate across sibling children (union)
-- `R` and `E` propagate through arbitrary nesting depth
-- Reactive props and reactive children both contribute — unioned
+- `Node<E, R>` must be assignable to `Effect.Effect<DOMNode, E, R>`.
+- Reactive prop values (Stream, Effect, Subscribable) contribute their `E` and `R` to the node.
+- Effect/Stream children embedded directly in the children array contribute their `E` and `R`.
+- `E` and `R` accumulate across sibling children (union).
+- `E` and `R` propagate through arbitrary nesting depth.
+- Reactive props and reactive children both contribute — unioned together.
 
-### Custom components
+### Components
 
-- `defineComponent` render function's `E`/`R` is fixed at definition time
-- Caller's reactive prop values contribute additional `E`/`R` at call site
-- Total `E`/`R` is the union of component's own and caller's props
-- Static prop values (`string`, `number`, `() => void`) contribute `never`
+- `Component.gen` / `Component.make` body `E`/`R` are inferred from the returned/yielded effects and fixed at definition time.
+- Caller's reactive prop values contribute additional `E`/`R` at the call site.
+- The optional `children` argument may be `readonly Child[]` or a `(input) => readonly Child[]` function; for the function form, `E`/`R` are extracted from the function's return type.
+- Total `E`/`R` is the union of body, caller-props, and caller-children channels.
+- Static prop values (`string`, `number`, `() => void`) contribute `never`.
+
+### Element call shapes
+
+- `h.div({}, ["a"])` — `Node<never, never>`.
+- `h.div({})` — `Node<never, never>`, no `children` key on the resulting `DOMNode`.
+- `h.div(["a"])` — children only, empty props.
+- `h.div({}, "a")` — single primitive child.
+- `h.div()` — `Node<never, never>`.
+- The `h` proxy returns identity-equal `ElementFn`s for repeated accesses of the same tag.
 
 ### Compatibility
 
-- `() => h.div(...)` — plain function wrapper preserves `R` on the return type
-- `Effect.gen(function* () { return yield* h.div(...) })` — `yield*` works, `R` propagates into the generator's context channel
-- `Effect.provide(h.div(...), layer)` — standard Effect combinators work on nodes
+- `() => h.div(...)` — plain function wrapper preserves `R` on the return type.
+- `Effect.gen(function* () { return yield* h.div(...) })` — `yield*` works, `R` propagates into the generator's context channel.
+- `Effect.provide(h.div(...), layer)` — standard Effect combinators work on nodes.
 
-### Static content
+### Invalid uses (must not compile)
 
-- `h.div({ className: "foo" }, "Hello")` — `Node<never, never>`
-- `h.div({ className: "foo" }, [h.span({}, "Hello")])` — `Node<never, never>`
-- `h.div({ id: "app" })` — `Node<never, never>`
-- `h.div({})` — `Node<never, never>`
-- `h.div([node(stream)])` — children only, no props
+- Arbitrary objects, bare functions, and symbols are not valid `Child` values.
+- A component declared with array children rejects function children at the call site (and vice versa).
+- Function-children with the wrong return type (e.g. returning a string) is rejected.
 
 ---
 
-## API surface (validated)
+## API surface
 
 ```ts
 // Core types
-type Node<E = never, R = never> = Effect.Effect<DOMNode, E, R>
+type Node<E = never, R = never> = Effect.Effect<DOMNode, E, R>;
 
-// R/E extraction (internal)
-type PropsE<P> = { [K in keyof P]: P[K] extends Stream<any, infer E, any> ? E : ... }[keyof P]
-type PropsR<P> = { [K in keyof P]: P[K] extends Stream<any, any, infer R> ? R : ... }[keyof P]
-type NodesE<T extends readonly Node[]> = { [K in keyof T]: ... }[number]
-type NodesR<T extends readonly Node[]> = { [K in keyof T]: ... }[number]
+type Child =
+  | Node<any, any>
+  | Stream.Stream<unknown, any, any>
+  | Effect.Effect<unknown, any, any>
+  | string | number | bigint | boolean
+  | null | undefined
+  | Iterable<Child>;
 
-// Escape hatch
-declare function node<E, R>(source: Effect<unknown, E, R> | Stream<unknown, E, R>): Node<E, R>
+// E/R extraction (internal but exported for type-level work)
+type PropsE<P>, PropsR<P>;
+type ChildrenE<T extends readonly Child[]>, ChildrenR<T extends readonly Child[]>;
 
-// Element namespace (one per HTML element, generated from src/types/html/)
-declare namespace h {
-  function div<P extends DivProps, C extends readonly Node[]>(props: P, children: C): Node<PropsE<P> | NodesE<C>, PropsR<P> | NodesR<C>>
-  function div<P extends DivProps>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>
-  function div<P extends DivProps>(props: P): Node<PropsE<P>, PropsR<P>>
-  function div<C extends readonly Node[]>(children: C): Node<NodesE<C>, NodesR<C>>
-  // span, p, ul, li, button, form, input, ... same pattern
+// Element namespace
+interface ElementFn<Props> {
+  <P extends Props, C extends readonly Child[]>(props: P, children: C):
+    Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>;
+  <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
+  <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
+  <C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  (): Node<never, never>;
 }
 
-// Component factory
-declare function defineComponent<BaseProps, CompE, CompR>(
-  render: (props: BaseProps) => Node<CompE, CompR>
-): <P extends BaseProps>(props: P) => Node<PropsE<P> | CompE, PropsR<P> | CompR>
+declare const h: { [Tag in keyof (HTMLElements & SVGElements & CustomElements)]: ElementFn<...> };
+declare function makeH(cache?: Map<string, ElementFn<any>>): typeof h;
+declare function h.fragment<C extends readonly Child[]>(children: C):
+  Node<ChildrenE<C>, ChildrenR<C>>;
+
+// Components
+namespace Component {
+  type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+
+  type Component<P, C extends Children, E, R> = <GenP extends P, GenC extends C>(
+    props: GenP,
+    children?: GenC,
+  ) => Node<
+    PropsE<GenP> | ChildrenE<GenC extends (...a: any[]) => any ? ReturnType<GenC> : GenC> | E,
+    PropsR<GenP> | ChildrenR<GenC extends (...a: any[]) => any ? ReturnType<GenC> : GenC> | R
+  >;
+
+  function gen<BaseProps, C extends Children>(
+    f: (props: BaseProps, children: C) => Generator<...>,
+  ): Component<BaseProps, C, E, R>;
+
+  function make<BaseProps, C extends Children>(
+    f: (props: BaseProps, children: C) => Effect<DOMNode, E, R>,
+  ): Component<BaseProps, C, E, R>;
+}
 ```
 
 ---
 
 ## What's next
 
-- **HTML prop types** — `DivProps`, `SpanProps`, etc. generated from the existing `src/types/html/` types; each element's props constrain which keys are valid
-- **Scoped children (`$`)** — layer on as additional overloads once component factory design is settled
-- **`toView` / headless pattern** — `toView: (attrs: ButtonAttrs) => Node<E, R>` prop for components that expose their managed attributes to the caller
-- **Custom component scopes** — typed child vocabulary per component; enables `Dialog.Root` / `Dialog.Content` slot patterns
-- **Runtime implementation** — replace `declare` mocks with real rendering logic; nodes are Effects run within a provided scope/layer
+- **`toView` / headless pattern** — `toView: (attrs: ButtonAttrs) => Node<E, R>` prop for components that expose their managed attributes to the caller.
+- **Per-element typed children** — narrow `Child` per tag (e.g. `<select>` may only contain `<option>` / `<optgroup>`) once the function-children pattern has been exercised in real apps.
+- **Custom component scopes** — typed child vocabulary per component; enables `Dialog.Root` / `Dialog.Content` slot patterns built on top of function-children.

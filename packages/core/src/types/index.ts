@@ -5,7 +5,7 @@ export type ElementType = symbol | string | ((props: Record<string, unknown>) =>
 
 /**
  * Every value the renderer can process: primitives, iterables, reactive
- * streams/effects, and element descriptors produced by `h`, `hFragment`, or
+ * streams/effects, and element descriptors produced by `h`, `h.fragment`, or
  * `Suspense`.
  */
 export type RenderNode =

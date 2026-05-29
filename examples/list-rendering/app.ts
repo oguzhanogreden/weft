@@ -5,7 +5,7 @@
  * including static arrays, stream-based lists, and Fragment usage.
  */
 
-import { h, hFragment } from "@effect-ui/core";
+import { h } from "@effect-ui/core";
 import { mount } from "@effect-ui/dom/client";
 import { Effect, Schedule, Stream } from "effect";
 
@@ -33,7 +33,7 @@ interface User {
 }
 
 const TableRow = ({ user }: { user: User }) =>
-  hFragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
+  h.fragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
 
 const UserTable = () => {
   const users: User[] = [
@@ -94,7 +94,7 @@ const NestedList = () => {
 // ============================================================================
 
 const TagList = ({ tags }: { tags: string[] }) =>
-  hFragment(
+  h.fragment(
     tags.map((tag, i) =>
       h.span({ class: `badge ${["blue", "green", "purple"][i % 3] ?? "blue"}` }, tag),
     ),

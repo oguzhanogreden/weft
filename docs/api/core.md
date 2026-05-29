@@ -29,14 +29,14 @@ Each builder has four overloads:
 
 Reactive prop values (Stream, Effect, Subscribable) contribute their `E`/`R` to the node. Static values contribute `never`. Children's channels are unioned with props' channels.
 
-### `hFragment`
+### `h.fragment`
 
 Groups children into a fragment that renders without a wrapper element:
 
 ```typescript
-import { hFragment } from "@effect-ui/core";
+import { h } from "@effect-ui/core";
 
-hFragment(children: Node[]): Node<ChildrenE, ChildrenR>
+h.fragment(children: Node[]): Node<ChildrenE, ChildrenR>
 ```
 
 Use when a component needs to return multiple sibling elements.
@@ -169,7 +169,7 @@ These are used internally by `h` and `defineComponent` to accumulate channels fr
 
 ### `FRAGMENT`
 
-Internal brand used to mark fragment nodes. Not intended for direct use — use `hFragment` instead.
+Internal brand used to mark fragment nodes. Not intended for direct use — use `h.fragment` instead.
 
 ---
 

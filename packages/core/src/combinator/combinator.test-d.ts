@@ -219,3 +219,73 @@ const _t21 = MakeWithFnChildren({ value: userStream }, (message) => [
   }),
 ]);
 type _T21 = Expect<Equal<typeof _t21, Node<"t21", UserService>>>;
+
+// =============================================================================
+// Invalid use of children — @ts-expect-error assertions
+// =============================================================================
+
+// --- h.* element children ---
+
+// Test 22: arbitrary object is not a Child
+// @ts-expect-error — `{}` is not assignable to `Child`
+h.div({}, [{}]);
+
+// Test 23: a bare function is not a Child
+// @ts-expect-error — `() => Node` is not assignable to `Child`
+h.div({}, [() => h.span({})]);
+
+// Test 24: a string is not a valid first argument (not props, not Child[])
+// @ts-expect-error — `string` is not assignable to props or `readonly Child[]`
+h.div("not a valid first arg");
+
+// Test 25: a Symbol is not a Child
+// @ts-expect-error — `symbol` is not assignable to `Child`
+h.div({}, [Symbol("x")]);
+
+// --- Component children: array vs function mismatches ---
+
+// Default `Children` for a gen component with no children typed is `readonly Child[]`,
+// so passing a function should fail.
+const GenArrayOnly = Component.gen(function* (_props: Record<string, never>) {
+  return yield* h.div({});
+});
+
+// Test 26: array-children component invoked with a function
+// @ts-expect-error — function not assignable to `readonly Child[]`
+GenArrayOnly({}, () => [h.span({})]);
+
+// A component that declares function-children should reject array literals.
+const GenFnOnly = Component.gen(function* (
+  _props: Record<string, never>,
+  _kids: (msg: string) => readonly Child[],
+) {
+  return yield* h.div({});
+});
+
+// Test 27: function-children component invoked with an array
+// @ts-expect-error — array not assignable to `(msg: string) => readonly Child[]`
+GenFnOnly({}, [h.span({})]);
+
+// Test 28: function-children — wrong return type (string instead of Child[])
+// @ts-expect-error — `string` is not assignable to `readonly Child[]`
+GenFnOnly({}, (_msg: string) => "not an array");
+
+// Test 29: function-children — wrong child shape inside returned array
+// @ts-expect-error — `{}` is not assignable to `Child`
+GenFnOnly({}, (_msg: string) => [{}]);
+
+// Mirror Component.make: array-only declaration rejects functions.
+const MakeArrayOnly = Component.make((_props: Record<string, never>) => h.div({}));
+
+// Test 30: Component.make array-children — function rejected
+// @ts-expect-error — function not assignable to `readonly Child[]`
+MakeArrayOnly({}, () => [h.span({})]);
+
+// Mirror Component.make: function-only declaration rejects arrays.
+const MakeFnOnly = Component.make(
+  (_props: Record<string, never>, _kids: (msg: string) => readonly Child[]) => h.div({}),
+);
+
+// Test 31: Component.make function-children — array rejected
+// @ts-expect-error — array not assignable to `(msg: string) => readonly Child[]`
+MakeFnOnly({}, [h.span({})]);

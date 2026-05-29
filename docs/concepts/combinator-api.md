@@ -85,16 +85,16 @@ const parent = h.div({}, [nodeA, nodeB]);
 
 Static values (strings, numbers, plain functions) contribute `never` to both channels.
 
-## `hFragment`
+## `h.fragment`
 
-`hFragment` groups children without emitting a wrapper element. Use it when a component needs to return multiple sibling nodes:
+`h.fragment` groups children without emitting a wrapper element. Use it when a component needs to return multiple sibling nodes:
 
 ```typescript
-import { hFragment } from "@effect-ui/core";
+import { h } from "@effect-ui/core";
 
 // Renders as three adjacent <td> elements with no wrapping element
 const TableRow = ({ user }: { user: User }) =>
-  hFragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
+  h.fragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
 ```
 
 ## Custom components with `defineComponent`

@@ -152,13 +152,13 @@ void Effect.runPromise(
 
 ## Returning fragments
 
-When a component needs to return multiple sibling elements without a wrapper, use `hFragment`:
+When a component needs to return multiple sibling elements without a wrapper, use `h.fragment`:
 
 ```typescript
-import { hFragment, h } from "@effect-ui/core";
+import { h } from "@effect-ui/core";
 
 const TableCells = ({ row }: { row: Row }) =>
-  hFragment([h.td({}, row.name), h.td({}, row.value), h.td({}, row.status)]);
+  h.fragment([h.td({}, row.name), h.td({}, row.value), h.td({}, row.status)]);
 ```
 
-`hFragment` returns a `Node<E, R>` that accumulates channels from all its children.
+`h.fragment` returns a `Node<E, R>` that accumulates channels from all its children.
