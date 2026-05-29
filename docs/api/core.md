@@ -16,7 +16,7 @@ h.ul(children)
 // ...any HTML or SVG tag
 ```
 
-Each builder has five overloads:
+Each builder has these overloads:
 
 | Signature                               | Description                 |
 | --------------------------------------- | --------------------------- |
@@ -24,6 +24,7 @@ Each builder has five overloads:
 | `h.tag(props, child: string \| number)` | Props + single static child |
 | `h.tag(props)`                          | Props only, no children     |
 | `h.tag(children: Child[])`              | Children only, no props     |
+| `h.tag(child: string \| number)`        | Single static child only    |
 | `h.tag()`                               | No arguments                |
 
 **Return type**: `Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>`

@@ -8,12 +8,17 @@ import type { Child, DOMNode } from "./types";
 const h = makeH();
 
 describe("createElementFn — arg normalization", () => {
-  test("empty props → empty props, no children", () => {
+  test("empty props, no children", () => {
     const node = Effect.runSync(h.div({}));
     assert.deepEqual(node, { type: "div", props: {} });
   });
 
-  test("empty → no children, no props", () => {
+  test("single child, no props", () => {
+    const node = Effect.runSync(h.div("test"));
+    assert.deepEqual(node, { type: "div", props: { children: "test" } });
+  });
+
+  test("no children, no props", () => {
     const node = Effect.runSync(h.div());
     assert.deepEqual(node, { type: "div", props: {} });
   });

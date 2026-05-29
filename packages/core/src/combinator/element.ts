@@ -35,6 +35,7 @@ export interface ElementFn<Props> {
   <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
   <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
   <C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  (child: string | number): Node<never, never>;
   (): Node<never, never>;
 }
 
@@ -68,6 +69,8 @@ function createElementFn(tag: string): ElementFn<any> {
     let kids: unknown = undefined;
 
     if (Array.isArray(propsOrChildren)) {
+      kids = propsOrChildren;
+    } else if (typeof propsOrChildren === "string" || typeof propsOrChildren === "number") {
       kids = propsOrChildren;
     } else if (propsOrChildren !== undefined) {
       props = propsOrChildren as Record<string, unknown>;

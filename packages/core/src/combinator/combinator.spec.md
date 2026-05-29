@@ -55,12 +55,13 @@ h.div({}, [userStream, dbEffect, h.span({}, "static")]);
 
 ### Element call shapes
 
-`ElementFn` supports five call shapes; each preserves the caller's prop and child `E`/`R`:
+`ElementFn` supports multiple call shapes; each preserves the caller's prop and child `E`/`R`:
 
 - `el(props, children)` — props plus a `readonly Child[]`.
 - `el(props, child)` — props plus a single `string | number`.
 - `el(props)` — props only.
 - `el(children)` — children only.
+- `el(child)` — single `string | number`.
 - `el()` — empty.
 
 ### `Component.gen` and `Component.make`

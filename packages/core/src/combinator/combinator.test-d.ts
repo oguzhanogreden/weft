@@ -234,9 +234,11 @@ h.div({}, [{}]);
 // @ts-expect-error — `() => Node` is not assignable to `Child`
 h.div({}, [() => h.span({})]);
 
-// Test 24: a string is not a valid first argument (not props, not Child[])
-// @ts-expect-error — `string` is not assignable to props or `readonly Child[]`
-h.div("not a valid first arg");
+// Test 24a: a string is a valid first argument (single static child)
+h.div("valid first arg");
+
+// Test 24b: a number is a valid first argument (single static child)
+h.div(42);
 
 // Test 25: a Symbol is not a Child
 // @ts-expect-error — `symbol` is not assignable to `Child`
