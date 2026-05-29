@@ -75,14 +75,15 @@ For function-children, `ChildrenE`/`ChildrenR` are extracted from the function's
 
 ```typescript
 interface TextFieldProps {
-  value?: string | Stream.Stream<string>;
+  value?: Source.Source<string>;
   onChange?: (v: string) => void;
 }
 
 const TextField = Component.gen(function* (props: TextFieldProps) {
+  const value = yield* Source.toSubscribable(props.value);
   return yield* h.input({
-    value: props.value,
-    oninput: (e) => props.onChange?.((e.target as HTMLInputElement).value),
+    value,
+    oninput: (e) => props.onChange?.(e.currentTarget.value),
   });
 });
 ```
@@ -91,8 +92,8 @@ const TextField = Component.gen(function* (props: TextFieldProps) {
 
 ```typescript
 const List = Component.make(
-  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
-    h.ul({}, props.items.flatMap(renderItem)),
+  (props: { items: readonly string[] }, children: (item: string) => readonly Child[]) =>
+    h.ul({}, props.items.flatMap(children)),
 );
 
 List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
