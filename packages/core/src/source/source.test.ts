@@ -12,7 +12,7 @@ import {
   pipe,
 } from "effect";
 import { describe, it } from "vite-plus/test";
-import { NoPropValue, Source } from "~/source";
+import { NoPropValue, Source } from "~/source/source";
 import { Cause } from "effect";
 
 // Run an Effect inside a managed Scope (Effect.scoped closes the scope when done).

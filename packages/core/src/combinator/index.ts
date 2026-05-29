@@ -11,3 +11,4 @@ export type {
   ChildrenE,
   ChildrenR,
 } from "./types";
+export { Component } from "./component";

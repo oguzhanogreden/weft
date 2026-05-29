@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { FRAGMENT } from "./fragment";
 import type { HTMLElements, SVGElements } from "~/types";
 import type { Child, ChildrenE, ChildrenR, CombinatorialProps, ElementFn, Node } from "./types";
-import type { Source } from "~/source";
+import type { Source } from "~/source/source";
 
 /** Augmentable interface for user-defined custom element tags and props. */
 export interface CustomElements {}
@@ -39,7 +39,7 @@ function createElementFn(tag: string): ElementFn<any> {
 const cache = new Map<string, ElementFn<any>>();
 
 /** Proxy-based element namespace. Access any HTML, SVG, or custom element as `h.tagName(props, children)`. */
-export const h = new Proxy({} as H, {
+export const h = new Proxy<H>({} as H, {
   get(_, tag: string) {
     let fn = cache.get(tag);
     if (!fn) {

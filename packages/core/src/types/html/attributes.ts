@@ -1,5 +1,5 @@
 import type { Properties as CSSProperties } from "csstype";
-import type { Source } from "~/source";
+import type { Source } from "~/source/source";
 
 export type HTMLAttributeSource<T> = Source.Source<T | undefined>;
 

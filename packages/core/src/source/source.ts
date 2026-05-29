@@ -12,9 +12,6 @@ import {
 } from "effect";
 import { isStream } from "~/stream";
 
-// Re-exported reliable guard, keyed off Subscribable's TypeId.
-export { isSubscribable } from "effect/Subscribable";
-
 /**
  * Raised by `toSubscribable` when a `Stream`-sourced prop completes without
  * ever emitting a value. The only source kind that can be legitimately absent.
