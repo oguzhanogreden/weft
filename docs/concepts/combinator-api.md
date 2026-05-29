@@ -46,7 +46,7 @@ h.input({ type: "text", placeholder: "Search..." });
 h.button({ type: "button", onclick: () => handleClick() }, "Submit");
 ```
 
-Each builder has four call signatures:
+Each builder has five call signatures:
 
 ```typescript
 // props + children array
@@ -60,6 +60,9 @@ h.div(props)
 
 // children only (no props)
 h.div(children: Node[])
+
+// no props, no children
+h.div()
 ```
 
 ### How `E` and `R` accumulate
