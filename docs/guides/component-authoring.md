@@ -10,7 +10,7 @@ The simplest component is just a function:
 import { h } from "@effect-ui/core";
 
 function Greeting({ name }: { name: string }) {
-  return h.p({}, `Hello, ${name}!`);
+  return h.p([`Hello, ${name}!`]);
 }
 
 // Call it like a function
