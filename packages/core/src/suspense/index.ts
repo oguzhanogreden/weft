@@ -1,5 +1,6 @@
 import type { RenderNode } from "~/types";
 import type { Child, ChildrenE, ChildrenR, Node } from "~/combinator/types";
+import { Effect } from "effect";
 
 /**
  * Props for the {@link Suspense} boundary — used by renderers to access
@@ -40,8 +41,8 @@ export function Suspense<C extends readonly Child[]>(
   // synchronously via the {type, props} branch — same path as JSX <Suspense>.
   // The `as unknown` cast is necessary because ElementType requires a
   // single-arg function, but Suspense takes two args.
-  return {
-    type: Suspense as unknown as (props: Record<string, unknown>) => unknown,
-    props: { ...props, children } as Record<string, unknown>,
-  } as unknown as Node<ChildrenE<C>, ChildrenR<C>>;
+  return Effect.succeed({
+    type: Suspense,
+    props: { ...props, children },
+  }) as unknown as Node<ChildrenE<C>, ChildrenR<C>>;
 }

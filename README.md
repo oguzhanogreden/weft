@@ -25,7 +25,7 @@ effect-ui is a reactive DOM rendering library built on Effect's combinator API. 
 
 effect-ui is a monorepo with two packages:
 
-- **`@effect-ui/core`**: Combinator builders and type definitions. Exports `h`, `h.fragment`, `Component` (with `Component.gen` / `Component.make`), `Suspense`, and the `Node<E, R>` / `Source<A, E, R>` types.
+- **`@effect-ui/core`**: Combinator builders and type definitions. Exports `h`, `h.fragment`, `Component` (with `Component.gen` / `Component.make`), `Suspense`, `Boundary` (six error-boundary variants), and the `Node<E, R>` / `Source<A, E, R>` types.
 - **`@effect-ui/dom`**: The renderer. `mount` and `hydrate` for the browser; `renderToString`, `renderToStringHydratable`, `renderToStream`, and `renderToStreamHydratable` for the server (imported from `@effect-ui/dom/server`).
 
 ## Installation
@@ -267,6 +267,7 @@ The [examples/](./examples) directory contains standalone applications you can r
 | `subscription-ref`           | Local state, derived streams, and coordinating multiple refs               |
 | `ssr-hydration`              | Server rendering with `renderToStringHydratable` and client `hydrate`      |
 | `suspense`                   | Suspense boundaries for streaming SSR and client-side coordination         |
+| `error-boundary`             | All six `Boundary.*` variants: catchAll, catchTag, catchTags, and more     |
 
 ## Development
 

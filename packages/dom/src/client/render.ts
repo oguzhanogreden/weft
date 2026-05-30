@@ -3,6 +3,7 @@ import {
   Effect,
   ExecutionStrategy,
   Exit,
+  Fiber,
   Layer,
   ManagedRuntime,
   Option,
@@ -11,11 +12,12 @@ import {
   Stream,
   pipe,
 } from "effect";
-import { FRAGMENT } from "@effect-ui/core";
+import { BOUNDARY, FRAGMENT } from "@effect-ui/core";
 import { isStream, Suspense, toStream } from "@effect-ui/core";
-import type { SuspenseProps } from "@effect-ui/core";
+import type { BoundaryProps, SuspenseProps } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import {
+  BoundaryContext,
   HydrationMismatchError,
   UnsupportedNodeTypeError,
   type RenderError,
@@ -25,13 +27,15 @@ import {
   SuspenseContext,
 } from "~/data";
 import {
+  boundaryEndText,
+  boundaryStartText,
   parseStreamMarker,
   streamEndText,
   streamStartText,
   suspenseEndText,
   suspenseStartText,
 } from "~/shared";
-import { nextStreamId, nextSuspenseId } from "~/utilities";
+import { nextBoundaryId, nextStreamId, nextSuspenseId } from "~/utilities";
 
 // ============================================================================
 // DOM Prop Handling
@@ -302,7 +306,8 @@ function camelToKebab(str: string): string {
 }
 
 /**
- * Subscribes to a stream and runs callback for each emission
+ * Subscribes to a stream and runs callback for each emission.
+ * If a `BoundaryContext` is present, stream failures are routed to it.
  */
 function subscribeToStream<A>(
   stream: Stream.Stream<A>,
@@ -311,16 +316,23 @@ function subscribeToStream<A>(
 ): Effect.Effect<void, StreamSubscriptionError, RenderContext> {
   return Effect.gen(function* () {
     const context = yield* RenderContext;
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
 
-    // Create the stream subscription effect
     const effect = Stream.runForEach(stream, (value) => Effect.sync(() => void onValue(value)));
+    const fiber = yield* Effect.forkIn(effect, context.scope);
 
-    // Fork the effect in the scope so it's automatically interrupted when scope closes
-    yield* Effect.forkIn(effect, context.scope);
-
-    // Note: Stream runs in background via forked fiber
-    // This matches the AC1 requirement that Effect completes after initial render
-    // and streams run in background
+    // Route stream failures to the nearest BoundaryContext; swallow if none.
+    yield* pipe(
+      Fiber.await(fiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit)
+          ? Option.isSome(boundaryCtx)
+            ? boundaryCtx.value.reportError(exit.cause)
+            : Effect.void
+          : Effect.void,
+      ),
+      Effect.forkIn(context.scope),
+    );
   });
 }
 
@@ -397,6 +409,92 @@ function setEventHandler(
 // ============================================================================
 // Suspense Boundary
 // ============================================================================
+
+/**
+ * Implements a `Boundary.*` error boundary for the DOM renderer.
+ *
+ * Renders the children in a forked subtree scope. Construction-time errors are
+ * caught immediately; post-mount stream errors are routed via `BoundaryContext`
+ * and trigger a DOM swap to the fallback returned by `props.match`.
+ */
+function renderBoundary(
+  props: BoundaryProps,
+): Effect.Effect<
+  readonly Node[],
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    const context = yield* RenderContext;
+    const parentBoundary = yield* Effect.serviceOption(BoundaryContext);
+
+    const id = nextBoundaryId();
+    const startMarker = document.createComment(boundaryStartText(id));
+    const endMarker = document.createComment(boundaryEndText(id));
+
+    const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const subtreeContext = { ...context, scope: subtreeScope };
+
+    const errorDeferred = yield* Deferred.make<void, import("effect").Cause.Cause<unknown>>();
+
+    const boundaryService: BoundaryContext["Type"] = {
+      reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
+    };
+
+    const childNodes = yield* pipe(
+      renderChildren(props.children as readonly RenderNode[]),
+      Effect.provideService(BoundaryContext, boundaryService),
+      Effect.provideService(RenderContext, subtreeContext),
+      Effect.provideService(Scope.Scope, subtreeScope),
+      Effect.catchAllCause((cause) => {
+        const fallbackNode = props.match(cause);
+        if (fallbackNode === null) return Effect.failCause(cause);
+        return pipe(
+          Scope.close(subtreeScope, Exit.void),
+          Effect.flatMap(() => renderNode(fallbackNode as RenderNode)),
+          Effect.map((n): readonly Node[] =>
+            n === null ? [] : Array.isArray(n) ? (n as Node[]) : [n as Node],
+          ),
+        );
+      }),
+    );
+
+    // Recovery fiber: awaits error deferred, swaps DOM on trigger
+    const recoveryEffect = Effect.gen(function* () {
+      const cause = yield* Deferred.await(errorDeferred).pipe(Effect.flip);
+      const fallbackNode = props.match(cause);
+      yield* Scope.close(subtreeScope, Exit.void);
+
+      if (fallbackNode === null) {
+        if (Option.isSome(parentBoundary)) {
+          // Propagate to the nearest parent boundary (spec AC15).
+          return yield* parentBoundary.value.reportError(cause);
+        }
+        // No parent boundary: surface as an unhandled boundary failure.
+        return yield* Effect.logError("Unhandled error escaped the outermost Boundary", cause);
+      }
+
+      removeNodesBetweenMarkers(startMarker, endMarker);
+      const fallbackNodes = yield* renderNode(fallbackNode as RenderNode);
+      const parent = endMarker.parentNode;
+      if (parent !== null) {
+        if (fallbackNodes !== null) {
+          if (Array.isArray(fallbackNodes)) {
+            for (const n of fallbackNodes as Node[]) {
+              parent.insertBefore(n, endMarker);
+            }
+          } else {
+            parent.insertBefore(fallbackNodes as Node, endMarker);
+          }
+        }
+      }
+    });
+
+    yield* Effect.forkIn(recoveryEffect, context.scope);
+
+    return [startMarker, ...childNodes, endMarker] as readonly Node[];
+  });
+}
 
 /**
  * Implements the `<Suspense>` boundary for the DOM renderer.
@@ -587,6 +685,11 @@ export function renderNode(
       // Suspense boundary
       if (type === Suspense) {
         return yield* renderSuspenseBoundary(props as unknown as SuspenseProps);
+      }
+
+      // Error boundary
+      if (type === BOUNDARY) {
+        return yield* renderBoundary(props as unknown as BoundaryProps);
       }
 
       // AC4: Element (string type)
@@ -858,7 +961,21 @@ function handleStreamChild(
     );
 
     // Subscription fiber lives in the enclosing context.scope (not content scope).
-    yield* Effect.forkIn(effect, context.scope);
+    const streamFiber = yield* Effect.forkIn(effect, context.scope);
+
+    // Route stream child failures to the nearest BoundaryContext; swallow if none.
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
+    yield* pipe(
+      Fiber.await(streamFiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit)
+          ? Option.isSome(boundaryCtx)
+            ? boundaryCtx.value.reportError(exit.cause)
+            : Effect.void
+          : Effect.void,
+      ),
+      Effect.forkIn(context.scope),
+    );
 
     // AC19: Return markers to be inserted.
     // Content will be updated asynchronously by the daemon fiber.
@@ -1196,6 +1313,12 @@ function hydrateNode(
         // the boundary: the fallback is gone and the children are inline in the
         // DOM. Hydrate the children directly from the current cursor — the
         // Suspense wrapper is transparent to the DOM walk.
+        return yield* hydrateChildren(props, cursor, path);
+      }
+
+      if (type === BOUNDARY) {
+        // Hydration: boundary rendered its children inline (no markers) on the
+        // server. Walk children from cursor and set up client boundary normally.
         return yield* hydrateChildren(props, cursor, path);
       }
 

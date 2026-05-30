@@ -62,22 +62,26 @@ export type PropsR<P> = {
 }[keyof P];
 
 /** Extract E from a children array — Node (Effect) and Stream children contribute their E. */
-export type ChildrenE<T extends readonly Child[]> = {
-  [K in keyof T]: T[K] extends Effect.Effect<any, infer E, any>
-    ? E
-    : T[K] extends Stream.Stream<any, infer E, any>
-      ? E
-      : never;
-}[number];
+export type ChildrenE<T extends readonly Child[]> = [T[number]] extends [never]
+  ? never
+  : {
+      [K in keyof T]: T[K] extends Effect.Effect<any, infer E, any>
+        ? E
+        : T[K] extends Stream.Stream<any, infer E, any>
+          ? E
+          : never;
+    }[number];
 
 /** Extract R from a children array — Node (Effect) and Stream children contribute their R. */
-export type ChildrenR<T extends readonly Child[]> = {
-  [K in keyof T]: T[K] extends Effect.Effect<any, any, infer R>
-    ? R
-    : T[K] extends Stream.Stream<any, any, infer R>
-      ? R
-      : never;
-}[number];
+export type ChildrenR<T extends readonly Child[]> = [T[number]] extends [never]
+  ? never
+  : {
+      [K in keyof T]: T[K] extends Effect.Effect<any, any, infer R>
+        ? R
+        : T[K] extends Stream.Stream<any, any, infer R>
+          ? R
+          : never;
+    }[number];
 
 /**
  * Strip `children` from HTML prop types and widen all Source prop types to

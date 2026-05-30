@@ -118,6 +118,118 @@ Suspense(
 - Works on both the server (streaming patch model) and the client
 - `hydrate()` sees through `Suspense` boundaries and adopts resolved DOM in place
 
+### `Boundary` namespace
+
+Six variants for intercepting rendering-path errors in a subtree. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch as `Suspense`. All variants share the same call shape — props first, children array second.
+
+**What is caught:**
+
+- Construction-time failures — the Effect phase of building child nodes
+- Post-mount stream failures — streams driving children or prop values that fail after mount
+
+**What is NOT caught:** event handler errors (they run in detached fibers outside the render path).
+
+```typescript
+import { Boundary } from "@effect-ui/core";
+```
+
+#### `Boundary.catchAll`
+
+Catches all typed failures (`Cause.fail`). Defects (`Cause.die`) are not caught and re-raise.
+
+```typescript
+Boundary.catchAll<C, FE, FR>(
+  props: { fallback: (e: ChildrenE<C>) => Node<FE, FR> },
+  children: C,
+): Node<FE, ChildrenR<C> | FR>
+```
+
+The children's `E` is fully consumed. The output `E` is only the fallback's own error channel.
+
+#### `Boundary.catchAllCause`
+
+Catches every `Cause` including defects and interruptions.
+
+```typescript
+Boundary.catchAllCause<C, FE, FR>(
+  props: { fallback: (cause: Cause.Cause<ChildrenE<C>>) => Node<FE, FR> },
+  children: C,
+): Node<FE, ChildrenR<C> | FR>
+```
+
+The fallback receives the full `Cause`, not just the failure value.
+
+#### `Boundary.catchTag`
+
+Catches errors whose `_tag` equals `props.tag`. Unmatched errors re-raise to the nearest parent boundary.
+
+```typescript
+Boundary.catchTag<C, Tag, FE, FR>(
+  props: {
+    tag: Tag;                                                    // must be a key of ChildrenE<C>["_tag"]
+    fallback: (e: Extract<ChildrenE<C>, { _tag: Tag }>) => Node<FE, FR>;
+  },
+  children: C,
+): Node<Exclude<ChildrenE<C>, { _tag: Tag }> | FE, ChildrenR<C> | FR>
+```
+
+The matched tag is removed from the output `E` union.
+
+#### `Boundary.catchTags`
+
+Catches multiple tags in one call. The handlers record IS the first argument (no wrapping object). Unregistered tags re-raise.
+
+```typescript
+Boundary.catchTags<C, Handlers>(
+  handlers: {
+    [Tag in ChildrenE<C>["_tag"]]?: (e: Extract<ChildrenE<C>, { _tag: Tag }>) => Node<any, any>
+  },
+  children: C,
+): Node<UnhandledE | HandlersE, ChildrenR<C> | HandlersR>
+```
+
+#### `Boundary.catchSome`
+
+The fallback returns `Option<Node>`. `Option.none()` re-raises the error; `Option.some(node)` catches it.
+
+```typescript
+Boundary.catchSome<C, FE, FR>(
+  props: { fallback: (e: ChildrenE<C>) => Option.Option<Node<FE, FR>> },
+  children: C,
+): Node<ChildrenE<C> | FE, ChildrenR<C> | FR>
+```
+
+The children's `E` is preserved in the output because the boundary may or may not handle any given error.
+
+#### `Boundary.catchIf`
+
+A predicate gates the fallback. `false` re-raises.
+
+```typescript
+Boundary.catchIf<C, FE, FR>(
+  props: {
+    predicate: (e: ChildrenE<C>) => boolean;
+    fallback: (e: ChildrenE<C>) => Node<FE, FR>;
+  },
+  children: C,
+): Node<ChildrenE<C> | FE, ChildrenR<C> | FR>
+```
+
+#### Re-raise and nesting
+
+When a boundary's `match` returns `null` (unmatched error), the error propagates to the nearest **parent** `Boundary` via `BoundaryContext`. If there is no parent boundary, the error fails the enclosing mount.
+
+Inner boundaries shadow outer ones for their subtree — the innermost boundary is always tried first.
+
+```typescript
+// Inner catches FooError; BarError propagates to outer
+Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
+  Boundary.catchTag({ tag: "Foo", fallback: (e) => h.span({}, `Foo: ${e.msg}`) }, [
+    ChildWithFooOrBarError(),
+  ]),
+]);
+```
+
 ---
 
 ## Types

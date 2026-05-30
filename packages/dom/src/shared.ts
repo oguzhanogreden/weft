@@ -93,6 +93,30 @@ export function parseSuspenseMarker(comment: Comment): SuspenseMarker | null {
 // Stream region markers
 // ============================================================================
 
+// ============================================================================
+// Boundary error markers
+// ============================================================================
+
+/**
+ * Text content (without the `<!--`/`-->` delimiters) of a Boundary's
+ * opening comment marker, e.g. `" boundary-start-3 "`.
+ */
+export function boundaryStartText(id: number): string {
+  return ` boundary-start-${id} `;
+}
+
+/**
+ * Text content of a Boundary's closing comment marker, e.g.
+ * `" boundary-end-3 "`.
+ */
+export function boundaryEndText(id: number): string {
+  return ` boundary-end-${id} `;
+}
+
+// ============================================================================
+// Stream region markers
+// ============================================================================
+
 const MARKER_PATTERN = /^ stream-(start|end)-(\d+) $/;
 
 /**
