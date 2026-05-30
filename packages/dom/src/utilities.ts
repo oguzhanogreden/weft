@@ -18,3 +18,11 @@ export function nextStreamId(): Effect.Effect<number, never, RenderContext> {
  * they only need to be unique within a single render tree.
  */
 export const nextSuspenseId = nextStreamId;
+
+let boundaryIdCounter = 0;
+
+/**
+ * Generates the next unique Boundary ID.
+ * Uses a module-level counter separate from the stream/suspense counter.
+ */
+export const nextBoundaryId = (): number => ++boundaryIdCounter;

@@ -1,4 +1,4 @@
-import { Context, Data, Effect, ManagedRuntime, Scope } from "effect";
+import { Cause, Context, Data, Effect, ManagedRuntime, Scope } from "effect";
 
 // ============================================================================
 // Error Types
@@ -38,6 +38,21 @@ export class HydrationMismatchError extends Data.TaggedError("HydrationMismatchE
   readonly actual: string;
   readonly path: string;
 }> {}
+
+/**
+ * Optional service provided by a `Boundary.*` descriptor to its subtree.
+ *
+ * Stream fibers running inside the boundary call `reportError` when they fail.
+ * Inner boundaries shadow the outer service via `Effect.provideService`, so
+ * errors are always reported to the innermost enclosing boundary.
+ */
+export class BoundaryContext extends Context.Tag("BoundaryContext")<
+  BoundaryContext,
+  {
+    /** Report a rendering-path error to this boundary. */
+    readonly reportError: (cause: Cause.Cause<unknown>) => Effect.Effect<void>;
+  }
+>() {}
 
 /**
  * Optional service provided by a `<Suspense>` boundary to its subtree.

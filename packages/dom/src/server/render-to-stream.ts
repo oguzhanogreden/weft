@@ -1,5 +1,11 @@
-import { FRAGMENT } from "@effect-ui/core";
-import { isStream, Suspense, type SuspenseProps, toStream } from "@effect-ui/core";
+import { BOUNDARY, FRAGMENT } from "@effect-ui/core";
+import {
+  isStream,
+  Suspense,
+  type BoundaryProps,
+  type SuspenseProps,
+  toStream,
+} from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
 import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
@@ -137,6 +143,42 @@ function renderSuspenseSSRInline(
 }
 
 // ============================================================================
+// Boundary SSR helper
+// ============================================================================
+
+/**
+ * Renders a `Boundary.*` descriptor for SSR. Attempts to render children; on
+ * error calls `props.match` — if it returns a `Node`, renders the fallback
+ * inline with no markers; if it returns `null`, propagates the error as a
+ * stream failure. Used by both plain-SSR and hydratable-SSR code paths.
+ */
+function renderBoundarySSR(
+  props: BoundaryProps,
+  renderFn: (node: RenderNode) => Stream.Stream<string, Error>,
+): Stream.Stream<string, Error> {
+  const childrenNode = (
+    props.children.length === 0
+      ? null
+      : props.children.length === 1
+        ? (props.children[0] as RenderNode)
+        : (props.children as RenderNode[])
+  ) as RenderNode;
+
+  return Stream.unwrapScoped(
+    Effect.gen(function* () {
+      const childrenHtml = yield* Stream.mkString(renderFn(childrenNode)).pipe(
+        Effect.catchAllCause((cause) => {
+          const fallbackNode = props.match(cause);
+          if (fallbackNode === null) return Effect.failCause(cause);
+          return Stream.mkString(renderFn(fallbackNode as RenderNode));
+        }),
+      );
+      return Stream.make(childrenHtml);
+    }),
+  );
+}
+
+// ============================================================================
 // Plain SSR  (no reactive-region markers)
 // ============================================================================
 
@@ -196,6 +238,10 @@ function renderSSRNode(
         return renderSSRNode((sp.fallback ?? null) as RenderNode, null);
       }
       return renderSuspenseSSRInline(sp, ctx, (n) => renderSSRNode(n, ctx));
+    }
+
+    if (type === BOUNDARY) {
+      return renderBoundarySSR(props as unknown as BoundaryProps, (n) => renderSSRNode(n, ctx));
     }
 
     if (typeof type === "string") {
@@ -298,6 +344,12 @@ function renderHydratableSSRNode(
         return renderHydratableSSRNode((sp.fallback ?? null) as RenderNode, counter, null);
       }
       return renderSuspenseSSRInline(sp, ctx, (n) => renderHydratableSSRNode(n, counter, ctx));
+    }
+
+    if (type === BOUNDARY) {
+      return renderBoundarySSR(props as unknown as BoundaryProps, (n) =>
+        renderHydratableSSRNode(n, counter, ctx),
+      );
     }
 
     if (typeof type === "string") {
