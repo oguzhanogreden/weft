@@ -1,4 +1,4 @@
-import { Cause, Option } from "effect";
+import { Cause, Effect, Option } from "effect";
 import type { RenderNode } from "~/types";
 import type { Child, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
@@ -36,12 +36,12 @@ export type CatchTagsE<C extends readonly Child[], Tags extends string> = Exclud
 
 function makeBoundaryNode<E, R>(
   match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null,
-  children: readonly RenderNode[],
+  children: readonly Child[],
 ): Node<E, R> {
-  return {
-    type: BOUNDARY as unknown as symbol,
-    props: { match, children } as unknown as Record<string, unknown>,
-  } as unknown as Node<E, R>;
+  return Effect.succeed({
+    type: BOUNDARY,
+    props: { match, children } as Record<string, unknown>,
+  }) as Node<E, R>;
 }
 
 /**
@@ -72,7 +72,7 @@ export namespace Boundary {
       const opt = Cause.failureOption(cause);
       return Option.isSome(opt) ? props.fallback(opt.value as ChildrenE<C>) : null;
     };
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 
   /**
@@ -85,7 +85,7 @@ export namespace Boundary {
   ): Node<FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null =>
       props.fallback(cause as Cause.Cause<ChildrenE<C>>);
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 
   /**
@@ -112,7 +112,7 @@ export namespace Boundary {
         ? props.fallback(e as Extract<ChildrenE<C>, { _tag: Tag }>)
         : null;
     };
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 
   /**
@@ -151,7 +151,7 @@ export namespace Boundary {
       )[tag];
       return handler ? handler(e) : null;
     };
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 
   /**
@@ -169,7 +169,7 @@ export namespace Boundary {
       const result = props.fallback(opt.value as ChildrenE<C>);
       return Option.isSome(result) ? (result.value as Node<unknown, unknown>) : null;
     };
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 
   /**
@@ -190,6 +190,6 @@ export namespace Boundary {
       const e = opt.value as ChildrenE<C>;
       return props.predicate(e) ? props.fallback(e) : null;
     };
-    return makeBoundaryNode(match, children as unknown as readonly RenderNode[]);
+    return makeBoundaryNode(match, children);
   }
 }

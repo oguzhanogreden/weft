@@ -44,7 +44,14 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
     a. Closes the subtree scope — cancels all child fibers and prop pumps within the boundary.
     b. Calls `props.match(cause)`:
     - If `match` returns a `Node`: remove all DOM nodes between the boundary markers, render the fallback in a fresh scope, insert it between the markers.
-    - If `match` returns `null`: call the parent `BoundaryContext`'s `reportError` with the same cause (propagate to nearest parent boundary). If no parent exists, the cause is re-raised into `context.scope` as an unhandled boundary failure.
+    - If `match` returns `null`: call the parent `BoundaryContext`'s `reportError` with the same cause (propagate to nearest parent boundary). If no parent exists, the cause is surfaced as an **unhandled boundary failure** — the recovery fiber logs it via `Effect.logError(message, cause)` so it is observable rather than silently swallowed. Unlike the construction-time path (AC11), this cannot reject the `mount` Effect, which has already resolved by the time a post-mount error occurs; logging is the terminal surfacing mechanism.
+
+> **Sync vs. async surfacing of unhandled errors.** When the outermost boundary cannot handle an error and has no parent:
+>
+> - **Construction-time (synchronous, AC11):** the error occurs before `mount` resolves, so it re-raises out of `renderBoundary` as an Effect failure and **rejects** the `mount` Effect.
+> - **Post-mount (asynchronous stream failure, AC15):** the error occurs after `mount` has resolved, so it is **logged** as an unhandled boundary failure via `Effect.logError`.
+>
+> Both apply equally whether the error arose synchronously at construction or asynchronously while consuming a stream — the renderer routes stream-fiber failures to the nearest `BoundaryContext` (AC7–9), so a boundary catches async stream errors in its subtree exactly as it catches construction-time errors.
 
 ### DOM structure
 

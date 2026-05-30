@@ -1,18 +1,22 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Option } from "effect";
+import { Cause, Data, Effect, Option, pipe } from "effect";
 import { BOUNDARY, Boundary, type BoundaryProps } from "./index";
 import type { Node } from "~/combinator/types";
+import { h } from "~/combinator";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 class FooError extends Data.TaggedError("Foo")<{ msg: string }> {}
 class BarError extends Data.TaggedError("Bar")<{ code: number }> {}
 
-const fallbackNode = { type: "span", props: { children: ["fallback"] } } as unknown as Node<never>;
+const fallbackNode = h.span("fallback");
 
-function extractDescriptor(node: unknown): { type: unknown; props: BoundaryProps } {
-  return node as { type: unknown; props: BoundaryProps };
+function extractDescriptor<E = never>(
+  node: Node<E, never>,
+): { type: unknown; props: BoundaryProps } {
+  const descriptor = Effect.runSync(pipe(node, Effect.orDie));
+  return { type: descriptor.type, props: descriptor.props as unknown as BoundaryProps };
 }
 
 // ── AC1: Descriptor shape ─────────────────────────────────────────────────────
@@ -33,14 +37,14 @@ describe("AC1: descriptor shape", () => {
   });
 
   it("catchTag returns BOUNDARY descriptor", () => {
-    const child = { type: "div", props: {} } as unknown as Node<FooError>;
+    const child = h.div() as Node<FooError>;
     const node = Boundary.catchTag({ tag: "Foo", fallback: () => fallbackNode }, [child]);
     const { type } = extractDescriptor(node);
     assert.equal(type, BOUNDARY);
   });
 
   it("catchTags returns BOUNDARY descriptor", () => {
-    const child = { type: "div", props: {} } as unknown as Node<FooError>;
+    const child = h.div() as Node<FooError>;
     const node = Boundary.catchTags({ Foo: () => fallbackNode }, [child]);
     const { type } = extractDescriptor(node);
     assert.equal(type, BOUNDARY);
@@ -59,7 +63,7 @@ describe("AC1: descriptor shape", () => {
   });
 
   it("children are preserved in props", () => {
-    const child = { type: "div", props: {} } as unknown as Node<never>;
+    const child = h.div();
     const node = Boundary.catchAll({ fallback: () => fallbackNode }, [child]);
     const { props } = extractDescriptor(node);
     assert.equal(props.children.length, 1);
@@ -71,7 +75,7 @@ describe("AC1: descriptor shape", () => {
 
 describe("AC4: catchAll match", () => {
   it("returns fallback node for typed failure", () => {
-    const expected = { type: "span", props: {} } as unknown as Node<never>;
+    const expected = h.span();
     const node = Boundary.catchAll({ fallback: () => expected }, []);
     const { props } = extractDescriptor(node);
     const result = props.match(Cause.fail(new FooError({ msg: "oops" })));
@@ -147,7 +151,7 @@ describe("AC7: catchAllCause match", () => {
 // ── AC9: catchTag match ───────────────────────────────────────────────────────
 
 describe("AC9: catchTag match", () => {
-  const fooChild = { type: "div", props: {} } as unknown as Node<FooError>;
+  const fooChild = h.div() as Node<FooError>;
 
   it("returns fallback when tag matches", () => {
     const node = Boundary.catchTag({ tag: "Foo", fallback: () => fallbackNode }, [fooChild]);
@@ -173,10 +177,10 @@ describe("AC9: catchTag match", () => {
 // ── AC14: catchTags match ─────────────────────────────────────────────────────
 
 describe("AC14: catchTags match", () => {
-  const fooFallback = { type: "span", props: { id: "foo" } } as unknown as Node<never>;
-  const barFallback = { type: "span", props: { id: "bar" } } as unknown as Node<never>;
-  const fooChild = { type: "div", props: {} } as unknown as Node<FooError>;
-  const barChild = { type: "div", props: {} } as unknown as Node<BarError>;
+  const fooFallback = h.span({ id: "foo" });
+  const barFallback = h.span({ id: "bar" });
+  const fooChild = h.div() as Node<FooError>;
+  const barChild = h.div() as Node<BarError>;
 
   it("routes to Foo handler for FooError", () => {
     const node = Boundary.catchTags({ Foo: () => fooFallback, Bar: () => barFallback }, [
@@ -279,7 +283,7 @@ describe("AC20: catchIf match", () => {
 
 describe("AC23/24: call shape", () => {
   it("all variants accept (props, children)", () => {
-    const fooChild = { type: "div", props: {} } as unknown as Node<FooError>;
+    const fooChild = h.div() as Node<FooError>;
     assert.doesNotThrow(() => Boundary.catchAll({ fallback: () => fallbackNode }, [fooChild]));
     assert.doesNotThrow(() => Boundary.catchAllCause({ fallback: () => fallbackNode }, [fooChild]));
     assert.doesNotThrow(() =>
@@ -294,7 +298,7 @@ describe("AC23/24: call shape", () => {
   });
 
   it("catchTags accepts (handlers, children)", () => {
-    const fooChild = { type: "div", props: {} } as unknown as Node<FooError>;
+    const fooChild = h.div() as Node<FooError>;
     assert.doesNotThrow(() => Boundary.catchTags({ Foo: () => fallbackNode }, [fooChild]));
   });
 });

@@ -44,9 +44,7 @@ describe("AC22 non-hydratable: children succeed — boundary is transparent", ()
 
 describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", () => {
   it("renders fallback HTML when child fails", async () => {
-    const failingChild = Effect.fail(new FooError({ msg: "oops" })) as unknown as ReturnType<
-      typeof h.div
-    >;
+    const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
@@ -58,9 +56,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
   });
 
   it("no boundary markers when rendering fallback inline", async () => {
-    const failingChild = Effect.fail(new FooError({ msg: "oops" })) as unknown as ReturnType<
-      typeof h.div
-    >;
+    const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
@@ -75,9 +71,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
 
 describe("AC22 non-hydratable: match returns null → stream failure", () => {
   it("propagates as stream failure when match returns null", async () => {
-    const failingChild = Effect.fail(new FooError({ msg: "oops" })) as unknown as ReturnType<
-      typeof h.div
-    >;
+    const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     // catchAll won't catch defects, but our test child is a typed failure.
     // To get match to return null, use catchTag with wrong tag.
@@ -109,9 +103,7 @@ describe("AC24 hydratable: children succeed — boundary transparent", () => {
 
 describe("AC25 hydratable: children fail — fallback emitted inline", () => {
   it("fallback HTML emitted when children fail (hydratable path)", async () => {
-    const failingChild = Effect.fail(new FooError({ msg: "err" })) as unknown as ReturnType<
-      typeof h.div
-    >;
+    const failingChild = Effect.fail(new FooError({ msg: "err" }));
 
     const html = await runHydratable(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failingChild]),
@@ -125,9 +117,7 @@ describe("AC25 hydratable: children fail — fallback emitted inline", () => {
 
 describe("AC26 hydratable: match returns null → stream failure", () => {
   it("propagates as stream failure when match returns null (hydratable)", async () => {
-    const failingChild = Effect.fail(new FooError({ msg: "oops" })) as unknown as ReturnType<
-      typeof h.div
-    >;
+    const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     // oxlint-disable-next-line typescript/no-explicit-any
     const node = (Boundary.catchTag as any)({ tag: "Bar", fallback: () => h.span({}, "inner") }, [
@@ -151,7 +141,7 @@ describe("AC27: boundary renders inline (no markers to track)", () => {
       Boundary.catchAll({ fallback: () => h.span({}, "outer-err") }, [
         Boundary.catchAll({ fallback: () => h.span({}, "inner-err") }, [
           h.div({ class: "deep" }, "nested"),
-        ]) as unknown as ReturnType<typeof h.div>,
+        ]),
       ]),
     );
     assert.ok(html.includes("deep"), `Expected nested content in: ${html}`);
@@ -164,9 +154,7 @@ describe("AC27: boundary renders inline (no markers to track)", () => {
 describe("stream child inside boundary on server", () => {
   it("renders first emission of stream child inline", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [
-        Stream.make(h.strong({}, "live")) as unknown as ReturnType<typeof h.div>,
-      ]),
+      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [Stream.make(h.strong({}, "live"))]),
     );
     assert.ok(html.includes("<strong>live</strong>"), `Expected stream content in: ${html}`);
   });

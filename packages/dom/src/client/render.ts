@@ -467,9 +467,11 @@ function renderBoundary(
 
       if (fallbackNode === null) {
         if (Option.isSome(parentBoundary)) {
-          yield* parentBoundary.value.reportError(cause);
+          // Propagate to the nearest parent boundary (spec AC15).
+          return yield* parentBoundary.value.reportError(cause);
         }
-        return;
+        // No parent boundary: surface as an unhandled boundary failure.
+        return yield* Effect.logError("Unhandled error escaped the outermost Boundary", cause);
       }
 
       removeNodesBetweenMarkers(startMarker, endMarker);

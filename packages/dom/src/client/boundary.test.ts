@@ -1,7 +1,8 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Data, Deferred, Effect, Option, Stream } from "effect";
+import { Cause, Data, Deferred, Effect, Logger, LogLevel, Option, Stream } from "effect";
 import { Boundary, h } from "@effect-ui/core";
+import type { Child } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
@@ -24,8 +25,8 @@ function createRoot(): HTMLElement {
   return root;
 }
 
-async function runMount(app: unknown, root: HTMLElement) {
-  return Effect.runPromise(mount(app as never, root));
+function runMount(app: RenderNode, root: HTMLElement) {
+  return Effect.runPromise(mount(app, root));
 }
 
 function waitFor(ms: number): Promise<void> {
@@ -43,57 +44,167 @@ function getBoundaryComments(el: Element): Comment[] {
   return result;
 }
 
+/**
+ * Runs `mount` with a replacement logger that records every `Error`-level log
+ * entry's `Cause`, so tests can assert that an unhandled boundary failure was
+ * surfaced (rather than silently swallowed). Returns the mount handle and the
+ * captured causes (populated asynchronously as post-mount failures occur).
+ */
+async function runMountCapturingErrors(app: RenderNode, root: HTMLElement) {
+  const causes: Cause.Cause<unknown>[] = [];
+  const capturing = Logger.replace(
+    Logger.defaultLogger,
+    Logger.make(({ logLevel, cause }) => {
+      if (logLevel === LogLevel.Error && Cause.isCause(cause) && !Cause.isEmpty(cause)) {
+        causes.push(cause);
+      }
+    }),
+  );
+  const handle = await Effect.runPromise(mount(app, root).pipe(Effect.provide(capturing)));
+  return { handle, causes };
+}
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 class FooError extends Data.TaggedError("Foo")<{ msg: string }> {}
 class BarError extends Data.TaggedError("Bar")<{ code: number }> {}
 
-// ── AC1: Construction-time error → fallback rendered ─────────────────────────
-// Note: in this renderer, child Effect failures become async stream errors.
-// The boundary catches them via BoundaryContext and swaps the DOM asynchronously.
+/**
+ * A child whose inferred error union is `FooError | BarError`, regardless of
+ * which one it fails with at runtime. `which` picks the runtime error; the
+ * static type always carries both tags.
+ *
+ * This lets `catchTag` reference a tag the child *can* produce ("Foo") while the
+ * child actually fails with the *other* tag ("Bar") — exercising the re-raise
+ * path with a fully type-checked `catchTag` call, no `as any` needed. (A child
+ * typed `Effect<never, BarError>` would reject `catchTag({ tag: "Foo" })` at
+ * compile time, since "Foo" is not in its error union.)
+ */
+function failWith(which: "Foo" | "Bar"): Effect.Effect<never, FooError | BarError> {
+  return which === "Foo"
+    ? Effect.fail(new FooError({ msg: "foo" }))
+    : Effect.fail(new BarError({ code: 42 }));
+}
 
-describe("AC1: construction-time error → fallback rendered", () => {
-  it("renders fallback when child fails at construction time", async () => {
+/**
+ * A boundary child that fails *synchronously* during construction — while
+ * `renderNode` walks the subtree — rather than asynchronously post-mount.
+ *
+ * The public node builders (`h.*`, `Component.*`, bare `Effect`s) are all
+ * consumed through the async stream path, so any error they raise surfaces
+ * *after* mount, via `BoundaryContext`. To exercise `renderBoundary`'s
+ * synchronous construction-time catch (spec AC1 / AC10–12) we hand the renderer
+ * the raw component descriptor it consumes internally: a function component that
+ * throws. The throw becomes a `Cause.die` at construction time.
+ *
+ * The single cast bridges the internal `{ type, props }` descriptor to the
+ * public `Child` union, which only admits Nodes/Streams/Effects/primitives — it
+ * is intentionally reaching one level below the public surface to drive a code
+ * path the public API cannot reach synchronously.
+ */
+function throwsAtConstruction(error: unknown): Child {
+  const component = () => {
+    throw error;
+  };
+  return { type: component, props: {} } as unknown as Child;
+}
+
+// ── AC1 / AC10–12: Construction-time error → handled synchronously ────────────
+// A child that throws while the subtree is being constructed fails the boundary
+// synchronously, before its comment markers ever reach the DOM. `catchAllCause`
+// sees the defect and renders the fallback in the same tick (no post-mount swap).
+
+describe("AC1: construction-time error handled synchronously", () => {
+  it("renders fallback synchronously when a child throws at construction", async () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "boom" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
+      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+        throwsAtConstruction(new Error("boom")),
       ]),
       root,
     );
 
-    await waitFor(50);
-
-    assert.ok(root.querySelector(".fallback"), "Fallback should be rendered");
+    // No waitFor: the fallback is in place by the time mount resolves.
+    assert.ok(root.querySelector(".fallback"), "Fallback should be rendered synchronously");
     assert.equal(root.querySelector(".fallback")?.textContent, "error!");
 
     await Effect.runPromise(handle.unmount());
   });
 
-  it("does not render children when boundary catches construction error", async () => {
+  it("does not render the failed children when the boundary catches at construction", async () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "boom" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
+      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+        throwsAtConstruction(new Error("boom")),
       ]),
       root,
     );
 
-    await waitFor(50);
-
     assert.equal(root.querySelector(".content"), null, "Content must not be rendered");
+
+    await Effect.runPromise(handle.unmount());
+  });
+});
+
+// ── AC11: construction-time error, match returns null → propagates ────────────
+// `catchAll` only catches typed failures, so a construction-time *defect*
+// (Cause.die) makes its `match` return null. With no parent boundary the error
+// re-raises out of `renderBoundary` and rejects the `mount` Effect.
+
+describe("AC11: construction-time match returns null → mount fails", () => {
+  it("rejects when no boundary handles a construction-time defect", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    await assert.rejects(
+      runMount(
+        Boundary.catchAll({ fallback: () => h.span({}, "err") }, [
+          throwsAtConstruction(new Error("unhandled")),
+        ]),
+        root,
+      ),
+    );
+  });
+});
+
+// ── AC15: post-mount error, match returns null, no parent → surfaced ──────────
+// After mount has resolved a post-mount failure cannot reject the mount Effect,
+// so when the outermost boundary cannot handle it (match → null, no parent) the
+// cause is surfaced as an unhandled boundary failure via Effect.logError rather
+// than being silently swallowed.
+
+describe("AC15: unhandled post-mount error is surfaced, not swallowed", () => {
+  it("logs the cause when an async stream defect escapes the outermost boundary", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // A defect (die) → catchAll's match returns null. No parent boundary.
+    const dyingStream = Stream.concat(
+      Stream.make(h.div({ class: "content" }, "live")),
+      Stream.die(new Error("async-defect")),
+    );
+
+    const { handle, causes } = await runMountCapturingErrors(
+      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [dyingStream]),
+      root,
+    );
+
+    await waitFor(80);
+
+    assert.equal(causes.length, 1, "Exactly one unhandled boundary failure should be surfaced");
+    assert.ok(
+      Cause.pretty(causes[0]!).includes("async-defect"),
+      "Logged cause should be the escaped defect",
+    );
+    assert.equal(
+      root.querySelector(".fallback"),
+      null,
+      "No fallback renders for an unhandled defect",
+    );
 
     await Effect.runPromise(handle.unmount());
   });
@@ -126,20 +237,22 @@ describe("AC16: boundary comment markers in DOM", () => {
 });
 
 // ── AC2: Post-mount stream failure → DOM swap ─────────────────────────────────
+// A bare Effect/Stream child is consumed asynchronously, so its failure is
+// reported to BoundaryContext after mount and triggers a DOM swap to the fallback.
 
 describe("AC2: post-mount stream failure → DOM swap to fallback", () => {
-  it("swaps DOM to fallback when stream inside boundary fails", async () => {
+  it("swaps DOM to fallback when a stream inside the boundary fails", async () => {
     createTestDOM();
     const root = createRoot();
 
     const failingStream = Stream.concat(
-      Stream.make(h.div({ class: "content" }, "live") as unknown as never),
+      Stream.make(h.div({ class: "content" }, "live")),
       Stream.fail(new FooError({ msg: "stream boom" })),
     );
 
     const handle = await runMount(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "stream error") }, [
-        failingStream as unknown as ReturnType<typeof h.div>,
+        failingStream,
       ]),
       root,
     );
@@ -147,6 +260,53 @@ describe("AC2: post-mount stream failure → DOM swap to fallback", () => {
     await waitFor(80);
 
     assert.ok(root.querySelector(".fallback"), "Fallback should appear after stream failure");
+    assert.equal(root.querySelector(".content"), null, "Failed content must be removed on swap");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("catches an async stream failure nested inside an element", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const failingStream = Stream.concat(
+      Stream.make(h.span({ class: "live" }, "x")),
+      Stream.fail(new FooError({ msg: "deep" })),
+    );
+
+    const handle = await runMount(
+      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "caught") }, [
+        h.div({ class: "wrapper" }, [failingStream]),
+      ]),
+      root,
+    );
+
+    await waitFor(80);
+
+    assert.ok(
+      root.querySelector(".fallback"),
+      "Fallback should appear for a deeply nested failure",
+    );
+    assert.equal(root.querySelector(".wrapper"), null, "The whole subtree should be swapped out");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("catches a post-mount typed failure and renders the fallback", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const handle = await runMount(
+      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+        Effect.fail(new FooError({ msg: "boom" })),
+      ]),
+      root,
+    );
+
+    await waitFor(50);
+
+    assert.ok(root.querySelector(".fallback"), "Fallback should be rendered");
+    assert.equal(root.querySelector(".fallback")?.textContent, "error!");
 
     await Effect.runPromise(handle.unmount());
   });
@@ -158,10 +318,6 @@ describe("AC5: BoundaryContext provided; inner boundary shadows outer", () => {
   it("inner boundary catches without triggering outer", async () => {
     createTestDOM();
     const root = createRoot();
-
-    const failingChild = Effect.fail(new FooError({ msg: "inner" })) as unknown as ReturnType<
-      typeof h.div
-    >;
 
     let outerTriggered = false;
 
@@ -175,8 +331,8 @@ describe("AC5: BoundaryContext provided; inner boundary shadows outer", () => {
         },
         [
           Boundary.catchAll({ fallback: () => h.span({ class: "inner-fallback" }, "inner") }, [
-            failingChild,
-          ]) as unknown as ReturnType<typeof h.div>,
+            Effect.fail(new FooError({ msg: "inner" })),
+          ]),
         ],
       ),
       root,
@@ -193,24 +349,21 @@ describe("AC5: BoundaryContext provided; inner boundary shadows outer", () => {
 });
 
 // ── AC6: catchTag re-raise — error propagates to parent ──────────────────────
+// The child's error union is `FooError | BarError`, so `catchTag({ tag: "Foo" })`
+// type-checks. At runtime it fails with BarError, which the inner boundary does
+// not handle, so the cause re-raises to the outer boundary.
 
 describe("AC6: catchTag re-raise propagates to parent", () => {
   it("inner boundary re-raises when tag does not match, outer catches", async () => {
     createTestDOM();
     const root = createRoot();
 
-    // Child has BarError; inner boundary looks for "Foo" — mismatch, re-raises to outer.
-    const failingChild = Effect.fail(new BarError({ code: 42 })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
       Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer caught") }, [
-        // oxlint-disable-next-line typescript/no-explicit-any
-        (Boundary.catchTag as any)(
+        Boundary.catchTag(
           { tag: "Foo", fallback: () => h.span({ class: "inner-fallback" }, "inner") },
-          [failingChild],
-        ) as ReturnType<typeof h.div>,
+          [failWith("Bar")],
+        ),
       ]),
       root,
     );
@@ -224,34 +377,6 @@ describe("AC6: catchTag re-raise propagates to parent", () => {
   });
 });
 
-// ── AC11: match returns null → error propagates out of renderBoundary ─────────
-// For this to propagate synchronously, we use a component that throws at render time
-// (caught as a defect by Effect.gen). catchAll's match returns null for defects.
-
-describe("AC11: match returns null → error propagates", () => {
-  it("mount fails when boundary match returns null for synchronous failure (no parent boundary)", async () => {
-    createTestDOM();
-    const root = createRoot();
-
-    // Component that throws synchronously → becomes Cause.die → catchAll returns null
-    const ThrowingChild = {
-      type: (): RenderNode => {
-        throw new Error("unhandled");
-      },
-      props: {},
-    };
-
-    await assert.rejects(
-      runMount(
-        Boundary.catchAll({ fallback: () => h.span({}, "err") }, [
-          ThrowingChild as unknown as ReturnType<typeof h.div>,
-        ]),
-        root,
-      ),
-    );
-  });
-});
-
 // ── AC19: Markers remain after DOM swap ───────────────────────────────────────
 
 describe("AC19: markers remain after swap", () => {
@@ -259,18 +384,17 @@ describe("AC19: markers remain after swap", () => {
     createTestDOM();
     const root = createRoot();
 
-    // A deferred that we can fail to trigger the stream failure
+    // A deferred we can fail on demand to trigger the post-mount stream failure.
     const failSignal = await Effect.runPromise(Deferred.make<void, FooError>());
     const controlledStream = Stream.fromEffect(Deferred.await(failSignal));
 
     const handle = await runMount(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
-        controlledStream as unknown as ReturnType<typeof h.div>,
+        controlledStream,
       ]),
       root,
     );
 
-    // Trigger failure
     await Effect.runPromise(Deferred.fail(failSignal, new FooError({ msg: "go" })));
     await waitFor(80);
 
@@ -295,15 +419,11 @@ describe("edge: catchSome non-matching re-raises to parent", () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "e" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
       Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
-        Boundary.catchSome({ fallback: () => Option.none() as unknown as never }, [
-          failingChild,
-        ]) as unknown as ReturnType<typeof h.div>,
+        Boundary.catchSome({ fallback: () => Option.none() }, [
+          Effect.fail(new FooError({ msg: "e" })),
+        ]),
       ]),
       root,
     );
@@ -321,15 +441,11 @@ describe("edge: catchIf false re-raises to parent", () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "e" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
       Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
         Boundary.catchIf({ predicate: () => false, fallback: () => h.span({}, "inner") }, [
-          failingChild,
-        ]) as unknown as ReturnType<typeof h.div>,
+          Effect.fail(new FooError({ msg: "e" })),
+        ]),
       ]),
       root,
     );
@@ -376,7 +492,7 @@ describe("AC3: event handler errors are NOT caught by boundary", () => {
     const btn = root.querySelector("button");
     assert.ok(btn, "Button should be rendered");
 
-    // Use btn.click() — triggers click event in jsdom without needing Event constructor
+    // btn.click() triggers a click event in jsdom without needing the Event constructor.
     btn!.click();
     await waitFor(20);
 
@@ -393,10 +509,6 @@ describe("nested: inner catches, outer not triggered", () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "inner" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     let outerCalled = false;
 
     const handle = await runMount(
@@ -409,8 +521,8 @@ describe("nested: inner catches, outer not triggered", () => {
         },
         [
           Boundary.catchAll({ fallback: () => h.span({ class: "inner-fb" }, "inner") }, [
-            failingChild,
-          ]) as unknown as ReturnType<typeof h.div>,
+            Effect.fail(new FooError({ msg: "inner" })),
+          ]),
           h.span({ class: "sibling" }, "sibling"),
         ],
       ),
@@ -434,17 +546,11 @@ describe("nested: inner re-raises, outer catches", () => {
     createTestDOM();
     const root = createRoot();
 
-    const failingChild = Effect.fail(new FooError({ msg: "foo" })) as unknown as ReturnType<
-      typeof h.div
-    >;
-
     const handle = await runMount(
       Boundary.catchAllCause({ fallback: () => h.span({ class: "outer-fb" }, "outer") }, [
-        // oxlint-disable-next-line typescript/no-explicit-any
-        (Boundary.catchTag as any)(
-          { tag: "Bar", fallback: () => h.span({ class: "inner-fb" }, "inner") },
-          [failingChild],
-        ) as ReturnType<typeof h.div>,
+        Boundary.catchTag({ tag: "Bar", fallback: () => h.span({ class: "inner-fb" }, "inner") }, [
+          failWith("Foo"),
+        ]),
       ]),
       root,
     );
