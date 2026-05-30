@@ -117,6 +117,26 @@ const AsyncGreeting = ({ name }: { name: string }) =>
 void Effect.runPromise(mount(AsyncGreeting({ name: "World" }), document.getElementById("root")!));
 ```
 
+## Error boundaries
+
+Wrap any subtree in a `Boundary.*` variant to intercept rendering-path errors and show a fallback. Six variants are available — `catchAll`, `catchAllCause`, `catchTag`, `catchTags`, `catchSome`, and `catchIf`:
+
+```typescript
+import { Boundary, h } from "@effect-ui/core";
+import { Data, Effect } from "effect";
+
+class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
+
+const SafeWidget = () =>
+  Boundary.catchAll({ fallback: (e) => h.div({ class: "error" }, `Request failed: ${e.status}`) }, [
+    Effect.fail(new ApiError({ status: 503 })),
+  ]);
+```
+
+Errors that fail their `match` condition (e.g. wrong tag in `catchTag`) re-raise to the nearest parent boundary. If there is no parent, the mount fails.
+
+See [examples/error-boundary](../../examples/error-boundary) for a runnable demo of all six variants.
+
 ## Next steps
 
 - [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`

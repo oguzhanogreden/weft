@@ -1,0 +1,16 @@
+{
+  "name": "error-boundary",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@effect-ui/core": "workspace:*",
+    "@effect-ui/dom": "workspace:*",
+    "@types/node": "^25.9.1",
+    "effect": "^3.21.2"
+  },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
