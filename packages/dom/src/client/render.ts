@@ -12,9 +12,8 @@ import {
   Stream,
   pipe,
 } from "effect";
-import { BOUNDARY, FRAGMENT } from "@effect-ui/core";
-import { isStream, Suspense, toStream } from "@effect-ui/core";
-import type { BoundaryProps, SuspenseProps } from "@effect-ui/core";
+import { FAILURE_BOUNDARY, FRAGMENT, isStream, SUSPENSE_BOUNDARY, toStream } from "@effect-ui/core";
+import type { Boundary, Child } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import {
   BoundaryContext,
@@ -418,7 +417,7 @@ function setEventHandler(
  * and trigger a DOM swap to the fallback returned by `props.match`.
  */
 function renderBoundary(
-  props: BoundaryProps,
+  props: Boundary.FailureProps & { children: Child[] },
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -497,7 +496,7 @@ function renderBoundary(
 }
 
 /**
- * Implements the `<Suspense>` boundary for the DOM renderer.
+ * Implements the suspense boundary (`Boundary.suspend`) for the DOM renderer.
  *
  * Shows `props.fallback` (bracketed by comment markers) while any async child
  * component is pending, then atomically swaps to the resolved children once
@@ -508,7 +507,7 @@ function renderBoundary(
  * chance to register. The sentinel is released after `renderChildren` returns.
  */
 function renderSuspenseBoundary(
-  props: SuspenseProps,
+  props: Boundary.SuspenseProps & { children?: Child },
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -683,13 +682,13 @@ export function renderNode(
       }
 
       // Suspense boundary
-      if (type === Suspense) {
-        return yield* renderSuspenseBoundary(props as unknown as SuspenseProps);
+      if (type === SUSPENSE_BOUNDARY) {
+        return yield* renderSuspenseBoundary(props as Boundary.SuspenseProps);
       }
 
       // Error boundary
-      if (type === BOUNDARY) {
-        return yield* renderBoundary(props as unknown as BoundaryProps);
+      if (type === FAILURE_BOUNDARY) {
+        return yield* renderBoundary(props as Boundary.FailureProps & { children: Child[] });
       }
 
       // AC4: Element (string type)
@@ -1308,7 +1307,7 @@ function hydrateNode(
         return yield* hydrateChildren(props, cursor, path);
       }
 
-      if (type === Suspense) {
+      if (type === SUSPENSE_BOUNDARY) {
         // By the time `hydrate` runs, the SSR patch script has already resolved
         // the boundary: the fallback is gone and the children are inline in the
         // DOM. Hydrate the children directly from the current cursor — the
@@ -1316,7 +1315,7 @@ function hydrateNode(
         return yield* hydrateChildren(props, cursor, path);
       }
 
-      if (type === BOUNDARY) {
+      if (type === FAILURE_BOUNDARY) {
         // Hydration: boundary rendered its children inline (no markers) on the
         // server. Walk children from cursor and set up client boundary normally.
         return yield* hydrateChildren(props, cursor, path);

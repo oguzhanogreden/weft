@@ -22,8 +22,6 @@ const vite = await createViteServer({
   root: __dirname,
   appType: "custom",
   server: { middlewareMode: true },
-  // Transform SSR JSX without relying on tsconfig discovery.
-  esbuild: { jsx: "automatic", jsxImportSource: "@effect-ui/core" },
 });
 
 const server = createHttpServer((req, res) => {

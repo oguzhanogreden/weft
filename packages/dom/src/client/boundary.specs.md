@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DOM renderer handles `Boundary` descriptors (identified by `type === BOUNDARY`) by intercepting rendering-path errors in the subtree and swapping the DOM to a fallback when an error is caught. The renderer adds a `BoundaryContext` service (parallel to `SuspenseContext`) that is provided to children during rendering and receives error reports from stream fibers within the boundary's scope.
+The DOM renderer handles failure `Boundary` descriptors (identified by `type === FAILURE_BOUNDARY`) by intercepting rendering-path errors in the subtree and swapping the DOM to a fallback when an error is caught. The renderer adds a `BoundaryContext` service (parallel to `SuspenseContext`) that is provided to children during rendering and receives error reports from stream fibers within the boundary's scope.
 
 Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access defects, not just typed failures.
 

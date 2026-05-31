@@ -55,14 +55,15 @@ export class BoundaryContext extends Context.Tag("BoundaryContext")<
 >() {}
 
 /**
- * Optional service provided by a `<Suspense>` boundary to its subtree.
+ * Optional service provided by a suspense boundary (`Boundary.suspend`) to its
+ * subtree.
  *
  * Function components returning `Effect`/`Stream` call `register` before their
  * stream is subscribed and `settle` exactly once when the stream emits its first
  * value. The boundary waits until all registered children have settled before
  * swapping the fallback for the resolved content.
  *
- * Inner `<Suspense>` boundaries shadow the outer service for their own subtree
+ * Inner suspense boundaries shadow the outer service for their own subtree
  * via `Effect.provideService`, so children register with the innermost boundary.
  */
 export class SuspenseContext extends Context.Tag("SuspenseContext")<

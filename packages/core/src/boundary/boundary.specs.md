@@ -2,9 +2,9 @@
 
 ## Overview
 
-The `Boundary` namespace provides error boundary descriptors that wrap subtrees and intercept rendering-path errors. Each variant returns a plain descriptor `{ type: BOUNDARY, props }` — like `Suspense` — that the renderer detects and handles. The `type` field is the `BOUNDARY` symbol; variant-specific matching logic is encoded in a `match` function stored in `props`.
+The `Boundary` namespace groups the subtree-wrapping boundaries: the **failure boundaries** (`catchAll`, `catchAllCause`, `catchTag`, `catchTags`, `catchSome`, `catchIf`) that intercept rendering-path errors, and the **suspense boundary** (`suspend`) that shows a fallback while async children are pending (spec'd in `dom/.../suspense.specs.md`). Each variant returns a plain descriptor `{ type, props }` that the renderer detects and handles. The `type` field is a symbol tag — `FAILURE_BOUNDARY` for the failure variants, `SUSPENSE_BOUNDARY` for `suspend`; for failure boundaries, variant-specific matching logic is encoded in a `match` function stored in `props`.
 
-`Boundary` only catches **rendering-path** errors:
+The failure boundaries only catch **rendering-path** errors:
 
 - Construction-time failures — the Effect phase of building child nodes
 - Post-mount stream/prop failures — streams driving children or prop values
@@ -17,11 +17,11 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 
 ### Descriptors
 
-1. Each `Boundary.*` call returns a plain object `{ type: BOUNDARY, props }` (not an Effect) so the renderer can process it synchronously via the `{ type, props }` branch — the same path as `Suspense`.
-2. `props` contains:
+1. Each failure `Boundary.*` call returns a plain object `{ type: FAILURE_BOUNDARY, props }` (and `Boundary.suspend` returns `{ type: SUSPENSE_BOUNDARY, props }`) — not a meaningful Effect — so the renderer can process it synchronously via the `{ type, props }` branch.
+2. For the failure variants, `props` contains:
    - `match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null` — returns a fallback `Node` if the cause is handled by this variant, `null` if the error should re-raise to a parent boundary or mount
    - `children: readonly RenderNode[]`
-3. The `BOUNDARY` symbol is exported from `@effect-ui/core` for use by renderers.
+3. The `FAILURE_BOUNDARY` and `SUSPENSE_BOUNDARY` symbols are exported from `@effect-ui/core` for use by renderers.
 
 ### `Boundary.catchAll`
 

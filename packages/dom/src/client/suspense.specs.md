@@ -2,16 +2,17 @@
 
 ## Overview
 
-`<Suspense>` is a boundary component that coordinates a shared loading state across
-multiple async children. While any child function component inside the boundary is
-still pending (has not emitted its first value), the boundary shows a `fallback`
-JSXNode in the DOM. When **all** pending children have settled — emitted at least
-one value — the boundary performs a single atomic DOM swap: the fallback is removed
-and all resolved children are inserted in its place.
+The suspense boundary coordinates a shared loading state across multiple async
+children. While any child function component inside the boundary is still pending
+(has not emitted its first value), the boundary shows a `fallback` JSXNode in the
+DOM. When **all** pending children have settled — emitted at least one value — the
+boundary performs a single atomic DOM swap: the fallback is removed and all resolved
+children are inserted in its place.
 
-`Suspense` is exported from `@effect-ui/core`. The rendering implementation
-lives in `@effect-ui/dom`. The boundary is recognised by the renderer via reference
-equality (`type === Suspense`).
+The boundary is constructed with `Boundary.suspend(props, children)`, exported from
+`@effect-ui/core`. The rendering implementation lives in `@effect-ui/dom`. The
+boundary is recognised by the renderer via its `SUSPENSE_BOUNDARY` symbol type tag
+(`type === SUSPENSE_BOUNDARY`).
 
 ## Purpose
 
@@ -23,18 +24,18 @@ Suspense model from SolidJS and React.
 
 ### AC1: Synchronous children — no fallback rendered
 
-- **Given** a `<Suspense>` whose `children` are all synchronous JSXNodes (no
-  function component returning `Effect` or `Stream`)
+- **Given** a `Boundary.suspend({}, children)` whose `children` are all synchronous
+  JSXNodes (no function component returning `Effect` or `Stream`)
 - **When** mounted
 - **Then**:
   - The fallback is never inserted into the DOM
-  - Children are rendered and inserted directly, without Suspense comment markers
+  - Children are rendered and inserted directly, without suspense comment markers
   - No background swap fiber is forked
 
 ### AC2: Single async child — fallback shown, then swap
 
-- **Given** a `<Suspense fallback={F}>` containing one function component `C`
-  that returns `Effect<JSXNode>` or `Stream<JSXNode>`
+- **Given** a `Boundary.suspend({ fallback: F }, [C])` containing one function
+  component `C` that returns `Effect<JSXNode>` or `Stream<JSXNode>`
 - **When** mounted
 - **Then**:
   - Fallback `F` is inserted into the DOM between `<!-- suspense-start-N -->` and
@@ -48,7 +49,7 @@ Suspense model from SolidJS and React.
 
 ### AC3: Multiple async siblings — shared fallback, single swap
 
-- **Given** a `<Suspense fallback={F}>` containing N ≥ 2 async sibling components
+- **Given** a `Boundary.suspend({ fallback: F }, children)` containing N ≥ 2 async sibling components
 - **When** mounted
 - **Then**:
   - A single fallback `F` is shown while **any** sibling is still pending
@@ -56,21 +57,21 @@ Suspense model from SolidJS and React.
   - The swap is atomic: all resolved children appear simultaneously
   - A faster sibling settling does not cause a partial or premature swap
 
-### AC4: Nested `<Suspense>` — independent boundaries
+### AC4: Nested `Boundary.suspend` — independent boundaries
 
-- **Given** an outer `<Suspense fallback={Outer}>` containing an inner
-  `<Suspense fallback={Inner}>`, each with their own async children
+- **Given** an outer `Boundary.suspend({ fallback: Outer }, [...])` containing an inner
+  `Boundary.suspend({ fallback: Inner }, [...])`, each with their own async children
 - **When** mounted
 - **Then**:
   - Inner async children register with the **inner** boundary only (the inner
-    `<Suspense>` overrides the outer's `SuspenseContext` for its subtree)
+    `Boundary.suspend` overrides the outer's `SuspenseContext` for its subtree)
   - The inner boundary resolves independently of the outer
   - The outer boundary's fallback is driven only by its own direct async children
   - Resolving the inner boundary does not affect the outer boundary's pending count
 
 ### AC5: Fallback renders nothing while pending
 
-- **Given** `<Suspense fallback={null}>` (or any falsy `JSXNode` fallback)
+- **Given** `Boundary.suspend({ fallback: null }, children)` (or any falsy `JSXNode` fallback)
 - **When** mounted with pending async children
 - **Then**:
   - The DOM contains only the `<!-- suspense-start-N -->` and
@@ -80,7 +81,7 @@ Suspense model from SolidJS and React.
 ### AC6: Function component returning `Effect<JSXNode>` triggers suspension
 
 - **Given** a function component `C = () => Effect.gen(function* () { … })` rendered
-  inside a `<Suspense>` boundary
+  inside a `Boundary.suspend` boundary
 - **When** the renderer calls `renderComponent(C, props)`
 - **Then**:
   - `SuspenseContext.register` is called before the Effect is forked
@@ -90,7 +91,7 @@ Suspense model from SolidJS and React.
 
 ### AC7: Function component returning `Stream<JSXNode>` triggers suspension
 
-- **Given** a function component `C = () => someStream` rendered inside a `<Suspense>`
+- **Given** a function component `C = () => someStream` rendered inside a `Boundary.suspend`
 - **When** the renderer processes the stream
 - **Then**:
   - `SuspenseContext.register` is called before the stream is subscribed
@@ -101,7 +102,7 @@ Suspense model from SolidJS and React.
 
 ### AC8: Non-component reactive values do not trigger suspension
 
-- **Given** a `<Suspense>` subtree that contains reactive values as **props** or
+- **Given** a `Boundary.suspend` subtree that contains reactive values as **props** or
   as **inline stream children** within an element (e.g. `<div>{count.changes}</div>`,
   `<div class={classStream}>`)
 - **When** rendered
@@ -113,7 +114,7 @@ Suspense model from SolidJS and React.
 
 ### AC9: Scope close while pending — clean interruption
 
-- **Given** a `<Suspense>` with pending children
+- **Given** a `Boundary.suspend` with pending children
 - **When** `unmount()` is called (the render scope is closed)
 - **Then**:
   - The swap fiber (forked in the render scope via `Effect.forkIn`) is interrupted
@@ -125,7 +126,7 @@ Suspense model from SolidJS and React.
 
 ### AC10: Sentinel prevents premature settlement
 
-- **Given** a `<Suspense>` with multiple async children where some resolve very
+- **Given** a `Boundary.suspend` with multiple async children where some resolve very
   quickly (within the same fiber scheduling round as the render)
 - **When** mounted
 - **Then**:
@@ -139,8 +140,9 @@ Suspense model from SolidJS and React.
 
 ### `SuspenseContext` service
 
-Provided by each `<Suspense>` boundary via `Effect.provideService` to its children's
-render. Inner `<Suspense>` boundaries shadow the outer service for their subtree.
+Provided by each `Boundary.suspend` boundary via `Effect.provideService` to its
+children's render. Inner `Boundary.suspend` boundaries shadow the outer service for
+their subtree.
 
 ```typescript
 class SuspenseContext extends Context.Tag("SuspenseContext")<
@@ -193,8 +195,8 @@ When `allSettled` fires in the swap fiber:
 
 ## Constraints
 
-- Error handling is out of scope; a future `<ErrorBoundary>` covers failures in
-  child Effects
+- Error handling is out of scope here; the failure boundaries (`Boundary.catchAll`,
+  `Boundary.catchTag`, etc.) cover failures in child Effects
 - No timeout mechanism — hanging Effects keep the fallback visible indefinitely
-- `Suspense` is not a valid SSR streaming component by itself; see
+- `Boundary.suspend` is not a valid SSR streaming component by itself; see
   `suspense-ssr.specs.md` for server behaviour

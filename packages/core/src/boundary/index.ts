@@ -1,26 +1,17 @@
 import { Cause, Effect, Option } from "effect";
-import type { RenderNode } from "~/types";
 import type { Child, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
 /**
- * Unique type tag used by renderers to identify a `Boundary` descriptor.
- * All six variants embed this symbol as `type` in the returned descriptor.
+ * Unique type tag used by renderers to identify a failure `Boundary` descriptor.
+ * All variants embed this symbol as `type` in the returned descriptor.
  */
-// oxlint-disable-next-line typescript/no-explicit-any
-export const BOUNDARY: unique symbol = Symbol.for("effect-ui/BOUNDARY") as any;
+export const FAILURE_BOUNDARY: unique symbol = Symbol.for("effect-ui/FAILURE_BOUNDARY");
 
 /**
- * Internal descriptor props shared by all `Boundary.*` variants.
- * The renderer reads `match` to decide how to handle a caught error.
+ * Unique type tag used by renderers to identify a suspense `Boundary` descriptor.
+ * All `Boundary.suspend` embeds this symbol as `type` in the returned descriptor.
  */
-export interface BoundaryProps {
-  /**
-   * Called with the caught `Cause`. Returns a fallback `Node` if this boundary
-   * handles the error, or `null` to re-raise to a parent boundary.
-   */
-  readonly match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null;
-  readonly children: readonly RenderNode[];
-}
+export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("effect-ui/SUSPENSE_BOUNDARY");
 
 /** Remove a single tagged error from the children's error union. */
 export type CatchTagE<C extends readonly Child[], Tag extends string> = Exclude<
@@ -34,32 +25,67 @@ export type CatchTagsE<C extends readonly Child[], Tags extends string> = Exclud
   { _tag: Tags }
 >;
 
-function makeBoundaryNode<E, R>(
+function makeFailureBoundaryNode<E, R>(
   match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null,
   children: readonly Child[],
 ): Node<E, R> {
   return Effect.succeed({
-    type: BOUNDARY,
+    type: FAILURE_BOUNDARY,
     props: { match, children } as Record<string, unknown>,
   }) as Node<E, R>;
 }
 
 /**
- * Error boundary namespace. Each variant wraps a subtree and intercepts
- * rendering-path errors (construction-time and post-mount stream failures).
+ * Boundary namespace encapsulating failure and suspense boundaries. Each
+ * variant wraps a subtree and shows a fallback in response to an event.
  *
- * All variants return a plain `{ type: BOUNDARY, props }` descriptor — the
- * renderer detects it synchronously via the `{ type, props }` branch, the
- * same path as `Suspense`.
+ * - **Failure boundaries** (`catchAll`, `catchAllCause`, `catchTag`,
+ *   `catchTags`, `catchSome`, `catchIf`) intercept rendering-path errors —
+ *   construction-time errors and post-mount stream failures — mirroring
+ *   Effect's `catch*` combinators.
+ * - **Suspense boundary** (`suspend`) shows a fallback while async children are
+ *   pending, then swaps to the resolved children once all have settled.
+ *
+ * Each variant returns a plain `{ type, props }` descriptor tagged with
+ * {@link FAILURE_BOUNDARY} or {@link SUSPENSE_BOUNDARY}; the renderer detects it
+ * synchronously via the `{ type, props }` branch.
  *
  * @example
  * ```ts
- * import { Boundary } from "@effect-ui/core";
+ * import { Boundary, h } from "@effect-ui/core";
  *
- * Boundary.catchAll({ fallback: (e) => h.div({}, e.message) }, [child])
+ * // Failure boundary wrapping a suspense boundary — the common pairing:
+ * Boundary.catchAll({ fallback: (e) => h.div({}, e.message) }, [
+ *   Boundary.suspend({ fallback: h.div({}, "Loading…") }, [AsyncCard()]),
+ * ])
  * ```
  */
 export namespace Boundary {
+  /**
+   * Internal descriptor props shared by the failure `Boundary.*` variants
+   * (everything except {@link suspend}). The renderer reads `match` to decide
+   * how to handle a caught error.
+   */
+  export interface FailureProps {
+    /**
+     * Called with the caught `Cause`. Returns a fallback `Node` if this boundary
+     * handles the error, or `null` to re-raise to a parent boundary.
+     */
+    readonly match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null;
+  }
+
+  /**
+   * Props for the {@link suspend} boundary — used by renderers to access
+   * `fallback` and `children` from the node descriptor.
+   */
+  export interface SuspenseProps {
+    /**
+     * Shown in the DOM while async children are pending. Pass `null` or omit to
+     * render nothing (only the comment markers) while pending.
+     */
+    readonly fallback?: Child;
+  }
+
   /**
    * Catch all typed failures (not defects). The children's `E` is fully
    * consumed; the output `E` is only the fallback's error channel.
@@ -72,7 +98,7 @@ export namespace Boundary {
       const opt = Cause.failureOption(cause);
       return Option.isSome(opt) ? props.fallback(opt.value as ChildrenE<C>) : null;
     };
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
   }
 
   /**
@@ -85,7 +111,7 @@ export namespace Boundary {
   ): Node<FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null =>
       props.fallback(cause as Cause.Cause<ChildrenE<C>>);
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
   }
 
   /**
@@ -112,7 +138,7 @@ export namespace Boundary {
         ? props.fallback(e as Extract<ChildrenE<C>, { _tag: Tag }>)
         : null;
     };
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
   }
 
   /**
@@ -151,7 +177,7 @@ export namespace Boundary {
       )[tag];
       return handler ? handler(e) : null;
     };
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
   }
 
   /**
@@ -169,7 +195,7 @@ export namespace Boundary {
       const result = props.fallback(opt.value as ChildrenE<C>);
       return Option.isSome(result) ? (result.value as Node<unknown, unknown>) : null;
     };
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
   }
 
   /**
@@ -190,6 +216,35 @@ export namespace Boundary {
       const e = opt.value as ChildrenE<C>;
       return props.predicate(e) ? props.fallback(e) : null;
     };
-    return makeBoundaryNode(match, children);
+    return makeFailureBoundaryNode(match, children);
+  }
+
+  /**
+   * Creates a suspense boundary node.
+   *
+   * Shows `fallback` while async children are pending (have not yet emitted
+   * their first value), then atomically swaps to the resolved children once
+   * **all** pending children have settled.
+   *
+   * The renderer (`@effect-ui/dom`) identifies the boundary via its
+   * {@link SUSPENSE_BOUNDARY} type tag.
+   *
+   * @example
+   * ```ts
+   * import { Boundary, h } from "@effect-ui/core";
+   *
+   * Boundary.suspend({ fallback: h.div({}, "Loading…") }, [AsyncCard(), AsyncSidebar()])
+   * ```
+   */
+  export function suspend<C extends readonly Child[]>(
+    props: SuspenseProps,
+    children: C,
+  ): Node<ChildrenE<C>, ChildrenR<C>> {
+    // Tag the descriptor with SUSPENSE_BOUNDARY so the renderer processes it
+    // synchronously via the {type, props} branch.
+    return Effect.succeed({
+      type: SUSPENSE_BOUNDARY,
+      props: { ...props, children },
+    });
   }
 }
