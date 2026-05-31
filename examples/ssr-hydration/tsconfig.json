@@ -1,7 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "jsxImportSource": "@effect-ui/core"
-  },
+  "compilerOptions": {},
   "include": ["src", "server.ts"]
 }
