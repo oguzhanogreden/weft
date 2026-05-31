@@ -1,12 +1,12 @@
 import * as assert from "node:assert/strict";
 import { Boundary, h } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
 import { renderToString } from "./render-to-string";
 
-const run = (node: RenderNode) => Effect.runPromise(Stream.mkString(renderToStream(node)));
+const run = (node: Renderable) => Effect.runPromise(Stream.mkString(renderToStream(node)));
 
 // Set OBSERVE_STREAM=1 to watch the HTML accumulate chunk-by-chunk in real time.
 const OBSERVE = process.env.OBSERVE_STREAM === "1";
@@ -80,7 +80,7 @@ describe("renderToStream - streaming behavior", () => {
   });
 
   it("AC-ST2: empty/boolean/null nodes contribute no chunks", async () => {
-    for (const node of [null, undefined, true, false] as RenderNode[]) {
+    for (const node of [null, undefined, true, false] as Renderable[]) {
       const chunks = await Effect.runPromise(Stream.runCollect(renderToStream(node)));
       assert.equal(Chunk.size(chunks), 0);
     }
@@ -123,13 +123,13 @@ describe("renderToStream - streaming behavior", () => {
 
   it("AC-ST4: fails the stream on an unsupported node type", async () => {
     const result = await Effect.runPromiseExit(
-      Stream.runDrain(renderToStream({ type: 123, props: {} } as unknown as RenderNode)),
+      Stream.runDrain(renderToStream({ type: 123, props: {} } as unknown as Renderable)),
     );
     assert.equal(result._tag, "Failure");
   });
 
   it("AC-ST5: builds a large tree with staggered async branches in document order", async () => {
-    const delayed = (millis: number, node: RenderNode) =>
+    const delayed = (millis: number, node: Renderable) =>
       Effect.succeed(node).pipe(Effect.delay(`${millis} millis`));
 
     const tree = h.html({}, [
@@ -216,7 +216,7 @@ describe("renderToStream - function components", () => {
 
 describe("renderToStream - Suspense SSR", () => {
   // Helper: async component backed by a Deferred gate so tests can control timing.
-  function makeGatedComponent(gate: Deferred.Deferred<void>, content: RenderNode) {
+  function makeGatedComponent(gate: Deferred.Deferred<void>, content: Renderable) {
     return () =>
       Effect.gen(function* () {
         yield* Deferred.await(gate);

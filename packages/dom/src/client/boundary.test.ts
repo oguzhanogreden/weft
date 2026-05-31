@@ -2,8 +2,7 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Data, Deferred, Effect, Logger, LogLevel, Option, Stream } from "effect";
 import { Boundary, h } from "@effect-ui/core";
-import type { Child } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
 
@@ -25,7 +24,7 @@ function createRoot(): HTMLElement {
   return root;
 }
 
-function runMount(app: RenderNode, root: HTMLElement) {
+function runMount(app: Renderable, root: HTMLElement) {
   return Effect.runPromise(mount(app, root));
 }
 
@@ -50,7 +49,7 @@ function getBoundaryComments(el: Element): Comment[] {
  * surfaced (rather than silently swallowed). Returns the mount handle and the
  * captured causes (populated asynchronously as post-mount failures occur).
  */
-async function runMountCapturingErrors(app: RenderNode, root: HTMLElement) {
+async function runMountCapturingErrors(app: Renderable, root: HTMLElement) {
   const causes: Cause.Cause<unknown>[] = [];
   const capturing = Logger.replace(
     Logger.defaultLogger,
@@ -94,19 +93,17 @@ function failWith(which: "Foo" | "Bar"): Effect.Effect<never, FooError | BarErro
  * consumed through the async stream path, so any error they raise surfaces
  * *after* mount, via `BoundaryContext`. To exercise `renderBoundary`'s
  * synchronous construction-time catch (spec AC1 / AC10–12) we hand the renderer
- * the raw component descriptor it consumes internally: a function component that
- * throws. The throw becomes a `Cause.die` at construction time.
+ * a function-component descriptor whose body throws. The throw becomes a
+ * `Cause.die` at construction time, when the renderer invokes the component.
  *
- * The single cast bridges the internal `{ type, props }` descriptor to the
- * public `Child` union, which only admits Nodes/Streams/Effects/primitives — it
- * is intentionally reaching one level below the public surface to drive a code
- * path the public API cannot reach synchronously.
+ * A bare `ElementDescriptor` (`{ type, props }`) is a valid `Renderable`, so no
+ * cast is needed — this drives the synchronous construction path directly.
  */
-function throwsAtConstruction(error: unknown): Child {
+function throwsAtConstruction(error: unknown): Renderable {
   const component = () => {
     throw error;
   };
-  return { type: component, props: {} } as unknown as Child;
+  return { type: component, props: {} };
 }
 
 // ── AC1 / AC10–12: Construction-time error → handled synchronously ────────────

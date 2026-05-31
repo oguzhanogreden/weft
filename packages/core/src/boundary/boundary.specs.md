@@ -20,7 +20,7 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 1. Each failure `Boundary.*` call returns a plain object `{ type: FAILURE_BOUNDARY, props }` (and `Boundary.suspend` returns `{ type: SUSPENSE_BOUNDARY, props }`) — not a meaningful Effect — so the renderer can process it synchronously via the `{ type, props }` branch.
 2. For the failure variants, `props` contains:
    - `match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null` — returns a fallback `Node` if the cause is handled by this variant, `null` if the error should re-raise to a parent boundary or mount
-   - `children: readonly RenderNode[]`
+   - `children: readonly Renderable[]`
 3. The `FAILURE_BOUNDARY` and `SUSPENSE_BOUNDARY` symbols are exported from `@effect-ui/core` for use by renderers.
 
 ### `Boundary.catchAll`
@@ -75,36 +75,36 @@ import { Boundary } from "@effect-ui/core";
 // Catch all typed failures
 Boundary.catchAll(
   { fallback: (e: E) => Node<FE, FR> },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<FE, ChildrenR | FR>
 
 // Catch all causes including defects
 Boundary.catchAllCause(
   { fallback: (cause: Cause.Cause<E>) => Node<FE, FR> },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<FE, ChildrenR | FR>
 
 // Catch a specific tagged error
 Boundary.catchTag(
   { tag: "NetworkError", fallback: (e: NetworkError) => Node<FE, FR> },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<Exclude<ChildrenE, NetworkError> | FE, ChildrenR | FR>
 
 // Catch multiple tagged errors
 Boundary.catchTags(
   { NetworkError: (e: NetworkError) => Node, AuthError: (e: AuthError) => Node },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<Exclude<ChildrenE, NetworkError | AuthError> | FE, ChildrenR | FR>
 
 // Conditionally catch — fallback returns Option
 Boundary.catchSome(
   { fallback: (e: E) => Option.Option<Node<FE, FR>> },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<ChildrenE | FE, ChildrenR | FR>
 
 // Conditionally catch — predicate gates the fallback
 Boundary.catchIf(
   { predicate: (e: E) => boolean, fallback: (e: E) => Node<FE, FR> },
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<ChildrenE | FE, ChildrenR | FR>
 ```

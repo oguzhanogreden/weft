@@ -4,7 +4,7 @@
 
 The suspense boundary coordinates a shared loading state across multiple async
 children. While any child function component inside the boundary is still pending
-(has not emitted its first value), the boundary shows a `fallback` JSXNode in the
+(has not emitted its first value), the boundary shows a `fallback` Renderable in the
 DOM. When **all** pending children have settled — emitted at least one value — the
 boundary performs a single atomic DOM swap: the fallback is removed and all resolved
 children are inserted in its place.
@@ -25,7 +25,7 @@ Suspense model from SolidJS and React.
 ### AC1: Synchronous children — no fallback rendered
 
 - **Given** a `Boundary.suspend({}, children)` whose `children` are all synchronous
-  JSXNodes (no function component returning `Effect` or `Stream`)
+  Renderables (no function component returning `Effect` or `Stream`)
 - **When** mounted
 - **Then**:
   - The fallback is never inserted into the DOM
@@ -35,7 +35,7 @@ Suspense model from SolidJS and React.
 ### AC2: Single async child — fallback shown, then swap
 
 - **Given** a `Boundary.suspend({ fallback: F }, [C])` containing one function
-  component `C` that returns `Effect<JSXNode>` or `Stream<JSXNode>`
+  component `C` that returns `Effect<Renderable>` or `Stream<Renderable>`
 - **When** mounted
 - **Then**:
   - Fallback `F` is inserted into the DOM between `<!-- suspense-start-N -->` and
@@ -71,14 +71,14 @@ Suspense model from SolidJS and React.
 
 ### AC5: Fallback renders nothing while pending
 
-- **Given** `Boundary.suspend({ fallback: null }, children)` (or any falsy `JSXNode` fallback)
+- **Given** `Boundary.suspend({ fallback: null }, children)` (or any falsy `Renderable` fallback)
 - **When** mounted with pending async children
 - **Then**:
   - The DOM contains only the `<!-- suspense-start-N -->` and
     `<!-- suspense-end-N -->` markers while pending — no visible content
   - The swap still occurs correctly when all children settle
 
-### AC6: Function component returning `Effect<JSXNode>` triggers suspension
+### AC6: Function component returning `Effect<Renderable>` triggers suspension
 
 - **Given** a function component `C = () => Effect.gen(function* () { … })` rendered
   inside a `Boundary.suspend` boundary
@@ -89,7 +89,7 @@ Suspense model from SolidJS and React.
     first emission is processed
   - All subsequent emissions from the same component do not call `settle` again
 
-### AC7: Function component returning `Stream<JSXNode>` triggers suspension
+### AC7: Function component returning `Stream<Renderable>` triggers suspension
 
 - **Given** a function component `C = () => someStream` rendered inside a `Boundary.suspend`
 - **When** the renderer processes the stream

@@ -1,9 +1,9 @@
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 import { type Effect, Stream } from "effect";
 import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-to-stream";
 
 /**
- * Serializes an Effect-infused JSX tree (`RenderNode`) into a single HTML string.
+ * Serializes an Effect-infused JSX tree (`Renderable`) into a single HTML string.
  * The server-side counterpart to the client DOM renderer, intended to produce
  * output isomorphic with what the client renderer creates in the browser.
  *
@@ -11,7 +11,7 @@ import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-t
  * and no `<template>`/`<script>` patches. For streaming Suspense support use
  * {@link renderToStreamHydratable} / {@link renderToStream} instead.
  */
-export const renderToString = (node: RenderNode): Effect.Effect<string, Error> =>
+export const renderToString = (node: Renderable): Effect.Effect<string, Error> =>
   renderToStreamFallbackOnly(node).pipe(Stream.mkString);
 
 /**
@@ -23,5 +23,5 @@ export const renderToString = (node: RenderNode): Effect.Effect<string, Error> =
  *
  * Re-derived from {@link renderToStreamHydratable} via `Stream.mkString`.
  */
-export const renderToStringHydratable = (node: RenderNode): Effect.Effect<string, Error> =>
+export const renderToStringHydratable = (node: Renderable): Effect.Effect<string, Error> =>
   renderToStreamHydratable(node).pipe(Stream.mkString);

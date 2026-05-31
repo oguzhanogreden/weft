@@ -1,11 +1,11 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Effect, Stream, SubscriptionRef } from "effect";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 import { h } from "@effect-ui/core";
 import { renderToString } from "./render-to-string";
 
-const run = (node: RenderNode) => Effect.runPromise(renderToString(node));
+const run = (node: Renderable) => Effect.runPromise(renderToString(node));
 
 describe("renderToString - elements", () => {
   it("renders a simple element with escaped text content", async () => {
@@ -37,7 +37,7 @@ describe("renderToString - attributes", () => {
   it("skips null and undefined attributes", async () => {
     assert.equal(await run(h.div({ title: undefined })), "<div></div>");
     // `null` is not in the AttributeValue type, but must still be skipped at runtime.
-    assert.equal(await run({ type: "div", props: { id: null } } as RenderNode), "<div></div>");
+    assert.equal(await run({ type: "div", props: { id: null } } as Renderable), "<div></div>");
   });
 
   it("skips children, ref, and event handler props", async () => {
@@ -95,7 +95,7 @@ describe("renderToString - void elements", () => {
   it("ignores children on void elements", async () => {
     // Void elements accept no children in the JSX types, so build the node directly.
     assert.equal(
-      await run({ type: "input", props: { children: "nope" } } as RenderNode),
+      await run({ type: "input", props: { children: "nope" } } as Renderable),
       "<input>",
     );
   });

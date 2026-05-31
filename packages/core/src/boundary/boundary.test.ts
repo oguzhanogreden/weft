@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Data, Effect, Option, pipe } from "effect";
 import { FAILURE_BOUNDARY, Boundary } from "./index";
-import type { Child, Node } from "~/combinator/types";
+import type { Renderable, Node } from "~/combinator/types";
 import { h } from "~/combinator";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ const fallbackNode = h.span("fallback");
 
 function extractDescriptor<E = never>(
   node: Node<E, never>,
-): { type: unknown; props: Boundary.FailureProps & { children?: Child } } {
+): { type: unknown; props: Boundary.FailureProps & { children?: Renderable } } {
   const descriptor = Effect.runSync(pipe(node, Effect.orDie));
   return { type: descriptor.type, props: descriptor.props as unknown as Boundary.FailureProps };
 }
@@ -66,8 +66,8 @@ describe("AC1: descriptor shape", () => {
     const child = h.div();
     const node = Boundary.catchAll({ fallback: () => fallbackNode }, [child]);
     const { props } = extractDescriptor(node);
-    assert.equal((props.children as Child[])?.length, 1);
-    assert.equal((props.children as Child[])?.[0], child);
+    assert.equal((props.children as Renderable[])?.length, 1);
+    assert.equal((props.children as Renderable[])?.[0], child);
   });
 });
 

@@ -20,10 +20,10 @@ Each builder has these overloads:
 
 | Signature                               | Description                 |
 | --------------------------------------- | --------------------------- |
-| `h.tag(props, children: Child[])`       | Props + array of children   |
+| `h.tag(props, children: Renderable[])`  | Props + array of children   |
 | `h.tag(props, child: string \| number)` | Props + single static child |
 | `h.tag(props)`                          | Props only, no children     |
-| `h.tag(children: Child[])`              | Children only, no props     |
+| `h.tag(children: Renderable[])`         | Children only, no props     |
 | `h.tag(child: string \| number)`        | Single static child only    |
 | `h.tag()`                               | No arguments                |
 
@@ -51,14 +51,14 @@ Namespace exposing two factories for reusable components with caller-propagating
 import { Component } from "@effect-ui/core";
 
 Component.gen<BaseProps, C>(
-  body: (props: BaseProps, children: C) => Generator<YieldedEffect, DOMNode, never>
+  body: (props: BaseProps, children: C) => Generator<YieldedEffect, ElementDescriptor, never>
 ): <GenP extends BaseProps, GenC extends C>(
   props: GenP,
   children?: GenC,
 ) => Node<PropsE<GenP> | ChildrenE<…> | BodyE, PropsR<GenP> | ChildrenR<…> | BodyR>;
 
 Component.make<BaseProps, C>(
-  body: (props: BaseProps, children: C) => Effect<DOMNode, E, R>
+  body: (props: BaseProps, children: C) => Effect<ElementDescriptor, E, R>
 ): /* same call signature as above */;
 ```
 
@@ -66,8 +66,8 @@ Component.make<BaseProps, C>(
 
 ```typescript
 type Component.Children<Input = never> =
-  | readonly Child[]
-  | ((input: Input) => readonly Child[]);
+  | readonly Renderable[]
+  | ((input: Input) => readonly Renderable[]);
 ```
 
 For function-children, `ChildrenE`/`ChildrenR` are extracted from the function's `ReturnType`, not from the function itself. The component's body invokes the function with whatever input it chooses.
@@ -93,7 +93,7 @@ const TextField = Component.gen(function* (props: TextFieldProps) {
 
 ```typescript
 const List = Component.make(
-  (props: { items: readonly string[] }, children: (item: string) => readonly Child[]) =>
+  (props: { items: readonly string[] }, children: (item: string) => readonly Renderable[]) =>
     h.ul({}, props.items.flatMap(children)),
 );
 
@@ -108,7 +108,7 @@ Boundary component that shows a fallback while async children are pending:
 import { Suspense } from "@effect-ui/core";
 
 Suspense(
-  props: { fallback?: Child },
+  props: { fallback?: Renderable },
   children: Node[]
 ): Node<ChildrenE, ChildrenR>
 ```
@@ -237,7 +237,7 @@ Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
 ### `Node<E, R>`
 
 ```typescript
-type Node<E = never, R = never> = Effect.Effect<DOMNode, E, R>;
+type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
 ```
 
 The core tree type. Every element builder and component returns a `Node`. Because `Node` is an alias for `Effect.Effect`, all Effect operators work on nodes directly.

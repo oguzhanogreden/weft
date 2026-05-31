@@ -12,9 +12,15 @@ import {
   Stream,
   pipe,
 } from "effect";
-import { FAILURE_BOUNDARY, FRAGMENT, isStream, SUSPENSE_BOUNDARY, toStream } from "@effect-ui/core";
-import type { Boundary, Child } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
+import {
+  FAILURE_BOUNDARY,
+  FRAGMENT,
+  getElementDescriptor,
+  isStream,
+  SUSPENSE_BOUNDARY,
+  toStream,
+} from "@effect-ui/core";
+import type { Boundary, Renderable } from "@effect-ui/core";
 import {
   BoundaryContext,
   HydrationMismatchError,
@@ -417,7 +423,7 @@ function setEventHandler(
  * and trigger a DOM swap to the fallback returned by `props.match`.
  */
 function renderBoundary(
-  props: Boundary.FailureProps & { children: Child[] },
+  props: Boundary.FailureProps & { children: Renderable[] },
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -441,7 +447,7 @@ function renderBoundary(
     };
 
     const childNodes = yield* pipe(
-      renderChildren(props.children as readonly RenderNode[]),
+      renderChildren(props.children as readonly Renderable[]),
       Effect.provideService(BoundaryContext, boundaryService),
       Effect.provideService(RenderContext, subtreeContext),
       Effect.provideService(Scope.Scope, subtreeScope),
@@ -450,7 +456,7 @@ function renderBoundary(
         if (fallbackNode === null) return Effect.failCause(cause);
         return pipe(
           Scope.close(subtreeScope, Exit.void),
-          Effect.flatMap(() => renderNode(fallbackNode as RenderNode)),
+          Effect.flatMap(() => renderNode(fallbackNode as Renderable)),
           Effect.map((n): readonly Node[] =>
             n === null ? [] : Array.isArray(n) ? (n as Node[]) : [n as Node],
           ),
@@ -474,7 +480,7 @@ function renderBoundary(
       }
 
       removeNodesBetweenMarkers(startMarker, endMarker);
-      const fallbackNodes = yield* renderNode(fallbackNode as RenderNode);
+      const fallbackNodes = yield* renderNode(fallbackNode as Renderable);
       const parent = endMarker.parentNode;
       if (parent !== null) {
         if (fallbackNodes !== null) {
@@ -507,7 +513,7 @@ function renderBoundary(
  * chance to register. The sentinel is released after `renderChildren` returns.
  */
 function renderSuspenseBoundary(
-  props: Boundary.SuspenseProps & { children?: Child },
+  props: Boundary.SuspenseProps & { children?: Renderable },
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -537,26 +543,26 @@ function renderSuspenseBoundary(
 
     // ── 4. Render children with SuspenseContext in scope ─────────────────────
     const rawChildren = props.children;
-    const childArray: readonly RenderNode[] =
+    const childArray: readonly Renderable[] =
       rawChildren === undefined
         ? []
         : Array.isArray(rawChildren)
-          ? (rawChildren as readonly RenderNode[])
-          : [rawChildren as RenderNode];
+          ? (rawChildren as readonly Renderable[])
+          : [rawChildren as Renderable];
 
     // Wrap direct Effect/Stream children in function-component descriptors so
     // they go through renderComponent and register/settle with this boundary.
     // Static element nodes ({type, props}) are passed through unchanged.
-    const suspenseChildren = childArray.map((child): RenderNode => {
+    const suspenseChildren = childArray.map((child): Renderable => {
       if (Effect.isEffect(child) || isStream(child)) {
-        const fn = (): RenderNode => child;
+        const fn = (): Renderable => child;
         return { type: fn, props: {} };
       }
       return child;
     });
 
     // renderNode handles arrays via its iterable branch → returns readonly Node[]
-    const childResult = yield* renderNode(suspenseChildren as RenderNode).pipe(
+    const childResult = yield* renderNode(suspenseChildren as Renderable).pipe(
       Effect.provideService(SuspenseContext, suspenseService),
     );
 
@@ -581,7 +587,7 @@ function renderSuspenseBoundary(
     const endMarker = document.createComment(suspenseEndText(boundaryId));
 
     // ── 8. Render fallback (null/undefined → empty, only markers shown) ──────
-    const fallbackResult = yield* renderNode((props.fallback ?? null) as RenderNode);
+    const fallbackResult = yield* renderNode((props.fallback ?? null) as Renderable);
     const fallbackNodes: Node[] = [];
     if (fallbackResult !== null) {
       if (Array.isArray(fallbackResult)) {
@@ -628,11 +634,11 @@ function renderSuspenseBoundary(
 // ============================================================================
 
 /**
- * Main rendering function that converts RenderNode to DOM nodes.
- * Handles all RenderNode types and sets up reactive subscriptions.
+ * Main rendering function that converts Renderable to DOM nodes.
+ * Handles all Renderable types and sets up reactive subscriptions.
  */
 export function renderNode(
-  node: RenderNode,
+  node: Renderable,
 ): Effect.Effect<
   RenderResult,
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -651,16 +657,24 @@ export function renderNode(
 
     // Check for Stream/Effect first (before iterables, since Stream might be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
-      // h.* nodes use Effect.sync and can be rendered inline without fork/markers.
-      // Truly async Effects (user components, timers) will throw and fall through.
+      // Static markup (h.*, h.fragment, Boundary.*) carries its descriptor — render
+      // it directly, without executing the Effect.
+      const descriptor = getElementDescriptor(node);
+      if (descriptor !== undefined) {
+        return yield* renderNode(descriptor);
+      }
+      // Untagged Effect: probe for synchronous resolution (e.g. a synchronous
+      // Component.gen used directly as a child) so it renders inline. A genuinely
+      // async Effect resolves to a failure exit (AsyncFiberException) and falls
+      // through to the fork + stream-marker path below.
       if (Effect.isEffect(node)) {
-        try {
-          return yield* renderNode(Effect.runSync(node as Effect.Effect<RenderNode, never, never>));
-        } catch {
-          // Async Effect — use fork + stream markers below
+        // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        if (Exit.isSuccess(exit)) {
+          return yield* renderNode(exit.value);
         }
       }
-      const stream = toStream(node);
+      const stream = toStream<Renderable>(node);
       const markers = yield* handleStreamChild(stream);
       return markers;
     }
@@ -688,7 +702,7 @@ export function renderNode(
 
       // Error boundary
       if (type === FAILURE_BOUNDARY) {
-        return yield* renderBoundary(props as Boundary.FailureProps & { children: Child[] });
+        return yield* renderBoundary(props as Boundary.FailureProps & { children: Renderable[] });
       }
 
       // AC4: Element (string type)
@@ -698,14 +712,14 @@ export function renderNode(
 
       // AC5: Function component
       if (typeof type === "function") {
-        return yield* renderComponent(type as (props: object) => RenderNode, props);
+        return yield* renderComponent(type as (props: object) => Renderable, props);
       }
 
       // AC23: Invalid element type
       return yield* Effect.fail(
         new UnsupportedNodeTypeError({
           type,
-          message: `Invalid RenderNode type: expected string, FRAGMENT, or function, got ${typeof type}`,
+          message: `Invalid Renderable type: expected string, FRAGMENT, or function, got ${typeof type}`,
         }),
       );
     }
@@ -718,10 +732,10 @@ export function renderNode(
 /**
  * Flattens iterable children recursively
  */
-function flattenChildren(node: RenderNode): readonly RenderNode[] {
-  const result: RenderNode[] = [];
+function flattenChildren(node: Renderable): readonly Renderable[] {
+  const result: Renderable[] = [];
 
-  function flatten(item: RenderNode): void {
+  function flatten(item: Renderable): void {
     // Don't try to iterate streams/effects
     if (isStream(item) || Effect.isEffect(item)) {
       result.push(item);
@@ -729,7 +743,7 @@ function flattenChildren(node: RenderNode): readonly RenderNode[] {
     }
 
     if (typeof item === "object" && item !== null && Symbol.iterator in item && !("type" in item)) {
-      for (const child of item as Iterable<RenderNode>) {
+      for (const child of item as Iterable<Renderable>) {
         flatten(child);
       }
     } else {
@@ -745,7 +759,7 @@ function flattenChildren(node: RenderNode): readonly RenderNode[] {
  * Renders an array of children nodes
  */
 function renderChildren(
-  children: readonly RenderNode[],
+  children: readonly Renderable[],
 ): Effect.Effect<
   readonly Node[],
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -757,7 +771,7 @@ function renderChildren(
     for (const child of children) {
       // Check if child is a stream/effect and handle specially
       if (isStream(child) || Effect.isEffect(child)) {
-        const stream = toStream(child) as Stream.Stream<RenderNode>;
+        const stream = toStream<Renderable>(child);
         const markers = yield* handleStreamChild(stream);
         nodes.push(...markers);
       } else {
@@ -778,7 +792,7 @@ function renderChildren(
 }
 
 /**
- * Renders a fragment RenderNode (type: FRAGMENT)
+ * Renders a fragment Renderable (type: FRAGMENT)
  */
 function renderFragment(
   props: object,
@@ -800,7 +814,7 @@ function renderFragment(
 }
 
 /**
- * Renders an element RenderNode (type: string)
+ * Renders an element Renderable (type: string)
  */
 function renderElement(
   type: string,
@@ -826,7 +840,7 @@ function renderElement(
       for (const child of childArray) {
         // Check if child is a stream/effect
         if (isStream(child) || Effect.isEffect(child)) {
-          const stream = toStream(child) as Stream.Stream<RenderNode>;
+          const stream = toStream<Renderable>(child);
           const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
             element.appendChild(marker);
@@ -851,10 +865,10 @@ function renderElement(
 }
 
 /**
- * Renders a function component RenderNode (type: function)
+ * Renders a function component Renderable (type: function)
  */
 function renderComponent(
-  component: (props: object) => RenderNode,
+  component: (props: object) => Renderable,
   props: object,
 ): Effect.Effect<
   RenderResult,
@@ -865,7 +879,7 @@ function renderComponent(
     // AC5: Call function once with props (ephemeral execution)
     const result = component(props);
 
-    // AC5: Handle Effect<RenderNode> or Stream<RenderNode>
+    // AC5: Handle Effect<Renderable> or Stream<Renderable>
     if (isStream(result) || Effect.isEffect(result)) {
       const context = yield* RenderContext;
 
@@ -878,7 +892,7 @@ function renderComponent(
 
       // Check whether this component is inside a Suspense boundary.
       const suspenseCtx = yield* Effect.serviceOption(SuspenseContext);
-      let stream = toStream(result);
+      let stream = toStream<Renderable>(result);
 
       if (Option.isSome(suspenseCtx)) {
         // Register before subscribing so the boundary knows about this child.
@@ -907,7 +921,7 @@ function renderComponent(
       );
     }
 
-    // AC5: Plain RenderNode
+    // AC5: Plain Renderable
     return yield* renderNode(result);
   });
 }
@@ -922,7 +936,7 @@ function renderComponent(
  * `context.scope` (the enclosing scope), not in the content scope.
  */
 function handleStreamChild(
-  stream: Stream.Stream<RenderNode>,
+  stream: Stream.Stream<Renderable>,
 ): Effect.Effect<
   readonly Node[],
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
@@ -1000,7 +1014,7 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
 export function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
-  newNode: RenderNode,
+  newNode: Renderable,
 ): Effect.Effect<
   void,
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
@@ -1082,7 +1096,7 @@ export interface MountHandle {
  * ```
  */
 export function mount(
-  app: RenderNode,
+  app: Renderable,
   root: HTMLElement,
 ): Effect.Effect<MountHandle, UnsupportedNodeTypeError | StreamSubscriptionError | RenderError> {
   return Effect.gen(function* () {
@@ -1190,7 +1204,7 @@ export function mount(
  * ```
  */
 export function hydrate(
-  app: RenderNode,
+  app: Renderable,
   root: HTMLElement,
 ): Effect.Effect<
   MountHandle,
@@ -1251,11 +1265,11 @@ type HydrateError =
   | HydrationMismatchError;
 
 /**
- * Hydrates a single RenderNode against the DOM, consuming the node(s) starting at
+ * Hydrates a single Renderable against the DOM, consuming the node(s) starting at
  * `cursor` and returning the next unconsumed sibling.
  */
 function hydrateNode(
-  node: RenderNode,
+  node: Renderable,
   cursor: ChildNode | null,
   path: string,
 ): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
@@ -1272,26 +1286,29 @@ function hydrateNode(
 
     // Reactive region (checked before iterables, since a Stream may be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
-      // h.* nodes are Effect.sync — run inline rather than treating as a reactive region.
+      // Static markup carries its descriptor — hydrate it directly, no execution.
+      const descriptor = getElementDescriptor(node);
+      if (descriptor !== undefined) {
+        return yield* hydrateNode(descriptor, cursor, path);
+      }
+      // Untagged Effect: probe for synchronous resolution; a genuinely async
+      // Effect resolves to a failure exit (AsyncFiberException) and falls through
+      // to reactive-region handling below.
       if (Effect.isEffect(node)) {
-        try {
-          return yield* hydrateNode(
-            Effect.runSync(node as Effect.Effect<RenderNode, never, never>),
-            cursor,
-            path,
-          );
-        } catch {
-          // Async Effect — fall through to reactive region handling
+        // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        if (Exit.isSuccess(exit)) {
+          return yield* hydrateNode(exit.value, cursor, path);
         }
       }
-      return yield* hydrateReactive(toStream(node) as Stream.Stream<RenderNode>, cursor, path);
+      return yield* hydrateReactive(toStream<Renderable>(node), cursor, path);
     }
 
     // Iterables: hydrate children in order, threading the cursor
     if (typeof node === "object" && Symbol.iterator in node && !("type" in node)) {
       let next = cursor;
       let index = 0;
-      for (const child of node as Iterable<RenderNode>) {
+      for (const child of node as Iterable<Renderable>) {
         next = yield* hydrateNode(child, next, `${path}[${index}]`);
         index++;
       }
@@ -1327,14 +1344,14 @@ function hydrateNode(
 
       if (typeof type === "function") {
         // Components are ephemeral: call once, hydrate the result in place.
-        const result = (type as (props: object) => RenderNode)(props);
+        const result = (type as (props: object) => Renderable)(props);
         return yield* hydrateNode(result, cursor, path);
       }
 
       return yield* Effect.fail(
         new UnsupportedNodeTypeError({
           type,
-          message: `Invalid RenderNode type during hydration at ${path}: expected string, FRAGMENT, or function, got ${typeof type}`,
+          message: `Invalid Renderable type during hydration at ${path}: expected string, FRAGMENT, or function, got ${typeof type}`,
         }),
       );
     }
@@ -1384,7 +1401,7 @@ function hydrateText(
  * subsequent emissions patch the region via {@link updateStreamChild}.
  */
 function hydrateReactive(
-  stream: Stream.Stream<RenderNode>,
+  stream: Stream.Stream<Renderable>,
   cursor: ChildNode | null,
   path: string,
 ): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
@@ -1449,7 +1466,7 @@ function hydrateReactive(
  * `console.error` is logged.
  */
 function hydrateFirstEmission(
-  value: RenderNode,
+  value: Renderable,
   startMarker: Comment,
   endMarker: Comment,
   path: string,
@@ -1529,7 +1546,7 @@ function hydrateChildren(
     let next = cursor;
     let index = 0;
     for (const child of childArray) {
-      next = yield* hydrateNode(child as RenderNode, next, `${path}[${index}]`);
+      next = yield* hydrateNode(child as Renderable, next, `${path}[${index}]`);
       index++;
     }
     return next;

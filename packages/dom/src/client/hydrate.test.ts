@@ -6,7 +6,7 @@ import { h } from "@effect-ui/core";
 import { HydrationMismatchError } from "~/data";
 import { hydrate } from "./render";
 import { renderToString, renderToStringHydratable } from "~/server";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 
 // ============================================================================
 // Test setup
@@ -28,7 +28,7 @@ function createRoot(): HTMLElement {
 }
 
 /** Renders `app` to hydratable HTML and seeds it into a fresh root. */
-async function seedServerHtml(app: RenderNode): Promise<HTMLElement> {
+async function seedServerHtml(app: Renderable): Promise<HTMLElement> {
   const root = createRoot();
   const html = await Effect.runPromise(renderToStringHydratable(app));
   root.innerHTML = html;
