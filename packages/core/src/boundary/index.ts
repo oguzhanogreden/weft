@@ -1,4 +1,5 @@
-import { Cause, Effect, Option } from "effect";
+import { Cause, Option } from "effect";
+import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
 /**
@@ -29,10 +30,10 @@ function makeFailureBoundaryNode<E, R>(
   match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null,
   children: readonly Renderable[],
 ): Node<E, R> {
-  return Effect.succeed({
+  return elementNode<E, R>({
     type: FAILURE_BOUNDARY,
     props: { match, children } as Record<string, unknown>,
-  }) as Node<E, R>;
+  });
 }
 
 /**
@@ -242,7 +243,7 @@ export namespace Boundary {
   ): Node<ChildrenE<C>, ChildrenR<C>> {
     // Tag the descriptor with SUSPENSE_BOUNDARY so the renderer processes it
     // synchronously via the {type, props} branch.
-    return Effect.succeed({
+    return elementNode({
       type: SUSPENSE_BOUNDARY,
       props: { ...props, children },
     });

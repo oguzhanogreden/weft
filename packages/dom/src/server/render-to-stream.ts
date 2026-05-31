@@ -5,8 +5,8 @@ import {
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@effect-ui/core";
-import { isStream, toStream } from "@effect-ui/core";
-import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
+import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
+import { Effect, Exit, Option, Queue, Ref, Scope, Stream } from "effect";
 import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
 import { UnsupportedNodeTypeError } from "~/data";
 import { escapeHtml, serializeProps, VOID_ELEMENTS } from "./serialize";
@@ -197,12 +197,19 @@ function renderSSRNode(
   }
 
   if (isStream(node) || Effect.isEffect(node)) {
-    // h.* nodes are Effect.sync — render inline without stream markers.
+    // Static markup carries its descriptor — render it directly, no execution.
+    const descriptor = getElementDescriptor(node);
+    if (descriptor !== undefined) {
+      return renderSSRNode(descriptor, ctx);
+    }
+    // Untagged Effect: probe for synchronous resolution; a genuinely async Effect
+    // resolves to a failure exit (AsyncFiberException) and falls through to the
+    // stream path below.
     if (Effect.isEffect(node)) {
-      try {
-        return renderSSRNode(Effect.runSync(node as Effect.Effect<Renderable, never, never>), ctx);
-      } catch {
-        // Async Effect — fall through to stream path
+      // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+      const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+      if (Exit.isSuccess(exit)) {
+        return renderSSRNode(exit.value, ctx);
       }
     }
     return toStream(node).pipe(
@@ -298,16 +305,19 @@ function renderHydratableSSRNode(
   }
 
   if (isStream(node) || Effect.isEffect(node)) {
-    // h.* nodes are Effect.sync — render inline without stream markers.
+    // Static markup carries its descriptor — render it directly, no execution.
+    const descriptor = getElementDescriptor(node);
+    if (descriptor !== undefined) {
+      return renderHydratableSSRNode(descriptor, counter, ctx);
+    }
+    // Untagged Effect: probe for synchronous resolution; a genuinely async Effect
+    // resolves to a failure exit (AsyncFiberException) and falls through to the
+    // stream path with markers below.
     if (Effect.isEffect(node)) {
-      try {
-        return renderHydratableSSRNode(
-          Effect.runSync(node as Effect.Effect<Renderable, never, never>),
-          counter,
-          ctx,
-        );
-      } catch {
-        // Async Effect — fall through to stream path with markers
+      // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+      const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+      if (Exit.isSuccess(exit)) {
+        return renderHydratableSSRNode(exit.value, counter, ctx);
       }
     }
     return toStream(node).pipe(

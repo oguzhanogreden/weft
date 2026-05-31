@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { elementNode } from "./descriptor";
 import { FRAGMENT } from "./fragment";
 import type { HTMLElements, SVGElements } from "~/types";
 import type {
@@ -78,7 +78,7 @@ function createElementFn(tag: string): ElementFn<any> {
     }
 
     const finalProps = kids !== undefined ? { ...props, children: kids } : props;
-    return Effect.succeed({ type: tag, props: finalProps }) as Node<any, any>;
+    return elementNode({ type: tag, props: finalProps }) as Node<any, any>;
   }) as ElementFn<any>;
 }
 
@@ -92,7 +92,7 @@ export function makeH(cache: Map<string, ElementFn<any>> = new Map()): H {
   return new Proxy<H>(
     {
       fragment<C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>> {
-        return Effect.sync(() => ({ type: FRAGMENT, props: { children } })) as Node<any, any>;
+        return elementNode({ type: FRAGMENT, props: { children } }) as Node<any, any>;
       },
     } as H,
     {

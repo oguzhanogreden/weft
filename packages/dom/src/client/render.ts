@@ -12,7 +12,14 @@ import {
   Stream,
   pipe,
 } from "effect";
-import { FAILURE_BOUNDARY, FRAGMENT, isStream, SUSPENSE_BOUNDARY, toStream } from "@effect-ui/core";
+import {
+  FAILURE_BOUNDARY,
+  FRAGMENT,
+  getElementDescriptor,
+  isStream,
+  SUSPENSE_BOUNDARY,
+  toStream,
+} from "@effect-ui/core";
 import type { Boundary, Renderable } from "@effect-ui/core";
 import {
   BoundaryContext,
@@ -650,13 +657,21 @@ export function renderNode(
 
     // Check for Stream/Effect first (before iterables, since Stream might be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
-      // h.* nodes use Effect.sync and can be rendered inline without fork/markers.
-      // Truly async Effects (user components, timers) will throw and fall through.
+      // Static markup (h.*, h.fragment, Boundary.*) carries its descriptor — render
+      // it directly, without executing the Effect.
+      const descriptor = getElementDescriptor(node);
+      if (descriptor !== undefined) {
+        return yield* renderNode(descriptor);
+      }
+      // Untagged Effect: probe for synchronous resolution (e.g. a synchronous
+      // Component.gen used directly as a child) so it renders inline. A genuinely
+      // async Effect resolves to a failure exit (AsyncFiberException) and falls
+      // through to the fork + stream-marker path below.
       if (Effect.isEffect(node)) {
-        try {
-          return yield* renderNode(Effect.runSync(node as Effect.Effect<Renderable, never, never>));
-        } catch {
-          // Async Effect — use fork + stream markers below
+        // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        if (Exit.isSuccess(exit)) {
+          return yield* renderNode(exit.value);
         }
       }
       const stream = toStream<Renderable>(node);
@@ -1271,16 +1286,19 @@ function hydrateNode(
 
     // Reactive region (checked before iterables, since a Stream may be iterable)
     if (isStream(node) || Effect.isEffect(node)) {
-      // h.* nodes are Effect.sync — run inline rather than treating as a reactive region.
+      // Static markup carries its descriptor — hydrate it directly, no execution.
+      const descriptor = getElementDescriptor(node);
+      if (descriptor !== undefined) {
+        return yield* hydrateNode(descriptor, cursor, path);
+      }
+      // Untagged Effect: probe for synchronous resolution; a genuinely async
+      // Effect resolves to a failure exit (AsyncFiberException) and falls through
+      // to reactive-region handling below.
       if (Effect.isEffect(node)) {
-        try {
-          return yield* hydrateNode(
-            Effect.runSync(node as Effect.Effect<Renderable, never, never>),
-            cursor,
-            path,
-          );
-        } catch {
-          // Async Effect — fall through to reactive region handling
+        // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
+        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        if (Exit.isSuccess(exit)) {
+          return yield* hydrateNode(exit.value, cursor, path);
         }
       }
       return yield* hydrateReactive(toStream<Renderable>(node), cursor, path);
