@@ -3,10 +3,9 @@ import {
   FAILURE_BOUNDARY,
   FRAGMENT,
   SUSPENSE_BOUNDARY,
-  type Child,
+  type Renderable,
 } from "@effect-ui/core";
 import { isStream, toStream } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
 import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
 import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
 import { UnsupportedNodeTypeError } from "~/data";
@@ -87,9 +86,9 @@ function buildPatch(id: number, html: string): string {
  * works for both the plain-SSR and hydratable-SSR variants.
  */
 function renderSuspenseSSRInline(
-  props: Boundary.SuspenseProps & { children?: Child },
+  props: Boundary.SuspenseProps & { children?: Renderable },
   ctx: ServerSuspenseCtx,
-  renderFn: (node: RenderNode) => Stream.Stream<string, Error>,
+  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
 ): Stream.Stream<string, Error> {
   return Stream.unwrap(
     Effect.gen(function* () {
@@ -103,9 +102,9 @@ function renderSuspenseSSRInline(
         props.children === undefined
           ? null
           : Array.isArray(props.children)
-            ? (props.children as RenderNode[])
-            : (props.children as RenderNode)
-      ) as RenderNode;
+            ? (props.children as Renderable[])
+            : (props.children as Renderable)
+      ) as Renderable;
 
       // Resolution fiber: renders children to HTML, pushes patch, decrements.
       // Effect.ignore ensures a rendering error never fails the outer scope.
@@ -132,7 +131,7 @@ function renderSuspenseSSRInline(
 
       const start = `<!--${suspenseStartText(id)}-->`;
       const end = `<!--${suspenseEndText(id)}-->`;
-      const fallback = (props.fallback ?? null) as RenderNode;
+      const fallback = (props.fallback ?? null) as Renderable;
 
       return Stream.make(start).pipe(
         Stream.concat(renderFn(fallback)),
@@ -153,16 +152,16 @@ function renderSuspenseSSRInline(
  * stream failure. Used by both plain-SSR and hydratable-SSR code paths.
  */
 function renderBoundarySSR(
-  props: Boundary.FailureProps & { children: Child[] },
-  renderFn: (node: RenderNode) => Stream.Stream<string, Error>,
+  props: Boundary.FailureProps & { children: Renderable[] },
+  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
 ): Stream.Stream<string, Error> {
   const childrenNode = (
     props.children.length === 0
       ? null
       : props.children.length === 1
-        ? (props.children[0] as RenderNode)
-        : (props.children as RenderNode[])
-  ) as RenderNode;
+        ? (props.children[0] as Renderable)
+        : (props.children as Renderable[])
+  ) as Renderable;
 
   return Stream.unwrapScoped(
     Effect.gen(function* () {
@@ -170,7 +169,7 @@ function renderBoundarySSR(
         Effect.catchAllCause((cause) => {
           const fallbackNode = props.match(cause);
           if (fallbackNode === null) return Effect.failCause(cause);
-          return Stream.mkString(renderFn(fallbackNode as RenderNode));
+          return Stream.mkString(renderFn(fallbackNode as Renderable));
         }),
       );
       return Stream.make(childrenHtml);
@@ -188,7 +187,7 @@ function renderBoundarySSR(
  * - non-`null` → full streaming-patch model — used by `renderToStream`
  */
 function renderSSRNode(
-  node: RenderNode,
+  node: Renderable,
   ctx: ServerSuspenseCtx | null,
 ): Stream.Stream<string, Error> {
   if (node == null || typeof node === "boolean") return Stream.empty;
@@ -201,7 +200,7 @@ function renderSSRNode(
     // h.* nodes are Effect.sync — render inline without stream markers.
     if (Effect.isEffect(node)) {
       try {
-        return renderSSRNode(Effect.runSync(node as Effect.Effect<RenderNode, never, never>), ctx);
+        return renderSSRNode(Effect.runSync(node as Effect.Effect<Renderable, never, never>), ctx);
       } catch {
         // Async Effect — fall through to stream path
       }
@@ -211,7 +210,7 @@ function renderSSRNode(
       Effect.map(
         Option.match({
           onNone: () => Stream.empty,
-          onSome: (v: RenderNode) => renderSSRNode(v, ctx),
+          onSome: (v: unknown) => renderSSRNode(v as Renderable, ctx),
         }),
       ),
       Stream.unwrap,
@@ -219,8 +218,8 @@ function renderSSRNode(
   }
 
   if (typeof node === "object" && Symbol.iterator in node && !("type" in node)) {
-    return Stream.flatMap(Stream.fromIterable(node), (child) =>
-      renderSSRNode(child as RenderNode, ctx),
+    return Stream.flatMap(Stream.fromIterable(node as Iterable<Renderable>), (child) =>
+      renderSSRNode(child as Renderable, ctx),
     );
   }
 
@@ -235,14 +234,14 @@ function renderSSRNode(
       const sp = props as unknown as Boundary.SuspenseProps;
       if (ctx === null) {
         // AC-SS1: renderToString — fallback only, no markers, no patches.
-        return renderSSRNode((sp.fallback ?? null) as RenderNode, null);
+        return renderSSRNode((sp.fallback ?? null) as Renderable, null);
       }
       return renderSuspenseSSRInline(sp, ctx, (n) => renderSSRNode(n, ctx));
     }
 
     if (type === FAILURE_BOUNDARY) {
       return renderBoundarySSR(
-        props as unknown as Boundary.FailureProps & { children: Child[] },
+        props as unknown as Boundary.FailureProps & { children: Renderable[] },
         (n) => renderSSRNode(n, ctx),
       );
     }
@@ -259,14 +258,14 @@ function renderSSRNode(
     }
 
     if (typeof type === "function") {
-      return renderSSRNode((type as (p: Record<string, unknown>) => RenderNode)(props), ctx);
+      return renderSSRNode((type as (p: Record<string, unknown>) => Renderable)(props), ctx);
     }
   }
 
   return Stream.fail(
     new UnsupportedNodeTypeError({
       type: (node as { type?: unknown }).type,
-      message: `Invalid RenderNode type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
+      message: `Invalid Renderable type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
     }),
   );
 }
@@ -279,7 +278,7 @@ function fragmentToSSR(
   if (children == null) return Stream.empty;
   const arr = Array.isArray(children) ? children : [children];
   return Stream.flatMap(Stream.fromIterable(arr), (child) =>
-    renderSSRNode(child as RenderNode, ctx),
+    renderSSRNode(child as Renderable, ctx),
   );
 }
 
@@ -288,7 +287,7 @@ function fragmentToSSR(
 // ============================================================================
 
 function renderHydratableSSRNode(
-  node: RenderNode,
+  node: Renderable,
   counter: RegionCounter,
   ctx: ServerSuspenseCtx | null,
 ): Stream.Stream<string, Error> {
@@ -303,7 +302,7 @@ function renderHydratableSSRNode(
     if (Effect.isEffect(node)) {
       try {
         return renderHydratableSSRNode(
-          Effect.runSync(node as Effect.Effect<RenderNode, never, never>),
+          Effect.runSync(node as Effect.Effect<Renderable, never, never>),
           counter,
           ctx,
         );
@@ -317,7 +316,7 @@ function renderHydratableSSRNode(
         const id = ++counter.current;
         const inner = Option.match(first, {
           onNone: () => Stream.empty,
-          onSome: (value: RenderNode) => renderHydratableSSRNode(value, counter, ctx),
+          onSome: (value: unknown) => renderHydratableSSRNode(value as Renderable, counter, ctx),
         });
         return Stream.make(`<!--${streamStartText(id)}-->`).pipe(
           Stream.concat(inner),
@@ -329,8 +328,8 @@ function renderHydratableSSRNode(
   }
 
   if (typeof node === "object" && Symbol.iterator in node && !("type" in node)) {
-    return Stream.flatMap(Stream.fromIterable(node), (child) =>
-      renderHydratableSSRNode(child as RenderNode, counter, ctx),
+    return Stream.flatMap(Stream.fromIterable(node as Iterable<Renderable>), (child) =>
+      renderHydratableSSRNode(child as Renderable, counter, ctx),
     );
   }
 
@@ -344,14 +343,14 @@ function renderHydratableSSRNode(
     if (type === SUSPENSE_BOUNDARY) {
       const sp = props as unknown as Boundary.SuspenseProps;
       if (ctx === null) {
-        return renderHydratableSSRNode((sp.fallback ?? null) as RenderNode, counter, null);
+        return renderHydratableSSRNode((sp.fallback ?? null) as Renderable, counter, null);
       }
       return renderSuspenseSSRInline(sp, ctx, (n) => renderHydratableSSRNode(n, counter, ctx));
     }
 
     if (type === FAILURE_BOUNDARY) {
       return renderBoundarySSR(
-        props as unknown as Boundary.FailureProps & { children: Child[] },
+        props as unknown as Boundary.FailureProps & { children: Renderable[] },
         (n) => renderHydratableSSRNode(n, counter, ctx),
       );
     }
@@ -369,7 +368,7 @@ function renderHydratableSSRNode(
 
     if (typeof type === "function") {
       return renderHydratableSSRNode(
-        (type as (p: Record<string, unknown>) => RenderNode)(props),
+        (type as (p: Record<string, unknown>) => Renderable)(props),
         counter,
         ctx,
       );
@@ -379,7 +378,7 @@ function renderHydratableSSRNode(
   return Stream.fail(
     new UnsupportedNodeTypeError({
       type: (node as { type?: unknown }).type,
-      message: `Invalid RenderNode type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
+      message: `Invalid Renderable type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
     }),
   );
 }
@@ -393,7 +392,7 @@ function fragmentToHydratableSSR(
   if (children == null) return Stream.empty;
   const arr = Array.isArray(children) ? children : [children];
   return Stream.flatMap(Stream.fromIterable(arr), (child) =>
-    renderHydratableSSRNode(child as RenderNode, counter, ctx),
+    renderHydratableSSRNode(child as Renderable, counter, ctx),
   );
 }
 
@@ -408,11 +407,11 @@ function fragmentToHydratableSSR(
  *
  * @internal
  */
-export const renderToStreamFallbackOnly = (node: RenderNode): Stream.Stream<string, Error> =>
+export const renderToStreamFallbackOnly = (node: Renderable): Stream.Stream<string, Error> =>
   renderSSRNode(node, null);
 
 /**
- * Progressively serializes an Effect-infused JSX tree (`RenderNode`) into a stream
+ * Progressively serializes an Effect-infused JSX tree (`Renderable`) into a stream
  * of HTML string chunks, in render-tree order.
  *
  * suspense boundaries are fully supported: the fallback is emitted inline
@@ -421,7 +420,7 @@ export const renderToStreamFallbackOnly = (node: RenderNode): Stream.Stream<stri
  * document structure as each boundary resolves. The stream terminates only
  * after all pending boundaries have emitted their patch.
  */
-export const renderToStream = (node: RenderNode): Stream.Stream<string, Error> =>
+export const renderToStream = (node: Renderable): Stream.Stream<string, Error> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<string>();
@@ -451,7 +450,7 @@ export const renderToStream = (node: RenderNode): Stream.Stream<string, Error> =
  * so the client `hydrate` can locate reactive regions. Suspense streaming
  * patches include these markers in the resolved children HTML (AC-SS3).
  */
-export const renderToStreamHydratable = (node: RenderNode): Stream.Stream<string, Error> =>
+export const renderToStreamHydratable = (node: Renderable): Stream.Stream<string, Error> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<string>();

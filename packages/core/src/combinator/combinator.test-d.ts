@@ -8,7 +8,7 @@
 
 import { Effect, Stream } from "effect";
 import { h } from "./element";
-import type { Child, DOMNode, Node } from "./types";
+import type { Renderable, ElementDescriptor, Node } from "./types";
 import { Component } from "./component";
 
 // =============================================================================
@@ -82,7 +82,7 @@ type _T6 = Expect<Equal<typeof _t6, () => Node<never, UserService>>>;
 const _t7 = Effect.gen(function* () {
   return yield* h.div({}, [userStream]);
 });
-type _T7 = Expect<Equal<typeof _t7, Effect.Effect<DOMNode, never, UserService>>>;
+type _T7 = Expect<Equal<typeof _t7, Effect.Effect<ElementDescriptor, never, UserService>>>;
 
 // Test 8: nesting — R propagates through levels
 const _t8 = h.div({}, [h.div({}, [userStream]), dbEffect]);
@@ -138,7 +138,7 @@ type _T13 = Expect<Equal<typeof _t13, Node<"t13", never>>>;
 // Test 14: function-as-children — E from yielded child, R from reactive prop unioned
 const GenWithFnChildren = Component.gen(function* (
   _props: { value?: string | Stream.Stream<string, any, any> },
-  children: (message: string) => readonly Child[],
+  children: (message: string) => readonly Renderable[],
 ) {
   return yield* h.div({ class: "field" }, children("message"));
 });
@@ -189,7 +189,7 @@ type _T19 = Expect<Equal<typeof _t19, Node<DbError, UserService | DbService>>>;
 // --- Component.make: children array ---
 
 // Test 20: E from child effect unioned through children array
-const MakeWithChildren = Component.make((_props, children: readonly Child[]) =>
+const MakeWithChildren = Component.make((_props, children: readonly Renderable[]) =>
   h.div({ class: "field" }, children),
 );
 
@@ -207,7 +207,7 @@ type _T20 = Expect<Equal<typeof _t20, Node<"t20", never>>>;
 const MakeWithFnChildren = Component.make(
   (
     _props: { value?: string | Stream.Stream<string, any, any> },
-    children: (message: string) => readonly Child[],
+    children: (message: string) => readonly Renderable[],
   ) => h.div({ class: "field" }, children("message")),
 );
 
@@ -226,12 +226,12 @@ type _T21 = Expect<Equal<typeof _t21, Node<"t21", UserService>>>;
 
 // --- h.* element children ---
 
-// Test 22: arbitrary object is not a Child
-// @ts-expect-error — `{}` is not assignable to `Child`
+// Test 22: arbitrary object is not a Renderable
+// @ts-expect-error — `{}` is not assignable to `Renderable`
 h.div({}, [{}]);
 
-// Test 23: a bare function is not a Child
-// @ts-expect-error — `() => Node` is not assignable to `Child`
+// Test 23: a bare function is not a Renderable
+// @ts-expect-error — `() => Node` is not assignable to `Renderable`
 h.div({}, [() => h.span({})]);
 
 // Test 24a: a string is a valid first argument (single static child)
@@ -240,54 +240,60 @@ h.div("valid first arg");
 // Test 24b: a number is a valid first argument (single static child)
 h.div(42);
 
-// Test 25: a Symbol is not a Child
-// @ts-expect-error — `symbol` is not assignable to `Child`
+// Test 25: a Symbol is not a Renderable
+// @ts-expect-error — `symbol` is not assignable to `Renderable`
 h.div({}, [Symbol("x")]);
+
+// Test 25b: a well-formed bare ElementDescriptor IS a valid Renderable child.
+// (Renderable subsumes the renderer's descriptor shape — see types/index.ts.)
+const _descriptorChild: ElementDescriptor = { type: "span", props: { children: ["hello"] } };
+h.div({}, [_descriptorChild]);
+h.div([{ type: "span", props: { children: ["hello"] } }]);
 
 // --- Component children: array vs function mismatches ---
 
-// Default `Children` for a gen component with no children typed is `readonly Child[]`,
+// Default `Children` for a gen component with no children typed is `readonly Renderable[]`,
 // so passing a function should fail.
 const GenArrayOnly = Component.gen(function* (_props: Record<string, never>) {
   return yield* h.div({});
 });
 
 // Test 26: array-children component invoked with a function
-// @ts-expect-error — function not assignable to `readonly Child[]`
+// @ts-expect-error — function not assignable to `readonly Renderable[]`
 GenArrayOnly({}, () => [h.span({})]);
 
 // A component that declares function-children should reject array literals.
 const GenFnOnly = Component.gen(function* (
   _props: Record<string, never>,
-  _kids: (msg: string) => readonly Child[],
+  _kids: (msg: string) => readonly Renderable[],
 ) {
   return yield* h.div({});
 });
 
 // Test 27: function-children component invoked with an array
-// @ts-expect-error — array not assignable to `(msg: string) => readonly Child[]`
+// @ts-expect-error — array not assignable to `(msg: string) => readonly Renderable[]`
 GenFnOnly({}, [h.span({})]);
 
-// Test 28: function-children — wrong return type (string instead of Child[])
-// @ts-expect-error — `string` is not assignable to `readonly Child[]`
+// Test 28: function-children — wrong return type (string instead of Renderable[])
+// @ts-expect-error — `string` is not assignable to `readonly Renderable[]`
 GenFnOnly({}, (_msg: string) => "not an array");
 
 // Test 29: function-children — wrong child shape inside returned array
-// @ts-expect-error — `{}` is not assignable to `Child`
+// @ts-expect-error — `{}` is not assignable to `Renderable`
 GenFnOnly({}, (_msg: string) => [{}]);
 
 // Mirror Component.make: array-only declaration rejects functions.
 const MakeArrayOnly = Component.make((_props: Record<string, never>) => h.div({}));
 
 // Test 30: Component.make array-children — function rejected
-// @ts-expect-error — function not assignable to `readonly Child[]`
+// @ts-expect-error — function not assignable to `readonly Renderable[]`
 MakeArrayOnly({}, () => [h.span({})]);
 
 // Mirror Component.make: function-only declaration rejects arrays.
 const MakeFnOnly = Component.make(
-  (_props: Record<string, never>, _kids: (msg: string) => readonly Child[]) => h.div({}),
+  (_props: Record<string, never>, _kids: (msg: string) => readonly Renderable[]) => h.div({}),
 );
 
 // Test 31: Component.make function-children — array rejected
-// @ts-expect-error — array not assignable to `(msg: string) => readonly Child[]`
+// @ts-expect-error — array not assignable to `(msg: string) => readonly Renderable[]`
 MakeFnOnly({}, [h.span({})]);

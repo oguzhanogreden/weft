@@ -8,14 +8,14 @@ JSX is a syntax transform that turns `<div class="foo">Hello</div>` into a funct
 
 This matters for Effect because Effects carry two channels beyond their value: **`E`** (the error channel) and **`R`** (the requirements / dependency-injection channel). If you build a tree with JSX, both channels are erased at every component boundary. You lose the ability to see at the type level which services the tree requires, and which errors it can raise.
 
-The combinator API sidesteps the JSX transform entirely. Component return types remain generic `Effect.Effect<DOMNode, E, R>`, so channels propagate through the full tree.
+The combinator API sidesteps the JSX transform entirely. Component return types remain generic `Effect.Effect<ElementDescriptor, E, R>`, so channels propagate through the full tree.
 
 ## Node IS an Effect
 
 `Node<E, R>` is defined as:
 
 ```typescript
-type Node<E = never, R = never> = Effect.Effect<DOMNode, E, R>;
+type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
 ```
 
 This has a direct consequence: nodes are first-class Effects. Everything the Effect ecosystem provides works on nodes:
@@ -128,7 +128,7 @@ declare const labelStream: Stream.Stream<string, never, I18nService>;
 const btn = Button({ label: labelStream });
 ```
 
-Components also accept an optional `children` argument, either as `readonly Child[]` or as a `(input) => readonly Child[]` function (render-prop pattern). `E`/`R` from children — including the array returned by a function-children call — accumulate on the resulting node.
+Components also accept an optional `children` argument, either as `readonly Renderable[]` or as a `(input) => readonly Renderable[]` function (render-prop pattern). `E`/`R` from children — including the array returned by a function-children call — accumulate on the resulting node.
 
 Without `Component`, a plain function's return type is fixed at definition time and doesn't reflect the caller's reactive prop types.
 

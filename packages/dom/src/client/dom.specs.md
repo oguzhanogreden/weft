@@ -12,7 +12,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 
 ### AC1: Mount Function API
 
-- **Given** a JSXNode and a root HTMLElement
+- **Given** a Renderable and a root HTMLElement
 - **When** `mount(app, root)` is called
 - **Then** it returns `Effect.Effect<void>` that:
   - Clears the root element's existing children
@@ -22,9 +22,9 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Creates a fresh ManagedRuntime per mount
   - Logs warning about runtime leaks (cleanup not yet implemented)
 
-### AC2: Primitive JSXNode Rendering
+### AC2: Primitive Renderable Rendering
 
-- **Given** primitive JSXNode values
+- **Given** primitive Renderable values
 - **When** rendering occurs
 - **Then**:
   - `string`, `number`, `bigint` → text nodes
@@ -32,13 +32,13 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 
 ### AC3: Iterable Children
 
-- **Given** JSXNode that is an iterable (including nested iterables)
+- **Given** Renderable that is an iterable (including nested iterables)
 - **When** rendering children
 - **Then** recursively flatten all iterables and render each child
 
 ### AC4: Element Creation
 
-- **Given** JSXNode with `{ type: string, props: object }`
+- **Given** Renderable with `{ type: string, props: object }`
 - **When** rendering
 - **Then**:
   - Create element using `document.createElement(type)` (HTML only, SVG/MathML later)
@@ -47,17 +47,17 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 
 ### AC5: Function Components
 
-- **Given** JSXNode with `{ type: function, props: object }`
+- **Given** Renderable with `{ type: function, props: object }`
 - **When** rendering
 - **Then**:
   - Call function once with props (ephemeral execution)
-  - Function can return: JSXNode, Effect<JSXNode>, or Stream<JSXNode>
+  - Function can return: Renderable, Effect<Renderable>, or Stream<Renderable>
   - Effects and Streams normalized to Streams and handled reactively
   - Component doesn't re-execute (no re-rendering)
 
 ### AC6: Fragment Handling
 
-- **Given** JSXNode with `{ type: FRAGMENT, props: { children } }`
+- **Given** Renderable with `{ type: FRAGMENT, props: { children } }`
 - **When** rendering
 - **Then**:
   - Render children without wrapper element
@@ -186,22 +186,22 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 - **Then**:
   - Find start and end comment markers
   - Remove all nodes between comments (iterate from `startComment.nextSibling` until `endComment`)
-  - Render new JSXNode value
+  - Render new Renderable value
   - Insert new nodes between comments
   - New value can be array/fragment (multiple nodes)
   - Text nodes replaced entirely (not updated in place)
 
 ### AC21: Nested Streams in Dynamic Children
 
-- **Given** a Stream child that emits JSXNode containing Streams
-- **When** rendering the emitted JSXNode
+- **Given** a Stream child that emits Renderable containing Streams
+- **When** rendering the emitted Renderable
 - **Then**:
   - Recursively set up all nested streams
   - Dynamically rendered content gets full reactive support
 
 ### AC22: Component Returning Stream
 
-- **Given** function component that returns `Stream<JSXNode>`
+- **Given** function component that returns `Stream<Renderable>`
 - **When** rendering
 - **Then**:
   - Normalize to Stream
@@ -213,7 +213,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 - **Given** various error conditions during rendering
 - **When** error occurs
 - **Then** throw appropriate tagged error:
-  - `InvalidElementType` - JSXNode type not string/FRAGMENT/function
+  - `InvalidElementType` - Renderable type not string/FRAGMENT/function
   - `StreamSubscriptionError` - stream subscription/execution fails
   - `RenderError` - general rendering failures
   - All errors include useful context for debugging
@@ -293,7 +293,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 
 ### AC28: Resource Cleanup on Mount Failure
 
-- **Given** a `mount` call where `renderNode` fails (e.g. unsupported JSXNode type)
+- **Given** a `mount` call where `renderNode` fails (e.g. unsupported Renderable type)
 - **When** the failure propagates
 - **Then**:
   - The internal `ManagedRuntime` is disposed before the error surfaces
@@ -315,7 +315,7 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 2. Stream-based attributes/properties update reactively
 3. Stream-based children update reactively with proper positioning
 4. Style attribute supports string and object forms with streams
-5. Function components work with plain JSXNode, Effects, and Streams
+5. Function components work with plain Renderable, Effects, and Streams
 6. Fragments render without wrapper elements
 7. Errors are tagged with useful context
 8. Effect completes after initial render, streams run in background

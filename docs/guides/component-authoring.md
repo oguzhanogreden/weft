@@ -93,15 +93,15 @@ Both factories accept an optional second `children` argument, typed as:
 
 ```typescript
 type Component.Children<Input = never> =
-  | readonly Child[]
-  | ((input: Input) => readonly Child[]);
+  | readonly Renderable[]
+  | ((input: Input) => readonly Renderable[]);
 ```
 
 The function form is the render-prop / slot pattern — the component invokes the function with whatever input it chooses, and the returned array's `E`/`R` propagate out:
 
 ```typescript
 const List = Component.make(
-  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
     h.ul({}, props.items.flatMap(renderItem)),
 );
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. `Node<E, R>` IS `Effect.Effect<DOMNode, E, R>`, so requirements and errors accumulate through the full tree and are visible to the type system end-to-end. Three building blocks make up the surface:
+A typed tree-building API that preserves Effect's `E` and `R` channels through the template structure. `Node<E, R>` IS `Effect.Effect<ElementDescriptor, E, R>`, so requirements and errors accumulate through the full tree and are visible to the type system end-to-end. Three building blocks make up the surface:
 
 - `h.<tag>(...)` — HTML, SVG, and user-extended custom elements via a proxy namespace.
 - `h.fragment(children)` — group children without a wrapping element.
@@ -14,7 +14,7 @@ A typed tree-building API that preserves Effect's `E` and `R` channels through t
 
 ### Node IS an Effect
 
-`Node<E, R>` is a type alias for `Effect.Effect<DOMNode, E, R>`. This means:
+`Node<E, R>` is a type alias for `Effect.Effect<ElementDescriptor, E, R>`. This means:
 
 - `yield* h.div(...)` works natively in `Effect.gen` and propagates `R`.
 - `() => h.div(...)` preserves `R` on the return type.
@@ -46,7 +46,7 @@ Custom components are imported and called directly without a namespace prefix. T
 
 ### Effects and Streams are children directly
 
-`Child` includes `Effect.Effect<unknown, any, any>` and `Stream.Stream<unknown, any, any>` (alongside primitives, other `Node`s, `null`/`undefined`, and `Iterable<Child>`). There is no `node()` lifting helper — `E`/`R` propagate from these children automatically.
+`Renderable` includes `Effect.Effect<unknown, any, any>` and `Stream.Stream<unknown, any, any>` (alongside primitives, bare `ElementDescriptor`s, other `Node`s, `null`/`undefined`/`void`, and `Iterable<Renderable>`). There is no `node()` lifting helper — `E`/`R` propagate from these children automatically.
 
 ```ts
 h.div({}, [userStream, dbEffect, h.span({}, "static")]);
@@ -57,7 +57,7 @@ h.div({}, [userStream, dbEffect, h.span({}, "static")]);
 
 `ElementFn` supports multiple call shapes; each preserves the caller's prop and child `E`/`R`:
 
-- `el(props, children)` — props plus a `readonly Child[]`.
+- `el(props, children)` — props plus a `readonly Renderable[]`.
 - `el(props, child)` — props plus a single `string | number`.
 - `el(props)` — props only.
 - `el(children)` — children only.
@@ -83,7 +83,7 @@ The returned function is generic over the caller's specific `GenP extends BasePr
 Components accept an optional `children` argument typed as:
 
 ```ts
-type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+type Children<Input = never> = readonly Renderable[] | ((input: Input) => readonly Renderable[]);
 ```
 
 - **Array children** — the common case; flows straight into the body.
@@ -93,7 +93,7 @@ For function-children, `ChildrenE`/`ChildrenR` are extracted from the function's
 
 ```ts
 const List = Component.make(
-  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
     h.ul({}, props.items.flatMap(renderItem)),
 );
 
@@ -119,7 +119,7 @@ The component owns behaviour and accessibility; the caller owns structure and st
 
 ### Core type accumulation
 
-- `Node<E, R>` must be assignable to `Effect.Effect<DOMNode, E, R>`.
+- `Node<E, R>` must be assignable to `Effect.Effect<ElementDescriptor, E, R>`.
 - Reactive prop values (Stream, Effect, Subscribable) contribute their `E` and `R` to the node.
 - Effect/Stream children embedded directly in the children array contribute their `E` and `R`.
 - `E` and `R` accumulate across sibling children (union).
@@ -130,14 +130,14 @@ The component owns behaviour and accessibility; the caller owns structure and st
 
 - `Component.gen` / `Component.make` body `E`/`R` are inferred from the returned/yielded effects and fixed at definition time.
 - Caller's reactive prop values contribute additional `E`/`R` at the call site.
-- The optional `children` argument may be `readonly Child[]` or a `(input) => readonly Child[]` function; for the function form, `E`/`R` are extracted from the function's return type.
+- The optional `children` argument may be `readonly Renderable[]` or a `(input) => readonly Renderable[]` function; for the function form, `E`/`R` are extracted from the function's return type.
 - Total `E`/`R` is the union of body, caller-props, and caller-children channels.
 - Static prop values (`string`, `number`, `() => void`) contribute `never`.
 
 ### Element call shapes
 
 - `h.div({}, ["a"])` — `Node<never, never>`.
-- `h.div({})` — `Node<never, never>`, no `children` key on the resulting `DOMNode`.
+- `h.div({})` — `Node<never, never>`, no `children` key on the resulting `ElementDescriptor`.
 - `h.div(["a"])` — children only, empty props.
 - `h.div({}, "a")` — single primitive child.
 - `h.div()` — `Node<never, never>`.
@@ -151,7 +151,7 @@ The component owns behaviour and accessibility; the caller owns structure and st
 
 ### Invalid uses (must not compile)
 
-- Arbitrary objects, bare functions, and symbols are not valid `Child` values.
+- Arbitrary objects (e.g. `{}`), bare functions, and symbols are not valid `Renderable` values. A well-formed `ElementDescriptor` (`{ type, props }`) is — bare descriptors are accepted as children.
 - A component declared with array children rejects function children at the call site (and vice versa).
 - Function-children with the wrong return type (e.g. returning a string) is rejected.
 
@@ -161,38 +161,43 @@ The component owns behaviour and accessibility; the caller owns structure and st
 
 ```ts
 // Core types
-type Node<E = never, R = never> = Effect.Effect<DOMNode, E, R>;
+interface ElementDescriptor {
+  readonly type: string | symbol | ((props: Record<string, unknown>) => unknown);
+  readonly props: Record<string, unknown>;
+}
 
-type Child =
-  | Node<any, any>
-  | Stream.Stream<unknown, any, any>
-  | Effect.Effect<unknown, any, any>
+type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
+
+type Renderable =
+  | void | null | undefined
   | string | number | bigint | boolean
-  | null | undefined
-  | Iterable<Child>;
+  | ElementDescriptor
+  | Iterable<Renderable>
+  | Stream.Stream<unknown, any, any>
+  | Effect.Effect<unknown, any, any>;
 
 // E/R extraction (internal but exported for type-level work)
 type PropsE<P>, PropsR<P>;
-type ChildrenE<T extends readonly Child[]>, ChildrenR<T extends readonly Child[]>;
+type ChildrenE<T extends readonly Renderable[]>, ChildrenR<T extends readonly Renderable[]>;
 
 // Element namespace
 interface ElementFn<Props> {
-  <P extends Props, C extends readonly Child[]>(props: P, children: C):
+  <P extends Props, C extends readonly Renderable[]>(props: P, children: C):
     Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>;
   <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
   <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
-  <C extends readonly Child[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  <C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
   (): Node<never, never>;
 }
 
 declare const h: { [Tag in keyof (HTMLElements & SVGElements & CustomElements)]: ElementFn<...> };
 declare function makeH(cache?: Map<string, ElementFn<any>>): typeof h;
-declare function h.fragment<C extends readonly Child[]>(children: C):
+declare function h.fragment<C extends readonly Renderable[]>(children: C):
   Node<ChildrenE<C>, ChildrenR<C>>;
 
 // Components
 namespace Component {
-  type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+  type Children<Input = never> = readonly Renderable[] | ((input: Input) => readonly Renderable[]);
 
   type Component<P, C extends Children, E, R> = <GenP extends P, GenC extends C>(
     props: GenP,
@@ -207,7 +212,7 @@ namespace Component {
   ): Component<BaseProps, C, E, R>;
 
   function make<BaseProps, C extends Children>(
-    f: (props: BaseProps, children: C) => Effect<DOMNode, E, R>,
+    f: (props: BaseProps, children: C) => Effect<ElementDescriptor, E, R>,
   ): Component<BaseProps, C, E, R>;
 }
 ```
@@ -217,5 +222,5 @@ namespace Component {
 ## What's next
 
 - **`toView` / headless pattern** — `toView: (attrs: ButtonAttrs) => Node<E, R>` prop for components that expose their managed attributes to the caller.
-- **Per-element typed children** — narrow `Child` per tag (e.g. `<select>` may only contain `<option>` / `<optgroup>`) once the function-children pattern has been exercised in real apps.
+- **Per-element typed children** — narrow `Renderable` per tag (e.g. `<select>` may only contain `<option>` / `<optgroup>`) once the function-children pattern has been exercised in real apps.
 - **Custom component scopes** — typed child vocabulary per component; enables `Dialog.Root` / `Dialog.Content` slot patterns built on top of function-children.

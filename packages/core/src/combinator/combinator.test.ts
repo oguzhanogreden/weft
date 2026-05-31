@@ -3,7 +3,7 @@ import { describe, test } from "vite-plus/test";
 import { Effect } from "effect";
 import { makeH, type ElementFn } from "./element";
 import { Component } from "./component";
-import type { Child, DOMNode } from "./types";
+import type { Renderable, ElementDescriptor } from "./types";
 
 const h = makeH();
 
@@ -90,7 +90,7 @@ describe("Component function-children forwarding", () => {
     let received: string | undefined;
     const Comp = Component.gen(function* (
       _props: Record<string, never>,
-      kids: (msg: string) => readonly Child[],
+      kids: (msg: string) => readonly Renderable[],
     ) {
       return yield* h.div({}, kids("hello"));
     });
@@ -99,7 +99,7 @@ describe("Component function-children forwarding", () => {
       Comp({}, (msg) => {
         received = msg;
         return [`got:${msg}`];
-      }) as Effect.Effect<DOMNode>,
+      }) as Effect.Effect<ElementDescriptor>,
     );
 
     assert.equal(received, "hello");
@@ -109,7 +109,7 @@ describe("Component function-children forwarding", () => {
   test("Component.make forwards the children function and uses its resolved array", () => {
     let received: string | undefined;
     const Comp = Component.make(
-      (_props: Record<string, never>, kids: (msg: string) => readonly Child[]) =>
+      (_props: Record<string, never>, kids: (msg: string) => readonly Renderable[]) =>
         h.div({}, kids("hello")),
     );
 
@@ -117,7 +117,7 @@ describe("Component function-children forwarding", () => {
       Comp({}, (msg) => {
         received = msg;
         return [`got:${msg}`];
-      }) as Effect.Effect<DOMNode>,
+      }) as Effect.Effect<ElementDescriptor>,
     );
 
     assert.equal(received, "hello");

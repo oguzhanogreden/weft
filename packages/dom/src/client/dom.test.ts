@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
 import { Component, h, Source } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
@@ -129,10 +129,10 @@ describe("AC1: Mount Function API", () => {
 });
 
 // ============================================================================
-// AC2: Primitive RenderNode Rendering
+// AC2: Primitive Renderable Rendering
 // ============================================================================
 
-describe("AC2: Primitive RenderNode Rendering", () => {
+describe("AC2: Primitive Renderable Rendering", () => {
   it("should render string as text node", async () => {
     createTestDOM();
     const root = createRoot();
@@ -289,11 +289,11 @@ describe("AC5: Function Components", () => {
     assert.equal(root.textContent, "Hello World");
   });
 
-  it("should handle component returning Effect<RenderNode>", async () => {
+  it("should handle component returning Effect<Renderable>", async () => {
     createTestDOM();
     const root = createRoot();
 
-    function AsyncComponent(): Effect.Effect<RenderNode> {
+    function AsyncComponent(): Effect.Effect<Renderable> {
       return Effect.sync(() => h.div({}, "Async Content"));
     }
 
@@ -304,11 +304,11 @@ describe("AC5: Function Components", () => {
     assert.equal(root.textContent, "Async Content");
   });
 
-  it("should handle component returning Stream<RenderNode>", async () => {
+  it("should handle component returning Stream<Renderable>", async () => {
     createTestDOM();
     const root = createRoot();
 
-    function StreamComponent(): Stream.Stream<RenderNode> {
+    function StreamComponent(): Stream.Stream<Renderable> {
       return Stream.make(h.div({}, "First"), h.div({}, "Second"));
     }
 
@@ -324,7 +324,7 @@ describe("AC5: Function Components", () => {
     const root = createRoot();
     let executionCount = 0;
 
-    function Counter(): Stream.Stream<RenderNode> {
+    function Counter(): Stream.Stream<Renderable> {
       executionCount++;
       return Stream.make(h.div({}, "Count: 1"), h.div({}, "Count: 2"));
     }
@@ -913,11 +913,11 @@ describe("AC21: Nested Streams in Dynamic Children", () => {
 // ============================================================================
 
 describe("AC22: Component Returning Stream", () => {
-  it("should handle component returning Stream<RenderNode>", async () => {
+  it("should handle component returning Stream<Renderable>", async () => {
     createTestDOM();
     const root = createRoot();
 
-    function StreamComponent(): Stream.Stream<RenderNode> {
+    function StreamComponent(): Stream.Stream<Renderable> {
       return Stream.make(h.div({}, "First"), h.div({}, "Second"));
     }
 
@@ -932,7 +932,7 @@ describe("AC22: Component Returning Stream", () => {
     createTestDOM();
     const root = createRoot();
 
-    function StreamComponent(): Stream.Stream<RenderNode> {
+    function StreamComponent(): Stream.Stream<Renderable> {
       return Stream.make(h.div({}, "Content"));
     }
 
@@ -950,7 +950,7 @@ describe("AC22: Component Returning Stream", () => {
 // ============================================================================
 
 describe("AC23: Tagged Errors", () => {
-  it("should throw InvalidElementType for invalid RenderNode type", async () => {
+  it("should throw InvalidElementType for invalid Renderable type", async () => {
     createTestDOM();
     const root = createRoot();
 
@@ -1248,7 +1248,7 @@ describe("Stream-Based Fallback Pattern", () => {
         Stream.fromEffect(
           Effect.promise(
             () =>
-              new Promise<RenderNode>((resolve) =>
+              new Promise<Renderable>((resolve) =>
                 setTimeout(() => resolve(h.span({ class: "loaded" }, "Done")), 300),
               ),
           ),
@@ -1322,7 +1322,7 @@ describe("Stream-Based Fallback Pattern", () => {
         Stream.fromEffect(
           Effect.promise(
             () =>
-              new Promise<RenderNode>((resolve) =>
+              new Promise<Renderable>((resolve) =>
                 setTimeout(() => resolve(h.span({ class: "child-loaded" }, "Child Done")), 200),
               ),
           ),
@@ -1336,7 +1336,7 @@ describe("Stream-Based Fallback Pattern", () => {
         Stream.fromEffect(
           Effect.promise(
             () =>
-              new Promise<RenderNode>((resolve) =>
+              new Promise<Renderable>((resolve) =>
                 setTimeout(() => resolve(h.div({ class: "parent-loaded" }, [Child()])), 100),
               ),
           ),
@@ -1681,7 +1681,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
     );
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ val: propStream })),
+      SubscriptionRef.make<Renderable>(Comp({ val: propStream })),
     );
 
     createTestDOM();
@@ -1713,7 +1713,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
       );
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ val: makePropStream() })),
+      SubscriptionRef.make<Renderable>(Comp({ val: makePropStream() })),
     );
 
     createTestDOM();
@@ -1807,9 +1807,9 @@ describe("scope lifetime: advanced cases", () => {
     // Effect.succeed gives Outer an instanceScope (renderComponent forks one for any
     // Effect/Stream result), so the full chain is:
     // contentScope → outerInstanceScope → contentScope(outer) → innerInstanceScope → pump.
-    const Outer = () => Effect.succeed(h.div({}, [Inner({ val: innerStream })]) as RenderNode);
+    const Outer = () => Effect.succeed(h.div({}, [Inner({ val: innerStream })]) as Renderable);
 
-    const regionRef = await Effect.runPromise(SubscriptionRef.make<RenderNode>(Outer()));
+    const regionRef = await Effect.runPromise(SubscriptionRef.make<Renderable>(Outer()));
 
     createTestDOM();
     const root = createRoot();
@@ -1858,7 +1858,7 @@ describe("scope lifetime: advanced cases", () => {
       });
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ a: streamA, b: streamB })),
+      SubscriptionRef.make<Renderable>(Comp({ a: streamA, b: streamB })),
     );
 
     createTestDOM();
@@ -1892,7 +1892,7 @@ describe("scope lifetime: advanced cases", () => {
       });
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ val: sharedRef })),
+      SubscriptionRef.make<Renderable>(Comp({ val: sharedRef })),
     );
 
     createTestDOM();
@@ -1934,12 +1934,12 @@ describe("scope lifetime: advanced cases", () => {
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(props.val);
           const v = yield* sub.get;
-          return h.div({}, v) as RenderNode;
+          return h.div({}, v) as Renderable;
         }),
       );
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ val: propStream })),
+      SubscriptionRef.make<Renderable>(Comp({ val: propStream })),
     );
 
     createTestDOM();
@@ -1979,10 +1979,10 @@ describe("scope lifetime: advanced cases", () => {
 
     // Two reactive region layers above Comp.
     const innerRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(Comp({ val: propStream })),
+      SubscriptionRef.make<Renderable>(Comp({ val: propStream })),
     );
     const outerRef = await Effect.runPromise(
-      SubscriptionRef.make<RenderNode>(h.div({}, [innerRef.changes])),
+      SubscriptionRef.make<Renderable>(h.div({}, [innerRef.changes])),
     );
 
     createTestDOM();

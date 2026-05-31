@@ -1,5 +1,5 @@
 import { Cause, Effect, Option } from "effect";
-import type { Child, ChildrenE, ChildrenR, Node } from "~/combinator/types";
+import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
 /**
  * Unique type tag used by renderers to identify a failure `Boundary` descriptor.
@@ -14,20 +14,20 @@ export const FAILURE_BOUNDARY: unique symbol = Symbol.for("effect-ui/FAILURE_BOU
 export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("effect-ui/SUSPENSE_BOUNDARY");
 
 /** Remove a single tagged error from the children's error union. */
-export type CatchTagE<C extends readonly Child[], Tag extends string> = Exclude<
+export type CatchTagE<C extends readonly Renderable[], Tag extends string> = Exclude<
   ChildrenE<C>,
   { _tag: Tag }
 >;
 
 /** Remove multiple tagged errors from the children's error union. */
-export type CatchTagsE<C extends readonly Child[], Tags extends string> = Exclude<
+export type CatchTagsE<C extends readonly Renderable[], Tags extends string> = Exclude<
   ChildrenE<C>,
   { _tag: Tags }
 >;
 
 function makeFailureBoundaryNode<E, R>(
   match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null,
-  children: readonly Child[],
+  children: readonly Renderable[],
 ): Node<E, R> {
   return Effect.succeed({
     type: FAILURE_BOUNDARY,
@@ -83,14 +83,14 @@ export namespace Boundary {
      * Shown in the DOM while async children are pending. Pass `null` or omit to
      * render nothing (only the comment markers) while pending.
      */
-    readonly fallback?: Child;
+    readonly fallback?: Renderable;
   }
 
   /**
    * Catch all typed failures (not defects). The children's `E` is fully
    * consumed; the output `E` is only the fallback's error channel.
    */
-  export function catchAll<C extends readonly Child[], FE = never, FR = never>(
+  export function catchAll<C extends readonly Renderable[], FE = never, FR = never>(
     props: { readonly fallback: (e: ChildrenE<C>) => Node<FE, FR> },
     children: C,
   ): Node<FE, ChildrenR<C> | FR> {
@@ -105,7 +105,7 @@ export namespace Boundary {
    * Catch all causes including defects and interruptions. The children's `E`
    * is fully consumed; the output `E` is only the fallback's error channel.
    */
-  export function catchAllCause<C extends readonly Child[], FE = never, FR = never>(
+  export function catchAllCause<C extends readonly Renderable[], FE = never, FR = never>(
     props: { readonly fallback: (cause: Cause.Cause<ChildrenE<C>>) => Node<FE, FR> },
     children: C,
   ): Node<FE, ChildrenR<C> | FR> {
@@ -119,7 +119,7 @@ export namespace Boundary {
    * from the output `E`; unmatched errors are re-raised.
    */
   export function catchTag<
-    C extends readonly Child[],
+    C extends readonly Renderable[],
     Tag extends ChildrenE<C> extends { _tag: string } ? ChildrenE<C>["_tag"] : string,
     FE = never,
     FR = never,
@@ -147,7 +147,7 @@ export namespace Boundary {
    * The handlers record IS the first argument (no wrapping object).
    */
   export function catchTags<
-    C extends readonly Child[],
+    C extends readonly Renderable[],
     Handlers extends {
       readonly [Tag in ChildrenE<C> extends { _tag: string } ? ChildrenE<C>["_tag"] : never]?: (
         e: Extract<ChildrenE<C>, { _tag: Tag }>,
@@ -185,7 +185,7 @@ export namespace Boundary {
    * `Option.none()`, the error is re-raised. The children's `E` is preserved
    * in the output since the boundary may not handle any given error.
    */
-  export function catchSome<C extends readonly Child[], FE = never, FR = never>(
+  export function catchSome<C extends readonly Renderable[], FE = never, FR = never>(
     props: { readonly fallback: (e: ChildrenE<C>) => Option.Option<Node<FE, FR>> },
     children: C,
   ): Node<ChildrenE<C> | FE, ChildrenR<C> | FR> {
@@ -203,7 +203,7 @@ export namespace Boundary {
    * returns `false`, the error is re-raised. The children's `E` is preserved
    * in the output since the boundary may not handle any given error.
    */
-  export function catchIf<C extends readonly Child[], FE = never, FR = never>(
+  export function catchIf<C extends readonly Renderable[], FE = never, FR = never>(
     props: {
       readonly predicate: (e: ChildrenE<C>) => boolean;
       readonly fallback: (e: ChildrenE<C>) => Node<FE, FR>;
@@ -236,7 +236,7 @@ export namespace Boundary {
    * Boundary.suspend({ fallback: h.div({}, "Loading…") }, [AsyncCard(), AsyncSidebar()])
    * ```
    */
-  export function suspend<C extends readonly Child[]>(
+  export function suspend<C extends readonly Renderable[]>(
     props: SuspenseProps,
     children: C,
   ): Node<ChildrenE<C>, ChildrenR<C>> {

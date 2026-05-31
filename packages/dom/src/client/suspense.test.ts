@@ -433,10 +433,10 @@ describe("AC5: Null fallback — only markers while pending", () => {
 });
 
 // ============================================================================
-// AC6: Effect<JSXNode> component triggers suspension
+// AC6: Effect<ElementDescriptor> component triggers suspension
 // ============================================================================
 
-describe("AC6: Function component returning Effect<JSXNode> triggers suspension", () => {
+describe("AC6: Function component returning Effect<ElementDescriptor> triggers suspension", () => {
   it("register is called before Effect runs, settle called exactly once", async () => {
     createTestDOM();
     const root = createRoot();
@@ -525,10 +525,10 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
 });
 
 // ============================================================================
-// AC7: Stream<JSXNode> component — settle on first emission
+// AC7: Stream<ElementDescriptor> component — settle on first emission
 // ============================================================================
 
-describe("AC7: Function component returning Stream<JSXNode> triggers suspension", () => {
+describe("AC7: Function component returning Stream<ElementDescriptor> triggers suspension", () => {
   it("settle called on first emission; subsequent emissions do not re-show fallback", async () => {
     createTestDOM();
     const root = createRoot();

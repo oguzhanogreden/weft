@@ -2,7 +2,7 @@
 
 ## Overview
 
-`renderToStream` progressively serializes an Effect-infused JSX tree (`JSXNode`)
+`renderToStream` progressively serializes an Effect-infused JSX tree (`Renderable`)
 into a `Stream.Stream<string, Error>` of HTML chunks, emitted in render-tree
 order. It is the streaming counterpart of `renderToString` and, inspired by
 React's Fizz (`renderToPipeableStream`), interleaves work and flush: chunks
@@ -51,8 +51,8 @@ string-accumulating destination), so the two share serialization semantics.
 
 ### Function components
 
-- AC-FC1: A function-component node (`{ type: (props) => JSXNode, props }`) calls
-  the component once with `props` and renders its returned `JSXNode` recursively.
+- AC-FC1: A function-component node (`{ type: (props) => Renderable, props }`) calls
+  the component once with `props` and renders its returned `Renderable` recursively.
 - AC-FC2: A component returning an element/fragment/iterable/primitive renders
   identically to that node written inline.
 - AC-FC3: A component returning a `Stream`/`Effect` is rendered via the reactive

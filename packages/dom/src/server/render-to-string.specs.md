@@ -2,7 +2,7 @@
 
 ## Overview
 
-`renderToString` serializes an Effect-infused JSX tree (`JSXNode`) into an HTML
+`renderToString` serializes an Effect-infused JSX tree (`Renderable`) into an HTML
 string. It is the server-side counterpart to the client DOM renderer
 (`render-core.ts` + `dom.ts`) and is intended to produce output that is
 isomorphic with what the client renderer would create in the browser.

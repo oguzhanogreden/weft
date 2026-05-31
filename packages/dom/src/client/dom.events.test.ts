@@ -3,7 +3,7 @@ import { describe, it } from "vite-plus/test";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { h } from "@effect-ui/core";
-import type { RenderNode } from "@effect-ui/core/types";
+import type { Renderable } from "@effect-ui/core/types";
 import { mount } from "./render";
 
 // ============================================================================
@@ -37,7 +37,7 @@ function createRoot(): HTMLElement {
 /**
  * Helper to run mount and wait for initial render
  */
-async function runMount(app: RenderNode, root: HTMLElement) {
+async function runMount(app: Renderable, root: HTMLElement) {
   const handle = await Effect.runPromise(mount(app, root));
   return handle;
 }

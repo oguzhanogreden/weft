@@ -1,5 +1,13 @@
 import { Effect } from "effect";
-import type { Child, ChildrenE, ChildrenR, DOMNode, Node, PropsE, PropsR } from "./types";
+import type {
+  Renderable,
+  ChildrenE,
+  ChildrenR,
+  ElementDescriptor,
+  Node,
+  PropsE,
+  PropsR,
+} from "./types";
 import type { YieldWrap } from "effect/Utils";
 
 /**
@@ -12,19 +20,21 @@ import type { YieldWrap } from "effect/Utils";
  * - `Component.make` — body is a plain function returning any `Effect`.
  *
  * Both accept an optional second `children` argument which may be either an
- * array of {@link Child} or a function `(input) => readonly Child[]` (the
+ * array of {@link Renderable} or a function `(input) => readonly Renderable[]` (the
  * render-prop / function-children pattern).
  */
 export namespace Component {
   /**
    * Shape of the optional `children` argument to a {@link Component}.
    *
-   * - `readonly Child[]` — a flat list of children, the common case.
-   * - `(input: Input) => readonly Child[]` — function-children: the component
+   * - `readonly Renderable[]` — a flat list of children, the common case.
+   * - `(input: Input) => readonly Renderable[]` — function-children: the component
    *   supplies `input` (some scoped value) and the caller returns the children
    *   array. Useful for render-prop / slot patterns.
    */
-  export type Children<Input = never> = readonly Child[] | ((input: Input) => readonly Child[]);
+  export type Children<Input = never> =
+    | readonly Renderable[]
+    | ((input: Input) => readonly Renderable[]);
 
   /**
    * The callable shape returned by {@link gen} and {@link make}. Generic over
@@ -63,7 +73,7 @@ export namespace Component {
    * ```ts
    * const Tooltip = Component.gen(function* (
    *   _props: { label: string },
-   *   children: (anchorId: string) => readonly Child[],
+   *   children: (anchorId: string) => readonly Renderable[],
    * ) {
    *   return yield* h.div({ class: "tooltip" }, children("anchor-42"));
    * });
@@ -74,9 +84,9 @@ export namespace Component {
   export function gen<
     Eff extends YieldWrap<Effect.Effect<any, any, any>>,
     BaseProps = Record<string, never>,
-    C extends Children = readonly Child[],
+    C extends Children = readonly Renderable[],
   >(
-    f: (props: BaseProps, children: C) => Generator<Eff, DOMNode, never>,
+    f: (props: BaseProps, children: C) => Generator<Eff, ElementDescriptor, never>,
   ): Component.Component<
     BaseProps,
     C,
@@ -111,7 +121,7 @@ export namespace Component {
    * const List = Component.make(
    *   (
    *     props: { items: readonly string[] },
-   *     children: (item: string) => readonly Child[],
+   *     children: (item: string) => readonly Renderable[],
    *   ) => h.ul({}, props.items.flatMap(children)),
    * );
    * ```
@@ -119,7 +129,7 @@ export namespace Component {
   export function make<
     Eff extends Effect.Effect<any, any, any>,
     BaseProps = Record<string, never>,
-    C extends Children = readonly Child[],
+    C extends Children = readonly Renderable[],
   >(
     f: (props: BaseProps, children: C) => Eff,
   ): Component<

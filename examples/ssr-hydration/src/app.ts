@@ -24,6 +24,7 @@ export const App = (props: { initialValue: number }) =>
 
     return yield* h.div({}, [
       h.h1({}, "SSR + Hydration"),
+      h.div([{ type: "span", props: { children: ["hello"] } }]),
       h.p({}, [
         "This page was rendered to HTML on the server and hydrated in the browser. The counter below shows ",
         h.code({}, "3"),
