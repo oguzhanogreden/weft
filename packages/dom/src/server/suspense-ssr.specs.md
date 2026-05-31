@@ -2,9 +2,12 @@
 
 ## Overview
 
-`renderToStream` and `renderToStreamHydratable` support `<Suspense>` via a
+The suspense boundary is constructed with `Boundary.suspend(props, children)` and
+recognised by the server renderer via its `SUSPENSE_BOUNDARY` symbol type tag.
+
+`renderToStream` and `renderToStreamHydratable` support suspense boundaries via a
 **streaming patch model** inspired by React's `renderToPipeableStream`. When the
-renderer encounters a `<Suspense>` boundary:
+renderer encounters a suspense boundary:
 
 1. The **fallback** HTML is emitted inline in the main stream, bracketed by
    `<!-- suspense-start-N -->` / `<!-- suspense-end-N -->` comment markers.
@@ -26,18 +29,18 @@ have already executed and the DOM is in the resolved state.
 
 ### AC-SS1: `renderToString` — fallback only, children not rendered
 
-- **Given** `renderToString(node)` where `node` contains a `<Suspense fallback={F}>`
+- **Given** `renderToString(node)` where `node` contains a `Boundary.suspend({ fallback: F }, children)`
 - **When** evaluated
 - **Then**:
   - The output contains the serialised HTML of `F`
-  - The children of `<Suspense>` are **not** rendered
+  - The children of the boundary are **not** rendered
   - No `<!-- suspense-start-N -->` / `<!-- suspense-end-N -->` markers appear
   - No `<template>` or `<script>` elements appear
   - The output string is otherwise identical to rendering `F` inline
 
 ### AC-SS2: `renderToStream` — fallback inline, patch after main stream
 
-- **Given** `renderToStream(node)` where `node` contains a `<Suspense fallback={F}>`
+- **Given** `renderToStream(node)` where `node` contains a `Boundary.suspend({ fallback: F }, children)`
   with an async child whose first emission eventually resolves to `C`
 - **When** the stream is consumed
 - **Then** the following chunks are emitted in this order:
@@ -58,7 +61,7 @@ have already executed and the DOM is in the resolved state.
 
 ### AC-SS3: `renderToStreamHydratable` — same as AC-SS2 plus reactive markers
 
-- **Given** `renderToStreamHydratable(node)` with a `<Suspense>` whose resolved
+- **Given** `renderToStreamHydratable(node)` with a `Boundary.suspend` whose resolved
   children contain reactive regions (Stream/Effect children or props)
 - **When** the stream is consumed
 - **Then**:
@@ -70,7 +73,7 @@ have already executed and the DOM is in the resolved state.
 
 ### AC-SS4: Multiple boundaries — independent patches, ordered by resolution time
 
-- **Given** a tree with two or more `<Suspense>` boundaries, each with its own async
+- **Given** a tree with two or more `Boundary.suspend` boundaries, each with its own async
   child, resolving at different times
 - **When** the stream is consumed
 - **Then**:
@@ -81,9 +84,9 @@ have already executed and the DOM is in the resolved state.
   - Each patch targets only its own boundary via the unique ID
   - The stream terminates only after **all** boundaries have emitted their patch
 
-### AC-SS5: Nested `<Suspense>` — inner boundary resolves within outer patch
+### AC-SS5: Nested `Boundary.suspend` — inner boundary resolves within outer patch
 
-- **Given** an outer `<Suspense>` containing an inner `<Suspense>`, each with async
+- **Given** an outer `Boundary.suspend` containing an inner `Boundary.suspend`, each with async
   children
 - **When** the outer boundary resolves
 - **Then**:
@@ -95,7 +98,7 @@ have already executed and the DOM is in the resolved state.
 
 ### AC-SS6: Never-resolving boundary — stream stays open
 
-- **Given** a `<Suspense>` boundary whose child Effect never emits
+- **Given** a `Boundary.suspend` boundary whose child Effect never emits
 - **When** the stream is consumed
 - **Then**:
   - The main document stream (with fallback in place) completes normally
@@ -104,10 +107,10 @@ have already executed and the DOM is in the resolved state.
   - This is expected behaviour; the consuming HTTP server is responsible for
     request timeouts and connection management
 
-### AC-SS7: No `<Suspense>` in tree — zero overhead
+### AC-SS7: No `Boundary.suspend` in tree — zero overhead
 
 - **Given** `renderToStream(node)` or `renderToStreamHydratable(node)` where `node`
-  contains no `<Suspense>` components
+  contains no `Boundary.suspend` boundaries
 - **When** the stream is consumed
 - **Then**:
   - Output is byte-for-byte identical to the pre-Suspense implementation
@@ -184,13 +187,13 @@ renderToStream(node)
 ```
 
 `Queue.shutdown` is called when `pendingCount` reaches 0 (all boundaries resolved).
-If no `<Suspense>` boundaries exist, `pendingCount` never increments, the queue is
+If no `Boundary.suspend` boundaries exist, `pendingCount` never increments, the queue is
 shut down immediately after the main stream completes, and the combined stream
 terminates without emitting any patches.
 
 ### Per-boundary resolution fiber
 
-For each `<Suspense>` encountered during the main render:
+For each `Boundary.suspend` encountered during the main render:
 
 1. Increment `pendingCount`
 2. Emit fallback + markers into the main stream (synchronous, in document order)
@@ -205,7 +208,7 @@ For each `<Suspense>` encountered during the main render:
 - `renderToString` does not support Suspense streaming; fallback is always shown
 - Patch scripts require JavaScript enabled on the client; JS-disabled environments
   always see the fallback
-- Nested `<Suspense>` boundaries require the outer boundary's children HTML to be
+- Nested `Boundary.suspend` boundaries require the outer boundary's children HTML to be
   rendered before the inner boundary's patch can be emitted — resolution is naturally
   ordered by the async dependency graph
 - No built-in timeout; the stream may stay open indefinitely if a boundary's Effect

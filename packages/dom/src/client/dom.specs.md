@@ -262,7 +262,6 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
 ### Dependencies
 
 - Effect library for Effect, Stream, Layer, Scope primitives
-- JSX runtime types from `@/jsx-runtime`
 - Browser DOM APIs
 
 ### Architecture

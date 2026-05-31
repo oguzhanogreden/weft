@@ -24,8 +24,8 @@ string-accumulating destination), so the two share serialization semantics.
   as `renderToString` — see `render-to-string.specs.md`; these come from the
   shared serialization helpers in `serialize.ts`.
 - **Function components.** A function-component node is invoked once with its
-  `props` (passed verbatim from the JSX node — no defaultProps or extra children
-  injection beyond what jsx-runtime already set), and its returned `JSXNode` is
+  `props` (passed verbatim from the node — no defaultProps or extra children
+  injection beyond what h runtime already set), and its returned `Node` is
   rendered recursively. Mirrors the client renderer's `renderComponent`
   (`render-core.ts`). There is no per-render state or lifecycle on the server.
 

@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Effect, Stream } from "effect";
-import { h, Suspense } from "@effect-ui/core";
+import { Boundary, h } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount, hydrate } from "./render";
 import { renderToStringHydratable } from "~/server/render-to-string";
@@ -60,7 +60,7 @@ describe("AC1: Synchronous children — no fallback rendered", () => {
     const root = createRoot();
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [
         h.div({ class: "content" }, "Hello"),
       ]),
       root,
@@ -82,7 +82,7 @@ describe("AC1: Synchronous children — no fallback rendered", () => {
     const root = createRoot();
 
     await runMount(
-      Suspense({ fallback: h.span({}, "Loading") }, [
+      Boundary.suspend({ fallback: h.span({}, "Loading") }, [
         h.div({ class: "a" }, "A"),
         h.div({ class: "b" }, "B"),
       ]),
@@ -114,7 +114,7 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
       root,
     );
 
@@ -158,7 +158,7 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [AsyncChild()]),
       root,
     );
 
@@ -210,7 +210,10 @@ describe("AC3: Multiple async siblings — shared fallback, single swap", () => 
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [FastChild(), SlowChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [
+        FastChild(),
+        SlowChild(),
+      ]),
       root,
     );
 
@@ -256,7 +259,10 @@ describe("AC3: Multiple async siblings — shared fallback, single swap", () => 
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [ChildA(), ChildB()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [
+        ChildA(),
+        ChildB(),
+      ]),
       root,
     );
 
@@ -307,9 +313,9 @@ describe("AC4: Nested Suspense — independent boundaries", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
+      Boundary.suspend({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
         OuterChild(),
-        Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
+        Boundary.suspend({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
           InnerChild(),
         ]),
       ]),
@@ -348,9 +354,9 @@ describe("AC4: Nested Suspense — independent boundaries", () => {
 
     await runMount(
       // Outer has only sync children (inner Suspense is not an async component)
-      Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
+      Boundary.suspend({ fallback: h.span({ class: "outer-fallback" }, "Outer Loading") }, [
         h.span({ class: "sync" }, "Sync"),
-        Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
+        Boundary.suspend({ fallback: h.span({ class: "inner-fallback" }, "Inner Loading") }, [
           InnerChild(),
         ]),
       ]),
@@ -386,7 +392,7 @@ describe("AC5: Null fallback — only markers while pending", () => {
       );
     }
 
-    await runMount(Suspense({ fallback: null }, [AsyncChild()]), root);
+    await runMount(Boundary.suspend({ fallback: null }, [AsyncChild()]), root);
 
     // Only markers, no visible content
     assert.equal(
@@ -416,7 +422,7 @@ describe("AC5: Null fallback — only markers while pending", () => {
       );
     }
 
-    await runMount(Suspense({}, [AsyncChild()]), root);
+    await runMount(Boundary.suspend({}, [AsyncChild()]), root);
 
     assert.equal(root.textContent?.trim(), "", "No visible content");
     assert.equal(getSuspenseComments(root).length, 2);
@@ -450,7 +456,7 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [EffectChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Waiting") }, [EffectChild()]),
       root,
     );
 
@@ -490,7 +496,10 @@ describe("AC6: Function component returning Effect<JSXNode> triggers suspension"
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [ChildA(), ChildB()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
+        ChildA(),
+        ChildB(),
+      ]),
       root,
     );
 
@@ -534,7 +543,7 @@ describe("AC7: Function component returning Stream<JSXNode> triggers suspension"
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [StreamChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Waiting") }, [StreamChild()]),
       root,
     );
 
@@ -586,7 +595,7 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
         h.div({}, [inlineStream]),
         AsyncComponent(),
       ]),
@@ -624,7 +633,7 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
 
     // Without any async function component child, the boundary should fast-path
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Waiting") }, [
         h.div({ class: classStream }, "Content"),
       ]),
       root,
@@ -651,7 +660,9 @@ describe("AC9: Scope close while pending — clean interruption", () => {
     }
 
     const handle = await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Forever loading") }, [NeverSettles()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Forever loading") }, [
+        NeverSettles(),
+      ]),
       root,
     );
 
@@ -676,7 +687,7 @@ describe("AC9: Scope close while pending — clean interruption", () => {
     }
 
     const handle = await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [SlowChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [SlowChild()]),
       root,
     );
 
@@ -715,7 +726,10 @@ describe("AC10: Sentinel prevents premature settlement", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [FastChild(), SlowChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [
+        FastChild(),
+        SlowChild(),
+      ]),
       root,
     );
 
@@ -742,7 +756,7 @@ describe("AC10: Sentinel prevents premature settlement", () => {
     }
 
     await runMount(
-      Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [SyncChild()]),
+      Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [SyncChild()]),
       root,
     );
 
@@ -774,7 +788,7 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
       });
     }
 
-    const app = Suspense({ fallback: h.span({ class: "fallback" }, "Loading") }, [Card()]);
+    const app = Boundary.suspend({ fallback: h.span({ class: "fallback" }, "Loading") }, [Card()]);
 
     // ── 1. SSR ───────────────────────────────────────────────────────────────
     const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));
@@ -819,7 +833,7 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
     assert.ok(streamComments.length >= 2, "Stream-region markers present for hydrate");
 
     // ── 4. Hydrate — must adopt the resolved DOM without mismatch errors ──────
-    // hydrate walks the JSX tree, sees <Suspense>, treats it as transparent
+    // hydrate walks the JSX tree, sees the Boundary.suspend node, treats it as transparent
     // (boundary already resolved), and hydrates the children against the DOM.
     const handle = await Effect.runPromise(hydrate(app, root));
 
@@ -837,14 +851,17 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
     function Outer() {
       return Effect.succeed(
         h.div({ class: "outer-content" }, [
-          Suspense({ fallback: h.span({ class: "inner-fallback" }, "Inner loading") }, [Inner()]),
+          Boundary.suspend({ fallback: h.span({ class: "inner-fallback" }, "Inner loading") }, [
+            Inner(),
+          ]),
         ]),
       );
     }
 
-    const app = Suspense({ fallback: h.span({ class: "outer-fallback" }, "Outer loading") }, [
-      Outer(),
-    ]);
+    const app = Boundary.suspend(
+      { fallback: h.span({ class: "outer-fallback" }, "Outer loading") },
+      [Outer()],
+    );
 
     // SSR
     const ssrHtml = await Effect.runPromise(renderToStringHydratable(app));

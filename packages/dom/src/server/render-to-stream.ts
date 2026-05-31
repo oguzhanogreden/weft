@@ -1,11 +1,11 @@
-import { BOUNDARY, FRAGMENT } from "@effect-ui/core";
 import {
-  isStream,
-  Suspense,
-  type BoundaryProps,
-  type SuspenseProps,
-  toStream,
+  Boundary,
+  FAILURE_BOUNDARY,
+  FRAGMENT,
+  SUSPENSE_BOUNDARY,
+  type Child,
 } from "@effect-ui/core";
+import { isStream, toStream } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { Effect, Option, Queue, Ref, Scope, Stream } from "effect";
 import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
@@ -27,7 +27,7 @@ interface RegionCounter {
 /**
  * Patch infrastructure created once per `renderToStream` /
  * `renderToStreamHydratable` call. Threaded through the recursive render
- * functions so every `<Suspense>` boundary in the tree can share it.
+ * functions so every suspense boundary (`Boundary.suspend`) in the tree can share it.
  */
 interface ServerSuspenseCtx {
   /** Serialised patch strings pushed here as each boundary resolves. */
@@ -87,7 +87,7 @@ function buildPatch(id: number, html: string): string {
  * works for both the plain-SSR and hydratable-SSR variants.
  */
 function renderSuspenseSSRInline(
-  props: SuspenseProps,
+  props: Boundary.SuspenseProps & { children?: Child },
   ctx: ServerSuspenseCtx,
   renderFn: (node: RenderNode) => Stream.Stream<string, Error>,
 ): Stream.Stream<string, Error> {
@@ -153,7 +153,7 @@ function renderSuspenseSSRInline(
  * stream failure. Used by both plain-SSR and hydratable-SSR code paths.
  */
 function renderBoundarySSR(
-  props: BoundaryProps,
+  props: Boundary.FailureProps & { children: Child[] },
   renderFn: (node: RenderNode) => Stream.Stream<string, Error>,
 ): Stream.Stream<string, Error> {
   const childrenNode = (
@@ -231,8 +231,8 @@ function renderSSRNode(
       return fragmentToSSR(props, ctx);
     }
 
-    if (type === Suspense) {
-      const sp = props as unknown as SuspenseProps;
+    if (type === SUSPENSE_BOUNDARY) {
+      const sp = props as unknown as Boundary.SuspenseProps;
       if (ctx === null) {
         // AC-SS1: renderToString — fallback only, no markers, no patches.
         return renderSSRNode((sp.fallback ?? null) as RenderNode, null);
@@ -240,8 +240,11 @@ function renderSSRNode(
       return renderSuspenseSSRInline(sp, ctx, (n) => renderSSRNode(n, ctx));
     }
 
-    if (type === BOUNDARY) {
-      return renderBoundarySSR(props as unknown as BoundaryProps, (n) => renderSSRNode(n, ctx));
+    if (type === FAILURE_BOUNDARY) {
+      return renderBoundarySSR(
+        props as unknown as Boundary.FailureProps & { children: Child[] },
+        (n) => renderSSRNode(n, ctx),
+      );
     }
 
     if (typeof type === "string") {
@@ -338,17 +341,18 @@ function renderHydratableSSRNode(
       return fragmentToHydratableSSR(props, counter, ctx);
     }
 
-    if (type === Suspense) {
-      const sp = props as unknown as SuspenseProps;
+    if (type === SUSPENSE_BOUNDARY) {
+      const sp = props as unknown as Boundary.SuspenseProps;
       if (ctx === null) {
         return renderHydratableSSRNode((sp.fallback ?? null) as RenderNode, counter, null);
       }
       return renderSuspenseSSRInline(sp, ctx, (n) => renderHydratableSSRNode(n, counter, ctx));
     }
 
-    if (type === BOUNDARY) {
-      return renderBoundarySSR(props as unknown as BoundaryProps, (n) =>
-        renderHydratableSSRNode(n, counter, ctx),
+    if (type === FAILURE_BOUNDARY) {
+      return renderBoundarySSR(
+        props as unknown as Boundary.FailureProps & { children: Child[] },
+        (n) => renderHydratableSSRNode(n, counter, ctx),
       );
     }
 
@@ -399,7 +403,7 @@ function fragmentToHydratableSSR(
 
 /**
  * Plain-SSR stream with fallback-only Suspense handling. Used internally by
- * `renderToString` so that `<Suspense>` boundaries emit the fallback without
+ * `renderToString` so that suspense boundaries emit the fallback without
  * comment markers or patch scripts.
  *
  * @internal
@@ -411,7 +415,7 @@ export const renderToStreamFallbackOnly = (node: RenderNode): Stream.Stream<stri
  * Progressively serializes an Effect-infused JSX tree (`RenderNode`) into a stream
  * of HTML string chunks, in render-tree order.
  *
- * `<Suspense>` boundaries are fully supported: the fallback is emitted inline
+ * suspense boundaries are fully supported: the fallback is emitted inline
  * between `<!-- suspense-start-N -->` / `<!-- suspense-end-N -->` comment
  * markers; a `<template>+<script>` patch chunk is appended after the main
  * document structure as each boundary resolves. The stream terminates only
@@ -427,7 +431,7 @@ export const renderToStream = (node: RenderNode): Stream.Stream<string, Error> =
       const ctx: ServerSuspenseCtx = { patchQueue, pendingCount, idCounter, scope };
 
       const mainStream = renderSSRNode(node, ctx).pipe(
-        // After the main document tree is exhausted: if no <Suspense> was
+        // After the main document tree is exhausted: if no suspense boundary was
         // encountered (pendingCount still 0), shut down the queue immediately
         // so the patch stream terminates without hanging (AC-SS7).
         Stream.ensuring(

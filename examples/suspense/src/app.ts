@@ -16,7 +16,7 @@
  *   - Single atomic DOM swap once every child has emitted its first value
  */
 
-import { h, Suspense } from "@effect-ui/core";
+import { Boundary, h } from "@effect-ui/core";
 import { Effect, pipe } from "effect";
 
 // ============================================================================
@@ -74,7 +74,7 @@ function Dashboard() {
       { class: "section-desc" },
       "One fallback covers all three cards. The resolved layout appears only once every card has loaded. Cards resolve at 300 ms, 600 ms, and 900 ms.",
     ),
-    Suspense(
+    Boundary.suspend(
       {
         fallback: h.div({ class: "fallback" }, [
           h.span({ class: "spinner", "aria-hidden": "true" }, "⏳"),
@@ -116,7 +116,7 @@ function NestedExample() {
       { class: "section-desc" },
       "Inner boundary resolves at 200 ms; outer at 800 ms. Each swap is independent.",
     ),
-    Suspense(
+    Boundary.suspend(
       {
         fallback: h.div({ class: "fallback" }, [
           h.span({ class: "spinner", "aria-hidden": "true" }, "⏳"),
@@ -126,7 +126,7 @@ function NestedExample() {
       [
         h.div({ class: "nested-outer" }, [
           SlowOuter(),
-          Suspense(
+          Boundary.suspend(
             {
               fallback: h.div({ class: "fallback fallback--inner" }, [
                 h.span({ class: "spinner", "aria-hidden": "true" }, "⏳"),

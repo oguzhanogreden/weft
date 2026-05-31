@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h, Suspense } from "@effect-ui/core";
+import { Boundary, h } from "@effect-ui/core";
 import type { RenderNode } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
@@ -227,7 +227,7 @@ describe("renderToStream - Suspense SSR", () => {
   it("AC-SS1: renderToString emits fallback only — no markers, no patches", async () => {
     const SlowChild = () => Effect.succeed(h.p({}, "resolved"));
     const html = await Effect.runPromise(
-      renderToString(Suspense({ fallback: h.span({}, "loading") }, [SlowChild()])),
+      renderToString(Boundary.suspend({ fallback: h.span({}, "loading") }, [SlowChild()])),
     );
     assert.equal(html, "<span>loading</span>");
     assert.ok(!html.includes("suspense-start"), "no start marker");
@@ -239,8 +239,8 @@ describe("renderToStream - Suspense SSR", () => {
   it("AC-SS1: renderToString renders nested Suspense fallback inline", async () => {
     const html = await Effect.runPromise(
       renderToString(
-        Suspense({ fallback: h.div({}, "outer loading") }, [
-          Suspense({ fallback: h.div({}, "inner loading") }, [
+        Boundary.suspend({ fallback: h.div({}, "outer loading") }, [
+          Boundary.suspend({ fallback: h.div({}, "inner loading") }, [
             Effect.succeed(h.p({}, "inner content")),
           ]),
         ]),
@@ -266,7 +266,7 @@ describe("renderToStream - Suspense SSR", () => {
         const fiber = yield* Effect.fork(
           Stream.runForEach(
             renderToStream(
-              h.div({}, [Suspense({ fallback: h.span({}, "loading") }, [GatedChild()])]),
+              h.div({}, [Boundary.suspend({ fallback: h.span({}, "loading") }, [GatedChild()])]),
             ),
             (chunk) =>
               Effect.sync(() => {
@@ -301,7 +301,7 @@ describe("renderToStream - Suspense SSR", () => {
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStream(
-          Suspense({ fallback: h.span({}, "loading") }, [Effect.succeed(h.p({}, "sync"))]),
+          Boundary.suspend({ fallback: h.span({}, "loading") }, [Effect.succeed(h.p({}, "sync"))]),
         ),
       ),
     );
@@ -315,7 +315,7 @@ describe("renderToStream - Suspense SSR", () => {
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStreamHydratable(
-          Suspense({ fallback: h.span({}, "loading") }, [
+          Boundary.suspend({ fallback: h.span({}, "loading") }, [
             Effect.succeed(h.div({}, [Stream.make("live")])),
           ]),
         ),
@@ -341,8 +341,8 @@ describe("renderToStream - Suspense SSR", () => {
             Stream.mkString(
               renderToStream(
                 h.fragment([
-                  Suspense({ fallback: h.span({}, "loading A") }, [SlowA()]),
-                  Suspense({ fallback: h.span({}, "loading B") }, [SlowB()]),
+                  Boundary.suspend({ fallback: h.span({}, "loading A") }, [SlowA()]),
+                  Boundary.suspend({ fallback: h.span({}, "loading B") }, [SlowB()]),
                 ]),
               ),
             ),
@@ -372,9 +372,9 @@ describe("renderToStream - Suspense SSR", () => {
     const html = await Effect.runPromise(
       Stream.mkString(
         renderToStream(
-          Suspense({ fallback: h.span({}, "outer loading") }, [
+          Boundary.suspend({ fallback: h.span({}, "outer loading") }, [
             Effect.succeed(
-              Suspense({ fallback: h.span({}, "inner loading") }, [
+              Boundary.suspend({ fallback: h.span({}, "inner loading") }, [
                 Effect.succeed(h.p({}, "inner content")),
               ]),
             ),
@@ -406,7 +406,9 @@ describe("renderToStream - Suspense SSR", () => {
 
         const fiber = yield* Effect.fork(
           Stream.runForEach(
-            renderToStream(Suspense({ fallback: h.span({}, "forever loading") }, [NeverChild()])),
+            renderToStream(
+              Boundary.suspend({ fallback: h.span({}, "forever loading") }, [NeverChild()]),
+            ),
             (chunk) =>
               Effect.sync(() => {
                 chunks.push(chunk);

@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Data, Effect, Option, pipe } from "effect";
-import { BOUNDARY, Boundary, type BoundaryProps } from "./index";
-import type { Node } from "~/combinator/types";
+import { FAILURE_BOUNDARY, Boundary } from "./index";
+import type { Child, Node } from "~/combinator/types";
 import { h } from "~/combinator";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -14,60 +14,60 @@ const fallbackNode = h.span("fallback");
 
 function extractDescriptor<E = never>(
   node: Node<E, never>,
-): { type: unknown; props: BoundaryProps } {
+): { type: unknown; props: Boundary.FailureProps & { children?: Child } } {
   const descriptor = Effect.runSync(pipe(node, Effect.orDie));
-  return { type: descriptor.type, props: descriptor.props as unknown as BoundaryProps };
+  return { type: descriptor.type, props: descriptor.props as unknown as Boundary.FailureProps };
 }
 
 // ── AC1: Descriptor shape ─────────────────────────────────────────────────────
 
 describe("AC1: descriptor shape", () => {
-  it("catchAll returns { type: BOUNDARY, props: { match, children } }", () => {
+  it("catchAll returns { type: FAILURE_BOUNDARY, props: { match, children } }", () => {
     const node = Boundary.catchAll({ fallback: () => fallbackNode }, []);
     const { type, props } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
     assert.equal(typeof props.match, "function");
     assert.ok(Array.isArray(props.children));
   });
 
-  it("catchAllCause returns BOUNDARY descriptor", () => {
+  it("catchAllCause returns FAILURE_BOUNDARY descriptor", () => {
     const node = Boundary.catchAllCause({ fallback: () => fallbackNode }, []);
     const { type } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
   });
 
-  it("catchTag returns BOUNDARY descriptor", () => {
+  it("catchTag returns FAILURE_BOUNDARY descriptor", () => {
     const child = h.div() as Node<FooError>;
     const node = Boundary.catchTag({ tag: "Foo", fallback: () => fallbackNode }, [child]);
     const { type } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
   });
 
-  it("catchTags returns BOUNDARY descriptor", () => {
+  it("catchTags returns FAILURE_BOUNDARY descriptor", () => {
     const child = h.div() as Node<FooError>;
     const node = Boundary.catchTags({ Foo: () => fallbackNode }, [child]);
     const { type } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
   });
 
-  it("catchSome returns BOUNDARY descriptor", () => {
+  it("catchSome returns FAILURE_BOUNDARY descriptor", () => {
     const node = Boundary.catchSome({ fallback: () => Option.none() }, []);
     const { type } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
   });
 
-  it("catchIf returns BOUNDARY descriptor", () => {
+  it("catchIf returns FAILURE_BOUNDARY descriptor", () => {
     const node = Boundary.catchIf({ predicate: () => true, fallback: () => fallbackNode }, []);
     const { type } = extractDescriptor(node);
-    assert.equal(type, BOUNDARY);
+    assert.equal(type, FAILURE_BOUNDARY);
   });
 
   it("children are preserved in props", () => {
     const child = h.div();
     const node = Boundary.catchAll({ fallback: () => fallbackNode }, [child]);
     const { props } = extractDescriptor(node);
-    assert.equal(props.children.length, 1);
-    assert.equal(props.children[0], child);
+    assert.equal((props.children as Child[])?.length, 1);
+    assert.equal((props.children as Child[])?.[0], child);
   });
 });
 
