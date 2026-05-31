@@ -158,7 +158,7 @@ Type tests verify compile-time behavior for complex type-level features. They us
 **Running type tests:**
 
 ```bash
-vp run typecheck.type-tests
+vp run check
 ```
 
 **Rules:**

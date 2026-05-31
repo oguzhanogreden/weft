@@ -4,6 +4,8 @@ import {
   ExecutionStrategy,
   Exit,
   Fiber,
+  HashMap,
+  HashSet,
   Layer,
   ManagedRuntime,
   Option,
@@ -17,15 +19,17 @@ import {
   FRAGMENT,
   getElementDescriptor,
   isStream,
+  LIST,
+  Source,
   SUSPENSE_BOUNDARY,
   toStream,
 } from "@effect-ui/core";
-import type { Boundary, Renderable } from "@effect-ui/core";
+import type { Boundary, ElementDescriptor, Renderable } from "@effect-ui/core";
 import {
   BoundaryContext,
   HydrationMismatchError,
   UnsupportedNodeTypeError,
-  type RenderError,
+  RenderError,
   type RenderResult,
   type StreamSubscriptionError,
   RenderContext,
@@ -34,6 +38,8 @@ import {
 import {
   boundaryEndText,
   boundaryStartText,
+  listItemEndText,
+  listItemStartText,
   parseStreamMarker,
   streamEndText,
   streamStartText,
@@ -705,6 +711,11 @@ export function renderNode(
         return yield* renderBoundary(props as Boundary.FailureProps & { children: Renderable[] });
       }
 
+      // Keyed list region (List.each)
+      if (type === LIST) {
+        return yield* renderList(props as ListProps);
+      }
+
       // AC4: Element (string type)
       if (typeof type === "string") {
         return yield* renderElement(type, props);
@@ -1006,10 +1017,27 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
 }
 
 /**
- * Updates stream child content between markers. Removes the nodes currently
- * between the markers, renders `newNode`, and inserts the result before the end
- * marker. Exported for reuse by the hydrator, which drives the same update flow
- * against markers adopted from server HTML rather than freshly created ones.
+ * Reconciles the region between the stream markers against `newNode`'s shape,
+ * patching in place when the shape is unchanged rather than tearing down and
+ * rebuilding (AC20, SP1–SP4). The new value's shape is read from its descriptor
+ * / primitive type **before** rendering, so identity-preserving updates avoid
+ * creating throwaway nodes and subscriptions:
+ *
+ * - **SP1/SP2** — text→text: the region holds one `Text` node and `newNode` is a
+ *   `string`/`number`/`bigint` → update `.data` in place (only if it differs).
+ * - **SP3** — same-tag element reuse: the region holds one `Element` whose tag
+ *   matches `newNode`'s descriptor → reuse the node, re-apply props, recurse over
+ *   children by position.
+ * - **SP4** — fallback (any other shape change): remove the nodes between the
+ *   markers, render `newNode`, and insert the result before the end marker.
+ *
+ * Content-scope rotation is owned by the caller (`handleStreamChild` /
+ * `hydrateReactive`): it closes the previous emission's content scope before each
+ * call, so SP3's re-applied props subscribe under a fresh scope and the prior
+ * emission's prop subscriptions / event listeners are already torn down.
+ *
+ * Exported for reuse by the hydrator, which drives the same update flow against
+ * markers adopted from server HTML rather than freshly created ones.
  */
 export function updateStreamChild(
   startMarker: Comment,
@@ -1021,22 +1049,202 @@ export function updateStreamChild(
   RenderContext
 > {
   return Effect.gen(function* () {
-    // AC20: Remove all nodes between markers
+    const only = startMarker.nextSibling;
+    const isSingle = only !== null && only !== endMarker && only.nextSibling === endMarker;
+
+    // SP1/SP2: text→text — patch the existing Text node in place.
+    if (isSingle && only.nodeType === TEXT_NODE && isTextValue(newNode)) {
+      const text = String(newNode);
+      if ((only as Text).data !== text) {
+        (only as Text).data = text;
+      }
+      return;
+    }
+
+    // SP3: same-tag element reuse — keep the node, re-apply props, recurse children.
+    if (isSingle && only.nodeType === ELEMENT_NODE) {
+      const descriptor = staticElementDescriptor(newNode);
+      if (
+        descriptor !== undefined &&
+        typeof descriptor.type === "string" &&
+        (only as Element).tagName.toLowerCase() === descriptor.type.toLowerCase()
+      ) {
+        yield* patchElementInPlace(only as HTMLElement, descriptor);
+        return;
+      }
+    }
+
+    // SP4: fallback — remove all nodes between markers, render, and insert.
     removeNodesBetweenMarkers(startMarker, endMarker);
-
-    // AC20: Render new node
     const result = yield* renderNode(newNode);
-
-    // AC20: Insert new nodes between markers
     const parent = startMarker.parentNode;
-    if (parent !== null) {
-      if (result !== null) {
-        if (Array.isArray(result)) {
-          for (const node of result) {
-            parent.insertBefore(node, endMarker);
+    if (parent !== null && result !== null) {
+      if (Array.isArray(result)) {
+        for (const node of result) {
+          parent.insertBefore(node, endMarker);
+        }
+      } else {
+        parent.insertBefore(result as Node, endMarker);
+      }
+    }
+  });
+}
+
+/** Narrows a Renderable to the primitive values that render as a single Text node. */
+function isTextValue(value: Renderable): value is string | number | bigint {
+  return typeof value === "string" || typeof value === "number" || typeof value === "bigint";
+}
+
+/**
+ * Reads the static {@link ElementDescriptor} a Renderable resolves to without
+ * executing anything: a static-markup `Node` (carries its descriptor) or a bare
+ * descriptor object. Returns `undefined` for primitives, iterables, and genuinely
+ * reactive streams/effects (which have no statically-known shape).
+ */
+function staticElementDescriptor(node: Renderable): ElementDescriptor | undefined {
+  const carried = getElementDescriptor(node);
+  if (carried !== undefined) {
+    return carried;
+  }
+  if (
+    typeof node === "object" &&
+    node !== null &&
+    "type" in node &&
+    !(Symbol.iterator in node) &&
+    !isStream(node) &&
+    !Effect.isEffect(node)
+  ) {
+    return node as unknown as ElementDescriptor;
+  }
+  return undefined;
+}
+
+/**
+ * SP3 element reuse: re-applies `descriptor.props` to a kept element (re-subscribing
+ * reactive props under the caller's fresh content scope), then reconciles its
+ * children. Children are patched positionally when each maps 1:1 to a single node
+ * ({@link patchChildrenInPlace}); otherwise the element's children are rebuilt
+ * wholesale, preserving the element node itself.
+ */
+function patchElementInPlace(
+  element: HTMLElement,
+  descriptor: ElementDescriptor,
+): Effect.Effect<
+  void,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    yield* setElementProps(element, descriptor.props);
+
+    const children = descriptor.props["children"];
+    const newChildren =
+      children === undefined ? [] : Array.isArray(children) ? children : [children];
+
+    const patched = yield* patchChildrenInPlace(element, newChildren as readonly Renderable[]);
+    if (!patched) {
+      while (element.firstChild !== null) {
+        element.firstChild.remove();
+      }
+      yield* appendRenderedChildren(element, newChildren as readonly Renderable[]);
+    }
+  });
+}
+
+/**
+ * Attempts an in-place positional patch of an element's children. Succeeds (returns
+ * `true`, having patched) only when every new child maps to exactly one existing
+ * DOM node of the matching kind — text→`Text`, same-tag element→`Element`. Any
+ * mismatch (count, kind, multi-node child, reactive child) returns `false` having
+ * mutated nothing, so the caller can rebuild cleanly. Element children recurse via
+ * {@link patchElementInPlace}, preserving nested node identity.
+ */
+function patchChildrenInPlace(
+  element: HTMLElement,
+  newChildren: readonly Renderable[],
+): Effect.Effect<
+  boolean,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    const existing = Array.from(element.childNodes);
+    if (existing.length !== newChildren.length) {
+      return false;
+    }
+
+    // Validation pass (no mutation): every slot must be a 1:1, same-kind match.
+    for (let i = 0; i < newChildren.length; i++) {
+      const child = newChildren[i] as Renderable;
+      const node = existing[i] as ChildNode;
+      if (isTextValue(child)) {
+        if (node.nodeType !== TEXT_NODE) {
+          return false;
+        }
+      } else {
+        const childDescriptor = staticElementDescriptor(child);
+        if (
+          childDescriptor === undefined ||
+          typeof childDescriptor.type !== "string" ||
+          node.nodeType !== ELEMENT_NODE ||
+          (node as Element).tagName.toLowerCase() !== childDescriptor.type.toLowerCase()
+        ) {
+          return false;
+        }
+      }
+    }
+
+    // Apply pass: positions are stable (no inserts/removes at this level).
+    for (let i = 0; i < newChildren.length; i++) {
+      const child = newChildren[i] as Renderable;
+      const node = existing[i] as ChildNode;
+      if (isTextValue(child)) {
+        const text = String(child);
+        if ((node as Text).data !== text) {
+          (node as Text).data = text;
+        }
+      } else {
+        // Validated above: a static, string-typed, same-tag descriptor.
+        const childDescriptor = staticElementDescriptor(child) as ElementDescriptor;
+        yield* patchElementInPlace(node as HTMLElement, childDescriptor);
+      }
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Renders each child and appends it to `element`, mirroring {@link renderElement}'s
+ * child loop. Used by {@link patchElementInPlace} to rebuild children when a
+ * positional in-place patch is not possible.
+ */
+function appendRenderedChildren(
+  element: HTMLElement,
+  children: readonly Renderable[],
+): Effect.Effect<
+  void,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    for (const child of children) {
+      if (isStream(child) || Effect.isEffect(child)) {
+        const stream = toStream<Renderable>(child);
+        const markers = yield* handleStreamChild(stream);
+        for (const marker of markers) {
+          element.appendChild(marker);
+        }
+      } else {
+        const result = yield* renderNode(child);
+        if (result !== null) {
+          if (Array.isArray(result)) {
+            for (const node of result) {
+              element.appendChild(node);
+            }
+          } else {
+            element.appendChild(result as Node);
           }
-        } else {
-          parent.insertBefore(result as Node, endMarker);
         }
       }
     }
@@ -1054,6 +1262,356 @@ export function removeNodesBetweenMarkers(startMarker: Comment, endMarker: Comme
     current.remove();
     current = next;
   }
+}
+
+// ============================================================================
+// Keyed list region (List.each)
+// ============================================================================
+
+/** Descriptor props carried by a `List.each` node (see `combinator/list.ts`). */
+interface ListProps {
+  readonly of: Source.Source<Iterable<unknown>>;
+  readonly by?: (item: unknown, index: number) => unknown;
+  readonly render: (item: unknown, index: number) => Renderable;
+}
+
+/**
+ * A single keyed item rendered inside a `List.each` region. Its `scope` is forked
+ * from the region scope and **persists across emissions** — it is closed only when
+ * the item is removed or the region is torn down — which is what keeps per-item
+ * subscription fibers (and therefore stream-driven content) alive while the item
+ * survives reconciliation. See `client/list.specs.md`.
+ */
+interface ItemRecord {
+  /** The reconciliation key (compared via Effect `Equal`, hashed via `Hash`). */
+  readonly key: unknown;
+  /** Per-item scope, forked from the region scope; persists across emissions. */
+  readonly scope: Scope.CloseableScope;
+  /** This item's opening comment marker (` list-item-start-<id> `). */
+  readonly startMarker: Comment;
+  /** This item's closing comment marker (` list-item-end-<id> `). */
+  readonly endMarker: Comment;
+  /** The DOM nodes rendered for this item, between (exclusive) its markers. */
+  readonly nodes: readonly Node[];
+}
+
+/** Persistent reconciler state held across a region's emissions. */
+interface ListState {
+  /** Identity map: key → record. */
+  readonly records: HashMap.HashMap<unknown, ItemRecord>;
+  /** The keys in their last-rendered DOM order (drives LIS move computation). */
+  readonly order: readonly unknown[];
+}
+
+/**
+ * Renders a `List.each` keyed-list region.
+ *
+ * Unlike a generic reactive child ({@link handleStreamChild}), this path does
+ * **not** rotate a single content scope per emission. It brackets the region with
+ * the usual `stream-start`/`stream-end` markers, forks a persistent region scope,
+ * normalizes `of` to a `Subscribable`, and reconciles each emission against a
+ * persistent `HashMap<K, ItemRecord>` so surviving keys keep both their DOM nodes
+ * and their running subscription fibers (only added/removed/moved items touch the
+ * DOM). Source/reconcile failures are routed to the nearest `BoundaryContext`,
+ * mirroring {@link handleStreamChild}.
+ */
+function renderList(
+  props: ListProps,
+): Effect.Effect<
+  readonly Node[],
+  StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    const context = yield* RenderContext;
+    const { of, by, render } = props;
+
+    // Region brackets, located on each emission like any reactive child.
+    const streamId = yield* nextStreamId();
+    const [startMarker, endMarker] = createStreamMarkers(streamId);
+
+    // Region scope: parent of every per-item scope and of the `of` pump fiber.
+    // Forked from the enclosing scope so region teardown (SC3) cascades to all
+    // item scopes when the enclosing render scope closes.
+    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+
+    // Normalize `of` (static Iterable / Effect / Stream / Subscribable) and
+    // subscribe to its `.changes`. The pump fiber lives in the region scope.
+    const subscribable = yield* Source.toSubscribable(of).pipe(
+      Effect.provideService(Scope.Scope, regionScope),
+    );
+    // E/R are satisfied by the captured runtime context; runtime failures still
+    // surface via the subscription fiber's exit and are routed to a boundary.
+    const changes = subscribable.changes as Stream.Stream<Iterable<unknown>>;
+
+    // Persistent reconciler state across emissions.
+    let state: ListState = { records: HashMap.empty(), order: [] };
+
+    const effect = Stream.runForEach(changes, (iterable) =>
+      Effect.gen(function* () {
+        // KR6: materialize the iterable so iteration order is fixed for this emission.
+        const items = Array.from(iterable);
+        state = yield* reconcileList(items, by, render, state, regionScope, endMarker, context);
+      }),
+    );
+
+    // Subscription fiber lives in the region scope; failures route to a boundary.
+    const fiber = yield* Effect.forkIn(effect, regionScope);
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
+    yield* pipe(
+      Fiber.await(fiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit)
+          ? Option.isSome(boundaryCtx)
+            ? boundaryCtx.value.reportError(exit.cause)
+            : Effect.void
+          : Effect.void,
+      ),
+      Effect.forkIn(context.scope),
+    );
+
+    return [startMarker, endMarker] as const;
+  });
+}
+
+/**
+ * Reconciles one emission of a `List.each` region against the previous
+ * {@link ListState}, returning the next state. Vue 3 / Solid `<For>`-style:
+ * duplicate-key guard (KR1), insert new keys (KR2), reuse persisted keys without
+ * re-invoking `render` (KR3), remove dropped keys and close their scopes (KR4),
+ * and reorder retained items with a longest-increasing-subsequence so only items
+ * outside the LIS are moved (KR5).
+ */
+function reconcileList(
+  items: readonly unknown[],
+  by: ((item: unknown, index: number) => unknown) | undefined,
+  render: (item: unknown, index: number) => Renderable,
+  prev: ListState,
+  regionScope: Scope.Scope,
+  regionEnd: Comment,
+  context: RenderContext["Type"],
+): Effect.Effect<
+  ListState,
+  StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    // 1. Project keys and guard duplicates *before* rendering anything (KR1).
+    const keys: unknown[] = [];
+    let seen = HashSet.empty<unknown>();
+    for (let i = 0; i < items.length; i++) {
+      const key = by === undefined ? items[i] : by(items[i], i);
+      if (HashSet.has(seen, key)) {
+        return yield* Effect.fail(
+          new RenderError({
+            cause: key,
+            message: `List.each: duplicate key ${describeKey(key)} in a single emission; keys must be unique (set a stable \`by\`).`,
+          }),
+        );
+      }
+      seen = HashSet.add(seen, key);
+      keys.push(key);
+    }
+
+    // Previous key → DOM-order index, for LIS move computation (Effect-keyed so
+    // structural keys compare via Equal).
+    let prevIndex = HashMap.empty<unknown, number>();
+    prev.order.forEach((key, i) => {
+      prevIndex = HashMap.set(prevIndex, key, i);
+    });
+
+    // 2. Build the target records (reuse persisted keys, render new keys). The
+    //    `sources[j]` is the item's previous DOM index, or -1 when newly created.
+    const records: ItemRecord[] = [];
+    const sources: number[] = [];
+    for (let j = 0; j < items.length; j++) {
+      const key = keys[j];
+      const existing = HashMap.get(prev.records, key);
+      if (Option.isSome(existing)) {
+        records.push(existing.value); // KR3: reuse — no re-render, scope untouched.
+        sources.push(Option.getOrElse(HashMap.get(prevIndex, key), () => -1));
+      } else {
+        const record = yield* renderItem(items[j], j, render, regionScope, context);
+        records.push(record);
+        sources.push(-1);
+      }
+    }
+
+    // 3. Remove dropped keys: close their scopes (interrupting subscriptions) and
+    //    delete their DOM range, markers included (KR4).
+    let nextKeySet = HashSet.empty<unknown>();
+    for (const key of keys) {
+      nextKeySet = HashSet.add(nextKeySet, key);
+    }
+    for (const key of prev.order) {
+      if (!HashSet.has(nextKeySet, key)) {
+        const dropped = HashMap.get(prev.records, key);
+        if (Option.isSome(dropped)) {
+          yield* Scope.close(dropped.value.scope, Exit.void);
+          removeItemRange(dropped.value.startMarker, dropped.value.endMarker);
+        }
+      }
+    }
+
+    // 4. Position items with minimal moves (KR5/KR2). Items whose previous indices
+    //    form the LIS are already in relative order and are not touched; every
+    //    other item (new, or retained-but-out-of-order) is (re)inserted before the
+    //    next item's start marker, right-to-left so anchors are already in place.
+    const keep = longestIncreasingSubsequence(sources);
+    const parent = regionEnd.parentNode;
+    if (parent !== null) {
+      for (let j = records.length - 1; j >= 0; j--) {
+        const record = records[j] as ItemRecord;
+        if (sources[j] !== -1 && keep.has(j)) {
+          continue; // in the LIS: already correctly positioned.
+        }
+        const anchor =
+          j + 1 < records.length ? (records[j + 1] as ItemRecord).startMarker : regionEnd;
+        const range =
+          sources[j] === -1
+            ? [record.startMarker, ...record.nodes, record.endMarker]
+            : collectItemRange(record.startMarker, record.endMarker);
+        for (const node of range) {
+          parent.insertBefore(node, anchor);
+        }
+      }
+    }
+
+    // 5. New identity map + DOM order.
+    let nextRecords = HashMap.empty<unknown, ItemRecord>();
+    for (const record of records) {
+      nextRecords = HashMap.set(nextRecords, record.key, record);
+    }
+    return { records: nextRecords, order: keys };
+  });
+}
+
+/**
+ * Renders a single new list item under a fresh per-item scope forked from the
+ * region scope (MR2/KR2). The scope persists across emissions until the item is
+ * removed; brackets the rendered nodes with per-item markers so the item moves
+ * and is removed as a unit.
+ */
+function renderItem(
+  item: unknown,
+  index: number,
+  render: (item: unknown, index: number) => Renderable,
+  regionScope: Scope.Scope,
+  context: RenderContext["Type"],
+): Effect.Effect<
+  ItemRecord,
+  StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    const key = item;
+    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemContext = { ...context, scope: itemScope };
+
+    const itemId = yield* nextStreamId();
+    const startMarker = document.createComment(listItemStartText(itemId));
+    const endMarker = document.createComment(listItemEndText(itemId));
+
+    const result = yield* renderNode(render(item, index)).pipe(
+      Effect.provideService(RenderContext, itemContext),
+      Effect.provideService(Scope.Scope, itemScope),
+    );
+
+    const nodes: Node[] =
+      result === null ? [] : Array.isArray(result) ? (result as Node[]) : [result as Node];
+
+    return { key, scope: itemScope, startMarker, endMarker, nodes };
+  });
+}
+
+/**
+ * Collects an item's live DOM range — its start marker through its end marker,
+ * inclusive — into an array so the whole unit can be moved with `insertBefore`
+ * without the live `nextSibling` chain shifting mid-move.
+ */
+function collectItemRange(startMarker: Comment, endMarker: Comment): Node[] {
+  const nodes: Node[] = [];
+  let current: ChildNode | null = startMarker;
+  while (current !== null) {
+    nodes.push(current);
+    if (current === endMarker) {
+      break;
+    }
+    current = current.nextSibling;
+  }
+  return nodes;
+}
+
+/**
+ * Removes an item's DOM range — its start marker through its end marker,
+ * inclusive — handling any nested reactive content that accrued between them.
+ */
+function removeItemRange(startMarker: Comment, endMarker: Comment): void {
+  let current: ChildNode | null = startMarker;
+  while (current !== null) {
+    const next: ChildNode | null = current.nextSibling;
+    current.remove();
+    if (current === endMarker) {
+      break;
+    }
+    current = next;
+  }
+}
+
+/** Describes a reconciliation key for a duplicate-key {@link RenderError} message. */
+function describeKey(key: unknown): string {
+  if (typeof key === "string") return JSON.stringify(key);
+  if (typeof key === "object" && key !== null) {
+    try {
+      return JSON.stringify(key);
+    } catch {
+      return Object.prototype.toString.call(key);
+    }
+  }
+  return String(key);
+}
+
+/**
+ * Computes a longest strictly-increasing subsequence over `seq` and returns the
+ * **set of indices into `seq`** that participate in it (patience-sorting,
+ * O(n log n)). Entries equal to `-1` mark newly created items and are excluded —
+ * they always need insertion. The returned indices are the retained items that
+ * are already in relative DOM order and must not be moved (KR5).
+ */
+function longestIncreasingSubsequence(seq: readonly number[]): Set<number> {
+  const n = seq.length;
+  // piles[k] = index into seq of the smallest tail of an increasing run of length k+1.
+  const piles: number[] = [];
+  const parent: number[] = Array.from({ length: n }, () => -1);
+
+  for (let i = 0; i < n; i++) {
+    const x = seq[i] as number;
+    if (x === -1) {
+      continue; // new item — never part of the retained LIS.
+    }
+    let lo = 0;
+    let hi = piles.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if ((seq[piles[mid] as number] as number) < x) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    if (lo > 0) {
+      parent[i] = piles[lo - 1] as number;
+    }
+    piles[lo] = i;
+  }
+
+  const set = new Set<number>();
+  let idx = piles.length > 0 ? (piles[piles.length - 1] as number) : -1;
+  while (idx !== -1) {
+    set.add(idx);
+    idx = parent[idx] as number;
+  }
+  return set;
 }
 
 // ============================================================================

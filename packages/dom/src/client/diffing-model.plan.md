@@ -214,7 +214,7 @@ Reconcile per `.changes` emission (`reconcileList`), Vue 3 / Solid `<For>`-style
 ## Verification
 
 - `vp test` — list reconciliation, scalar patching, subscription & focus preservation.
-- `vp run typecheck.type-tests` — `List.each` E/R propagation type tests.
+- `vp run check` — `List.each` E/R propagation type tests.
 - `vp check --fix` — format/lint/typecheck.
 - Manual: run the `keyed-list` playground recipe; confirm (a) reordering keeps focus in an
   edited input, (b) per-item counters keep counting through a reorder (no reset), (c) only
