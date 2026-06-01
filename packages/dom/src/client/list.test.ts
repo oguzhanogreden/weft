@@ -78,7 +78,9 @@ describe("List.each — Mount (MR)", () => {
     const root = createRoot();
 
     await runMount(
-      List.each({ of: [p("a"), p("b"), p("c")], by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      List.each({ of: [p("a"), p("b"), p("c")], by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, x.name),
+      ),
       root,
     );
     await waitForStream();
@@ -147,7 +149,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     const root = createRoot();
 
     await runMount(
-      Boundary.catchAll({ fallback: (e) => h.div({ id: "fallback" }, e.message) }, [
+      Boundary.catchAll({ fallback: (e) => h.div({ id: "fallback" }, (e as Error).message) }, [
         List.each({ of: [p("a"), p("a")], by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
       ]),
       root,
@@ -256,7 +258,9 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     );
     await waitForStream();
 
-    const before = Object.fromEntries(itemIds(root).map((id) => [id, root.querySelector(`#${id}`)]));
+    const before = Object.fromEntries(
+      itemIds(root).map((id) => [id, root.querySelector(`#${id}`)]),
+    );
 
     // Spy on the container's insertBefore: one moved item == its 3-node range
     // (item-start, <li>, item-end) == 3 calls. Two moves would be 6.
@@ -424,9 +428,7 @@ describe("List.each — Identity (ID)", () => {
     createTestDOM();
     const root = createRoot();
     let renders = 0;
-    const ref = await Effect.runPromise(
-      SubscriptionRef.make<readonly Person[]>([p("a", "Ann")]),
-    );
+    const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a", "Ann")]));
 
     await runMount(
       List.each({ of: ref.changes, by: (x) => x.id }, (x) => {
@@ -443,6 +445,10 @@ describe("List.each — Identity (ID)", () => {
     await waitForStreamUpdate();
 
     assert.equal(renders, 1, "render not re-invoked for a persisted key");
-    assert.equal(root.querySelector("#a")?.textContent, "Ann", "content not refreshed (render-once)");
+    assert.equal(
+      root.querySelector("#a")?.textContent,
+      "Ann",
+      "content not refreshed (render-once)",
+    );
   });
 });

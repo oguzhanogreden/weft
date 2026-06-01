@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A minimal Node.js + TypeScript project template using modern tooling and strict TypeScript configuration.
+`effect-ui` is a pnpm monorepo (`effect-ui-workspace`) implementing an Effect-based UI library with strict TypeScript configuration and modern tooling.
+
+Workspace layout (see `pnpm-workspace.yaml`):
+
+- `packages/*` — published library packages:
+  - `@effect-ui/base` (`packages/base`) — shared primitives
+  - `@effect-ui/core` (`packages/core`) — core combinators, sources, streams, boundaries
+  - `@effect-ui/dom` (`packages/dom`) — DOM renderer with `./client` and `./server` entry points
+- `examples/*` — standalone runnable example apps, each its own workspace package
 
 ## Requirements
 
@@ -55,10 +63,9 @@ Strict TypeScript setup with:
 - `isolatedModules: true` - Each file must be transpilable independently
 - `noUncheckedSideEffectImports: true` - Side-effect imports must be explicit
 
-Path aliases:
+Path aliases (configured per package in `packages/*/tsconfig.json`, which extend `tsconfig.base.json`):
 
-- `@/*` maps to `./src/*`
-- `~/*` maps to `./*`
+- `~/*` maps to that package's `./src/*`
 
 ### Code Style
 
@@ -76,22 +83,22 @@ When ignoring lint rules, use Oxlint syntax:
 
 ### Project Structure
 
-- `src/` - Source TypeScript files
-- `dist/` - Build output (excluded from TypeScript compilation)
-- `playground/` - Development playground and examples
-  - `app.ts` - Main playground entry point
-  - `recipes/` - Standalone example recipes demonstrating patterns
+- `packages/*/src/` - Source TypeScript files for each library package
+- `packages/*/dist/` - Build output (excluded from TypeScript compilation)
+- `examples/*/` - Standalone runnable example apps, each its own workspace package with an `app.ts` entry point and `vite.config.ts`
+- `docs/` - Documentation
+- `plans/` - Design plans and specs
 - ES modules only (`"type": "module"` in package.json)
 
-### Recipes
+### Examples
 
-The `playground/recipes/` folder contains standalone examples demonstrating specific patterns or features.
+The `examples/` folder contains standalone workspace packages demonstrating specific patterns or features (e.g. `keyed-list`, `form-handling`, `ssr-hydration`).
 
-**Rules for recipes:**
+**Rules for examples:**
 
-- Every recipe must have a co-located README file named `{recipe-name}.readme.md`
-- Recipe files should be self-contained and runnable
-- Include a JSDoc header comment in the `.ts` file explaining the recipe's purpose
+- Every example must have a co-located README named `readme.md`
+- Each example is a self-contained, runnable workspace package (depends on `@effect-ui/*` via `workspace:*`)
+- Include a JSDoc header comment in `app.ts` explaining the example's purpose
 - READMEs should include: Overview, Problem, Solution, How It Works, and When to Use sections
 
 ## Coding Standards
@@ -215,11 +222,11 @@ const _invalid: SomeType = invalidValue;
 
 ### Module Organization
 
-- Organize code by domain
-- Barrel exports (`index.ts`) only for grouping application domains:
-  - `dom/index.ts` - DOM utilities
-  - `server/index.ts` - Server utilities
-  - `lib/index.ts` - Other utilities
+- Organize code by domain, within the relevant workspace package
+- Barrel exports (`index.ts`) only for grouping application domains, e.g. in `@effect-ui/dom`:
+  - `src/index.ts` - package root export
+  - `src/client/index.ts` - client-side DOM renderer (`@effect-ui/dom/client`)
+  - `src/server/index.ts` - server-side rendering (`@effect-ui/dom/server`)
 - Avoid circular dependencies
 - Use `/utils` only for common code that doesn't fit a specific domain
 

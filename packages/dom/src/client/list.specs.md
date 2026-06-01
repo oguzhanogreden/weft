@@ -133,18 +133,28 @@ assertions, per `dom.test.ts`.
   surfaces the failure like any stream child (no partial reconcile is committed for the
   failed emission).
 
-### Hydration contract (HY) — Part B3, spec now
+### Hydration contract (HY) — Part B3
 
-- **HY1 — server markers.** The hydratable server renderer emits the `List` region with
-  the same `stream-start`/`stream-end` brackets and per-item `list-item-start`/`-end`
-  markers as the client, so the server DOM is adoptable.
-- **HY2 — adopt + flash-free first emission.** A client `hydrateList` walks the region,
-  parses per-item markers, builds the `HashMap<K, ItemRecord>` from the server DOM
-  (adopting each item's nodes and forking a per-item scope), then subscribes to `of`.
-  The **first** emission reconciles against the adopted records — flash-free when keys
-  and order match (mirrors `hydrateFirstEmission`); later emissions reconcile normally.
-  Divergence patches the DOM and logs `console.error`, consistent with existing
-  hydration mismatch handling.
+- **HY1 — server markers.** The hydratable server renderer (`renderToStreamHydratable` /
+  `renderToStringHydratable`) renders only the **first** emission of `of`, bracketing the
+  region with the same `stream-start`/`stream-end` markers and each item with
+  `list-item-start`/`-end` markers as the client, so the server DOM is adoptable. Region
+  and item ids come from the shared region counter. Plain `renderToString` (non-hydrated)
+  emits the items inline with **no** markers.
+- **HY2 — adopt + flash-free first emission.** A client `hydrateList` pairs the region's
+  `stream-start`/`stream-end` markers, collects the server item ranges positionally
+  (`collectAdoptedItems`, depth-aware so nested lists don't terminate an item early), then
+  subscribes to `of`. The **first** emission is adopted: its projected keys are paired
+  positionally with the server ranges, and each item's `render` output is hydrated against
+  its adopted DOM (attaching event handlers / reactive subscriptions, preserving node
+  identity — flash-free), building the persistent `HashMap<K, ItemRecord>`. `render` runs
+  once per key during hydration (and once on the server), consistent with mount. Later
+  emissions reconcile normally via the shared `reconcileList`.
+  - **Divergence (recoverable, logged via `console.error`):** if the server item count
+    differs from the first emission's count, the region diverged — the adopted DOM is
+    discarded and the emission is rendered fresh (`reconcileList` against empty state). If
+    a single item's interior diverges, that item's scope is re-forked and it is rendered
+    fresh into its preserved marker range (mirrors `hydrateFirstEmission`).
 
 ## Markers (shared protocol additions)
 

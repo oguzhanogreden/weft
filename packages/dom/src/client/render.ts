@@ -40,6 +40,7 @@ import {
   boundaryStartText,
   listItemEndText,
   listItemStartText,
+  parseListItemMarker,
   parseStreamMarker,
   streamEndText,
   streamStartText,
@@ -1375,6 +1376,37 @@ function renderList(
 }
 
 /**
+ * Projects each item to its reconciliation key (via `by`, or the item itself
+ * under Effect `Equal`/`Hash`) and guards against duplicate keys within one
+ * emission (KR1), failing with a descriptive {@link RenderError} *before* any
+ * DOM is touched. Shared by {@link reconcileList} and {@link hydrateList}'s
+ * first-emission adoption.
+ */
+function projectKeys(
+  items: readonly unknown[],
+  by: ((item: unknown, index: number) => unknown) | undefined,
+): Effect.Effect<readonly unknown[], RenderError> {
+  return Effect.gen(function* () {
+    const keys: unknown[] = [];
+    let seen = HashSet.empty<unknown>();
+    for (let i = 0; i < items.length; i++) {
+      const key = by === undefined ? items[i] : by(items[i], i);
+      if (HashSet.has(seen, key)) {
+        return yield* Effect.fail(
+          new RenderError({
+            cause: key,
+            message: `List.each: duplicate key ${describeKey(key)} in a single emission; keys must be unique (set a stable \`by\`).`,
+          }),
+        );
+      }
+      seen = HashSet.add(seen, key);
+      keys.push(key);
+    }
+    return keys;
+  });
+}
+
+/**
  * Reconciles one emission of a `List.each` region against the previous
  * {@link ListState}, returning the next state. Vue 3 / Solid `<For>`-style:
  * duplicate-key guard (KR1), insert new keys (KR2), reuse persisted keys without
@@ -1397,21 +1429,7 @@ function reconcileList(
 > {
   return Effect.gen(function* () {
     // 1. Project keys and guard duplicates *before* rendering anything (KR1).
-    const keys: unknown[] = [];
-    let seen = HashSet.empty<unknown>();
-    for (let i = 0; i < items.length; i++) {
-      const key = by === undefined ? items[i] : by(items[i], i);
-      if (HashSet.has(seen, key)) {
-        return yield* Effect.fail(
-          new RenderError({
-            cause: key,
-            message: `List.each: duplicate key ${describeKey(key)} in a single emission; keys must be unique (set a stable \`by\`).`,
-          }),
-        );
-      }
-      seen = HashSet.add(seen, key);
-      keys.push(key);
-    }
+    const keys = yield* projectKeys(items, by);
 
     // Previous key → DOM-order index, for LIS move computation (Effect-keyed so
     // structural keys compare via Equal).
@@ -1431,7 +1449,7 @@ function reconcileList(
         records.push(existing.value); // KR3: reuse — no re-render, scope untouched.
         sources.push(Option.getOrElse(HashMap.get(prevIndex, key), () => -1));
       } else {
-        const record = yield* renderItem(items[j], j, render, regionScope, context);
+        const record = yield* renderItem(key, items[j], j, render, regionScope, context);
         records.push(record);
         sources.push(-1);
       }
@@ -1493,6 +1511,7 @@ function reconcileList(
  * and is removed as a unit.
  */
 function renderItem(
+  key: unknown,
   item: unknown,
   index: number,
   render: (item: unknown, index: number) => Renderable,
@@ -1504,7 +1523,6 @@ function renderItem(
   RenderContext
 > {
   return Effect.gen(function* () {
-    const key = item;
     const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
     const itemContext = { ...context, scope: itemScope };
 
@@ -1896,6 +1914,10 @@ function hydrateNode(
         return yield* hydrateChildren(props, cursor, path);
       }
 
+      if (type === LIST) {
+        return yield* hydrateList(props as ListProps, cursor, path);
+      }
+
       if (typeof type === "string") {
         return yield* hydrateElement(type, props, cursor, path);
       }
@@ -2108,6 +2130,321 @@ function hydrateChildren(
       index++;
     }
     return next;
+  });
+}
+
+// ============================================================================
+// Hydrate — keyed list region (List.each)
+// ============================================================================
+
+/**
+ * An item's DOM range adopted from server HTML during list hydration: its
+ * per-item markers and the nodes between them (exclusive). The reconciliation
+ * key is not yet known — it is paired positionally with the first emission's
+ * projected keys in {@link hydrateFirstListEmission}.
+ */
+interface AdoptedItem {
+  readonly startMarker: Comment;
+  readonly endMarker: Comment;
+  readonly nodes: readonly Node[];
+}
+
+/**
+ * Hydrates a `List.each` region (HY2). Pairs the region's `stream-start`/
+ * `stream-end` markers, collects the server-rendered per-item ranges, then
+ * subscribes to `of`. The **first** emission is adopted in place — paired
+ * positionally with the server items and hydrated flash-free (node identity and
+ * per-item subscriptions preserved) — building the persistent
+ * `HashMap<K, ItemRecord>`. Later emissions reconcile normally via
+ * {@link reconcileList}. Divergence (item-count or per-item content mismatch)
+ * patches the DOM and logs `console.error`, mirroring {@link hydrateReactive}.
+ */
+function hydrateList(
+  props: ListProps,
+  cursor: ChildNode | null,
+  path: string,
+): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
+  return Effect.gen(function* () {
+    const context = yield* RenderContext;
+    const { of, by, render } = props;
+
+    // Region start marker — same brackets as any reactive region.
+    if (cursor === null || cursor.nodeType !== COMMENT_NODE) {
+      return yield* mismatch("list region start marker", describeNode(cursor), path);
+    }
+    const startMarker = cursor as Comment;
+    const parsed = parseStreamMarker(startMarker);
+    if (parsed === null || parsed.kind !== "start") {
+      return yield* mismatch("list region start marker", describeNode(cursor), path);
+    }
+    const endMarker = findMatchingEnd(startMarker);
+    if (endMarker === null) {
+      return yield* mismatch(
+        "list region end marker",
+        `unterminated region starting at ${JSON.stringify(startMarker.data)}`,
+        path,
+      );
+    }
+
+    // Adopt the server-rendered item ranges (positional; keys learned below).
+    const adopted = collectAdoptedItems(startMarker, endMarker);
+
+    // Region scope: parent of every per-item scope and of the `of` pump fiber
+    // (mirrors renderList). Closing the enclosing scope cascades teardown.
+    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const subscribable = yield* Source.toSubscribable(of).pipe(
+      Effect.provideService(Scope.Scope, regionScope),
+    );
+    const changes = subscribable.changes as Stream.Stream<Iterable<unknown>>;
+
+    let state: ListState = { records: HashMap.empty(), order: [] };
+    let isFirst = true;
+
+    const effect = Stream.runForEach(changes, (iterable) =>
+      Effect.gen(function* () {
+        const items = Array.from(iterable);
+        if (isFirst) {
+          isFirst = false;
+          state = yield* hydrateFirstListEmission(
+            items,
+            by,
+            render,
+            adopted,
+            regionScope,
+            startMarker,
+            endMarker,
+            context,
+            path,
+          );
+        } else {
+          // KR6 already materialized; later emissions reconcile like mount.
+          state = yield* reconcileList(items, by, render, state, regionScope, endMarker, context);
+        }
+      }),
+    );
+
+    // Subscription fiber lives in the region scope; failures route to a boundary.
+    const fiber = yield* Effect.forkIn(effect, regionScope);
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
+    yield* pipe(
+      Fiber.await(fiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit)
+          ? Option.isSome(boundaryCtx)
+            ? boundaryCtx.value.reportError(exit.cause)
+            : Effect.void
+          : Effect.void,
+      ),
+      Effect.forkIn(context.scope),
+    );
+
+    return endMarker.nextSibling;
+  });
+}
+
+/**
+ * Walks a hydrated list region and collects its per-item DOM ranges in document
+ * order. Item boundaries are the `list-item-start`/`list-item-end` markers;
+ * nesting is tracked with a depth counter so a nested `List.each` inside an item
+ * doesn't terminate the outer item early. Stream markers (nested reactive
+ * children) are stepped over — they belong to the item's node range.
+ */
+function collectAdoptedItems(regionStart: Comment, regionEnd: Comment): AdoptedItem[] {
+  const items: AdoptedItem[] = [];
+  let current: ChildNode | null = regionStart.nextSibling;
+
+  while (current !== null && current !== regionEnd) {
+    const marker =
+      current.nodeType === COMMENT_NODE ? parseListItemMarker(current as Comment) : null;
+    if (marker === null || marker.kind !== "start") {
+      current = current.nextSibling;
+      continue;
+    }
+
+    const itemStart = current as Comment;
+    const nodes: Node[] = [];
+    let depth = 0;
+    let itemEnd: Comment | null = null;
+    let scan: ChildNode | null = itemStart.nextSibling;
+    while (scan !== null && scan !== regionEnd) {
+      if (scan.nodeType === COMMENT_NODE) {
+        const inner = parseListItemMarker(scan as Comment);
+        if (inner !== null) {
+          if (inner.kind === "start") {
+            depth++;
+          } else if (depth === 0) {
+            itemEnd = scan as Comment;
+            break;
+          } else {
+            depth--;
+          }
+        }
+      }
+      nodes.push(scan);
+      scan = scan.nextSibling;
+    }
+
+    if (itemEnd === null) {
+      // Unterminated item: stop collecting; the count mismatch will trigger a
+      // rebuild on the first emission.
+      break;
+    }
+    items.push({ startMarker: itemStart, endMarker: itemEnd, nodes });
+    current = itemEnd.nextSibling;
+  }
+
+  return items;
+}
+
+/**
+ * Adopts the first (server-rendered) emission of a hydrated list region. Pairs
+ * the projected keys with the collected server item ranges positionally and
+ * hydrates each in place (flash-free), producing the initial {@link ListState}.
+ *
+ * If the server item count differs from the emission's, the region diverged:
+ * the adopted DOM is discarded and the emission is rendered fresh via
+ * {@link reconcileList} (logged, recoverable). Per-item content divergence is
+ * handled within {@link hydrateItem}.
+ */
+function hydrateFirstListEmission(
+  items: readonly unknown[],
+  by: ((item: unknown, index: number) => unknown) | undefined,
+  render: (item: unknown, index: number) => Renderable,
+  adopted: readonly AdoptedItem[],
+  regionScope: Scope.Scope,
+  regionStart: Comment,
+  regionEnd: Comment,
+  context: RenderContext["Type"],
+  path: string,
+): Effect.Effect<ListState, HydrateError, RenderContext> {
+  return Effect.gen(function* () {
+    const keys = yield* projectKeys(items, by);
+
+    // Region-level divergence: server item count != first emission count.
+    if (keys.length !== adopted.length) {
+      console.error(
+        `[effect-ui] hydrate: list region at ${path} had ${adopted.length} server item(s) but the first emission has ${keys.length}; rebuilding.`,
+      );
+      removeNodesBetweenMarkers(regionStart, regionEnd);
+      return yield* reconcileList(
+        items,
+        by,
+        render,
+        { records: HashMap.empty(), order: [] },
+        regionScope,
+        regionEnd,
+        context,
+      );
+    }
+
+    // Counts match: adopt each item positionally, hydrating its content in place.
+    const records: ItemRecord[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const record = yield* hydrateItem(
+        keys[i],
+        items[i],
+        i,
+        render,
+        adopted[i] as AdoptedItem,
+        regionScope,
+        context,
+        path,
+      );
+      records.push(record);
+    }
+
+    let nextRecords = HashMap.empty<unknown, ItemRecord>();
+    for (const record of records) {
+      nextRecords = HashMap.set(nextRecords, record.key, record);
+    }
+    return { records: nextRecords, order: keys };
+  });
+}
+
+/**
+ * Hydrates a single server-rendered list item in place: forks a persistent
+ * per-item scope, then hydrates `render(item)`'s output against the adopted DOM
+ * range (attaching event handlers and reactive subscriptions, preserving node
+ * identity — flash-free). `render` runs once per key, consistent with mount.
+ *
+ * If the item's content diverges from the server output, the item's scope is
+ * closed and re-forked, its adopted nodes are removed, and it is rendered fresh
+ * into the (preserved) marker range — logged and recoverable, mirroring
+ * {@link hydrateFirstEmission}.
+ */
+function hydrateItem(
+  key: unknown,
+  item: unknown,
+  index: number,
+  render: (item: unknown, index: number) => Renderable,
+  adopted: AdoptedItem,
+  regionScope: Scope.Scope,
+  context: RenderContext["Type"],
+  path: string,
+): Effect.Effect<ItemRecord, HydrateError, RenderContext> {
+  return Effect.gen(function* () {
+    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemContext = { ...context, scope: itemScope };
+    const node = render(item, index);
+
+    const divergence = yield* hydrateNode(
+      node,
+      adopted.startMarker.nextSibling,
+      `${path}<item>`,
+    ).pipe(
+      Effect.provideService(RenderContext, itemContext),
+      Effect.provideService(Scope.Scope, itemScope),
+      Effect.map((next) =>
+        next === adopted.endMarker
+          ? null
+          : "adopted item content did not align with its end marker",
+      ),
+      Effect.catchTag("HydrationMismatchError", (error) =>
+        Effect.succeed(`expected ${error.expected}, found ${error.actual} at ${error.path}`),
+      ),
+    );
+
+    if (divergence === null) {
+      // Flash-free: server nodes adopted, identity preserved.
+      return {
+        key,
+        scope: itemScope,
+        startMarker: adopted.startMarker,
+        endMarker: adopted.endMarker,
+        nodes: adopted.nodes,
+      };
+    }
+
+    // Diverged: discard the failed hydration's partial scope and re-render fresh
+    // into the preserved marker range.
+    console.error(
+      `[effect-ui] hydrate: list item at ${path} diverged from server output (${divergence}); patching.`,
+    );
+    yield* Scope.close(itemScope, Exit.void);
+    const freshScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const freshContext = { ...context, scope: freshScope };
+
+    removeNodesBetweenMarkers(adopted.startMarker, adopted.endMarker);
+    const result = yield* renderNode(node).pipe(
+      Effect.provideService(RenderContext, freshContext),
+      Effect.provideService(Scope.Scope, freshScope),
+    );
+    const nodes: Node[] =
+      result === null ? [] : Array.isArray(result) ? (result as Node[]) : [result as Node];
+    const parent = adopted.endMarker.parentNode;
+    if (parent !== null) {
+      for (const n of nodes) {
+        parent.insertBefore(n, adopted.endMarker);
+      }
+    }
+
+    return {
+      key,
+      scope: freshScope,
+      startMarker: adopted.startMarker,
+      endMarker: adopted.endMarker,
+      nodes,
+    };
   });
 }
 

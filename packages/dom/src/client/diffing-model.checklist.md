@@ -10,8 +10,13 @@ Design is locked via spec discussion. **Part A is complete** (scalar same-type p
 SP1–SP4 in `updateStreamChild`, tests in `dom.test.ts`, `dom.specs.md` AC20 amended).
 **Part B1 is complete** (`List.each` core API: `LIST` symbol + combinator in
 `packages/core/src/combinator/list.ts`, exports, `list.specs.md`, type tests, and a
-`list.test.ts` detection unit test; 284 tests passing). Next is **Part B2**
-(client `renderList` + `reconcileList`). Part B3 unstarted.
+`list.test.ts` detection unit test). **Part B2 is complete** (client `renderList` +
+`reconcileList` + `ItemRecord` + LIS moves in `render.ts`, per-item markers in
+`shared.ts`, `client/list.test.ts`, `examples/keyed-list/`; 298 tests passing).
+**Part B3 is complete** (hydratable server `LIST` region + per-item markers in
+`server/render-to-stream.ts`, client `hydrateList` + flash-free first-emission adoption in
+`render.ts`, `client/list.hydrate.test.ts`; 308 tests passing). The diffing-model work is
+done.
 
 Follow CLAUDE.md spec → mock → test → implement for each phase.
 
@@ -43,43 +48,59 @@ Follow CLAUDE.md spec → mock → test → implement for each phase.
 - [x] `combinator/list.test.ts` (detection / descriptor-shape unit test)
 - [x] `vp check --fix` + `vp test` (284 passing)
 
-### Part B2 — client renderList + reconcileList (task #3, blocked by #2)
+### Part B2 — client renderList + reconcileList (task #3, done)
 
-- [ ] `listItemStartText`/`listItemEndText` + parse in `shared.ts` / `utilities.ts`
-- [ ] `LIST` case in `renderNode` → `renderList`
-- [ ] `reconcileList` + `ItemRecord` (per-key persistent `Scope.fork`, `HashMap<K, ItemRecord>`)
-- [ ] LIS-based minimal moves (KR5)
-- [ ] `client/list.specs.md` (KR/SC/HY ACs + render-once / index-key warning)
-- [ ] `client/list.test.ts` (insert/remove/move/reuse, dup keys, `Equal` vs `by`,
-      subscription preservation, focus preservation)
-- [ ] `playground/recipes/keyed-list/` (`keyed-list.ts` + `keyed-list.readme.md`)
-- [ ] `vp check --fix` + `vp test`
+- [x] `listItemStartText`/`listItemEndText` + `parseListItemMarker` in `shared.ts`
+      (distinct from `parseStreamMarker`, so `findMatchingEnd` steps over them)
+- [x] `LIST` case in `renderNode` → `renderList` (region scope forked from the
+      enclosing scope; `Source.toSubscribable` pump + subscription fork into it;
+      failures routed to `BoundaryContext` like `handleStreamChild`)
+- [x] `reconcileList` + `ItemRecord` (per-key persistent `Scope.fork`,
+      `HashMap<K, ItemRecord>` + `order` array; KR1 dup-key fail, KR2 insert,
+      KR3 reuse, KR4 remove + scope close, KR6 iterable materialization)
+- [x] LIS-based minimal moves (KR5) — `longestIncreasingSubsequence` over retained
+      items' previous indices; only non-LIS items re-inserted (right-to-left)
+- [x] `client/list.specs.md` (KR/SC/HY ACs + render-once / index-key warning)
+- [x] `client/list.test.ts` (MR1–3, KR1–6, SC1–3, ID1–2; 14 tests)
+- [x] `examples/keyed-list/` (`app.ts` + `readme.md` + index.html/vite/tsconfig;
+      this repo uses `examples/`, not `playground/recipes/`)
+- [x] `vp check` clean + `vp test` (298 passing); core+dom re-`pack`ed; example builds
 
-### Part B3 — hydration of List regions (task #4, blocked by #3)
+NOTE: a `by`-projected key must be stored on the `ItemRecord` (not the raw item),
+or reuse breaks — caught in test (ID2/SC2) and fixed.
 
-- [ ] Server hydratable renderer emits `LIST` region + per-item markers (`packages/dom/src/server/*`)
-- [ ] Client `hydrateList` adopts server DOM + reconciles first emission flash-free
-- [ ] Hydration tests + `vp check --fix` + `vp test`
+### Part B3 — hydration of List regions (task #4, done)
+
+- [x] Server hydratable renderer emits `LIST` region + per-item markers
+      (`listToHydratableSSR` in `server/render-to-stream.ts`; `firstListEmission` resolves
+      the first `of` emission via `Source.toSubscribable`; plain `listToSSR` emits items
+      with no markers). Region/item ids from the shared region counter.
+- [x] Client `hydrateList` adopts server DOM + reconciles first emission flash-free
+      (`render.ts`, beside `hydrateReactive`): `collectAdoptedItems` (depth-aware item-range
+      walk), `hydrateFirstListEmission` (positional key↔range pairing), `hydrateItem`
+      (per-item scope + in-place content hydration; divergence re-forks + re-renders).
+      `projectKeys` factored out and shared with `reconcileList`. `reconcileList`/`ItemRecord`
+      reused directly (same module — no export/factor-out needed).
+- [x] `client/list.hydrate.test.ts` (HY1 markers incl. plain-SSR + empty; HY2 flash-free
+      adopt, live per-item subscription, post-hydrate insert/reorder/remove, teardown,
+      region-count + per-item divergence; 10 tests)
+- [x] `vp check` clean + `vp test` (308 passing)
+
+NOTE: server SSR `runHead`/`get` of an item's stream fires that stream's finalizers during
+server render — tests that assert on per-item teardown must discount/clear that before
+hydrating (see `cancelled.clear()` in `list.hydrate.test.ts`).
 
 ## Resume point
 
-Parts A + B1 complete. Next concrete step: **Part B2 — client `renderList` +
-`reconcileList`**. Per CLAUDE.md (spec → mock → test → implement), start with
-`client/list.specs.md` (KR/SC/HY ACs + render-once / index-key warning), then:
+Parts A + B1 + B2 + **B3 complete** — the diffing-model work (scalar same-type patching,
+`List.each` core API, client keyed reconciliation, and `List` hydration) is done. 308 tests
+pass, `vp check` clean. Nothing outstanding on this plan.
 
-1. `listItemStartText`/`listItemEndText` markers + parse in `shared.ts` / `utilities.ts`
-   (reuse `RenderContext.streamIdCounter`, same `MARKER_PATTERN` family).
-2. `LIST` case in `renderNode` (beside `FRAGMENT`/`SUSPENSE_BOUNDARY`/`FAILURE_BOUNDARY`)
-   → `renderList`. Read `descriptor.props.{of,by,render}`; normalize `of` via
-   `Source.toSubscribable`; subscribe to `.changes`. This path must NOT use
-   `handleStreamChild`'s close-all scope rotation — it keeps persistent reconciler state.
-3. `reconcileList` + `ItemRecord` (`HashMap<K, ItemRecord>`; per-key `scope =
-Scope.fork(regionScope)` that PERSISTS across emissions; KR1 dup-key fail, KR2 insert,
-   KR3 reuse, KR4 remove, KR5 LIS minimal moves; SC1/SC2 subscription & focus preservation).
-4. `client/list.test.ts` + `playground/recipes/keyed-list/`.
-
-Core surface available to import: `List`, `LIST` from `@effect-ui/core`; descriptor
-props shape is `{ of, by, render }` (read via `getElementDescriptor`).
+If extending: v1 non-goals still stand (animation / FLIP move hooks; a dedicated positional
+`List.index` variant; nested-list–specific optimizations beyond recursion). List hydration
+divergence is handled at region granularity (count mismatch → full rebuild) and per-item
+granularity (content mismatch → re-render that item); a finer key-aware reconcile of partial
+server/client divergence was deliberately left out of v1.
 
 ## Key reminders
 
