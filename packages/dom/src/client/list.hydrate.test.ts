@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Effect, Stream, SubscriptionRef } from "effect";
+import { Data, Effect, Stream, SubscriptionRef } from "effect";
 import { h, List } from "@effect-ui/core";
 import type { Renderable } from "@effect-ui/core/types";
 import { JSDOM } from "jsdom";
@@ -52,6 +52,18 @@ const p = (id: string, name = id.toUpperCase()): Person => ({ id, name });
 function itemIds(root: HTMLElement): string[] {
   return Array.from(root.querySelectorAll("li")).map((li) => li.id);
 }
+
+/** All comment-marker text data under `root`, in document order. */
+function commentData(root: HTMLElement): string[] {
+  const out: string[] = [];
+  const walker = document.createTreeWalker(root, 128 /* SHOW_COMMENT */);
+  for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+    out.push((n as Comment).data);
+  }
+  return out;
+}
+
+class PersonData extends Data.Class<{ readonly id: string; readonly name: string }> {}
 
 // ============================================================================
 // HY1: server markers
@@ -303,5 +315,161 @@ describe("List.each hydration — HY2 divergence", () => {
     } finally {
       console.error = originalError;
     }
+  });
+});
+
+// ============================================================================
+// HY2: nested lists (depth-aware item-range adoption)
+// ============================================================================
+
+describe("List.each hydration — HY2 nested lists", () => {
+  it("adopts a nested List.each inside an item without losing outer/inner identity", async () => {
+    createTestDOM();
+    const app = List.each({ of: [p("a"), p("b")], by: (x) => x.id }, (x) =>
+      h.ul({ id: `outer-${x.id}` }, [
+        List.each({ of: [p(`${x.id}1`), p(`${x.id}2`)], by: (y) => y.id }, (y) =>
+          h.li({ id: y.id }, y.name),
+        ),
+      ]),
+    );
+    const root = await seedServerHtml(app);
+
+    // Tag the server nodes so we can prove adoption vs re-creation.
+    const outerA = root.querySelector("#outer-a");
+    const innerA1 = root.querySelector("#a1");
+    assert.ok(outerA && innerA1);
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+
+    // `collectAdoptedItems` stepped over the nested list-item markers (depth) so
+    // each outer item's range was bounded correctly — both levels adopted in place.
+    assert.deepEqual(itemIds(root), ["a1", "a2", "b1", "b2"]);
+    assert.strictEqual(root.querySelector("#outer-a"), outerA, "outer item adopted, not rebuilt");
+    assert.strictEqual(root.querySelector("#a1"), innerA1, "nested item adopted, not rebuilt");
+  });
+});
+
+// ============================================================================
+// HY2: marker-id stability after hydration
+// ============================================================================
+
+describe("List.each hydration — HY2 marker id stability", () => {
+  it("post-hydration inserts mint marker ids that don't collide with adopted ones", async () => {
+    createTestDOM();
+    const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
+    const app = List.each({ of: ref.changes, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name));
+    const root = await seedServerHtml(app);
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+
+    // Insert a new key after hydration — its fresh markers must be unique.
+    await Effect.runPromise(SubscriptionRef.set(ref, [p("a"), p("c"), p("b")]));
+    await waitForStreamUpdate();
+    assert.deepEqual(itemIds(root), ["a", "c", "b"]);
+
+    const itemStarts = commentData(root).filter((d) => d.includes("list-item-start"));
+    assert.equal(itemStarts.length, 3);
+    assert.equal(
+      new Set(itemStarts).size,
+      itemStarts.length,
+      "every list-item-start marker id is unique (counter seeded past adopted ids)",
+    );
+  });
+});
+
+// ============================================================================
+// HY2: additional source/identity coverage
+// ============================================================================
+
+describe("List.each hydration — HY2 source & identity coverage", () => {
+  it("hydrates an empty server region and inserts on a later emission", async () => {
+    createTestDOM();
+    const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([]));
+    const app = List.each({ of: ref.changes, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name));
+    const root = await seedServerHtml(app);
+    assert.equal(commentData(root).filter((d) => d.includes("list-item-start")).length, 0);
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+    assert.deepEqual(itemIds(root), []);
+
+    await Effect.runPromise(SubscriptionRef.set(ref, [p("a"), p("b")]));
+    await waitForStreamUpdate();
+    assert.deepEqual(itemIds(root), ["a", "b"]);
+  });
+
+  it("hydrates with `by` omitted (structural Data identity), reusing equal items", async () => {
+    createTestDOM();
+    let renders = 0;
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<readonly PersonData[]>([new PersonData({ id: "a", name: "Ann" })]),
+    );
+    const app = List.each({ of: ref.changes }, (x) => {
+      renders++;
+      return h.li({ id: x.id }, x.name);
+    });
+    const root = await seedServerHtml(app);
+    renders = 0;
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+    assert.equal(renders, 1, "render invoked once per key during hydration");
+    const a0 = root.querySelector("#a");
+
+    // A fresh, structurally-equal instance reconciles to the same key.
+    await Effect.runPromise(SubscriptionRef.set(ref, [new PersonData({ id: "a", name: "Ann" })]));
+    await waitForStreamUpdate();
+    assert.equal(renders, 1, "structurally-equal Data item reused (no re-render)");
+    assert.strictEqual(root.querySelector("#a"), a0, "adopted node identity preserved");
+  });
+
+  it("hydrates a Stream `of` (first emission via await-first get on the server)", async () => {
+    createTestDOM();
+    const app = List.each(
+      { of: Stream.succeed([p("a"), p("b")] as readonly Person[]), by: (x) => x.id },
+      (x) => h.li({ id: x.id }, x.name),
+    );
+    const root = await seedServerHtml(app);
+    const a0 = root.querySelector("#a");
+    assert.ok(a0);
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+
+    assert.deepEqual(itemIds(root), ["a", "b"]);
+    assert.strictEqual(
+      root.querySelector("#a"),
+      a0,
+      "Stream-sourced first emission adopted in place",
+    );
+  });
+
+  it("SC2: focus and uncontrolled input value survive a post-hydration reorder", async () => {
+    createTestDOM();
+    const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
+    const app = List.each({ of: ref.changes, by: (x) => x.id }, (x) =>
+      h.li({ id: x.id }, [h.input({ id: `input-${x.id}` })]),
+    );
+    const root = await seedServerHtml(app);
+
+    await Effect.runPromise(hydrate(app, root));
+    await waitForStream();
+
+    // Interact with the adopted input, then reorder.
+    const input = root.querySelector<HTMLInputElement>("#input-a")!;
+    input.value = "typed text";
+    input.focus();
+    assert.strictEqual(document.activeElement, input);
+
+    await Effect.runPromise(SubscriptionRef.set(ref, [p("b"), p("a")]));
+    await waitForStreamUpdate();
+
+    assert.deepEqual(itemIds(root), ["b", "a"]);
+    const after = root.querySelector<HTMLInputElement>("#input-a")!;
+    assert.strictEqual(after, input, "the adopted input node was moved, not recreated");
+    assert.equal(after.value, "typed text", "uncontrolled value preserved");
+    assert.strictEqual(document.activeElement, after, "focus preserved");
   });
 });

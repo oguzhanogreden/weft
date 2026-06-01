@@ -132,7 +132,14 @@ describe("Source.toSubscribable", () => {
       const value = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(Stream.make(1, 2));
-          yield* pipe(sub.changes, Stream.take(2), Stream.runDrain);
+          // Wait until the latest broadcast value is the final one. Robust to
+          // whether the hot SubscriptionRef replays the intermediate `1` or only
+          // the current value, unlike a fixed `take(2)` (which races the pump).
+          yield* pipe(
+            sub.changes,
+            Stream.takeUntil((v) => v === 2),
+            Stream.runDrain,
+          );
           return yield* sub.get;
         }),
       );
@@ -188,6 +195,45 @@ describe("Source.toSubscribable", () => {
       );
       assert.ok(error instanceof NoPropValue);
       assert.equal(error.key, undefined);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // AC-10: stream failure propagates on `changes` (not swallowed by the pump)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe("AC-10 stream failure on changes", () => {
+    class Boom {
+      readonly _tag = "Boom";
+    }
+
+    it("changes fails when the source fails after emitting", async () => {
+      const source = Stream.concat(Stream.make("a"), Stream.fail(new Boom()));
+      const exit = await scoped(
+        Effect.gen(function* () {
+          const sub = yield* Source.toSubscribable(source);
+          return yield* pipe(sub.changes, Stream.runDrain, Effect.exit);
+        }),
+      );
+      assert.ok(Exit.isFailure(exit), "changes surfaces the source failure");
+      assert.ok(
+        Exit.isFailure(exit) &&
+          Option.exists(Cause.failureOption(exit.cause), (e) => e instanceof Boom),
+        "the failure carries the original source error",
+      );
+    });
+
+    it("get still resolves to the emitted value despite the later failure", async () => {
+      const source = Stream.concat(Stream.make("a"), Stream.fail(new Boom()));
+      const value = await scoped(
+        Effect.gen(function* () {
+          const sub = yield* Source.toSubscribable(source);
+          // Drain the first emission (the failure fires afterwards).
+          yield* pipe(sub.changes, Stream.take(1), Stream.runDrain, Effect.ignore);
+          return yield* sub.get;
+        }),
+      );
+      assert.equal(value, "a");
     });
   });
 

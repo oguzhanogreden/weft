@@ -29,9 +29,10 @@ It normalizes via `Source.toSubscribable`; the reconciler subscribes to `.change
 materializes each emission's `Iterable` to an array to fix order.
 
 The item type `T`, the error channel `E`, and the requirement channel `R` are all
-extracted from whichever `Source` kind `of` is, via the `SourceValue` / `SourceError` /
-`SourceContext` helpers (mirroring `OpenPropSource` / `PropsE` / `PropsR`). A static
-`Iterable` contributes `never` to both `E` and `R`.
+extracted from whichever `Source` kind `of` is, via the public `Source.Success` /
+`Source.Error` / `Source.Context` channel accessors (mirroring `OpenPropSource` /
+`PropsE` / `PropsR`, and Effect's own `Effect.Effect.Success`/`Error`/`Context`). A
+static `Iterable` contributes `never` to both `E` and `R`.
 
 ### `by` is the identity knob
 
@@ -111,9 +112,17 @@ export namespace List {
       readonly by?: (item: ItemOf<S>, index: number) => K;
     },
     render: (item: ItemOf<S>, index: number) => Node<CE, CR>,
-  ): Node<SourceError<S> | CE, SourceContext<S> | CR>;
+  ): Node<Source.Error<S> | CE, Source.Context<S> | CR>;
+
+  /** Re-exports of {@link Node.Error} / {@link Node.Context} (a Node's success channel is fixed). */
+  export type Error<N> = Node.Error<N>;
+  export type Context<N> = Node.Context<N>;
 }
 ```
+
+`ItemOf<S>` is `Source.Success<S> extends Iterable<infer T> ? T : never` (list-local).
+The canonical channel accessors live on `Node` (`Node.Error` / `Node.Context`); `List`
+and `Component` re-export them.
 
 ## What's next
 

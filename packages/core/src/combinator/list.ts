@@ -1,7 +1,6 @@
 import { elementNode } from "./descriptor";
 import type { Node } from "./types";
 import type { Source } from "~/source/source";
-import type { Effect, Stream, Subscribable } from "effect";
 
 /**
  * Unique symbol identifying keyed-list nodes built by {@link List.each}. The
@@ -10,43 +9,8 @@ import type { Effect, Stream, Subscribable } from "effect";
  */
 export const LIST = Symbol("@effect-ui/core/list");
 
-/**
- * Extract the emitted value type `A` from any {@link Source} kind. Stream/
- * Effect/Subscribable contribute their value channel; a static value is itself.
- * Checked in the same order as `OpenPropSource` so an `Effect` (which is itself
- * iterable for generators) never reaches the static fallback.
- */
-type SourceValue<S> =
-  S extends Stream.Stream<infer A, any, any>
-    ? A
-    : S extends Effect.Effect<infer A, any, any>
-      ? A
-      : S extends Subscribable.Subscribable<infer A, any, any>
-        ? A
-        : S;
-
-/** Extract the error channel `E` from any {@link Source} kind; static ⇒ `never`. */
-type SourceError<S> =
-  S extends Stream.Stream<any, infer E, any>
-    ? E
-    : S extends Effect.Effect<any, infer E, any>
-      ? E
-      : S extends Subscribable.Subscribable<any, infer E, any>
-        ? E
-        : never;
-
-/** Extract the requirement channel `R` from any {@link Source} kind; static ⇒ `never`. */
-type SourceContext<S> =
-  S extends Stream.Stream<any, any, infer R>
-    ? R
-    : S extends Effect.Effect<any, any, infer R>
-      ? R
-      : S extends Subscribable.Subscribable<any, any, infer R>
-        ? R
-        : never;
-
 /** Element type carried by a list source — the element type of the emitted `Iterable`. */
-type ItemOf<S> = SourceValue<S> extends Iterable<infer T> ? T : never;
+type ItemOf<S> = Source.Success<S> extends Iterable<infer T> ? T : never;
 
 /**
  * Keyed-list combinator namespace. The opt-in alternative to wholesale child
@@ -98,10 +62,22 @@ export namespace List {
   >(
     options: Options<S, K>,
     render: (item: ItemOf<S>, index: number) => Node<CE, CR>,
-  ): Node<SourceError<S> | CE, SourceContext<S> | CR> {
+  ): Node<Source.Error<S> | CE, Source.Context<S> | CR> {
     return elementNode({
       type: LIST,
       props: { of: options.of, by: options.by, render } as Record<string, unknown>,
     });
   }
+
+  /**
+   * Extract the error channel `E` from a list {@link Node} — re-exported from
+   * {@link Node.Error}, the canonical accessor (a `Node`'s success channel is
+   * fixed to `ElementDescriptor`, so only `Error`/`Context` are exposed here).
+   */
+  export type Error<N> = Node.Error<N>;
+  /**
+   * Extract the requirement channel `R` from a list {@link Node} — re-exported
+   * from {@link Node.Context}, the canonical accessor.
+   */
+  export type Context<N> = Node.Context<N>;
 }

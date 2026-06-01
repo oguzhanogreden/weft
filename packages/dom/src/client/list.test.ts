@@ -452,3 +452,46 @@ describe("List.each — Identity (ID)", () => {
     );
   });
 });
+
+// ============================================================================
+// Errors (ER)
+// ============================================================================
+
+describe("List.each — Errors (ER)", () => {
+  it("ER1: a failing rendered item surfaces on the region channel and is caught by a Boundary", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    await runMount(
+      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "render failed") }, [
+        // render returns a node whose `E` fails when the item is inserted.
+        List.each({ of: [p("a")], by: (x) => x.id }, () => Effect.fail(new Error("render boom"))),
+      ]),
+      root,
+    );
+    await waitForStream();
+
+    assert.ok(root.querySelector("#fallback"), "boundary swapped to fallback on render failure");
+  });
+
+  it("ER2: a source failure after the first emission is caught by a Boundary", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // Emits one good value, then fails.
+    const of = Stream.concat(
+      Stream.succeed([p("a")] as readonly Person[]),
+      Stream.fail(new Error("source boom")),
+    );
+
+    await runMount(
+      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "source failed") }, [
+        List.each({ of, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      ]),
+      root,
+    );
+    await waitForStreamUpdate();
+
+    assert.ok(root.querySelector("#fallback"), "boundary swapped to fallback on source failure");
+  });
+});

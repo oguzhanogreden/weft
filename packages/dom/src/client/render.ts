@@ -42,6 +42,7 @@ import {
   listItemStartText,
   parseListItemMarker,
   parseStreamMarker,
+  parseSuspenseMarker,
   streamEndText,
   streamStartText,
   suspenseEndText,
@@ -1292,7 +1293,12 @@ interface ItemRecord {
   readonly startMarker: Comment;
   /** This item's closing comment marker (` list-item-end-<id> `). */
   readonly endMarker: Comment;
-  /** The DOM nodes rendered for this item, between (exclusive) its markers. */
+  /**
+   * The DOM nodes rendered for this item, between (exclusive) its markers, as of
+   * first render. Consumed only when the item is first **inserted**; once the item
+   * is reused across emissions, moves walk its live range ({@link collectItemRange})
+   * rather than this snapshot, so the field may go stale and is not read again.
+   */
   readonly nodes: readonly Node[];
 }
 
@@ -1798,6 +1804,11 @@ export function hydrate(
       scope,
       streamIdCounter: { current: 0 },
     };
+
+    // Advance the id counter past every marker already in the server DOM, so ids
+    // minted for content inserted after hydration (new list items, rebuilt
+    // regions) never collide with adopted markers.
+    seedStreamIdCounter(root, context.streamIdCounter);
 
     // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
     const cleanup = Effect.zipRight(
@@ -2455,6 +2466,29 @@ function hydrateItem(
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const COMMENT_NODE = 8;
+const SHOW_COMMENT = 128;
+
+/**
+ * Advances `counter` past the highest marker id present in the server-rendered
+ * DOM under `root`. Stream, suspense, and list-item markers all draw from this
+ * one counter (see `shared.ts`), so any of them can set the high-water mark.
+ * Without this, ids minted after hydration restart at 1 and collide with adopted
+ * markers — harmless for location (markers are matched positionally / by depth)
+ * but it leaves duplicate ids in the live DOM.
+ */
+function seedStreamIdCounter(root: Node, counter: { current: number }): void {
+  const walker = document.createTreeWalker(root, SHOW_COMMENT);
+  let max = counter.current;
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    const comment = node as Comment;
+    const marker =
+      parseStreamMarker(comment) ?? parseSuspenseMarker(comment) ?? parseListItemMarker(comment);
+    if (marker !== null && marker.id > max) {
+      max = marker.id;
+    }
+  }
+  counter.current = max;
+}
 
 /**
  * Walks forward from a start marker to its depth-matched end marker, accounting
