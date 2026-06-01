@@ -37,6 +37,18 @@ export namespace Component {
     | ((input: Input) => readonly Renderable[]);
 
   /**
+   * Extract the error channel `E` from the {@link Node} a component produces —
+   * re-exported from {@link Node.Error}, the canonical accessor. Apply to a
+   * component's return type, e.g. `Component.Error<ReturnType<typeof MyComponent>>`.
+   */
+  export type Error<N> = Node.Error<N>;
+  /**
+   * Extract the requirement channel `R` from the {@link Node} a component
+   * produces — re-exported from {@link Node.Context}, the canonical accessor.
+   */
+  export type Context<N> = Node.Context<N>;
+
+  /**
    * The callable shape returned by {@link gen} and {@link make}. Generic over
    * the caller's specific `GenP`/`GenC` so reactive prop values and reactive
    * children contribute their `E`/`R` to the resulting `Node` at the call site.

@@ -153,6 +153,28 @@ importers:
         specifier: 'catalog:'
         version: 0.1.23(@types/node@25.9.1)(@voidzero-dev/vite-plus-core@0.1.23(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.3)(typescript@6.0.3))(esbuild@0.28.0)(jsdom@29.1.1)(tsx@4.22.3)(typescript@6.0.3)
 
+  examples/keyed-list:
+    dependencies:
+      '@effect-ui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@effect-ui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
+      '@types/node':
+        specifier: ^25.9.1
+        version: 25.9.1
+      effect:
+        specifier: ^3.21.2
+        version: 3.21.2
+    devDependencies:
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@latest
+        version: '@voidzero-dev/vite-plus-core@0.1.23(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.3)(typescript@6.0.3)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.1.23(@types/node@25.9.1)(@voidzero-dev/vite-plus-core@0.1.23(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.3)(typescript@6.0.3))(esbuild@0.28.0)(jsdom@29.1.1)(tsx@4.22.3)(typescript@6.0.3)
+
   examples/list-rendering:
     dependencies:
       '@effect-ui/core':

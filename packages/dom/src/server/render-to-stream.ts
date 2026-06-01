@@ -2,12 +2,22 @@ import {
   Boundary,
   FAILURE_BOUNDARY,
   FRAGMENT,
+  LIST,
+  NoPropValue,
+  Source,
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@effect-ui/core";
 import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
 import { Effect, Exit, Option, Queue, Ref, Scope, Stream } from "effect";
-import { suspenseEndText, suspenseStartText, streamEndText, streamStartText } from "~/shared";
+import {
+  listItemEndText,
+  listItemStartText,
+  suspenseEndText,
+  suspenseStartText,
+  streamEndText,
+  streamStartText,
+} from "~/shared";
 import { UnsupportedNodeTypeError } from "~/data";
 import { escapeHtml, serializeProps, VOID_ELEMENTS } from "./serialize";
 
@@ -41,6 +51,18 @@ interface ServerSuspenseCtx {
    * stream and are interrupted if the consumer cancels.
    */
   readonly scope: Scope.Scope;
+}
+
+/**
+ * Descriptor props carried by a `List.each` node (mirrors the client's
+ * `ListProps` in `client/render.ts`). The server renders only the **first**
+ * emission of `of`, bracketing the region and each item with the same markers
+ * the client emits so the server DOM is adoptable by `hydrateList`.
+ */
+interface ListSSRProps {
+  readonly of: Source.Source<Iterable<unknown>>;
+  readonly by?: (item: unknown, index: number) => unknown;
+  readonly render: (item: unknown, index: number) => Renderable;
 }
 
 // ============================================================================
@@ -178,6 +200,30 @@ function renderBoundarySSR(
 }
 
 // ============================================================================
+// Keyed-list SSR helper
+// ============================================================================
+
+/**
+ * Resolves the **first** emission of a `List.each` source to a fixed-order array
+ * of items. Mirrors the client's `Source.toSubscribable(of)` normalization but
+ * takes only the await-first value (`get`): a static `Iterable` resolves
+ * immediately, an `Effect`/`Stream`/`Subscribable` resolves to its first value.
+ * A source that completes without ever emitting (`NoPropValue`) renders an empty
+ * region. SSR assumes the source's requirements (`R`) are already discharged.
+ */
+function firstListEmission(
+  of: Source.Source<Iterable<unknown>>,
+): Effect.Effect<readonly unknown[]> {
+  return Effect.scoped(
+    Source.toSubscribable(of).pipe(
+      Effect.flatMap((s) => s.get as Effect.Effect<Iterable<unknown>, NoPropValue>),
+      Effect.map((items): readonly unknown[] => Array.from(items)),
+      Effect.catchTag("NoPropValue", () => Effect.succeed<readonly unknown[]>([])),
+    ),
+  );
+}
+
+// ============================================================================
 // Plain SSR  (no reactive-region markers)
 // ============================================================================
 
@@ -253,6 +299,11 @@ function renderSSRNode(
       );
     }
 
+    if (type === LIST) {
+      // Plain SSR: render the first emission's items inline, no markers.
+      return listToSSR(props as unknown as ListSSRProps, ctx);
+    }
+
     if (typeof type === "string") {
       const openTag = Stream.fromEffect(
         serializeProps(props).pipe(Effect.map((attrs) => `<${type}${attrs}>`)),
@@ -273,6 +324,27 @@ function renderSSRNode(
     new UnsupportedNodeTypeError({
       type: (node as { type?: unknown }).type,
       message: `Invalid Renderable type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
+    }),
+  );
+}
+
+/**
+ * Plain-SSR rendering of a `List.each` region: resolves the first emission and
+ * renders each item inline (no region or per-item markers), since plain
+ * `renderToString` output is not hydrated.
+ */
+function listToSSR(
+  props: ListSSRProps,
+  ctx: ServerSuspenseCtx | null,
+): Stream.Stream<string, Error> {
+  return Stream.unwrap(
+    Effect.gen(function* () {
+      const items = yield* firstListEmission(props.of);
+      let inner: Stream.Stream<string, Error> = Stream.empty;
+      items.forEach((item, index) => {
+        inner = inner.pipe(Stream.concat(renderSSRNode(props.render(item, index), ctx)));
+      });
+      return inner;
     }),
   );
 }
@@ -365,6 +437,10 @@ function renderHydratableSSRNode(
       );
     }
 
+    if (type === LIST) {
+      return listToHydratableSSR(props as unknown as ListSSRProps, counter, ctx);
+    }
+
     if (typeof type === "string") {
       const openTag = Stream.fromEffect(
         serializeProps(props).pipe(Effect.map((attrs) => `<${type}${attrs}>`)),
@@ -389,6 +465,42 @@ function renderHydratableSSRNode(
     new UnsupportedNodeTypeError({
       type: (node as { type?: unknown }).type,
       message: `Invalid Renderable type: expected string, FRAGMENT, or function, got ${typeof (node as { type?: unknown }).type}`,
+    }),
+  );
+}
+
+/**
+ * Hydratable-SSR rendering of a `List.each` region (HY1): brackets the region
+ * with `stream-start`/`stream-end` markers and each item with
+ * `list-item-start`/`list-item-end` markers, matching exactly what the client
+ * renderer emits so `hydrateList` can adopt the server DOM. Only the first
+ * emission is rendered; reconciliation of later emissions is the client's job.
+ * Region and item ids are drawn from the shared region counter in document
+ * order (region, then each item before its content), mirroring the client's
+ * `nextStreamId` allocation.
+ */
+function listToHydratableSSR(
+  props: ListSSRProps,
+  counter: RegionCounter,
+  ctx: ServerSuspenseCtx | null,
+): Stream.Stream<string, Error> {
+  return Stream.unwrap(
+    Effect.gen(function* () {
+      const regionId = ++counter.current;
+      const items = yield* firstListEmission(props.of);
+      let inner: Stream.Stream<string, Error> = Stream.empty;
+      items.forEach((item, index) => {
+        const itemId = ++counter.current;
+        inner = inner.pipe(
+          Stream.concat(Stream.make(`<!--${listItemStartText(itemId)}-->`)),
+          Stream.concat(renderHydratableSSRNode(props.render(item, index), counter, ctx)),
+          Stream.concat(Stream.make(`<!--${listItemEndText(itemId)}-->`)),
+        );
+      });
+      return Stream.make(`<!--${streamStartText(regionId)}-->`).pipe(
+        Stream.concat(inner),
+        Stream.concat(Stream.make(`<!--${streamEndText(regionId)}-->`)),
+      );
     }),
   );
 }
