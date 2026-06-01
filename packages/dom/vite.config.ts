@@ -13,7 +13,7 @@ export default defineConfig({
     entry: ["src/index.ts", "src/client/index.ts", "src/server/index.ts"],
     outDir: "dist",
     dts: true,
-    platform: "browser",
+    platform: "neutral",
     minify: true,
     deps: {
       neverBundle: ["effect", /^@effect-ui\//],
