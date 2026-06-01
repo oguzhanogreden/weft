@@ -100,12 +100,12 @@ type Component.Children<Input = never> =
 The function form is the render-prop / slot pattern — the component invokes the function with whatever input it chooses, and the returned array's `E`/`R` propagate out:
 
 ```typescript
-const List = Component.make(
+const ItemList = Component.make(
   (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
     h.ul({}, props.items.flatMap(renderItem)),
 );
 
-List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+ItemList({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
 ```
 
 ## Props typing

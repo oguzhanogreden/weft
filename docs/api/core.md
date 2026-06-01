@@ -92,12 +92,12 @@ const TextField = Component.gen(function* (props: TextFieldProps) {
 **Example — `Component.make` with function-children**:
 
 ```typescript
-const List = Component.make(
+const ItemList = Component.make(
   (props: { items: readonly string[] }, children: (item: string) => readonly Renderable[]) =>
     h.ul({}, props.items.flatMap(children)),
 );
 
-List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+ItemList({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
 ```
 
 ### `Suspense`
@@ -229,6 +229,59 @@ Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
   ]),
 ]);
 ```
+
+---
+
+## Keyed lists
+
+### `List` namespace
+
+The keyed-list combinator. It is the opt-in alternative to wholesale child rebuilds: items are rendered **once per key** and reconciled across emissions, so reordering, inserting, or removing items reuses and moves existing DOM rather than rebuilding the region.
+
+> **Note:** Do not confuse this exported `List` namespace with the `const ItemList = Component.make(...)` example above — that is a user-defined component, not the built-in `List`.
+
+```typescript
+import { h, List } from "@effect-ui/core";
+
+h.ul({}, [
+  List.each({ of: rows.changes, by: (row) => row.id }, (row) =>
+    h.li({}, row.name),
+  ),
+]);
+```
+
+#### `List.each`
+
+Declares a keyed reactive list region.
+
+```typescript
+List.each<S extends Source.Source<Iterable<any>, any, any>, CE, CR, K>(
+  options: List.Options<S, K>,
+  render: (item: ItemOf<S>, index: number) => Node<CE, CR>,
+): Node<Source.Error<S> | CE, Source.Context<S> | CR>
+```
+
+`render` runs **once per key**; a persisted key keeps its DOM nodes and its running subscription fibers across re-emits (it is never re-invoked). The returned node's `E`/`R` are the union of the source channels and the channels of the node `render` returns.
+
+> **⚠️ Render-once / index-key footgun:** because `render` runs exactly once per key, reconciliation never refreshes a kept row's content — refresh a row by threading a `Stream` **inside** it, not by re-running `render`. Keying by index (`by: (_, i) => i`) reuses rows positionally and will show stale content after a reorder; prefer a stable identity key (`by: (item) => item.id`).
+
+**`List.Options<S, K>`**
+
+```typescript
+interface List.Options<S, K> {
+  readonly of: S;                                        // static Iterable<T>, or an Effect/Stream/Subscribable of one
+  readonly by?: (item: ItemOf<S>, index: number) => K;   // key projection; compared via Effect Equal / Hash
+}
+```
+
+- **`of`** — the list source. Each emission is materialized to an array to fix order, then reconciled by key.
+- **`by`** — projects each item to its reconciliation key. Omitted ⇒ the item itself is the key (structural for `Data`, by reference otherwise).
+
+#### `List.Error<N>` and `List.Context<N>`
+
+Type-level accessors that extract the `E` and `R` channels from a list `Node`. Re-exported from the canonical `Node.Error` / `Node.Context` accessors.
+
+See the `examples/keyed-list` example for a full reconciliation walkthrough (focus, uncontrolled inputs, and per-row counters surviving reorders).
 
 ---
 
