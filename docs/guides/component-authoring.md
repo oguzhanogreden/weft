@@ -58,18 +58,11 @@ observer of a `ref`, a polling timer, anything you `fork`. The rule:
 
 > Fork background work with **`Effect.forkScoped`**, never a bare `Effect.fork`.
 
-`Effect.forkScoped` attaches the fiber to the ambient instance scope, so it keeps
-running for the component's lifetime and is interrupted on unmount. A bare
-`Effect.fork` instead attaches the fiber to the **component-body fiber** — the fiber
-that runs your `Effect.gen` to produce the tree. That fiber completes the instant the
-gen returns its node, and structured concurrency then interrupts its children. So the
+`Effect.forkScoped` attaches the fiber to the instance scope, so it keeps running for
+the component's lifetime and is interrupted on unmount. A bare `Effect.fork` instead
+attaches the fiber to the component-body fiber — the one that runs your `Effect.gen` to
+produce the tree. That fiber completes the instant the gen returns its node, so the
 forked work is cancelled almost immediately.
-
-The trap is that this often _appears_ to work in development: the forked fiber and the
-interruption race, and under `vp dev` the fiber frequently wins and runs once before it
-is killed. Under an isolated `mount` (for example in a browser test) the timing flips
-and the work is silently cancelled before it ever runs. Same code, different outcome —
-which is exactly why this is easy to miss.
 
 Concretely, an observer that runs an effect when a `ref`'s element mounts:
 

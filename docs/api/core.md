@@ -92,35 +92,21 @@ const TextField = Component.gen(function* (props: TextFieldProps) {
 **Example — `Component.make` with function-children**:
 
 ```typescript
-const ItemList = Component.make(
-  (props: { items: readonly string[] }, children: (item: string) => readonly Renderable[]) =>
-    h.ul({}, props.items.flatMap(children)),
+const Labeled = Component.make(
+  (props: { label: string }, children: (label: string) => readonly Renderable[]) =>
+    h.div({ class: "field" }, children(props.label)),
 );
 
-ItemList({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+Labeled({ label: "Name" }, (label) => [h.label({}, label), h.input({})]);
 ```
 
-### `Suspense`
-
-Boundary component that shows a fallback while async children are pending:
-
-```typescript
-import { Suspense } from "@effect-ui/core";
-
-Suspense(
-  props: { fallback?: Renderable },
-  children: Node[]
-): Node<ChildrenE, ChildrenR>
-```
-
-- Shows `fallback` while any registered child has not yet emitted its first value
-- Performs a single atomic DOM swap once all children have settled
-- Works on both the server (streaming patch model) and the client
-- `hydrate()` sees through `Suspense` boundaries and adopts resolved DOM in place
+> For rendering a reactive collection, reach for the built-in [`List.each`](#listeach)
+> rather than mapping items by hand — it reconciles by key across emissions instead of
+> rebuilding the region.
 
 ### `Boundary` namespace
 
-Six variants for intercepting rendering-path errors in a subtree. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch as `Suspense`. All variants share the same call shape — props first, children array second.
+Variants for intercepting rendering-path errors in a subtree, plus `Boundary.suspend` for async fallbacks. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch. All variants share the same call shape — props first, children array second.
 
 **What is caught:**
 
@@ -132,6 +118,22 @@ Six variants for intercepting rendering-path errors in a subtree. Each returns a
 ```typescript
 import { Boundary } from "@effect-ui/core";
 ```
+
+#### `Boundary.suspend`
+
+Shows a fallback while async children are pending:
+
+```typescript
+Boundary.suspend(
+  props: { fallback?: Renderable },
+  children: Node[]
+): Node<ChildrenE, ChildrenR>
+```
+
+- Shows `fallback` while any registered child has not yet emitted its first value
+- Performs a single atomic DOM swap once all children have settled
+- Works on both the server (streaming patch model) and the client
+- `hydrate()` sees through `Boundary.suspend` boundaries and adopts resolved DOM in place
 
 #### `Boundary.catchAll`
 
@@ -238,7 +240,9 @@ Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
 
 The keyed-list combinator. It is the opt-in alternative to wholesale child rebuilds: items are rendered **once per key** and reconciled across emissions, so reordering, inserting, or removing items reuses and moves existing DOM rather than rebuilding the region.
 
-> **Note:** Do not confuse this exported `List` namespace with the `const ItemList = Component.make(...)` example above — that is a user-defined component, not the built-in `List`.
+> **Note:** This exported `List` namespace is the built-in, key-reconciling way to
+> render collections — prefer it over hand-rolling a component that maps items into
+> elements.
 
 ```typescript
 import { h, List } from "@effect-ui/core";
