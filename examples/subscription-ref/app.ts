@@ -11,7 +11,6 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -236,7 +235,7 @@ const CoordinatedRefs = () =>
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "SubscriptionRef"),
 
@@ -270,5 +269,3 @@ const App = () =>
       CoordinatedRefs(),
     ]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));

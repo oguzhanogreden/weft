@@ -24,6 +24,17 @@ See versions in package.json > engines. Package management and all tooling is ha
 
 All commands use the `vp` CLI (Vite+). Run `vp help` for a full list.
 
+### The `pack` step (read this first)
+
+This is a monorepo: `@effect-ui/dom` and the `examples/*` consume `@effect-ui/core`/`@effect-ui/base` as workspace packages, resolved through their **built `dist/`**. Cross-package type-checking is therefore only correct once those packages have been packed.
+
+**Rule: run validation through the `vp run <task>` tasks, never the bare `vp <command>`.** The tasks are declared in the root `vite.config.ts` under `run.tasks` and each one declares `dependsOn: ["pack"]`, so `vp run` always rebuilds the packages first:
+
+- ✅ `vp run check`, `vp run test`, `vp run test:browser` — pack first, then run. Always correct.
+- ❌ `vp check`, `vp test` directly — skip `pack`, so against stale/missing `dist/` they report **false** cross-package errors (e.g. spurious `implicit any` from unresolved `@effect-ui/*` types). Only safe right after a pack.
+
+Treat the task list in `vite.config.ts` (`run.tasks`) as the source of truth for how to validate — if a task exists there, invoke it via `vp run <task>`. Current tasks: `dev`, `pack`, `check`, `test`, `test:browser`.
+
 ### Building
 
 ```bash
@@ -35,20 +46,21 @@ Uses tsdown for fast TypeScript bundling.
 ### Testing
 
 ```bash
-vp test            # Run all tests
-vp test --watch    # Run tests in watch mode
+vp run test            # Pack, then run all node/jsdom tests
+vp run test:browser    # Pack, then run real-browser e2e tests (Playwright)
+vp test --watch        # Watch mode (only safe after a pack)
 ```
 
-Uses Vitest (via Vite+). Test files follow the pattern `src/**/*.test.{ts,tsx}`.
+Uses Vitest (via Vite+). Node test files follow the pattern `**/*.test.{ts,tsx}`; `*.browser.test.{ts,tsx}` are excluded from `vp run test` and run via `vp run test:browser` (see the `pack` step rule above).
 
 ### Checking (format + lint + typecheck)
 
 ```bash
-vp check           # Format, lint, and type-check all files
-vp check --fix     # Auto-fix formatting and lint issues
+vp run check       # Pack, then format, lint, and type-check all files
+vp check --fix     # Auto-fix formatting/lint (only safe after a pack)
 ```
 
-**Important:** Always run `vp check --fix` after making changes, not individual lint/format commands.
+**Important:** Validate via `vp run check` (it packs first — see the `pack` step rule). Use `vp check --fix` for auto-fixing, but only when packages are already built, otherwise it reports false cross-package type errors. Always prefer these over individual lint/format commands.
 
 ## Architecture
 
@@ -100,6 +112,15 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 - Each example is a self-contained, runnable workspace package (depends on `@effect-ui/*` via `workspace:*`)
 - Include a JSDoc header comment in `app.ts` explaining the example's purpose
 - READMEs should include: Overview, Problem, Solution, How It Works, and When to Use sections
+- Each example is split into a **side-effect-free `app.ts`** (or `src/app.ts`) that
+  `export`s `App` — no top-level `mount`/`hydrate` call — and a thin entry
+  (`main.ts`, or `entry-client.ts` for SSR examples) that mounts it and is the file
+  referenced by `index.html`. This keeps `app.ts` importable by tests.
+- Every example **must include at least one co-located `*.browser.test.ts`** that
+  imports `App`, mounts it in a real browser, and asserts the example's headline
+  behaviour. Browser tests use `vite-plus/test` globals (never `vitest` directly)
+  and run via `vp run test:browser`. See `e2e/specs.md` for conventions and known
+  pitfalls (post-mount render tick, ref observers, missing example CSS).
 
 ## Coding Standards
 
@@ -155,6 +176,10 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
   - Test all possible error types defined in the Effect error union (expected errors)
   - Include edge cases defined in specifications
 - Use Effect testing utilities for testing Effect code
+- Real-browser end-to-end tests live in `*.browser.test.{ts,tsx}` files, run via
+  `vp run test:browser` (Vitest browser mode + Playwright), and are excluded from
+  the default `vp test` run. Every `examples/*` app must have one — see the
+  Examples section above and `e2e/specs.md`.
 
 ### Type Tests
 
@@ -203,7 +228,7 @@ const _invalid: SomeType = invalidValue;
   - Ensure implementation matches mock signatures exactly
   - Ensure implementation matches co-located specs.md files
   - If implementation reveals mocks/specs need changes: pause implementation and update specs/mocks first (maintain strict spec → mock → test → implement cycle)
-  - After implementation: run `vp check --fix` and `vp test`
+  - After implementation: auto-fix with `vp check --fix`, then validate with `vp run check` and `vp run test` (which pack first)
 - Specs MUST include:
   - Feature overview and purpose
   - Detailed acceptance criteria

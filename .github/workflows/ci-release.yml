@@ -43,20 +43,39 @@ jobs:
       - name: Run tests
         run: vp run test
 
+  test-browser:
+    name: Browser Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real-browser e2e tests
+        run: vp run test:browser
+
   status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [check, test]
+    needs: [check, test, test-browser]
     if: always()
 
     steps:
       - name: Check CI status
         run: |
           if [ "${{ needs.check.result }}" != "success" ] || \
-             [ "${{ needs.test.result }}" != "success" ]; then
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.test-browser.result }}" != "success" ]; then
             echo "CI validation failed"
             echo "Lint: ${{ needs.check.result }}"
             echo "Test: ${{ needs.test.result }}"
+            echo "Browser Test: ${{ needs.test-browser.result }}"
             exit 1
           fi
           echo "All CI checks passed"
@@ -64,7 +83,7 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    needs: [check, test]
+    needs: [check, test, test-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:

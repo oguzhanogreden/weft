@@ -1,0 +1,48 @@
+/**
+ * End-to-end browser test for the SSR + Hydration example.
+ *
+ * Exercises the full path in a real browser: render the shared `App` to
+ * hydratable HTML (as the server does), inject it as the container's markup,
+ * confirm the server-rendered count is present before any client JS runs, then
+ * `hydrate` over it and verify the counter becomes interactive in place.
+ */
+
+import { hydrate, type MountHandle } from "@effect-ui/dom/client";
+import { renderToStringHydratable } from "@effect-ui/dom/server";
+import { Effect } from "effect";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { App } from "./app";
+
+let container: HTMLElement;
+let handle: MountHandle;
+
+beforeEach(() => {
+  container = document.createElement("div");
+  document.body.append(container);
+});
+
+afterEach(async () => {
+  await Effect.runPromise(handle.unmount());
+  container.remove();
+});
+
+describe("ssr-hydration example", () => {
+  it("renders on the server, then hydrates to an interactive counter", async () => {
+    // 1. Server-render to hydratable HTML and install it as the static markup.
+    const html = await Effect.runPromise(renderToStringHydratable(App({ initialValue: 3 })));
+    container.innerHTML = html;
+
+    // 2. The count is present in the static markup before hydration.
+    const count = () => container.querySelector(".count");
+    expect(count()?.textContent).toContain("3");
+
+    // 3. Hydrate over the server markup; the buttons become interactive.
+    handle = await Effect.runPromise(hydrate(App({ initialValue: 3 }), container));
+
+    const plus = [...container.querySelectorAll("button")].find((b) => b.textContent === "+");
+    expect(plus).toBeDefined();
+
+    plus!.click();
+    await vi.waitFor(() => expect(count()?.textContent).toContain("4"));
+  });
+});

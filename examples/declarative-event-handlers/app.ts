@@ -7,7 +7,6 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Context, Effect, Layer, Stream } from "effect";
 
 // ============================================================================
@@ -84,7 +83,7 @@ class Analytics extends Context.Tag("Analytics")<
   }
 >() {}
 
-const AnalyticsLive = Layer.succeed(Analytics, {
+export const AnalyticsLive = Layer.succeed(Analytics, {
   track: (event) =>
     Effect.sync(() => {
       console.log(`[Analytics] Tracked: ${event}`);
@@ -138,7 +137,7 @@ const ConditionalButton = ({ enabled }: { enabled: boolean }) =>
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "Event Handler Examples"),
 
@@ -160,7 +159,3 @@ const App = () =>
       ConditionalButton({ enabled: false }),
     ]),
   ]);
-
-void Effect.runPromise(
-  mount(App(), document.getElementById("root")!).pipe(Effect.provide(AnalyticsLive)),
-);

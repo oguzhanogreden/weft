@@ -7,7 +7,6 @@
  */
 
 import { Boundary, h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Data, Effect, Option, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -358,7 +357,7 @@ function ToggleSection() {
 // App
 // ============================================================================
 
-function App() {
+export function App() {
   return h.div({ class: "app" }, [
     h.header({}, [
       h.h1({}, "effect-ui — Error Boundaries"),
@@ -380,5 +379,3 @@ function App() {
     ]),
   ]);
 }
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));
