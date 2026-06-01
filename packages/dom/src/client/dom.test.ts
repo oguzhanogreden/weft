@@ -886,6 +886,121 @@ describe("AC20: Stream Children - Updates", () => {
 });
 
 // ============================================================================
+// AC20: Stream Children - Same-type patching (SP1–SP4)
+// ============================================================================
+
+describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
+  // Returns the lone Text node currently in the region between the root markers.
+  function regionTextNode(root: HTMLElement): Text | undefined {
+    return Array.from(root.childNodes).find((n): n is Text => n.nodeType === 3);
+  }
+
+  it("SP1: text→text patches the existing Text node in place (identity preserved)", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
+    const handle = await runMount(region.changes, root);
+    await waitForStream();
+
+    const before = regionTextNode(root);
+    assert.ok(before !== undefined, "first emission should render a Text node");
+    assert.equal(before.data, "first");
+
+    await Effect.runPromise(SubscriptionRef.set(region, "second"));
+    await waitForStreamUpdate();
+
+    const after = regionTextNode(root);
+    assert.ok(after === before, "the same Text node should be reused across emissions");
+    assert.equal(after.data, "second");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("SP3: same-tag element is reused; live DOM state (focus + typed value) survives", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const region = await Effect.runPromise(
+      SubscriptionRef.make<Renderable>(h.input({ class: "a" })),
+    );
+    const handle = await runMount(region.changes, root);
+    await waitForStream();
+
+    const before = root.querySelector("input");
+    assert.ok(before !== null, "first emission should render an <input>");
+    assert.equal(before.className, "a");
+
+    // Simulate uncontrolled user state: a typed value (live property, not a prop)
+    // and focus. Neither is part of the descriptor's props.
+    before.value = "typed-by-user";
+    before.focus();
+    assert.equal(document.activeElement, before, "input should be focused");
+
+    // Re-emit a same-tag element with a changed prop.
+    await Effect.runPromise(SubscriptionRef.set(region, h.input({ class: "b" })));
+    await waitForStreamUpdate();
+
+    const after = root.querySelector("input");
+    assert.ok(after === before, "the same <input> element should be reused (identity preserved)");
+    assert.equal(after.className, "b", "changed prop should be re-applied");
+    assert.equal(after.value, "typed-by-user", "uncontrolled value should survive the update");
+    assert.equal(document.activeElement, after, "focus should survive the update");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("SP3: same-tag element reuse recurses into children (child Text patched in place)", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const region = await Effect.runPromise(
+      SubscriptionRef.make<Renderable>(h.div({ id: "host" }, "hello")),
+    );
+    const handle = await runMount(region.changes, root);
+    await waitForStream();
+
+    const beforeDiv = root.querySelector("#host");
+    assert.ok(beforeDiv !== null, "first emission should render the host <div>");
+    const beforeText = beforeDiv.firstChild;
+    assert.ok(beforeText?.nodeType === 3, "host should contain a Text child");
+
+    await Effect.runPromise(SubscriptionRef.set(region, h.div({ id: "host" }, "world")));
+    await waitForStreamUpdate();
+
+    const afterDiv = root.querySelector("#host");
+    assert.ok(afterDiv === beforeDiv, "the host <div> should be reused");
+    assert.ok(afterDiv.firstChild === beforeText, "the child Text node should be patched in place");
+    assert.equal(afterDiv.textContent, "world");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("SP4: shape change (element→text) falls back to rebuild", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const region = await Effect.runPromise(SubscriptionRef.make<Renderable>(h.span({}, "boxed")));
+    const handle = await runMount(region.changes, root);
+    await waitForStream();
+
+    assert.ok(root.querySelector("span") !== null, "first emission should render a <span>");
+
+    await Effect.runPromise(SubscriptionRef.set(region, "plain"));
+    await waitForStreamUpdate();
+
+    assert.equal(
+      root.querySelector("span"),
+      null,
+      "the <span> should be torn down on shape change",
+    );
+    assert.ok(root.textContent?.includes("plain"));
+
+    await Effect.runPromise(handle.unmount());
+  });
+});
+
+// ============================================================================
 // AC21: Nested Streams in Dynamic Children
 // ============================================================================
 

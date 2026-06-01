@@ -27,12 +27,13 @@ export default defineConfig({
   },
   test: {
     include: ["**/*.test.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],
   },
   fmt: {
-    ignorePatterns: ["**/dist/**", "*.min.js"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "*.min.js"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,

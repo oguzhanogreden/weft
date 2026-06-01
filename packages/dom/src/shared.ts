@@ -133,3 +133,60 @@ export function parseStreamMarker(comment: Comment): StreamMarker | null {
   const id = Number.parseInt(match[2]!, 10);
   return { kind, id };
 }
+
+// ============================================================================
+// Keyed-list per-item markers
+// ============================================================================
+
+/**
+ * Text content (without the `<!--`/`-->` delimiters) of a keyed-list item's
+ * opening comment marker, e.g. `" list-item-start-7 "`.
+ *
+ * A `List.each` region (bracketed by the usual `stream-start`/`stream-end`
+ * markers) brackets each of its items with a `list-item-start`/`list-item-end`
+ * pair so that a multi-node item moves and is removed as a single unit, and so
+ * the hydratable server renderer can emit adoptable per-item boundaries. IDs are
+ * drawn from the same monotonic counter (`RenderContext.streamIdCounter`) as the
+ * stream/suspense markers and are therefore unique within one render tree.
+ */
+export function listItemStartText(id: number): string {
+  return ` list-item-start-${id} `;
+}
+
+/**
+ * Text content of a keyed-list item's closing comment marker, e.g.
+ * `" list-item-end-7 "`.
+ */
+export function listItemEndText(id: number): string {
+  return ` list-item-end-${id} `;
+}
+
+/**
+ * The kind and id parsed from a keyed-list per-item marker comment.
+ */
+export interface ListItemMarker {
+  readonly kind: "start" | "end";
+  readonly id: number;
+}
+
+const LIST_ITEM_MARKER_PATTERN = /^ list-item-(start|end)-(\d+) $/;
+
+/**
+ * Recognises a comment node as a keyed-list per-item start/end marker, returning
+ * its kind and id, or `null` if the comment is not a list-item marker.
+ *
+ * Note: list-item markers are intentionally distinct from stream markers, so
+ * {@link parseStreamMarker} returns `null` for them and region-depth walks
+ * (`findMatchingEnd`) step over per-item markers without treating them as nested
+ * reactive regions.
+ */
+export function parseListItemMarker(comment: Comment): ListItemMarker | null {
+  const match = LIST_ITEM_MARKER_PATTERN.exec(comment.data);
+  if (match === null) {
+    return null;
+  }
+  const kind = match[1] as "start" | "end";
+  // biome-ignore lint/style/noNonNullAssertion: regex guarantees group 2 on match
+  const id = Number.parseInt(match[2]!, 10);
+  return { kind, id };
+}

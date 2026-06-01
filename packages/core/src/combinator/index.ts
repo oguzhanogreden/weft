@@ -1,6 +1,7 @@
 export { h } from "./element";
 export { elementNode, getElementDescriptor } from "./descriptor";
 export { FRAGMENT } from "./fragment";
+export { List, LIST } from "./list";
 export type { CustomElements, ElementFn } from "./element";
 export type {
   Node,

@@ -179,17 +179,41 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Use simple counter for unique IDs
   - Keep internal reference to track nodes
 
-### AC20: Stream Children - Updates
+### AC20: Stream Children - Updates (same-type patching)
 
-- **Given** a Stream child that emits new value
+- **Given** a Stream child that emits a new value
 - **When** emission occurs
-- **Then**:
-  - Find start and end comment markers
-  - Remove all nodes between comments (iterate from `startComment.nextSibling` until `endComment`)
-  - Render new Renderable value
-  - Insert new nodes between comments
-  - New value can be array/fragment (multiple nodes)
-  - Text nodes replaced entirely (not updated in place)
+- **Then** the region between the start and end comment markers is reconciled against
+  the new value's shape (read from its descriptor / primitive type) **before** rendering,
+  patching in place when the shape is unchanged rather than tearing down and rebuilding:
+  - **SP1 — text→text**: the region holds exactly one `Text` node and the new value is a
+    `string`/`number`/`bigint` → update that node's `.data` in place (node identity
+    preserved). A bare text value spawns no nested fibers, so the content scope the caller
+    rotates around this call is empty and its rotation is a no-op.
+  - **SP2 — unchanged text**: the new text equals the current `.data` → no DOM mutation.
+  - **SP3 — same-tag element reuse**: the region holds a single `Element` and the new
+    value's descriptor has the same string `type` → reuse the element node, re-apply props
+    (`setElementProps` re-subscribes reactive props under the fresh content scope the caller
+    has already rotated to; the prior emission's prop subscriptions and event listeners were
+    torn down when the caller closed the previous scope), then reconcile its children by
+    position. A child slot is patched in place only when it maps 1:1 to a single node
+    (text→`Text`, same-tag element→`Element`, recursing into SP3); if any child does not
+    (count mismatch, kind mismatch, multi-node/reactive child) the element's children are
+    rebuilt wholesale, still preserving the element node itself. Re-applying props does not
+    remove props absent from the new descriptor (no stale-attribute diffing); same-element
+    re-emissions are expected to carry a consistent prop set.
+  - **SP4 — fallback (shape change)**: any other case (text↔element, different tag,
+    multi-node, fragment/array, boundary) → remove all nodes between the markers
+    (iterate from `startComment.nextSibling` until `endComment`), render the new
+    Renderable, and insert the resulting nodes before the end marker. New value can be
+    an array/fragment (multiple nodes).
+- **Scope ownership**: content-scope rotation (close previous → fork fresh) is owned by the
+  caller (`handleStreamChild` / `hydrateReactive`), not `updateStreamChild`. It rotates
+  unconditionally before each call; SP3/SP4 rely on this for correct teardown of the prior
+  emission's subscriptions, and SP1/SP2's rotation is a harmless no-op.
+- **Rationale**: SP1/SP3 preserve DOM identity across scalar updates, so focus,
+  uncontrolled input values, scroll position, and in-flight CSS transitions survive a
+  value change that does not change the region's shape.
 
 ### AC21: Nested Streams in Dynamic Children
 

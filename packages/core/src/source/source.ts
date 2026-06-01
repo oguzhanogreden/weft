@@ -1,5 +1,6 @@
 import {
   pipe,
+  Cause,
   Effect,
   Scope,
   Stream,
@@ -34,6 +35,44 @@ export namespace Source {
     | Subscribable.Subscribable<A, E, R>;
 
   /**
+   * Extract the emitted value type `A` from any {@link Source} kind, mirroring
+   * Effect's `Effect.Effect.Success`. A `Stream`/`Effect`/`Subscribable`
+   * contributes its value channel; a static value is itself.
+   *
+   * Checked in the same order as `OpenPropSource` (`combinator/types.ts`) so an
+   * `Effect` — which is itself iterable for generators — never reaches the static
+   * fallback. The props-object analog is `PropsE`/`PropsR` in `combinator/types.ts`.
+   */
+  export type Success<S> =
+    S extends Stream.Stream<infer A, any, any>
+      ? A
+      : S extends Effect.Effect<infer A, any, any>
+        ? A
+        : S extends Subscribable.Subscribable<infer A, any, any>
+          ? A
+          : S;
+
+  /** Extract the error channel `E` from any {@link Source} kind; a static value ⇒ `never`. */
+  export type Error<S> =
+    S extends Stream.Stream<any, infer E, any>
+      ? E
+      : S extends Effect.Effect<any, infer E, any>
+        ? E
+        : S extends Subscribable.Subscribable<any, infer E, any>
+          ? E
+          : never;
+
+  /** Extract the requirement channel `R` from any {@link Source} kind; a static value ⇒ `never`. */
+  export type Context<S> =
+    S extends Stream.Stream<any, any, infer R>
+      ? R
+      : S extends Effect.Effect<any, any, infer R>
+        ? R
+        : S extends Subscribable.Subscribable<any, any, infer R>
+          ? R
+          : never;
+
+  /**
    * Normalize a `Source<A>` into an await-first, hot `Subscribable`.
    *
    * - existing `Subscribable` → returned by reference (no new ref/fiber);
@@ -62,6 +101,10 @@ export namespace Source {
       return Effect.gen(function* () {
         const ref = yield* SubscriptionRef.make(Option.none<A>());
         const latch = yield* Deferred.make<A, NoPropValue>();
+        // Carries a genuine source failure to `changes` consumers (the
+        // SubscriptionRef broadcast can't itself fail). Left pending forever when
+        // the source completes normally or the scope interrupts the pump.
+        const failure = yield* Deferred.make<never, E>();
 
         // Pump: drain source into ref and resolve the first-value latch.
         const pump = pipe(
@@ -83,6 +126,13 @@ export namespace Source {
               ),
             ),
           ),
+          // Surface a real source failure on `changes`; ignore scope-close
+          // interruption (teardown is not an error).
+          Effect.onError((cause) =>
+            Cause.isInterruptedOnly(cause)
+              ? Effect.void
+              : Effect.asVoid(Deferred.failCause(failure, cause)),
+          ),
         );
 
         // Fork pump into the enclosing scope — dies when the scope closes.
@@ -96,8 +146,18 @@ export namespace Source {
           ),
         );
 
-        // changes: filter the SubscriptionRef's broadcast stream to present values.
-        const changes = pipe(ref.changes, Stream.filterMap(identity));
+        // changes: the SubscriptionRef broadcast (present values only). A genuine
+        // source-pump failure is injected via `interruptWhen` so it propagates to
+        // subscribers instead of being swallowed; on normal completion the
+        // `failure` deferred stays pending and never interrupts. `interruptWhen`
+        // keeps the primary `ref.changes` subscription in the foreground, so the
+        // emission timing the await-first contract relies on is preserved (unlike a
+        // concurrent `merge`, which would fork it a hop later).
+        const changes = pipe(
+          ref.changes,
+          Stream.filterMap(identity),
+          Stream.interruptWhen(Deferred.await(failure)),
+        ) as Stream.Stream<A, NoPropValue>;
 
         return Subscribable.make({ get, changes });
       }) as Effect.Effect<Subscribable.Subscribable<A, NoPropValue>, never, Scope.Scope>;
