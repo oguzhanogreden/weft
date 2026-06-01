@@ -243,11 +243,7 @@ The keyed-list combinator. It is the opt-in alternative to wholesale child rebui
 ```typescript
 import { h, List } from "@effect-ui/core";
 
-h.ul({}, [
-  List.each({ of: rows.changes, by: (row) => row.id }, (row) =>
-    h.li({}, row.name),
-  ),
-]);
+h.ul({}, [List.each({ of: rows.changes, by: (row) => row.id }, (row) => h.li({}, row.name))]);
 ```
 
 #### `List.each`
