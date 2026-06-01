@@ -30,3 +30,6 @@ dist
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Claude Code worktrees (isolated repo copies — must stay invisible to tooling)
+.claude/worktrees/
