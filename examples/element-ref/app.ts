@@ -8,6 +8,12 @@
  * - Direct access to DOM elements for imperative operations
  * - Type-safe references (HTMLInputElement, HTMLCanvasElement, etc.)
  * - Reactive mount detection via SubscriptionRef.changes
+ *
+ * Observers of `ref.changes` are forked with `Effect.forkScoped`, not bare
+ * `Effect.fork`: this ties them to the component's instance scope (the ambient
+ * `Scope.Scope` the renderer provides per component) so they live as long as the
+ * component is mounted. A bare `Effect.fork` would bind the observer to the
+ * transient component-body fiber and be interrupted the instant the gen returns.
  */
 
 import { h } from "@effect-ui/core";
@@ -29,7 +35,7 @@ const AutoFocusInput = () =>
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((option) => Effect.sync(() => option.value.focus())),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.div({}, [
@@ -69,7 +75,7 @@ const MeasureElement = () =>
           );
         }),
       ),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.div({}, [
@@ -130,7 +136,7 @@ const CanvasDrawing = () =>
           ctx.fill();
         }),
       ),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.div({}, [

@@ -44,6 +44,64 @@ const Counter = () =>
 
 The return type here is `Effect.Effect<Node, never, never>` — itself a valid `Node`, so it composes naturally with other tree-building calls.
 
+## Component scope and background effects
+
+Every component instance is rendered under its own **instance scope** — a child of the
+mount scope created fresh for that instance. Anything bound to the instance scope lives
+exactly as long as the component is mounted and is torn down automatically when the
+component unmounts (or when the whole tree unmounts via the `MountHandle`). The renderer
+provides this scope as the ambient `Scope.Scope` while it evaluates the component body,
+so it is already in context when you need it.
+
+This matters the moment a component starts **background work** — a subscription, an
+observer of a `ref`, a polling timer, anything you `fork`. The rule:
+
+> Fork background work with **`Effect.forkScoped`**, never a bare `Effect.fork`.
+
+`Effect.forkScoped` attaches the fiber to the ambient instance scope, so it keeps
+running for the component's lifetime and is interrupted on unmount. A bare
+`Effect.fork` instead attaches the fiber to the **component-body fiber** — the fiber
+that runs your `Effect.gen` to produce the tree. That fiber completes the instant the
+gen returns its node, and structured concurrency then interrupts its children. So the
+forked work is cancelled almost immediately.
+
+The trap is that this often _appears_ to work in development: the forked fiber and the
+interruption race, and under `vp dev` the fiber frequently wins and runs once before it
+is killed. Under an isolated `mount` (for example in a browser test) the timing flips
+and the work is silently cancelled before it ever runs. Same code, different outcome —
+which is exactly why this is easy to miss.
+
+Concretely, an observer that runs an effect when a `ref`'s element mounts:
+
+```typescript
+import { h } from "@effect-ui/core";
+import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
+
+const AutoFocusInput = () =>
+  Effect.gen(function* () {
+    const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
+
+    yield* pipe(
+      inputRef.changes,
+      Stream.filter(Option.isSome),
+      Stream.take(1),
+      Stream.runForEach((el) => Effect.sync(() => el.value.focus())),
+      Effect.forkScoped, // ✅ tied to the instance scope — survives until unmount
+      // Effect.fork,     // ❌ tied to the body fiber — interrupted when the gen returns
+    );
+
+    return yield* h.input({ ref: inputRef, type: "text" });
+  });
+```
+
+You do not manage the scope yourself: you do not create it, close it, or pass it
+around. `forkScoped` reads it from context, and unmount closes it for you. If you ever
+fork outside a component body (rare), you must supply a `Scope.Scope` yourself — the
+type system will tell you, because `forkScoped` carries a `Scope.Scope` requirement.
+
+See `examples/element-ref` for the auto-focus, measure, and canvas recipes built on
+this pattern.
+
 ## `Component.gen` / `Component.make` for reusable components
 
 When you want the caller's reactive prop types to flow into the returned node's type, use one of the `Component` factories. Both have the same call semantics; pick the body style that fits:

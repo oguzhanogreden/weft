@@ -24,6 +24,17 @@ See versions in package.json > engines. Package management and all tooling is ha
 
 All commands use the `vp` CLI (Vite+). Run `vp help` for a full list.
 
+### The `pack` step (read this first)
+
+This is a monorepo: `@effect-ui/dom` and the `examples/*` consume `@effect-ui/core`/`@effect-ui/base` as workspace packages, resolved through their **built `dist/`**. Cross-package type-checking is therefore only correct once those packages have been packed.
+
+**Rule: run validation through the `vp run <task>` tasks, never the bare `vp <command>`.** The tasks are declared in the root `vite.config.ts` under `run.tasks` and each one declares `dependsOn: ["pack"]`, so `vp run` always rebuilds the packages first:
+
+- ✅ `vp run check`, `vp run test`, `vp run test:browser` — pack first, then run. Always correct.
+- ❌ `vp check`, `vp test` directly — skip `pack`, so against stale/missing `dist/` they report **false** cross-package errors (e.g. spurious `implicit any` from unresolved `@effect-ui/*` types). Only safe right after a pack.
+
+Treat the task list in `vite.config.ts` (`run.tasks`) as the source of truth for how to validate — if a task exists there, invoke it via `vp run <task>`. Current tasks: `dev`, `pack`, `check`, `test`, `test:browser`.
+
 ### Building
 
 ```bash
@@ -35,20 +46,21 @@ Uses tsdown for fast TypeScript bundling.
 ### Testing
 
 ```bash
-vp test            # Run all tests
-vp test --watch    # Run tests in watch mode
+vp run test            # Pack, then run all node/jsdom tests
+vp run test:browser    # Pack, then run real-browser e2e tests (Playwright)
+vp test --watch        # Watch mode (only safe after a pack)
 ```
 
-Uses Vitest (via Vite+). Test files follow the pattern `src/**/*.test.{ts,tsx}`.
+Uses Vitest (via Vite+). Node test files follow the pattern `**/*.test.{ts,tsx}`; `*.browser.test.{ts,tsx}` are excluded from `vp run test` and run via `vp run test:browser` (see the `pack` step rule above).
 
 ### Checking (format + lint + typecheck)
 
 ```bash
-vp check           # Format, lint, and type-check all files
-vp check --fix     # Auto-fix formatting and lint issues
+vp run check       # Pack, then format, lint, and type-check all files
+vp check --fix     # Auto-fix formatting/lint (only safe after a pack)
 ```
 
-**Important:** Always run `vp check --fix` after making changes, not individual lint/format commands.
+**Important:** Validate via `vp run check` (it packs first — see the `pack` step rule). Use `vp check --fix` for auto-fixing, but only when packages are already built, otherwise it reports false cross-package type errors. Always prefer these over individual lint/format commands.
 
 ## Architecture
 
@@ -216,7 +228,7 @@ const _invalid: SomeType = invalidValue;
   - Ensure implementation matches mock signatures exactly
   - Ensure implementation matches co-located specs.md files
   - If implementation reveals mocks/specs need changes: pause implementation and update specs/mocks first (maintain strict spec → mock → test → implement cycle)
-  - After implementation: run `vp check --fix` and `vp test`
+  - After implementation: auto-fix with `vp check --fix`, then validate with `vp run check` and `vp run test` (which pack first)
 - Specs MUST include:
   - Feature overview and purpose
   - Detailed acceptance criteria

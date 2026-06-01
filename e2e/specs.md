@@ -56,9 +56,13 @@ server. Notes from wiring these up:
 
 - The mounted tree is appended a tick **after** `mount`'s Effect resolves, so assert
   initial state with `vi.waitFor` rather than synchronously.
-- Component-level `Effect.fork` observers of `ref.changes` (auto-focus, measure) do
-  not outlive an isolated `mount`; assert ref behaviour through on-demand reads in
-  event handlers instead (see `examples/element-ref`).
+- To run an effect when a `ref`'s element mounts (auto-focus, measure), fork the
+  `ref.changes` observer with `Effect.forkScoped`, **not** bare `Effect.fork`.
+  `forkScoped` ties it to the component instance scope so it survives an isolated
+  `mount`; a bare `Effect.fork` binds it to the transient component-body fiber and is
+  interrupted the instant the gen returns the tree — under `vp dev` it usually wins
+  the race and emits anyway, but under an isolated `mount` it is killed first (see
+  `examples/element-ref`).
 - The test page has none of the example's `index.html` CSS, so don't assert on
   layout-derived pixel values.
 

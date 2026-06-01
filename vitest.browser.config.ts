@@ -23,7 +23,7 @@ const config: ViteUserConfig = {
     browser: {
       enabled: true,
       headless: true,
-      provider: playwright(),
+      provider: playwright() as any, // cast as any because of tsgo quirk
       instances: [{ browser: "chromium" }],
     },
   },
