@@ -6,8 +6,7 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
-import { Effect, Schedule, Stream } from "effect";
+import { Schedule, Stream } from "effect";
 
 // ============================================================================
 // Example 1: Static Array Rendering
@@ -129,7 +128,7 @@ const LiveCounterList = () => {
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "List Rendering"),
 
@@ -169,5 +168,3 @@ const App = () =>
       LiveCounterList(),
     ]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));

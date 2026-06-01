@@ -20,6 +20,10 @@ export default defineConfig({
         command: "vp test",
         dependsOn: ["pack"],
       },
+      "test:browser": {
+        command: "vp test --config vitest.browser.config.ts",
+        dependsOn: ["pack"],
+      },
     },
   },
   resolve: {
@@ -27,12 +31,13 @@ export default defineConfig({
   },
   test: {
     include: ["**/*.test.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**", "**/*.browser.test.{ts,tsx}"],
   },
   fmt: {
-    ignorePatterns: ["**/dist/**", "*.min.js"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "*.min.js"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,

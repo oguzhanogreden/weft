@@ -6,7 +6,6 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Effect, Stream } from "effect";
 
 // ============================================================================
@@ -121,7 +120,7 @@ const SequentialLoad = () =>
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "Async Data Loading"),
 
@@ -149,5 +148,3 @@ const App = () =>
       h.div({ style: { marginTop: "0.5rem" } }, [SequentialLoad()]),
     ]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));

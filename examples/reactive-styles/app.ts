@@ -7,8 +7,7 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
-import { Effect, Schedule, Stream } from "effect";
+import { Schedule, Stream } from "effect";
 
 // ============================================================================
 // Example 1: Individual Style Properties as Streams
@@ -131,7 +130,7 @@ const GrowingBox = () => {
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "Reactive Styles"),
 
@@ -165,5 +164,3 @@ const App = () =>
       GrowingBox(),
     ]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));

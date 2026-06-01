@@ -11,7 +11,6 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -212,7 +211,7 @@ const ScrollIntoView = () =>
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "Element Ref"),
 
@@ -240,5 +239,3 @@ const App = () =>
       ScrollIntoView(),
     ]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));

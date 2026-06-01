@@ -94,6 +94,22 @@ The `playground/recipes/` folder contains standalone examples demonstrating spec
 - Include a JSDoc header comment in the `.ts` file explaining the recipe's purpose
 - READMEs should include: Overview, Problem, Solution, How It Works, and When to Use sections
 
+### Examples
+
+The `examples/` folder contains standalone, runnable demo apps (one per directory).
+
+**Rules for examples:**
+
+- Each example is split into a **side-effect-free `app.ts`** (or `src/app.ts`) that
+  `export`s `App` — no top-level `mount`/`hydrate` call — and a thin entry
+  (`main.ts`, or `entry-client.ts` for SSR examples) that mounts it and is the file
+  referenced by `index.html`. This keeps `app.ts` importable by tests.
+- Every example **must include at least one co-located `*.browser.test.ts`** that
+  imports `App`, mounts it in a real browser, and asserts the example's headline
+  behaviour. Browser tests use `vite-plus/test` globals (never `vitest` directly)
+  and run via `vp run test:browser`. See `e2e/specs.md` for conventions and known
+  pitfalls (post-mount render tick, ref observers, missing example CSS).
+
 ## Coding Standards
 
 ### Architecture & Patterns
@@ -148,6 +164,10 @@ The `playground/recipes/` folder contains standalone examples demonstrating spec
   - Test all possible error types defined in the Effect error union (expected errors)
   - Include edge cases defined in specifications
 - Use Effect testing utilities for testing Effect code
+- Real-browser end-to-end tests live in `*.browser.test.{ts,tsx}` files, run via
+  `vp run test:browser` (Vitest browser mode + Playwright), and are excluded from
+  the default `vp test` run. Every `examples/*` app must have one — see the
+  Examples section above and `e2e/specs.md`.
 
 ### Type Tests
 

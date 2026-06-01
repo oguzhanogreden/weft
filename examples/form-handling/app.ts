@@ -6,7 +6,6 @@
  */
 
 import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -315,7 +314,7 @@ const SearchPreview = () =>
 // App
 // ============================================================================
 
-const App = () =>
+export const App = () =>
   h.div({}, [
     h.h1({}, "Form Handling"),
 
@@ -331,5 +330,3 @@ const App = () =>
 
     h.section({}, [h.h2({}, "6. Live Search Preview"), SearchPreview()]),
   ]);
-
-void Effect.runPromise(mount(App(), document.getElementById("root")!));
