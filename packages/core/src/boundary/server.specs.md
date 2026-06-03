@@ -116,3 +116,65 @@ Boundary.server<A, ELoad, RServer, C extends Node<any, any>>(
 class Database extends ServerTag("Database")<Database, DatabaseShape>() {}
 type AssertNoServerOnly<R>; // R | ServerOnlyLeak
 ```
+
+---
+
+## Deferred / v2
+
+v1 ships the **success path only** (serialize + replay). The phases below are
+intentionally out of scope; each needs its own spec discussion before any code.
+Listed in rough priority order.
+
+### 1. Typed-failure replay (headline v2)
+
+Make `ELoad` meaningful on the **client**, not just the server. Today `ELoad`
+stays in the output error channel but a `load` failure is handled server-side
+only (propagates to the nearest enclosing failure `Boundary`); hydrating a
+boundary whose `load` failed is merely a recoverable `HydrationMismatchError`.
+
+- **Adds:** a `failure?: Schema.Schema<ELoad, any>` prop (required when
+  `ELoad ≠ never`). The server encodes a `load` failure into the payload; the
+  client `decode`s it and **re-raises it inside the boundary**, so the _same_
+  enclosing client failure `Boundary` reproduces the _same_ fallback DOM it is
+  hydrating against. Still **replay, never retry**.
+- **Blocker to resolve first:** `renderBoundarySSR`
+  (`packages/dom/src/server/render-to-stream.ts`) buffers children via
+  `Stream.mkString` and **discards** that HTML when a cause propagates to the
+  enclosing failure boundary — which would discard a failure payload emitted
+  inside the region. The enclosing-boundary cause path must be reworked to
+  preserve/relocate the serialized failure before this phase can land.
+
+### 2. Prune plugin (layer 2) — bundle-size correctness
+
+The `ServerTag` brand keeps the server tag out of universal **types**, but not
+out of the **bundle**: the `provide` `Layer` (e.g. `DatabaseLive`) and the `load`
+closure remain statically referenced by the universal node, so they currently
+ship to the client. v2 is a build plugin that strips them, plus layer-3 `VITE_`
+env guidance. (Documented today as a runtime-safe-but-larger-bundle caveat.)
+
+### 3. Progressive load & client refetch
+
+- **Streamed `load`** returning a `Stream` (stream-the-shell-then-fill). Today's
+  workaround: nest `Boundary.server` inside `Boundary.suspend`, which already
+  owns the fallback + streaming-patch machinery.
+- **Client-side mutation/refetch** of server data (re-running `load` on the
+  client). v1 is strictly replay-only; reach for ordinary client services to
+  refresh.
+
+### 4. Ergonomic polish
+
+- An optional-when-`never` `provide` overload so `provide` can be omitted (rather
+  than passing `Layer.empty`) when `RServer = never`. v1 ships a single required
+  signature deliberately — required `provide` is the structural guarantee no
+  un-discharged server requirement escapes into `R`.
+
+### Explicitly rejected (not deferred — will not do)
+
+- **Bubble-to-entrypoint `provide`.** Incompatible with branding + `hydrate`: an
+  external `Effect.provide(DatabaseLive)` would discharge `RServer` from `R`
+  before `AssertNoServerOnly` could reject a leak. Required on-boundary `provide`
+  _is_ the prevention.
+- **Changes to `mount` / non-hydratable `renderToString` semantics.**
+- **A `Hydration` service.** Considered and dropped before v1; payloads are read
+  positionally from the DOM cursor during the adopt-walk with no service, so v2
+  will not reintroduce one.
