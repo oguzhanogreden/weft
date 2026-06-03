@@ -6,6 +6,5 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["src"],
-  "exclude": ["src/**/__type-tests__/**/*"]
+  "include": ["src"]
 }

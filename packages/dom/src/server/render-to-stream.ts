@@ -4,12 +4,13 @@ import {
   FRAGMENT,
   LIST,
   NoPropValue,
+  SERVER_BOUNDARY,
   Source,
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@effect-ui/core";
 import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
-import { Effect, Exit, Option, Queue, Ref, Scope, Stream } from "effect";
+import { Effect, Exit, type Layer, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
 import {
   listItemEndText,
   listItemStartText,
@@ -19,7 +20,7 @@ import {
   streamStartText,
 } from "~/shared";
 import { UnsupportedNodeTypeError } from "~/data";
-import { escapeHtml, serializeProps, VOID_ELEMENTS } from "./serialize";
+import { escapeHtml, serializeJsonForScript, serializeProps, VOID_ELEMENTS } from "./serialize";
 
 // ============================================================================
 // Internal types
@@ -200,6 +201,59 @@ function renderBoundarySSR(
 }
 
 // ============================================================================
+// Server boundary SSR helper
+// ============================================================================
+
+/**
+ * Descriptor props carried by a `Boundary.server` node. The server renderer runs
+ * `load` (with its requirements discharged by `provide`) to obtain `data`,
+ * encodes it through `schema`, and renders `render(data)` in place. `load`'s
+ * error is typed as `Error` here because the renderer's stream error channel is
+ * `Error`; a `load` failure propagates as a stream failure (caught by the
+ * nearest enclosing failure `Boundary`).
+ */
+interface ServerBoundarySSRProps {
+  readonly load: () => Effect.Effect<unknown, Error, unknown>;
+  readonly provide: Layer.Layer<unknown, never, never>;
+  readonly schema: Schema.Schema<unknown, unknown>;
+  readonly render: (data: unknown) => Renderable;
+}
+
+/**
+ * Renders a `Boundary.server` descriptor for SSR (success path). Runs
+ * `Effect.provide(load(), provide)` to obtain `data` — the region **blocks** on
+ * it, like `firstListEmission` — then renders `render(data)` HTML in place.
+ *
+ * When `emitPayload` is `true` (the hydratable passes), the encoded `data` is
+ * emitted inline as a `<script type="application/json">…</script>` at the region
+ * cursor, **before** the rendered HTML, so the client `hydrate` walk reads it
+ * positionally and hydrates `render(data)` at `script.nextSibling`. The plain
+ * passes (`emitPayload === false`) emit only the `render(data)` HTML — complete
+ * without JS, with no payload script (AC-11/AC-12).
+ *
+ * No wrapper comment markers are needed: `render(data)` is fully-resolved static
+ * HTML located positionally, and the payload script itself sits at the cursor.
+ */
+function renderServerBoundarySSR(
+  props: ServerBoundarySSRProps,
+  emitPayload: boolean,
+  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
+): Stream.Stream<string, Error> {
+  return Stream.unwrap(
+    Effect.gen(function* () {
+      const data = yield* Effect.provide(props.load(), props.provide);
+      const childrenHtml = renderFn(props.render(data));
+      if (!emitPayload) {
+        return childrenHtml;
+      }
+      const encoded = yield* Schema.encode(props.schema)(data);
+      const payload = `<script type="application/json">${serializeJsonForScript(encoded)}</script>`;
+      return Stream.make(payload).pipe(Stream.concat(childrenHtml));
+    }),
+  );
+}
+
+// ============================================================================
 // Keyed-list SSR helper
 // ============================================================================
 
@@ -296,6 +350,14 @@ function renderSSRNode(
       return renderBoundarySSR(
         props as unknown as Boundary.FailureProps & { children: Renderable[] },
         (n) => renderSSRNode(n, ctx),
+      );
+    }
+
+    if (type === SERVER_BOUNDARY) {
+      // Plain SSR: run load + render(data) inline, but emit no payload script
+      // (not hydratable) — AC-11.
+      return renderServerBoundarySSR(props as unknown as ServerBoundarySSRProps, false, (n) =>
+        renderSSRNode(n, ctx),
       );
     }
 
@@ -434,6 +496,14 @@ function renderHydratableSSRNode(
       return renderBoundarySSR(
         props as unknown as Boundary.FailureProps & { children: Renderable[] },
         (n) => renderHydratableSSRNode(n, counter, ctx),
+      );
+    }
+
+    if (type === SERVER_BOUNDARY) {
+      // Hydratable SSR: emit the encoded payload inline at the cursor, then the
+      // render(data) HTML, so client hydrate reads it positionally — AC-10.
+      return renderServerBoundarySSR(props as unknown as ServerBoundarySSRProps, true, (n) =>
+        renderHydratableSSRNode(n, counter, ctx),
       );
     }
 

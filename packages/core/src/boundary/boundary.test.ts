@@ -1,9 +1,9 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Effect, Option, pipe } from "effect";
-import { FAILURE_BOUNDARY, Boundary } from "./index";
+import { Cause, Data, Effect, Layer, Option, pipe, Schema } from "effect";
+import { FAILURE_BOUNDARY, SERVER_BOUNDARY, Boundary } from "./index";
 import type { Renderable, Node } from "~/combinator/types";
-import { h } from "~/combinator";
+import { getElementDescriptor, h } from "~/combinator";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -300,5 +300,53 @@ describe("AC23/24: call shape", () => {
   it("catchTags accepts (handlers, children)", () => {
     const fooChild = h.div() as Node<FooError>;
     assert.doesNotThrow(() => Boundary.catchTags({ Foo: () => fallbackNode }, [fooChild]));
+  });
+});
+
+// ── Boundary.server: descriptor shape ─────────────────────────────────────────
+
+describe("Boundary.server: descriptor shape", () => {
+  const Product = Schema.Struct({ name: Schema.String });
+
+  it("returns { type: SERVER_BOUNDARY, props: { load, provide, schema, render } }", () => {
+    const node = Boundary.server(
+      {
+        load: () => Effect.succeed({ name: "Widget" }),
+        provide: Layer.empty,
+        schema: Product,
+      },
+      (data) => h.div(data.name),
+    );
+    const descriptor = getElementDescriptor(node);
+    assert.ok(descriptor, "descriptor should be readable without running the node");
+    assert.equal(descriptor.type, SERVER_BOUNDARY);
+    const props = descriptor.props as {
+      load: unknown;
+      provide: unknown;
+      schema: unknown;
+      render: unknown;
+    };
+    assert.equal(typeof props.load, "function");
+    assert.ok(props.provide);
+    assert.ok(props.schema);
+    assert.equal(typeof props.render, "function");
+  });
+
+  it("does not run `load` when the descriptor is read", () => {
+    let loaded = false;
+    const node = Boundary.server(
+      {
+        load: () =>
+          Effect.sync(() => {
+            loaded = true;
+            return { name: "Widget" };
+          }),
+        provide: Layer.empty,
+        schema: Product,
+      },
+      (data) => h.div(data.name),
+    );
+    getElementDescriptor(node);
+    assert.equal(loaded, false);
   });
 });
