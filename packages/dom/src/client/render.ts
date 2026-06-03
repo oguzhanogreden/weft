@@ -1,4 +1,5 @@
 import {
+  Cause,
   Deferred,
   Effect,
   ExecutionStrategy,
@@ -58,6 +59,7 @@ import {
   suspenseStartText,
 } from "~/shared";
 import { nextBoundaryId, nextStreamId, nextSuspenseId } from "~/utilities";
+import { BOUNDARY_FAILURE_ATTR, collectServerBoundaries } from "~/boundary-replay";
 
 // ============================================================================
 // DOM Prop Handling
@@ -1945,9 +1947,11 @@ function hydrateNode(
       }
 
       if (type === FAILURE_BOUNDARY) {
-        // Hydration: boundary rendered its children inline (no markers) on the
-        // server. Walk children from cursor and set up client boundary normally.
-        return yield* hydrateChildren(props, cursor, path);
+        return yield* hydrateFailureBoundary(
+          props as Boundary.FailureProps & { children: Renderable[] },
+          cursor,
+          path,
+        );
       }
 
       if (type === SERVER_BOUNDARY) {
@@ -2116,6 +2120,85 @@ function hydrateFirstEmission(
 }
 
 /**
+ * Hydrates a failure `Boundary` region. Two cases, distinguished by the cursor:
+ *
+ * - **Success (no failure marker):** the server rendered the boundary's children
+ *   inline. The boundary is transparent to the DOM walk — hydrate the children
+ *   directly from the cursor (unchanged v1 behaviour).
+ * - **Typed-failure replay:** the cursor is the
+ *   `<script type="application/json" data-eui-boundary-failure>` the server
+ *   emitted (carrying `{ index, error }`). The client does **not** run `load`: it
+ *   locates the `index`-th statically-reachable {@link Boundary.server} in
+ *   `props.children`, `Schema.decode`s `error` via **that** boundary's `failure`
+ *   schema, `Cause.fail`s the rebuilt typed error, and feeds it to `props.match`
+ *   to obtain the **same** fallback the server rendered — hydrating it against the
+ *   adopted DOM at `script.nextSibling` and removing the script.
+ *
+ * A parse/decode miss, a missing/locate-less boundary, or a `match` that declines
+ * the rebuilt cause is a recoverable {@link HydrationMismatchError} (logged),
+ * consistent with {@link hydrateServerBoundary}.
+ */
+function hydrateFailureBoundary(
+  props: Boundary.FailureProps & { children: Renderable[] },
+  cursor: ChildNode | null,
+  path: string,
+): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
+  return Effect.gen(function* () {
+    // Success path: anything other than a failure-marked payload script means the
+    // boundary rendered its children inline — walk them transparently.
+    if (
+      cursor === null ||
+      cursor.nodeType !== ELEMENT_NODE ||
+      (cursor as Element).tagName !== "SCRIPT" ||
+      (cursor as Element).getAttribute("type") !== "application/json" ||
+      !(cursor as Element).hasAttribute(BOUNDARY_FAILURE_ATTR)
+    ) {
+      return yield* hydrateChildren(props, cursor, path);
+    }
+
+    const script = cursor as HTMLScriptElement;
+    const raw = script.textContent ?? "";
+
+    // Rebuild the fallback from the encoded typed failure. A failure to parse,
+    // locate the boundary, or decode is a recoverable mismatch (logged) — the
+    // wire contract changed across a deploy and the region cannot be replayed.
+    const fallbackNode = yield* Effect.gen(function* () {
+      const payload = yield* Effect.try({
+        try: () => JSON.parse(raw) as { readonly index: number; readonly error: unknown },
+        catch: (cause) => cause,
+      });
+      const owner = collectServerBoundaries(props.children)[payload.index];
+      // Boundary not statically locatable: degrade to a recoverable mismatch.
+      if (owner?.failure === undefined) {
+        return null;
+      }
+      const decoded = yield* Schema.decodeUnknown(owner.failure)(payload.error);
+      return props.match(Cause.fail(decoded));
+    }).pipe(
+      Effect.catchAll((cause) => {
+        console.error(
+          `[effect-ui] hydrate: boundary failure payload at ${path} failed to decode; cannot replay.`,
+          cause,
+        );
+        return Effect.succeed<ReturnType<typeof props.match>>(null);
+      }),
+    );
+
+    // `match` declined the rebuilt cause (or decoding failed): the fallback DOM
+    // cannot be reproduced from here — surface a recoverable mismatch.
+    if (fallbackNode === null) {
+      return yield* mismatch("replayable boundary failure", "undecodable failure payload", path);
+    }
+
+    // Hydrate the fallback against the adopted DOM following the payload script,
+    // then drop the script — it is consumed only by hydration.
+    const next = yield* hydrateNode(fallbackNode as Renderable, script.nextSibling, path);
+    script.remove();
+    return next;
+  });
+}
+
+/**
  * Client-side props read from a {@link Boundary.server} descriptor during
  * hydration. `load` and `provide` are intentionally absent from the type: the
  * client **never** runs `load` — it replays the server result from the inline
@@ -2158,6 +2241,17 @@ function hydrateServerBoundary(
       return yield* mismatch(
         'server boundary payload <script type="application/json">',
         describeNode(cursor),
+        path,
+      );
+    }
+
+    // Defensive: a failure payload is consumed at the enclosing failure boundary
+    // before descent ever reaches a server boundary's success path. If one slips
+    // through, treat it as a mismatch rather than mis-decoding it as success data.
+    if ((cursor as Element).hasAttribute(BOUNDARY_FAILURE_ATTR)) {
+      return yield* mismatch(
+        'server boundary success payload <script type="application/json">',
+        "boundary failure payload",
         path,
       );
     }

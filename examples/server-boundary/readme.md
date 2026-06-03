@@ -72,10 +72,34 @@ uses it, discharged on the server, and statically prevented from leaking into th
 client bundle's type surface. For data that is freely available on both sides,
 plain props or a normal reactive source are simpler.
 
-> **v1 scope:** success replay only. A `load` _failure_ is handled server-side
-> (it propagates to the nearest enclosing failure `Boundary`, so the no-JS page
-> shows that fallback); typed-failure replay on the client is a deferred phase.
-> Use a non-failing (or boundary-wrapped) `load` for now.
+## Typed-failure replay
+
+A `load` _failure_ replays too. Give the boundary a `failure` schema (required
+once `load` can fail) and wrap it in a failure `Boundary`:
+
+```ts
+Boundary.catchAll({ fallback: (e: ProductLoadError) => /* … */ }, [
+  Boundary.server(
+    {
+      load: () => Effect.fail(new ProductLoadError({ reason: "…" })),
+      provide: Layer.empty,
+      schema: Product,
+      failure: ProductLoadError, // wire contract for the typed error
+    },
+    (product) => /* … success render … */,
+  ),
+]);
+```
+
+On the server the typed error propagates to the enclosing `catchAll`, which
+renders its fallback and emits an inline
+`<script type="application/json" data-eui-boundary-failure>` carrying the encoded
+error (plus the failing boundary's index). On the client `hydrate` decodes that
+payload and re-raises the **same** typed error into the **same** `catchAll`,
+reproducing the identical fallback DOM — flash-free and **without re-running
+`load`** (replay, never retry). A `load` _defect_ (a `Die`, not an expected
+typed error) is not replayed: it propagates as before. `FailingApp` in `app.ts`
+demonstrates the round-trip (see `app.failure.browser.test.ts`).
 
 ## How to run
 

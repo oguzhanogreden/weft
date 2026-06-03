@@ -282,6 +282,15 @@ export namespace Boundary {
      * inline) and `Schema.decode`d from that JSON on the client during `hydrate`.
      */
     readonly schema: Schema.Schema<A, any>;
+    /**
+     * Wire contract for a `load` **failure**: a typed `ELoad` error is
+     * `Schema.encode`d on the server (into the inline failure payload) and
+     * `Schema.decode`d + re-raised on the client during `hydrate`, so the same
+     * enclosing failure `Boundary` reproduces the same fallback. **Required when
+     * `ELoad ≠ never`** (enforced on the {@link server} signature); omittable when
+     * `load` cannot fail. Replays the failure, never retries `load`.
+     */
+    readonly failure?: Schema.Schema<ELoad, any>;
   }
 
   /**
@@ -297,9 +306,14 @@ export namespace Boundary {
    *
    * `provide` discharges `load`'s server-only requirements `RServer`, so they
    * never enter the output requirement channel `R` (which is exactly `render`'s
-   * `R`, untouched — no `Exclude`). `ELoad` remains in the output error channel;
-   * in v1 a `load` failure is handled **server-side only** (propagating to the
-   * nearest enclosing failure `Boundary`).
+   * `R`, untouched — no `Exclude`). `ELoad` remains in the output error channel.
+   * A typed `load` failure is **replayed on the client**: the server encodes it
+   * via `failure` into the inline payload and the client `hydrate` decodes it and
+   * re-raises it into the nearest enclosing failure `Boundary`, reproducing the
+   * same fallback DOM (replay, never retry). `failure` is therefore **required
+   * when `ELoad ≠ never`** and omittable when `load` cannot fail. A `load`
+   * **defect** (not an expected `ELoad`) is not replayed: it propagates as today
+   * (server fallback, client hydration mismatch).
    *
    * The renderer identifies the boundary via its {@link SERVER_BOUNDARY} type tag.
    *
@@ -319,7 +333,8 @@ export namespace Boundary {
    * ```
    */
   export function server<A, ELoad, RServer, C extends Node<any, any>>(
-    props: ServerProps<A, ELoad, RServer>,
+    props: ServerProps<A, ELoad, RServer> &
+      ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }),
     render: (data: A) => C,
   ): Node<Node.Error<C> | ELoad, Node.Context<C>> {
     // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it

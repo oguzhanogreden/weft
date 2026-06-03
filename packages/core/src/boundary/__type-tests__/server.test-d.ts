@@ -52,10 +52,27 @@ const _loadError = Boundary.server(
     load: () => Effect.fail(new FooError({ msg: "x" })),
     provide: Layer.empty,
     schema: Product,
+    failure: FooError,
   },
   (_p) => staticNode,
 );
 type _TLoadError = Expect<Equal<typeof _loadError, Node<FooError, never>>>;
+
+// ── `failure` is required when ELoad ≠ never, omittable when ELoad = never ─────
+
+Boundary.server(
+  // @ts-expect-error — `failure` is required when `load` can fail (ELoad ≠ never)
+  { load: () => Effect.fail(new FooError({ msg: "x" })), provide: Layer.empty, schema: Product },
+  (_p) => staticNode,
+);
+
+// `failure` may be omitted when `load` cannot fail (ELoad = never); output type
+// is unchanged from v1 (RServer discharged, no error).
+const _noFailure = Boundary.server(
+  { load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
+  (_p) => staticNode,
+);
+type _TNoFailure = Expect<Equal<typeof _noFailure, Node<never, never>>>;
 
 // ── render's R passes through untouched (no Exclude) ──────────────────────────
 

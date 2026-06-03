@@ -291,3 +291,68 @@ describe("Boundary.server hydrate — payload divergence", () => {
     assert.ok(Cause.squash(exit.cause) instanceof HydrationMismatchError);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Typed-failure replay (core AC-16): decode the encoded `load` failure and
+// reproduce the SAME enclosing-failure-boundary fallback without running `load`.
+// ---------------------------------------------------------------------------
+
+describe("Boundary.server hydrate — typed-failure replay", () => {
+  class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+    reason: Schema.String,
+  }) {}
+
+  /** A failing-`load` server boundary under a `catchAll` that renders the error. */
+  const makeFailingApp = (calls: { n: number }) =>
+    Boundary.catchAll({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
+      Boundary.server(
+        {
+          load: () =>
+            Effect.sync(() => {
+              calls.n++;
+            }).pipe(Effect.flatMap(() => Effect.fail(new LoadError({ reason: "db down" })))),
+          provide: Layer.empty,
+          schema: Product,
+          failure: LoadError,
+        },
+        (data) => h.div({ class: "product" }, data.name),
+      ),
+    ]);
+
+  it("replays the encoded failure into the same fallback without running load (AC-16)", async () => {
+    createTestDOM();
+    const calls = { n: 0 };
+    const app = makeFailingApp(calls);
+
+    const root = await seedServerHtml(app);
+    assert.equal(calls.n, 1, "server ran load once");
+    const serverFallback = root.querySelector("div.fallback");
+    assert.ok(serverFallback, "server rendered the enclosing fallback");
+    (serverFallback as unknown as { __sentinel?: boolean }).__sentinel = true;
+    calls.n = 0;
+
+    await Effect.runPromise(hydrate(app, root));
+
+    // `load` is NOT re-run; the same fallback node is adopted in place.
+    assert.equal(calls.n, 0, "client never runs load (replay, not retry)");
+    assert.equal(root.querySelector("div.fallback"), serverFallback);
+    assert.equal((serverFallback as unknown as { __sentinel?: boolean }).__sentinel, true);
+    assert.equal(serverFallback?.textContent, "db down");
+    // The failure payload script is consumed.
+    assert.equal(root.querySelector("script[data-eui-boundary-failure]"), null);
+    // The success subtree was never reproduced.
+    assert.equal(root.querySelector("div.product"), null);
+  });
+
+  it("fails with a recoverable mismatch when the failure payload is malformed", async () => {
+    createTestDOM();
+    const root = createRoot();
+    root.innerHTML =
+      '<script type="application/json" data-eui-boundary-failure>not json</script><div class="fallback">db down</div>';
+
+    const exit = await Effect.runPromiseExit(hydrate(makeFailingApp({ n: 0 }), root));
+
+    assert.ok(Exit.isFailure(exit));
+    assert.ok(Cause.squash(exit.cause) instanceof HydrationMismatchError);
+  });
+});

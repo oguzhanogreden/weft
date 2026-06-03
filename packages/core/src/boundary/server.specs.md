@@ -19,15 +19,20 @@ signature and its channel algebra, and the `ServerTag` / `AssertNoServerOnly`
 brand. The renderer behaviour (SSR emit, hydrate replay) is spec'd alongside the
 DOM package; this file states the contract those renderers must honour.
 
-### v1 scope
+### Scope
 
-- **Success serialization + replay only.** Typed-failure replay (encoding a
-  `load` failure for the client to re-raise) is a deferred phase. In v1 a `load`
-  failure is handled **server-side only**: it propagates to the nearest enclosing
-  failure `Boundary` (so the no-JS page shows that fallback). Hydrating a boundary
-  whose server `load` failed therefore produces a recoverable hydration mismatch
-  (logged) — so v1 examples/tests use a non-failing (or boundary-wrapped,
-  success-on-client) `load`.
+- **Success serialization + replay** (v1) **and typed-failure replay** (v2). A
+  successful `load` is encoded via `schema` and replayed on the client; a typed
+  `load` **failure** (`ELoad`) is encoded via `failure` and re-raised on the
+  client into the nearest enclosing failure `Boundary`, reproducing the same
+  fallback DOM the server rendered. Both are **replay, never retry** — `load`
+  never runs on the client.
+- **Out of scope:** a `load` **defect** (a `Die`, not an expected `ELoad`) is not
+  replayed — it has no `Cause.failureOption`, so no failure payload is emitted and
+  it propagates as before (server renders the enclosing fallback; the client
+  hydrate produces a recoverable mismatch). Prune plugin, progressive/streamed
+  `load`, client refetch, and an ergonomic optional-`provide` overload remain
+  deferred (see below).
 
 ---
 
@@ -43,6 +48,8 @@ DOM package; this file states the contract those renderers must honour.
      construction so `load` is built/run only on the server)
    - `provide: Layer.Layer<RServer>` — discharges `load`'s server-only requirements
    - `schema: Schema.Schema<A, any>` — the wire contract for `A`
+   - `failure?: Schema.Schema<ELoad, any>` — the wire contract for a typed `load`
+     failure; **required when `ELoad ≠ never`**, omittable when `load` cannot fail
    - `render: (data: A) => C` — builds the subtree from the loaded data
 3. The `SERVER_BOUNDARY` symbol is exported from `@effect-ui/core` for renderers.
 
@@ -59,6 +66,10 @@ DOM package; this file states the contract those renderers must honour.
 7. **No `Exclude`** is applied to `render`'s `R`. A server-only tag accidentally
    referenced in `render` therefore **remains** in the output `R` (rather than
    being silently erased), where `hydrate`'s `AssertNoServerOnly` can reject it.
+   7a. `failure` is **conditionally required**: omitting it is a compile error when
+   `ELoad ≠ never`, and allowed when `ELoad = never`. It does not alter the
+   output channels (AC-4 is unchanged — `ELoad` already lives in the error
+   channel whether or not `failure` is supplied).
 
 ### `ServerTag` / `AssertNoServerOnly` brand
 
@@ -88,6 +99,34 @@ DOM package; this file states the contract those renderers must honour.
     cursor inside the region), matching the determinism the renderer already relies
     on for suspense / `List.each`.
 
+### Typed-failure replay (v2)
+
+15. **Server:** when `load` fails with a typed `ELoad` (i.e. `Cause.failureOption`
+    is `Some`) on the **hydratable** pass, the error is `Schema.encode`d via
+    `failure` and the encoded value is handed to the nearest enclosing failure
+    `Boundary` (whose `match` handled the cause). That boundary emits, **before**
+    its fallback HTML, a single
+    `<script type="application/json" data-eui-boundary-failure>{"index":N,"error":<encoded>}</script>`,
+    where `N` is the pre-order index of the failing `Boundary.server` among the
+    `SERVER_BOUNDARY` descriptors statically reachable in the failure boundary's
+    `children`. The `data-eui-boundary-failure` marker distinguishes it from a
+    success payload. The original cause is preserved unchanged through `match`.
+16. **Client (`hydrate`):** at a failure `Boundary` whose cursor is a
+    `data-eui-boundary-failure` script, `hydrate` does **not** run `load`: it reads
+    `{ index, error }`, locates the `index`-th statically-reachable
+    `Boundary.server` in `children`, `Schema.decode`s `error` via **that
+    boundary's** `failure` schema, rebuilds the typed `ELoad`, `Cause.fail`s it,
+    and calls the failure boundary's `match` to obtain the **same** fallback,
+    hydrating it against the adopted DOM and removing the script. **Replay, never
+    retry.**
+17. The failing `Boundary.server` must be **statically reachable** within the
+    failure boundary's `children` (the index walk descends arrays, fragments,
+    suspense boundaries, element children, and function components, but **not**
+    into another `Boundary.server`'s data-dependent `render` output or a
+    `List.each` projection). A failure under a non-reachable boundary is not
+    indexed; it degrades to a recoverable hydration mismatch (as a missing
+    payload would).
+
 ### Edge cases
 
 - **Nesting:** a `Boundary.server` nested inside another emits its payload
@@ -95,6 +134,18 @@ DOM package; this file states the contract those renderers must honour.
 - **Composition with `suspend` / `List.each`:** payloads are read positionally from
   the DOM cursor during the adopt-walk, interleaving correctly with suspense
   `<template>` markers and list markers.
+- **No enclosing failure boundary:** a `load` failure with no enclosing failure
+  `Boundary` fails the server render (no fallback to relocate the payload to) —
+  unchanged from v1.
+- **`match` returns `null` (re-propagation):** when the nearest failure boundary
+  declines the cause, it re-fails **without** draining the failure payload, so the
+  payload relocates to the next enclosing boundary that handles it (the index is
+  recomputed against that boundary's `children`).
+- **Defect (`Die`):** a `load` defect has no `Cause.failureOption`, so no failure
+  payload is emitted; it propagates as in v1 (server fallback, client mismatch).
+- **Multiple server boundaries under one failure boundary:** each is decoded via
+  its own `failure` schema, located by the pre-order index — faithful, not
+  best-effort.
 
 ---
 
@@ -108,7 +159,8 @@ Boundary.server<A, ELoad, RServer, C extends Node<any, any>>(
     load: () => Effect.Effect<A, ELoad, RServer>;
     provide: Layer.Layer<RServer>;
     schema: Schema.Schema<A, any>;
-  },
+    failure?: Schema.Schema<ELoad, any>;
+  } & ([ELoad] extends [never] ? unknown : { failure: Schema.Schema<ELoad, any> }),
   render: (data: A) => C,
 ): Node<Node.Error<C> | ELoad, Node.Context<C>>;
 
@@ -119,32 +171,18 @@ type AssertNoServerOnly<R>; // R | ServerOnlyLeak
 
 ---
 
-## Deferred / v2
+## Deferred / v2+
 
-v1 ships the **success path only** (serialize + replay). The phases below are
-intentionally out of scope; each needs its own spec discussion before any code.
-Listed in rough priority order.
+Typed-failure replay (the former headline v2 phase) **has shipped** — see the
+"Typed-failure replay (v2)" acceptance criteria above. The encode-in-catch design
+dissolved the documented `renderBoundarySSR` buffering blocker: the failure
+payload is emitted by the enclosing failure boundary's catch handler (which holds
+the cause and renders the fallback), never inside the discarded children buffer.
 
-### 1. Typed-failure replay (headline v2)
+The phases below remain intentionally out of scope; each needs its own spec
+discussion before any code. Listed in rough priority order.
 
-Make `ELoad` meaningful on the **client**, not just the server. Today `ELoad`
-stays in the output error channel but a `load` failure is handled server-side
-only (propagates to the nearest enclosing failure `Boundary`); hydrating a
-boundary whose `load` failed is merely a recoverable `HydrationMismatchError`.
-
-- **Adds:** a `failure?: Schema.Schema<ELoad, any>` prop (required when
-  `ELoad ≠ never`). The server encodes a `load` failure into the payload; the
-  client `decode`s it and **re-raises it inside the boundary**, so the _same_
-  enclosing client failure `Boundary` reproduces the _same_ fallback DOM it is
-  hydrating against. Still **replay, never retry**.
-- **Blocker to resolve first:** `renderBoundarySSR`
-  (`packages/dom/src/server/render-to-stream.ts`) buffers children via
-  `Stream.mkString` and **discards** that HTML when a cause propagates to the
-  enclosing failure boundary — which would discard a failure payload emitted
-  inside the region. The enclosing-boundary cause path must be reworked to
-  preserve/relocate the serialized failure before this phase can land.
-
-### 2. Prune plugin (layer 2) — bundle-size correctness
+### 1. Prune plugin (layer 2) — bundle-size correctness
 
 The `ServerTag` brand keeps the server tag out of universal **types**, but not
 out of the **bundle**: the `provide` `Layer` (e.g. `DatabaseLive`) and the `load`
@@ -152,7 +190,7 @@ closure remain statically referenced by the universal node, so they currently
 ship to the client. v2 is a build plugin that strips them, plus layer-3 `VITE_`
 env guidance. (Documented today as a runtime-safe-but-larger-bundle caveat.)
 
-### 3. Progressive load & client refetch
+### 2. Progressive load & client refetch
 
 - **Streamed `load`** returning a `Stream` (stream-the-shell-then-fill). Today's
   workaround: nest `Boundary.server` inside `Boundary.suspend`, which already
@@ -161,7 +199,7 @@ env guidance. (Documented today as a runtime-safe-but-larger-bundle caveat.)
   client). v1 is strictly replay-only; reach for ordinary client services to
   refresh.
 
-### 4. Ergonomic polish
+### 3. Ergonomic polish
 
 - An optional-when-`never` `provide` overload so `provide` can be omitted (rather
   than passing `Layer.empty`) when `RServer = never`. v1 ships a single required

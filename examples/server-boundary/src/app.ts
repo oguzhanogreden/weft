@@ -80,6 +80,26 @@ const Product = Schema.Struct({
 });
 
 /**
+ * Typed `load` failure for {@link FailingApp}. Being a `Schema.TaggedError`, it
+ * doubles as the boundary's `failure` wire contract: encoded on the server into
+ * the inline failure payload and decoded + re-raised on the client during
+ * `hydrate`.
+ */
+export class ProductLoadError extends Schema.TaggedError<ProductLoadError>()("ProductLoadError", {
+  reason: Schema.String,
+}) {}
+
+let failingLoadAttempts = 0;
+
+/**
+ * How many times {@link FailingApp}'s `load` has been *attempted*. The failure
+ * e2e test snapshots this after the server render and asserts it does not advance
+ * across client hydration — direct evidence the client replays the encoded
+ * failure instead of re-running `load`.
+ */
+export const getFailingLoadAttempts = (): number => failingLoadAttempts;
+
+/**
  * Root component. A single `Boundary.server` that loads the product from the
  * server-only `Database` and renders it with a client-interactive quantity
  * control. Requires no services — `Database` is discharged inside the boundary.
@@ -109,4 +129,43 @@ export const App = () =>
           h.div({}, [h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
         ]);
       }),
+  );
+
+/**
+ * Failure-replay variant. The same server-only `load`, but it **fails** with a
+ * typed {@link ProductLoadError}. On the server the error propagates to the
+ * enclosing `Boundary.catchAll`, which renders the `.load-error` fallback and
+ * emits an inline `data-eui-boundary-failure` payload (the encoded error +
+ * boundary index). On the client `hydrate` decodes that payload and re-raises the
+ * **same** typed error into the **same** `catchAll`, reproducing the identical
+ * fallback DOM — flash-free and **without ever re-running `load`** (replay, never
+ * retry). {@link getFailingLoadAttempts} proves `load` never runs on the client.
+ */
+export const FailingApp = () =>
+  Boundary.catchAll(
+    {
+      fallback: (error: ProductLoadError) =>
+        h.div({ class: "load-error" }, [
+          h.h1({}, "Out of stock"),
+          h.p({ class: "reason" }, error.reason),
+        ]),
+    },
+    [
+      Boundary.server(
+        {
+          load: () =>
+            Effect.sync(() => {
+              failingLoadAttempts += 1;
+            }).pipe(
+              Effect.flatMap(() =>
+                Effect.fail(new ProductLoadError({ reason: "inventory service unavailable" })),
+              ),
+            ),
+          provide: Layer.empty,
+          schema: Product,
+          failure: ProductLoadError,
+        },
+        (product) => h.div({ class: "product" }, product.name),
+      ),
+    ],
   );

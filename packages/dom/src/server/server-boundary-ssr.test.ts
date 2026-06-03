@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { Boundary, ServerTag, h } from "@effect-ui/core";
-import { Data, Effect, Exit, Layer, Schema, Stream } from "effect";
+import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
@@ -123,11 +123,16 @@ describe("Boundary.server — nesting", () => {
   });
 });
 
-describe("Boundary.server — load failure (server-side, v1)", () => {
-  // v1 contract: a `load` failure is handled server-side only — it propagates as
-  // a stream failure to the nearest enclosing failure `Boundary`, so the no-JS
-  // page shows that fallback. (Typed-failure *replay* on the client is deferred.)
-  class LoadError extends Data.TaggedError("LoadError")<{ readonly reason: string }> {}
+describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", () => {
+  // A typed `load` failure is encoded by the enclosing failure `Boundary` into a
+  // `data-eui-boundary-failure` payload (hydratable), or shown as the no-JS
+  // fallback only (plain). A defect is never encoded.
+  class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+    reason: Schema.String,
+  }) {}
+
+  const FAILURE_SCRIPT_RE =
+    /<script type="application\/json" data-eui-boundary-failure>(.*?)<\/script>/;
 
   const failingBoundary = () =>
     Boundary.server(
@@ -135,11 +140,12 @@ describe("Boundary.server — load failure (server-side, v1)", () => {
         load: () => Effect.fail(new LoadError({ reason: "db down" })),
         provide: Layer.empty,
         schema: Product,
+        failure: LoadError,
       },
       (data) => h.div({ class: "product" }, data.name),
     );
 
-  it("propagates a load failure to the nearest enclosing failure Boundary (plain SSR)", async () => {
+  it("plain SSR shows the fallback with no failure payload (AC-8)", async () => {
     const node = Boundary.catchAll(
       { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
       [failingBoundary()],
@@ -147,17 +153,62 @@ describe("Boundary.server — load failure (server-side, v1)", () => {
 
     const html = await Effect.runPromise(renderToString(node));
     assert.ok(html.includes('<div class="fallback">db down</div>'));
+    assert.ok(!html.includes("data-eui-boundary-failure"));
     assert.ok(!html.includes('class="product"'));
   });
 
-  it("emits no payload script when load fails under a failure boundary (hydratable)", async () => {
-    const node = Boundary.catchAll({ fallback: () => h.div({ class: "fallback" }, "oops") }, [
-      failingBoundary(),
+  it("hydratable emits the failure payload before the fallback, decodable to the error (AC-7)", async () => {
+    const node = Boundary.catchAll(
+      { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
+      [failingBoundary()],
+    );
+
+    const html = await Effect.runPromise(renderToStringHydratable(node));
+
+    const match = FAILURE_SCRIPT_RE.exec(html);
+    assert.ok(match !== null, "expected a data-eui-boundary-failure payload");
+    const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
+    assert.equal(payload.index, 0);
+    const decoded = await Effect.runPromise(Schema.decodeUnknown(LoadError)(payload.error));
+    assert.equal(decoded.reason, "db down");
+
+    // Payload precedes the fallback; the fallback is still rendered for no-JS.
+    assert.ok(html.includes('<div class="fallback">db down</div>'));
+    assert.ok(html.indexOf(match[0]) < html.indexOf('<div class="fallback">'));
+  });
+
+  it("relocates the payload to the outer boundary when the inner match returns null (AC-9)", async () => {
+    // Inner `catchSome` declines (Option.none → match null); the failure
+    // re-propagates without draining, so the outer boundary emits the payload.
+    const node = Boundary.catchAll(
+      { fallback: (e: LoadError) => h.div({ class: "outer" }, e.reason) },
+      [Boundary.catchSome({ fallback: () => Option.none() }, [failingBoundary()])],
+    );
+
+    const html = await Effect.runPromise(renderToStringHydratable(node));
+    const match = FAILURE_SCRIPT_RE.exec(html);
+    assert.ok(match !== null, "expected the relocated failure payload");
+    const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
+    // Index recomputed against the OUTER boundary's children (still 0 here).
+    assert.equal(payload.index, 0);
+    assert.ok(html.includes('<div class="outer">db down</div>'));
+  });
+
+  it("does not emit a failure payload for a load defect (AC-9)", async () => {
+    const node = Boundary.catchAllCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
+      Boundary.server(
+        {
+          load: () => Effect.die(new Error("kaboom")),
+          provide: Layer.empty,
+          schema: Product,
+        },
+        (data) => h.div({}, data.name),
+      ),
     ]);
 
     const html = await Effect.runPromise(renderToStringHydratable(node));
-    assert.ok(html.includes('<div class="fallback">oops</div>'));
-    assert.ok(!html.includes("<script"));
+    assert.ok(html.includes('<div class="fallback">boom</div>'));
+    assert.ok(!html.includes("data-eui-boundary-failure"));
   });
 });
 

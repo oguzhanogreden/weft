@@ -94,3 +94,32 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
       d. Hydrate the fallback `Node` against the DOM between the boundary markers.
       e. Set up the client boundary normally (recovery fiber, `BoundaryContext`) so future post-mount errors are handled.
 29. **Constraint**: for accurate hydration of error-displaying fallbacks (e.g. `(e) => h.div({}, e.message)`), errors should be JSON-serializable. Non-serializable errors produce a `null` cause on the client, which may result in a hydration mismatch for fallbacks that render error details — a console warning should be emitted in this case.
+
+### Hydration — `Boundary.server` typed-failure replay
+
+> Distinct from AC24–29 above (which concern a failure boundary catching errors
+> from its _own_ rendered subtree). This section covers a failure boundary
+> **replaying** a typed `load` failure that a nested `Boundary.server` encoded on
+> the server. The server emit half is in
+> `packages/dom/src/server/server-boundary-ssr.specs.md` (AC-7…AC-9); the shared
+> index walk is in `packages/dom/src/boundary-replay.specs.md`.
+
+30. **No failure payload at the cursor** — the failure boundary is transparent: its
+    children are hydrated directly from the cursor (the server-success path,
+    unchanged).
+31. **`<script type="application/json" data-eui-boundary-failure>` at the cursor** —
+    the boundary replays the typed failure instead of hydrating its children:
+    a. Parse `{ index, error }` from the script.
+    b. Locate the `index`-th statically-reachable `Boundary.server` in
+    `props.children` via the shared `collectServerBoundaries` walk.
+    c. `Schema.decodeUnknown(owner.failure)(error)` → the typed `ELoad`.
+    d. `Cause.fail(decoded)` → `props.match(cause)` → the **same** fallback `Node`
+    the server rendered. `load` is **never** run on the client.
+    e. Hydrate the fallback at `script.nextSibling`, remove the script, and return
+    the following cursor so the surrounding walk stays aligned.
+32. **Recoverable miss**: a malformed payload, an un-locatable/`failure`-less
+    boundary at `index`, a decode failure, or a `match` that declines the rebuilt
+    cause is a `HydrationMismatchError` (logged), consistent with
+    `hydrateServerBoundary` — never a defect.
+33. **Replay, never retry**: as with success replay, the client does not run
+    `load`; it reproduces the server-rendered fallback DOM flash-free.

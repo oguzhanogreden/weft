@@ -131,6 +131,13 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 - Prefer Effect's error handling over try/catch (except when it significantly hurts ergonomics)
 - Use Services and Layers for dependency injection
 - Prefer `pipe(effect, ...)` over `effect.pipe(...)`
+- **No JSX.** effect-ui does **not** use JSX, even though its node descriptors
+  (`{ type, props }`) resemble React elements. There is no JSX runtime (no `jsx`
+  in any tsconfig) and no `h(Component)` overload — `h.*` only builds string-tag
+  and `FRAGMENT` nodes, and components are plain functions that are **called**
+  (e.g. `App()`), placing their resulting node in the tree directly rather than
+  deferring construction. Do not assume `<Component/>`-style deferred descriptors
+  exist or write code that depends on them.
 
 ### TypeScript Standards
 

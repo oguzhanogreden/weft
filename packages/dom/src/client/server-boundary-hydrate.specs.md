@@ -26,13 +26,30 @@ Region location is **positional**: the payload sits at the region cursor and is
 read inline during the same depth-first walk the renderer already relies on — no
 service, no markers, no entrypoint plumbing.
 
-### v1 scope
+### Scope
 
-Success path only. A payload that is missing, malformed, or fails `schema`
-decoding is treated as a **recoverable** hydration mismatch
-(`HydrationMismatchError`, logged) — not a defect — since the region cannot be
-located or replayed without the data. Typed-failure replay (re-raising a server
-`load` failure on the client) is a deferred phase.
+Success replay is owned here (`hydrateServerBoundary`). A payload that is
+missing, malformed, or fails `schema` decoding is treated as a **recoverable**
+hydration mismatch (`HydrationMismatchError`, logged) — not a defect — since the
+region cannot be located or replayed without the data.
+
+**Typed-failure replay is owned by the enclosing failure `Boundary`, not here.**
+On a `load` failure the server renders the failure boundary's _fallback_ (a tree
+independent of this boundary's `render(data)`), so a children-vs-fallback walk
+diverges structurally _before_ reaching this server boundary — its hydrate is
+unreachable on a failure. The failure boundary therefore detects the
+`data-eui-boundary-failure` payload, decodes via this boundary's `failure` schema
+(located by pre-order index), rebuilds the cause, and hydrates the fallback. See
+`client/boundary.specs.md`. The only obligation here is **defensive** (AC-H-S7):
+the success path must reject a failure-marked payload rather than mis-decode it.
+
+### AC-H-S7: Success path rejects a failure payload (defensive)
+
+- **Given** the cursor at a `<script type="application/json" data-eui-boundary-failure>`
+  (a failure payload that somehow reached the server-boundary success descent)
+- **When** `hydrateServerBoundary` runs
+- **Then** it fails with a `HydrationMismatchError` rather than decoding the
+  failure payload as success `data`.
 
 ---
 
