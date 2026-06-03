@@ -197,7 +197,7 @@ vp run check
 
 - Type test files use the `.test-d.ts` extension (convention from `tsd` and similar tools)
 - Use `@ts-expect-error` to assert code that should fail to compile
-- Type tests are excluded from the main `vp check` typecheck to avoid conflicts with other augmentations
+- Type tests are type-checked as part of `vp run check`: both `packages/core` and `packages/dom` include `src` (and therefore `src/**/__type-tests__`) in their tsconfig, so the `@ts-expect-error` assertions are enforced by the main typecheck
 - Each type test file should be self-contained and test a specific feature
 
 **Example pattern:**

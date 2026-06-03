@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { Boundary, ServerTag, h } from "@effect-ui/core";
-import { Effect, Layer, Schema, Stream } from "effect";
+import { Data, Effect, Exit, Layer, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
@@ -120,6 +120,63 @@ describe("Boundary.server — nesting", () => {
     const innerIdx = html.indexOf(scripts[1]![0]);
     assert.ok(innerIdx > html.indexOf("<div>"));
     assert.ok(innerIdx < html.indexOf("<span>"));
+  });
+});
+
+describe("Boundary.server — load failure (server-side, v1)", () => {
+  // v1 contract: a `load` failure is handled server-side only — it propagates as
+  // a stream failure to the nearest enclosing failure `Boundary`, so the no-JS
+  // page shows that fallback. (Typed-failure *replay* on the client is deferred.)
+  class LoadError extends Data.TaggedError("LoadError")<{ readonly reason: string }> {}
+
+  const failingBoundary = () =>
+    Boundary.server(
+      {
+        load: () => Effect.fail(new LoadError({ reason: "db down" })),
+        provide: Layer.empty,
+        schema: Product,
+      },
+      (data) => h.div({ class: "product" }, data.name),
+    );
+
+  it("propagates a load failure to the nearest enclosing failure Boundary (plain SSR)", async () => {
+    const node = Boundary.catchAll(
+      { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
+      [failingBoundary()],
+    );
+
+    const html = await Effect.runPromise(renderToString(node));
+    assert.ok(html.includes('<div class="fallback">db down</div>'));
+    assert.ok(!html.includes('class="product"'));
+  });
+
+  it("emits no payload script when load fails under a failure boundary (hydratable)", async () => {
+    const node = Boundary.catchAll({ fallback: () => h.div({ class: "fallback" }, "oops") }, [
+      failingBoundary(),
+    ]);
+
+    const html = await Effect.runPromise(renderToStringHydratable(node));
+    assert.ok(html.includes('<div class="fallback">oops</div>'));
+    assert.ok(!html.includes("<script"));
+  });
+});
+
+describe("Boundary.server — encode failure (server-side)", () => {
+  it("fails the hydratable render when loaded data does not satisfy the schema", async () => {
+    // `load` yields a value whose `name` is a number, violating `Product`; the
+    // hydratable pass `Schema.encode`s `data`, so the bad value surfaces as a
+    // stream failure rather than emitting a corrupt payload.
+    const node = Boundary.server(
+      {
+        load: () => Effect.succeed({ name: 123, price: 9 } as unknown as ProductShape),
+        provide: Layer.empty,
+        schema: Product,
+      },
+      (data) => h.div({ class: "product" }, String(data.name)),
+    );
+
+    const exit = await Effect.runPromiseExit(renderToStringHydratable(node));
+    assert.ok(Exit.isFailure(exit));
   });
 });
 
