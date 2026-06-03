@@ -171,24 +171,29 @@ type AssertNoServerOnly<R>; // R | ServerOnlyLeak
 
 ---
 
-## Deferred / v2+
+## Deferred / roadmap
 
-Typed-failure replay (the former headline v2 phase) **has shipped** — see the
-"Typed-failure replay (v2)" acceptance criteria above. The encode-in-catch design
-dissolved the documented `renderBoundarySSR` buffering blocker: the failure
-payload is emitted by the enclosing failure boundary's catch handler (which holds
-the cause and renders the fallback), never inside the discarded children buffer.
+**Shipped so far:** both **success serialization + replay** (v1) and
+**typed-failure replay** (v2) — see the acceptance criteria above. (The
+encode-in-catch design dissolved the documented `renderBoundarySSR` buffering
+blocker: the failure payload is emitted by the enclosing failure boundary's catch
+handler, which holds the cause and renders the fallback, never inside the
+discarded children buffer.)
 
 The phases below remain intentionally out of scope; each needs its own spec
-discussion before any code. Listed in rough priority order.
+discussion before any code. They are **not** versioned `vN` — v1/v2 above are the
+shipped phases; these are the remaining roadmap in rough priority order. **The
+next session starts with phase 1, the Prune plugin.**
 
-### 1. Prune plugin (layer 2) — bundle-size correctness
+### 1. Prune plugin — bundle-size correctness (NEXT)
 
 The `ServerTag` brand keeps the server tag out of universal **types**, but not
 out of the **bundle**: the `provide` `Layer` (e.g. `DatabaseLive`) and the `load`
 closure remain statically referenced by the universal node, so they currently
-ship to the client. v2 is a build plugin that strips them, plus layer-3 `VITE_`
-env guidance. (Documented today as a runtime-safe-but-larger-bundle caveat.)
+ship to the client. The next phase is a build plugin that strips them, with
+`VITE_` env guidance as a follow-on. This is the second layer of the
+bundle-safety strategy — the `ServerTag` type brand is the first. (Documented
+today as a runtime-safe-but-larger-bundle caveat.)
 
 ### 2. Progressive load & client refetch
 
@@ -214,5 +219,5 @@ env guidance. (Documented today as a runtime-safe-but-larger-bundle caveat.)
   _is_ the prevention.
 - **Changes to `mount` / non-hydratable `renderToString` semantics.**
 - **A `Hydration` service.** Considered and dropped before v1; payloads are read
-  positionally from the DOM cursor during the adopt-walk with no service, so v2
-  will not reintroduce one.
+  positionally from the DOM cursor during the adopt-walk with no service, so the
+  remaining roadmap phases will not reintroduce one.
