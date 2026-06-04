@@ -101,6 +101,19 @@ reproducing the identical fallback DOM — flash-free and **without re-running
 typed error) is not replayed: it propagates as before. `FailingApp` in `app.ts`
 demonstrates the round-trip (see `app.failure.browser.test.ts`).
 
+## Bundle pruning
+
+The `ServerTag` brand keeps `Database` out of the client's _types_, but the
+universal `Boundary.server` node still statically references its `load` thunk and
+`provide` `Layer` (`DatabaseLive`) — so on a naive client build they (and their
+transitive imports) ship to the browser even though `hydrate` never runs them.
+
+This example's `vite.config.ts` wires `effectUiPrune()` from `@effect-ui/vite`,
+which on the **client (non-SSR) build** strips the `load` and `provide` keys from
+each `Boundary.server` call, letting the bundler tree-shake the server-only code.
+It is `apply: "build"` so it is inert in the dev SSR flow above; the SSR build
+keeps every key (the server reads them).
+
 ## How to run
 
 ```bash

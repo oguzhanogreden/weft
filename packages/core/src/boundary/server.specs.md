@@ -183,17 +183,21 @@ discarded children buffer.)
 The phases below remain intentionally out of scope; each needs its own spec
 discussion before any code. They are **not** versioned `vN` — v1/v2 above are the
 shipped phases; these are the remaining roadmap in rough priority order. **The
-next session starts with phase 1, the Prune plugin.**
+next session starts with phase 2, progressive load & client refetch.**
 
-### 1. Prune plugin — bundle-size correctness (NEXT)
+### 1. Prune plugin — bundle-size correctness (SHIPPED)
 
 The `ServerTag` brand keeps the server tag out of universal **types**, but not
 out of the **bundle**: the `provide` `Layer` (e.g. `DatabaseLive`) and the `load`
-closure remain statically referenced by the universal node, so they currently
-ship to the client. The next phase is a build plugin that strips them, with
-`VITE_` env guidance as a follow-on. This is the second layer of the
-bundle-safety strategy — the `ServerTag` type brand is the first. (Documented
-today as a runtime-safe-but-larger-bundle caveat.)
+closure remain statically referenced by the universal node, so on a naive client
+build they ship to the client. **Shipped** as `effectUiPrune()` in
+`@effect-ui/vite` (see `packages/vite/src/prune.specs.md`): a `apply: "build"`
+plugin that, on the non-SSR build, strips `load`/`provide` from each
+`Boundary.server` call so the bundler tree-shakes the server-only code. This is
+the second layer of the bundle-safety strategy — the `ServerTag` type brand is
+the first. `VITE_` env gating and the optional-`provide` overload remain
+follow-ons. (Until a project adopts the plugin, the unpruned client bundle is
+runtime-safe-but-larger.)
 
 ### 2. Progressive load & client refetch
 

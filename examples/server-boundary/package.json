@@ -9,6 +9,7 @@
     "effect": "^3.21.2"
   },
   "devDependencies": {
+    "@effect-ui/vite": "workspace:*",
     "@types/node": "^25.9.1",
     "tsx": "^4.22.3",
     "vite-plus": "catalog:"
