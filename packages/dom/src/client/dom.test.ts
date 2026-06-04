@@ -976,6 +976,56 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     await Effect.runPromise(handle.unmount());
   });
 
+  it("SP3: UserProfile pattern — concat(loading, fromEffect) reuses the <div>, patches text in place", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // Mirrors the docs' UserProfile example: a component that returns a Stream
+    // emitting a "Loading..." <div> first, then a resolved <div> with the user's
+    // name. Both emissions are same-tag (<div>) with a single text child, so the
+    // renderer takes the SP3 identity-preserving path rather than replacing the
+    // element. `fetchUser` is a resolved Effect standing in for the network call.
+    // Delayed so the "Loading..." frame is observable before the second emission;
+    // with a synchronous Effect both values land within a single tick.
+    const fetchUser = (id: number) =>
+      Effect.succeed({ id, name: "Ada Lovelace" }).pipe(Effect.delay("120 millis"));
+
+    const UserProfile = ({ id }: { id: number }) =>
+      Stream.concat(
+        Stream.make(h.div({ id: "profile" }, "Loading...")),
+        Stream.fromEffect(
+          fetchUser(id).pipe(
+            Effect.flatMap((user) => h.div({ id: "profile" }, user.name)),
+            Effect.catchAll(() => h.div({ id: "profile" }, "Failed to load user")),
+          ),
+        ),
+      );
+
+    const handle = await runMount(UserProfile({ id: 1 }), root);
+    await waitForStream();
+
+    const beforeDiv = root.querySelector("#profile");
+    assert.ok(beforeDiv !== null, "first emission should render the loading <div>");
+    assert.equal(beforeDiv.textContent, "Loading...");
+    const beforeText = beforeDiv.firstChild;
+    assert.ok(beforeText?.nodeType === 3, "loading <div> should hold a single Text child");
+
+    await waitForStreamUpdate();
+
+    const afterDiv = root.querySelector("#profile");
+    assert.ok(
+      afterDiv === beforeDiv,
+      "the same <div> element should be reused across the two emissions (not replaced)",
+    );
+    assert.ok(
+      afterDiv.firstChild === beforeText,
+      "the same Text node should be patched in place, not recreated",
+    );
+    assert.equal(afterDiv.textContent, "Ada Lovelace", "the text node's data should be updated");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
   it("SP4: shape change (element→text) falls back to rebuild", async () => {
     createTestDOM();
     const root = createRoot();
