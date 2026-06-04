@@ -99,10 +99,20 @@ type _TReject = Expect<
   Equal<AssertNoServerOnly<DatabaseReq>, DatabaseReq> extends true ? false : true
 >;
 
-// ── provide is required ───────────────────────────────────────────────────────
+// ── provide: omittable when RServer = never, required otherwise ───────────────
 
-// @ts-expect-error — `provide` is required even when RServer is never
-Boundary.server({ load: () => Effect.succeed(product), schema: Product }, (_p) => staticNode);
+// Omittable when `load` has no requirements (RServer = never); it defaults to
+// `Layer.empty`, and the output type is unchanged from passing it explicitly.
+const _noProvide = Boundary.server(
+  { load: () => Effect.succeed(product), schema: Product },
+  (_p) => staticNode,
+);
+type _TNoProvide = Expect<Equal<typeof _noProvide, Node<never, never>>>;
+
+// Required when `load` has requirements (RServer ≠ never): omitting it leaves the
+// server requirement un-discharged.
+// @ts-expect-error — `provide` is required when RServer ≠ never
+Boundary.server({ load: () => dbLoad, schema: Product }, (_p) => staticNode);
 
 // `load` needs Database but `provide` (Layer.empty) does not supply it
 // @ts-expect-error — un-discharged server requirement

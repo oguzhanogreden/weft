@@ -82,6 +82,30 @@ describe("Boundary.server — plain SSR (AC-11/AC-12)", () => {
   });
 });
 
+describe("Boundary.server — omitted provide defaults to Layer.empty", () => {
+  // A dependency-free `load` (RServer = never) may omit `provide`; the
+  // constructor defaults it to `Layer.empty`, so the renderer's
+  // `Effect.provide(load(), provide)` still has a real layer to discharge.
+  const NoProvideBoundary = () =>
+    Boundary.server(
+      { load: () => Effect.succeed({ name: "Plain", price: 1 }), schema: Product },
+      (data) => h.div({ class: "product" }, data.name),
+    );
+
+  it("renders the loaded data without an explicit provide", async () => {
+    const html = await Effect.runPromise(renderToString(NoProvideBoundary()));
+    assert.ok(html.includes('<div class="product">Plain</div>'));
+  });
+
+  it("emits a hydratable payload that decodes back to the loaded data", async () => {
+    const html = await Effect.runPromise(renderToStringHydratable(NoProvideBoundary()));
+    const match = SCRIPT_RE.exec(html);
+    assert.ok(match !== null, "expected an application/json payload script");
+    const decoded = await decodeScript(match[1] as string);
+    assert.deepEqual(decoded, { name: "Plain", price: 1 });
+  });
+});
+
 describe("Boundary.server — nesting", () => {
   it("emits nested payloads positionally, each decodable", async () => {
     const Nested = () =>

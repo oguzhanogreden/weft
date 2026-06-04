@@ -1,4 +1,4 @@
-import { Cause, type Effect, type Layer, Option, type Schema } from "effect";
+import { Cause, type Effect, Layer, Option, type Schema } from "effect";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
@@ -271,12 +271,14 @@ export namespace Boundary {
      */
     readonly load: () => Effect.Effect<A, ELoad, RServer>;
     /**
-     * Discharges `load`'s server-only requirements `RServer` at construction.
-     * **Required** (pass `Layer.empty` when `RServer` is `never`): it is the
+     * Discharges `load`'s server-only requirements `RServer` at construction: the
      * structural guarantee that no un-discharged server dependency escapes into
-     * the boundary's requirement channel `R`.
+     * the boundary's requirement channel `R`. **Required whenever `load` has
+     * requirements (`RServer ≠ never`)** — enforced on the {@link server}
+     * signature — and **omittable when `RServer` is `never`** (it defaults to
+     * `Layer.empty`, so a dependency-free `load` need not pass `provide`).
      */
-    readonly provide: Layer.Layer<RServer>;
+    readonly provide?: Layer.Layer<RServer>;
     /**
      * Wire contract for `A`: `Schema.encode`d to JSON on the server (emitted
      * inline) and `Schema.decode`d from that JSON on the client during `hydrate`.
@@ -334,16 +336,20 @@ export namespace Boundary {
    */
   export function server<A, ELoad, RServer, C extends Node<any, any>>(
     props: ServerProps<A, ELoad, RServer> &
-      ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }),
+      ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }) &
+      ([RServer] extends [never] ? unknown : { readonly provide: Layer.Layer<RServer> }),
     render: (data: A) => C,
   ): Node<Node.Error<C> | ELoad, Node.Context<C>> {
     // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it
     // synchronously via the {type, props} branch. RServer is consumed by
     // `provide`, so it is absent from the returned R; no Exclude is applied to
     // render's R, leaving any accidental server-tag leak visible for hydrate.
+    // `provide` is omittable only when `RServer = never` (the signature requires
+    // it otherwise), so default it to `Layer.empty` to keep the descriptor's
+    // runtime contract — the renderer always `Effect.provide`s a real layer.
     return elementNode({
       type: SERVER_BOUNDARY,
-      props: { ...props, render } as Record<string, unknown>,
+      props: { ...props, provide: props.provide ?? Layer.empty, render } as Record<string, unknown>,
     });
   }
 }

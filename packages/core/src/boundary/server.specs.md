@@ -30,9 +30,9 @@ DOM package; this file states the contract those renderers must honour.
 - **Out of scope:** a `load` **defect** (a `Die`, not an expected `ELoad`) is not
   replayed — it has no `Cause.failureOption`, so no failure payload is emitted and
   it propagates as before (server renders the enclosing fallback; the client
-  hydrate produces a recoverable mismatch). Prune plugin, progressive/streamed
-  `load`, client refetch, and an ergonomic optional-`provide` overload remain
-  deferred (see below).
+  hydrate produces a recoverable mismatch). The prune plugin and the optional-
+  `provide` ergonomic refinement have shipped; progressive/streamed `load` and
+  client refetch remain deferred (see below).
 
 ---
 
@@ -46,7 +46,9 @@ DOM package; this file states the contract those renderers must honour.
 2. `props` contains:
    - `load: () => Effect.Effect<A, ELoad, RServer>` — a **thunk** (defers
      construction so `load` is built/run only on the server)
-   - `provide: Layer.Layer<RServer>` — discharges `load`'s server-only requirements
+   - `provide?: Layer.Layer<RServer>` — discharges `load`'s server-only
+     requirements; **required when `RServer ≠ never`**, omittable when `load` has
+     no requirements (defaults to `Layer.empty`)
    - `schema: Schema.Schema<A, any>` — the wire contract for `A`
    - `failure?: Schema.Schema<ELoad, any>` — the wire contract for a typed `load`
      failure; **required when `ELoad ≠ never`**, omittable when `load` cannot fail
@@ -61,8 +63,12 @@ DOM package; this file states the contract those renderers must honour.
 5. `RServer` is **absent** from the output requirement channel: `provide` consumes
    it at construction (it feeds only `load`, never `render`), so no un-discharged
    server requirement can escape into `R`.
-6. `provide` is **required** (single signature). Passing `Layer.empty` is the
-   intended form when `RServer` is `never`. Omitting `provide` is a compile error.
+6. `provide` is **required when `RServer ≠ never`** and **omittable when `RServer`
+   is `never`** (a conditional intersection on the signature, mirroring `failure`).
+   When omitted it defaults to `Layer.empty`, so a dependency-free `load` need not
+   pass it; omitting it while `load` still has requirements is a compile error
+   (the server requirement would be un-discharged). This preserves the structural
+   guarantee — `provide` can only be absent when there is nothing to discharge.
 7. **No `Exclude`** is applied to `render`'s `R`. A server-only tag accidentally
    referenced in `render` therefore **remains** in the output `R` (rather than
    being silently erased), where `hydrate`'s `AssertNoServerOnly` can reject it.
@@ -157,10 +163,11 @@ export const SERVER_BOUNDARY: unique symbol;
 Boundary.server<A, ELoad, RServer, C extends Node<any, any>>(
   props: {
     load: () => Effect.Effect<A, ELoad, RServer>;
-    provide: Layer.Layer<RServer>;
+    provide?: Layer.Layer<RServer>;
     schema: Schema.Schema<A, any>;
     failure?: Schema.Schema<ELoad, any>;
-  } & ([ELoad] extends [never] ? unknown : { failure: Schema.Schema<ELoad, any> }),
+  } & ([ELoad] extends [never] ? unknown : { failure: Schema.Schema<ELoad, any> })
+    & ([RServer] extends [never] ? unknown : { provide: Layer.Layer<RServer> }),
   render: (data: A) => C,
 ): Node<Node.Error<C> | ELoad, Node.Context<C>>;
 
@@ -195,9 +202,9 @@ build they ship to the client. **Shipped** as `effectUiPrune()` in
 plugin that, on the non-SSR build, strips `load`/`provide` from each
 `Boundary.server` call so the bundler tree-shakes the server-only code. This is
 the second layer of the bundle-safety strategy — the `ServerTag` type brand is
-the first. `VITE_` env gating and the optional-`provide` overload remain
-follow-ons. (Until a project adopts the plugin, the unpruned client bundle is
-runtime-safe-but-larger.)
+the first. The optional-`provide` overload has since shipped (phase 3); `VITE_`
+env gating remains a follow-on. (Until a project adopts the plugin, the unpruned
+client bundle is runtime-safe-but-larger.)
 
 ### 2. Progressive load & client refetch
 
@@ -210,10 +217,14 @@ runtime-safe-but-larger.)
 
 ### 3. Ergonomic polish
 
-- An optional-when-`never` `provide` overload so `provide` can be omitted (rather
-  than passing `Layer.empty`) when `RServer = never`. v1 ships a single required
-  signature deliberately — required `provide` is the structural guarantee no
-  un-discharged server requirement escapes into `R`.
+- **Optional `provide` when `RServer = never` (SHIPPED).** `provide` is now
+  omittable when `load` has no requirements — a conditional intersection on the
+  signature (`[RServer] extends [never] ? unknown : { provide: … }`, mirroring
+  `failure`) keeps it **required** whenever `RServer ≠ never`, and the constructor
+  defaults an omitted `provide` to `Layer.empty`. The structural guarantee is
+  preserved: `provide` can only be absent when there is nothing to discharge.
+- `VITE_` env gating (the runtime complement to the prune plugin) remains a
+  follow-on.
 
 ### Explicitly rejected (not deferred — will not do)
 
