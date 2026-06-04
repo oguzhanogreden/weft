@@ -106,7 +106,7 @@ Labeled({ label: "Name" }, (label) => [h.label({}, label), h.input({})]);
 
 ### `Boundary` namespace
 
-Variants for intercepting rendering-path errors in a subtree, plus `Boundary.suspend` for async fallbacks. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch. All variants share the same call shape — props first, children array second.
+Variants for intercepting rendering-path errors in a subtree, plus `Boundary.suspend` for async fallbacks and `Boundary.server` for server-side data loading. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch. The catch variants share the same call shape — props first, children array second.
 
 **What is caught:**
 
@@ -134,6 +134,32 @@ Boundary.suspend(
 - Performs a single atomic DOM swap once all children have settled
 - Works on both the server (streaming patch model) and the client
 - `hydrate()` sees through `Boundary.suspend` boundaries and adopts resolved DOM in place
+
+#### `Boundary.server`
+
+A server-side render boundary: loads data on the **server**, serializes it into the HTML, and **replays** it on the client during hydration without re-running the load. Unlike the other variants it takes a `render` function as its second argument (not a children array).
+
+```typescript
+Boundary.server<A, ELoad, RServer, C>(
+  props: {
+    load: () => Effect.Effect<A, ELoad, RServer>;  // server-only thunk; never runs on the client
+    provide?: Layer.Layer<RServer>;                // discharges load's RServer; required when RServer ≠ never
+    schema: Schema.Schema<A, any>;                  // wire contract for the loaded data A
+    failure?: Schema.Schema<ELoad, any>;            // wire contract for a typed load failure; required when ELoad ≠ never
+  },
+  render: (data: A) => C,
+): Node<Node.Error<C> | ELoad, Node.Context<C>>
+```
+
+- **On the server:** runs `Effect.provide(load(), provide)` to obtain `data`, `schema`-encodes it, emits it inline as `<script type="application/json">` at the region cursor, then renders `render(data)` to HTML in place.
+- **On the client:** `hydrate` reads the inline payload positionally, `schema`-decodes it, and hydrates `render(data)` against the adopted DOM — it **never runs `load`** and never touches the server-only services `load` reads (replay, not refetch).
+- **Channel algebra:** `RServer` is consumed by `provide`, so it is **absent** from the output requirement channel. The output `R` is exactly `render`'s `R`, untouched (no `Exclude`); the output `E` is `render`'s error union plus `ELoad`.
+- **`provide`** is **required when `load` has requirements** (`RServer ≠ never`) and **omittable when it does not** (defaults to `Layer.empty`). This is the structural guarantee that no un-discharged server requirement escapes into `R`.
+- **`failure`** is **required when `load` can fail** (`ELoad ≠ never`) and omittable otherwise. A typed `load` failure is encoded on the server and **replayed** on the client — decoded and re-raised into the nearest enclosing failure `Boundary`, reproducing the same fallback DOM (replay, never retry). A defect is not replayed.
+- Brand server-only services with [`ServerTag`](#servertag) so referencing one in universal `render` code — or leaking it to `hydrate` — is a compile error.
+- `load`/`provide` statically reference server-only code. The [`@effect-ui/vite`](../guides/server-side-rendering.md#bundle-pruning) prune plugin strips them from the client build so that code tree-shakes away.
+
+See the [Server-side rendering guide](../guides/server-side-rendering.md) and [examples/server-boundary](../../examples/server-boundary).
 
 #### `Boundary.catchAll`
 
@@ -231,6 +257,28 @@ Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
   ]),
 ]);
 ```
+
+---
+
+## ServerTag
+
+A `Context.Tag` whose identifier is branded server-only. Use it exactly like `Context.Tag` for services that must only ever be provided on the server — e.g. a database handle read inside a [`Boundary.server`](#boundaryserver) `load`.
+
+```typescript
+import { ServerTag } from "@effect-ui/core";
+import { Effect } from "effect";
+
+class Database extends ServerTag("Database")<
+  Database,
+  { readonly getProduct: () => Effect.Effect<Product> }
+>() {}
+```
+
+- The server-only brand rides along in the requirement channel `R` of any effect that uses the tag.
+- `Boundary.server`'s `provide` discharges it on the server, so it never enters the boundary's output `R`.
+- If a branded tag ever reaches client code — referenced in `render` and surviving into `hydrate`'s requirement channel — `AssertNoServerOnly` resolves `R` to a compile-error sentinel (`ServerOnlyLeak`) at the `hydrate` call site, rather than failing silently at runtime.
+
+`ServerOnly`, `ServerOnlyLeak`, and `AssertNoServerOnly<R>` are exported alongside `ServerTag` for advanced typing; most code only needs `ServerTag` itself.
 
 ---
 

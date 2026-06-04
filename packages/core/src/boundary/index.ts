@@ -1,4 +1,4 @@
-import { Cause, Option } from "effect";
+import { Cause, type Effect, Layer, Option, type Schema } from "effect";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
 
@@ -13,6 +13,12 @@ export const FAILURE_BOUNDARY: unique symbol = Symbol.for("effect-ui/FAILURE_BOU
  * All `Boundary.suspend` embeds this symbol as `type` in the returned descriptor.
  */
 export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("effect-ui/SUSPENSE_BOUNDARY");
+
+/**
+ * Unique type tag used by renderers to identify a server `Boundary` descriptor.
+ * Every `Boundary.server` embeds this symbol as `type` in the returned descriptor.
+ */
+export const SERVER_BOUNDARY: unique symbol = Symbol.for("effect-ui/SERVER_BOUNDARY");
 
 /** Remove a single tagged error from the children's error union. */
 export type CatchTagE<C extends readonly Renderable[], Tag extends string> = Exclude<
@@ -246,6 +252,104 @@ export namespace Boundary {
     return elementNode({
       type: SUSPENSE_BOUNDARY,
       props: { ...props, children },
+    });
+  }
+
+  /**
+   * Props for the {@link server} boundary — read by the server renderer to run
+   * `load`, by both renderers to encode/decode through `schema`, and (via
+   * `render`) to build the subtree from the loaded data.
+   *
+   * @typeParam A - The loaded data shape, shared by `load`, `schema`, and `render`.
+   * @typeParam ELoad - Typed failures `load` may produce (server-side only in v1).
+   * @typeParam RServer - Server-only requirements of `load`, discharged by `provide`.
+   */
+  export interface ServerProps<A, ELoad, RServer> {
+    /**
+     * Thunk producing the server `load` effect. Deferred so it is constructed and
+     * run **only on the server** — never during client `hydrate`.
+     */
+    readonly load: () => Effect.Effect<A, ELoad, RServer>;
+    /**
+     * Discharges `load`'s server-only requirements `RServer` at construction: the
+     * structural guarantee that no un-discharged server dependency escapes into
+     * the boundary's requirement channel `R`. **Required whenever `load` has
+     * requirements (`RServer ≠ never`)** — enforced on the {@link server}
+     * signature — and **omittable when `RServer` is `never`** (it defaults to
+     * `Layer.empty`, so a dependency-free `load` need not pass `provide`).
+     */
+    readonly provide?: Layer.Layer<RServer>;
+    /**
+     * Wire contract for `A`: `Schema.encode`d to JSON on the server (emitted
+     * inline) and `Schema.decode`d from that JSON on the client during `hydrate`.
+     */
+    readonly schema: Schema.Schema<A, any>;
+    /**
+     * Wire contract for a `load` **failure**: a typed `ELoad` error is
+     * `Schema.encode`d on the server (into the inline failure payload) and
+     * `Schema.decode`d + re-raised on the client during `hydrate`, so the same
+     * enclosing failure `Boundary` reproduces the same fallback. **Required when
+     * `ELoad ≠ never`** (enforced on the {@link server} signature); omittable when
+     * `load` cannot fail. Replays the failure, never retries `load`.
+     */
+    readonly failure?: Schema.Schema<ELoad, any>;
+  }
+
+  /**
+   * Creates a server render boundary.
+   *
+   * On the server, the renderer runs `Effect.provide(load(), provide)` to obtain
+   * `data: A` (blocking on it), encodes it through `schema` and emits the result
+   * inline as a `<script type="application/json">` payload (hydratable pass only),
+   * then renders `render(data)` to HTML in place. On the client, `hydrate` **does
+   * not run `load`**: it reads the inline payload at the cursor, decodes it through
+   * `schema`, and hydrates `render(data)` against the adopted DOM — replaying the
+   * server result, never retrying.
+   *
+   * `provide` discharges `load`'s server-only requirements `RServer`, so they
+   * never enter the output requirement channel `R` (which is exactly `render`'s
+   * `R`, untouched — no `Exclude`). `ELoad` remains in the output error channel.
+   * A typed `load` failure is **replayed on the client**: the server encodes it
+   * via `failure` into the inline payload and the client `hydrate` decodes it and
+   * re-raises it into the nearest enclosing failure `Boundary`, reproducing the
+   * same fallback DOM (replay, never retry). `failure` is therefore **required
+   * when `ELoad ≠ never`** and omittable when `load` cannot fail. A `load`
+   * **defect** (not an expected `ELoad`) is not replayed: it propagates as today
+   * (server fallback, client hydration mismatch).
+   *
+   * The renderer identifies the boundary via its {@link SERVER_BOUNDARY} type tag.
+   *
+   * @example
+   * ```ts
+   * import { Boundary, h } from "@effect-ui/core";
+   * import { Layer, Schema } from "effect";
+   *
+   * Boundary.server(
+   *   {
+   *     load: () => Database.query(),
+   *     provide: DatabaseLive,
+   *     schema: Product,
+   *   },
+   *   (product) => h.div({}, product.name),
+   * )
+   * ```
+   */
+  export function server<A, ELoad, RServer, C extends Node<any, any>>(
+    props: ServerProps<A, ELoad, RServer> &
+      ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }) &
+      ([RServer] extends [never] ? unknown : { readonly provide: Layer.Layer<RServer> }),
+    render: (data: A) => C,
+  ): Node<Node.Error<C> | ELoad, Node.Context<C>> {
+    // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it
+    // synchronously via the {type, props} branch. RServer is consumed by
+    // `provide`, so it is absent from the returned R; no Exclude is applied to
+    // render's R, leaving any accidental server-tag leak visible for hydrate.
+    // `provide` is omittable only when `RServer = never` (the signature requires
+    // it otherwise), so default it to `Layer.empty` to keep the descriptor's
+    // runtime contract — the renderer always `Effect.provide`s a real layer.
+    return elementNode({
+      type: SERVER_BOUNDARY,
+      props: { ...props, provide: props.provide ?? Layer.empty, render } as Record<string, unknown>,
     });
   }
 }

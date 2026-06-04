@@ -52,6 +52,44 @@ export function escapeHtml(value: string): string {
 }
 
 /**
+ * UTF-16 code units that must be escaped to make JSON safe to embed inline
+ * inside a `<script type="application/json">` element. `<` is the critical one —
+ * escaping it prevents an embedded `</script` from closing the script early and
+ * `<!--` from opening an HTML comment; the JS line/paragraph separators
+ * U+2028/U+2029 are escaped because they are valid JSON but illegal in a JS
+ * string literal (some embedders reuse the JS tokenizer). `&` and `>` are
+ * escaped defensively. Each maps to a `\uXXXX` escape, which is a valid JSON
+ * string escape that `JSON.parse` restores to the original character.
+ */
+const SCRIPT_JSON_UNSAFE_CODES: ReadonlySet<number> = new Set([
+  0x26, // &
+  0x3c, // <
+  0x3e, // >
+  0x2028, // line separator
+  0x2029, // paragraph separator
+]);
+
+/**
+ * `JSON.stringify`s `value` and escapes the code units that are unsafe to embed
+ * inline in a `<script type="application/json">` element (see
+ * {@link SCRIPT_JSON_UNSAFE_CODES}). The result is still valid JSON: the escapes
+ * only ever occur inside JSON string tokens and `JSON.parse` restores them.
+ */
+export function serializeJsonForScript(value: unknown): string {
+  const json = JSON.stringify(value);
+  let result = "";
+  for (let i = 0; i < json.length; i++) {
+    const code = json.charCodeAt(i);
+    if (SCRIPT_JSON_UNSAFE_CODES.has(code)) {
+      result += `\\u${code.toString(16).padStart(4, "0")}`;
+    } else {
+      result += json[i];
+    }
+  }
+  return result;
+}
+
+/**
  * Converts camelCase to kebab-case for CSS properties.
  */
 function camelToKebab(str: string): string {

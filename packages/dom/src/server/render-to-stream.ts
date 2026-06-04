@@ -4,12 +4,13 @@ import {
   FRAGMENT,
   LIST,
   NoPropValue,
+  SERVER_BOUNDARY,
   Source,
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@effect-ui/core";
 import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
-import { Effect, Exit, Option, Queue, Ref, Scope, Stream } from "effect";
+import { Cause, Effect, Exit, type Layer, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
 import {
   listItemEndText,
   listItemStartText,
@@ -19,7 +20,12 @@ import {
   streamStartText,
 } from "~/shared";
 import { UnsupportedNodeTypeError } from "~/data";
-import { escapeHtml, serializeProps, VOID_ELEMENTS } from "./serialize";
+import {
+  BOUNDARY_FAILURE_ATTR,
+  collectServerBoundaries,
+  type ServerBoundaryReplayProps,
+} from "~/boundary-replay";
+import { escapeHtml, serializeJsonForScript, serializeProps, VOID_ELEMENTS } from "./serialize";
 
 // ============================================================================
 // Internal types
@@ -51,7 +57,28 @@ interface ServerSuspenseCtx {
    * stream and are interrupted if the consumer cancels.
    */
   readonly scope: Scope.Scope;
+  /**
+   * Single-slot collector for a `Boundary.server` **load failure** being
+   * relocated to its enclosing failure `Boundary` (typed-failure replay). A
+   * failing server boundary `Schema.encode`s its error and stashes
+   * `{ owner, encoded }` here, then re-fails the original cause; the enclosing
+   * failure boundary drains it (after its `match` handles the cause) to emit the
+   * `data-eui-boundary-failure` payload before its fallback. `null` on the plain
+   * SSR passes — failure payloads are emitted only on the hydratable pass.
+   */
+  readonly failureCollector: FailureCollector | null;
 }
+
+/** A `Boundary.server` load failure stashed for relocation to its failure boundary. */
+interface ServerBoundaryFailure {
+  /** The failing `Boundary.server`'s live `props` (matched by reference for its index). */
+  readonly owner: ServerBoundaryReplayProps;
+  /** The `Schema.encode`d typed `ELoad` error, ready to embed in the payload. */
+  readonly encoded: unknown;
+}
+
+/** Single-slot relocation channel for a server-boundary load failure. */
+type FailureCollector = Ref.Ref<Option.Option<ServerBoundaryFailure>>;
 
 /**
  * Descriptor props carried by a `List.each` node (mirrors the client's
@@ -172,9 +199,20 @@ function renderSuspenseSSRInline(
  * error calls `props.match` — if it returns a `Node`, renders the fallback
  * inline with no markers; if it returns `null`, propagates the error as a
  * stream failure. Used by both plain-SSR and hydratable-SSR code paths.
+ *
+ * **Typed-failure replay (hydratable):** when `match` handles a cause raised by a
+ * nested `Boundary.server`'s `load`, the failing boundary has stashed its encoded
+ * error in `failureCollector`. After rendering the fallback, this handler drains
+ * the collector and emits a single
+ * `<script type="application/json" data-eui-boundary-failure>{"index":N,"error":…}</script>`
+ * **before** the fallback HTML, where `N` is the failing boundary's pre-order
+ * index among the `SERVER_BOUNDARY` descriptors statically reachable in
+ * `props.children`. When `match` returns `null` the cause re-fails **without**
+ * draining, so the payload relocates to the next enclosing handling boundary.
  */
 function renderBoundarySSR(
   props: Boundary.FailureProps & { children: Renderable[] },
+  failureCollector: FailureCollector | null,
   renderFn: (node: Renderable) => Stream.Stream<string, Error>,
 ): Stream.Stream<string, Error> {
   const childrenNode = (
@@ -188,13 +226,125 @@ function renderBoundarySSR(
   return Stream.unwrapScoped(
     Effect.gen(function* () {
       const childrenHtml = yield* Stream.mkString(renderFn(childrenNode)).pipe(
-        Effect.catchAllCause((cause) => {
-          const fallbackNode = props.match(cause);
-          if (fallbackNode === null) return Effect.failCause(cause);
-          return Stream.mkString(renderFn(fallbackNode as Renderable));
-        }),
+        Effect.catchAllCause((cause) =>
+          Effect.gen(function* () {
+            const fallbackNode = props.match(cause);
+            // Not handled here: re-fail without draining so any stashed failure
+            // payload relocates to the next enclosing handling boundary.
+            if (fallbackNode === null) return yield* Effect.failCause(cause);
+
+            const fallbackHtml = yield* Stream.mkString(renderFn(fallbackNode as Renderable));
+            if (failureCollector === null) return fallbackHtml;
+
+            // Drain the relocation slot: if this cause came from a server
+            // boundary's load, prepend its encoded failure payload.
+            const stashed = yield* Ref.getAndSet(failureCollector, Option.none());
+            if (Option.isNone(stashed)) return fallbackHtml;
+
+            const index = collectServerBoundaries(props.children).indexOf(stashed.value.owner);
+            const payload = serializeJsonForScript({ index, error: stashed.value.encoded });
+            const script = `<script type="application/json" ${BOUNDARY_FAILURE_ATTR}>${payload}</script>`;
+            return script + fallbackHtml;
+          }),
+        ),
       );
       return Stream.make(childrenHtml);
+    }),
+  );
+}
+
+// ============================================================================
+// Server boundary SSR helper
+// ============================================================================
+
+/**
+ * Descriptor props carried by a `Boundary.server` node. The server renderer runs
+ * `load` (with its requirements discharged by `provide`) to obtain `data`,
+ * encodes it through `schema`, and renders `render(data)` in place. `load`'s
+ * error is typed as `Error` here because the renderer's stream error channel is
+ * `Error`; a `load` failure propagates as a stream failure (caught by the
+ * nearest enclosing failure `Boundary`).
+ */
+interface ServerBoundarySSRProps {
+  readonly load: () => Effect.Effect<unknown, Error, unknown>;
+  readonly provide: Layer.Layer<unknown, never, never>;
+  readonly schema: Schema.Schema<unknown, unknown>;
+  readonly render: (data: unknown) => Renderable;
+  /**
+   * Wire contract for a typed `load` failure (typed-failure replay). Present when
+   * `ELoad ≠ never`; used to `Schema.encode` the error for the failure payload.
+   */
+  readonly failure?: Schema.Schema<unknown, unknown>;
+}
+
+/**
+ * On a `load` **failure** during a hydratable pass, `Schema.encode`s the typed
+ * error via `props.failure` and stashes `{ owner, encoded }` in `failureCollector`
+ * for the enclosing failure `Boundary` to relocate, then re-fails the **original**
+ * cause so `match` still sees it unchanged. No-ops (re-fails unchanged) on the
+ * plain passes (`failureCollector === null`), when no `failure` schema is present,
+ * on a defect (no `Cause.failureOption`), or if the encode itself fails — all of
+ * which fall back to v1 behaviour (server fallback, client mismatch).
+ */
+function stashServerBoundaryFailure(
+  props: ServerBoundarySSRProps,
+  failureCollector: FailureCollector | null,
+  cause: Cause.Cause<Error>,
+): Effect.Effect<never, Error> {
+  if (failureCollector === null || props.failure === undefined) {
+    return Effect.failCause(cause);
+  }
+  const error = Cause.failureOption(cause);
+  if (Option.isNone(error)) {
+    return Effect.failCause(cause);
+  }
+  return Schema.encode(props.failure)(error.value).pipe(
+    Effect.flatMap((encoded) => Ref.set(failureCollector, Option.some({ owner: props, encoded }))),
+    // Whether the encode succeeds or fails, re-raise the original cause so the
+    // enclosing boundary's `match` sees the unchanged failure.
+    Effect.matchCauseEffect({
+      onFailure: () => Effect.failCause(cause),
+      onSuccess: () => Effect.failCause(cause),
+    }),
+  );
+}
+
+/**
+ * Renders a `Boundary.server` descriptor for SSR (success path). Runs
+ * `Effect.provide(load(), provide)` to obtain `data` — the region **blocks** on
+ * it, like `firstListEmission` — then renders `render(data)` HTML in place.
+ *
+ * When `emitPayload` is `true` (the hydratable passes), the encoded `data` is
+ * emitted inline as a `<script type="application/json">…</script>` at the region
+ * cursor, **before** the rendered HTML, so the client `hydrate` walk reads it
+ * positionally and hydrates `render(data)` at `script.nextSibling`. The plain
+ * passes (`emitPayload === false`) emit only the `render(data)` HTML — complete
+ * without JS, with no payload script (AC-11/AC-12).
+ *
+ * No wrapper comment markers are needed: `render(data)` is fully-resolved static
+ * HTML located positionally, and the payload script itself sits at the cursor.
+ */
+function renderServerBoundarySSR(
+  props: ServerBoundarySSRProps,
+  emitPayload: boolean,
+  failureCollector: FailureCollector | null,
+  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
+): Stream.Stream<string, Error> {
+  return Stream.unwrap(
+    Effect.gen(function* () {
+      // A typed `load` failure is stashed for the enclosing failure boundary to
+      // replay (hydratable pass only); the original cause is then re-raised so it
+      // still propagates to `match` as before.
+      const data = yield* Effect.provide(props.load(), props.provide).pipe(
+        Effect.catchAllCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
+      );
+      const childrenHtml = renderFn(props.render(data));
+      if (!emitPayload) {
+        return childrenHtml;
+      }
+      const encoded = yield* Schema.encode(props.schema)(data);
+      const payload = `<script type="application/json">${serializeJsonForScript(encoded)}</script>`;
+      return Stream.make(payload).pipe(Stream.concat(childrenHtml));
     }),
   );
 }
@@ -293,9 +443,19 @@ function renderSSRNode(
     }
 
     if (type === FAILURE_BOUNDARY) {
+      // Plain SSR never emits a failure payload, so no collector is threaded.
       return renderBoundarySSR(
         props as unknown as Boundary.FailureProps & { children: Renderable[] },
+        null,
         (n) => renderSSRNode(n, ctx),
+      );
+    }
+
+    if (type === SERVER_BOUNDARY) {
+      // Plain SSR: run load + render(data) inline, but emit no payload script
+      // (not hydratable) — AC-11.
+      return renderServerBoundarySSR(props as unknown as ServerBoundarySSRProps, false, null, (n) =>
+        renderSSRNode(n, ctx),
       );
     }
 
@@ -431,8 +591,22 @@ function renderHydratableSSRNode(
     }
 
     if (type === FAILURE_BOUNDARY) {
+      // Hydratable SSR: thread the collector so a handled server-boundary load
+      // failure emits its `data-eui-boundary-failure` payload before the fallback.
       return renderBoundarySSR(
         props as unknown as Boundary.FailureProps & { children: Renderable[] },
+        ctx?.failureCollector ?? null,
+        (n) => renderHydratableSSRNode(n, counter, ctx),
+      );
+    }
+
+    if (type === SERVER_BOUNDARY) {
+      // Hydratable SSR: emit the encoded payload inline at the cursor, then the
+      // render(data) HTML, so client hydrate reads it positionally — AC-10.
+      return renderServerBoundarySSR(
+        props as unknown as ServerBoundarySSRProps,
+        true,
+        ctx?.failureCollector ?? null,
         (n) => renderHydratableSSRNode(n, counter, ctx),
       );
     }
@@ -549,7 +723,14 @@ export const renderToStream = (node: Renderable): Stream.Stream<string, Error> =
       const pendingCount = yield* Ref.make(0);
       const idCounter = { current: 0 };
       const scope = yield* Effect.scope;
-      const ctx: ServerSuspenseCtx = { patchQueue, pendingCount, idCounter, scope };
+      // Plain SSR never emits failure payloads.
+      const ctx: ServerSuspenseCtx = {
+        patchQueue,
+        pendingCount,
+        idCounter,
+        scope,
+        failureCollector: null,
+      };
 
       const mainStream = renderSSRNode(node, ctx).pipe(
         // After the main document tree is exhausted: if no suspense boundary was
@@ -579,7 +760,16 @@ export const renderToStreamHydratable = (node: Renderable): Stream.Stream<string
       const pendingCount = yield* Ref.make(0);
       const idCounter = { current: 0 };
       const scope = yield* Effect.scope;
-      const ctx: ServerSuspenseCtx = { patchQueue, pendingCount, idCounter, scope };
+      const failureCollector: FailureCollector = yield* Ref.make(
+        Option.none<ServerBoundaryFailure>(),
+      );
+      const ctx: ServerSuspenseCtx = {
+        patchQueue,
+        pendingCount,
+        idCounter,
+        scope,
+        failureCollector,
+      };
       const counter: RegionCounter = { current: 0 };
 
       const mainStream = renderHydratableSSRNode(node, counter, ctx).pipe(

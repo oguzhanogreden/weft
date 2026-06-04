@@ -1,0 +1,32 @@
+{
+  "name": "@effect-ui/vite",
+  "version": "0.0.0",
+  "description": "Vite plugins for effect-ui — the Boundary.server prune plugin",
+  "keywords": [
+    "effect-ui",
+    "ssr",
+    "vite-plugin"
+  ],
+  "license": "MIT",
+  "author": "Stef van Wijchen",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "magic-string": "^0.30.17"
+  },
+  "devDependencies": {
+    "@effect-ui/core": "workspace:*",
+    "@types/node": "^25.9.1",
+    "effect": "^3.21.2",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "*"
+  }
+}
