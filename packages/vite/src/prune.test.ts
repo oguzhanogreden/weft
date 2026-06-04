@@ -9,9 +9,15 @@ const parse = (code: string): AstNode => parseSync("module.ts", code).program as
 /** Run the prune core over a source string. */
 const prune = (code: string) => pruneServerBoundaries(code, parse(code));
 
-/** Assert a string is parseable (i.e. the rewrite produced valid JS). */
+/**
+ * Assert the rewrite produced valid JS. `parseSync` is **error-tolerant** — it
+ * returns a `program` plus an `errors` array and never throws — so a plain
+ * `doesNotThrow(() => parse(code))` would silently pass on invalid output like
+ * `{ , }`. We must inspect `errors` to actually validate.
+ */
 const assertValid = (code: string): void => {
-  assert.doesNotThrow(() => parse(code), `expected valid JS:\n${code}`);
+  const { errors } = parseSync("module.ts", code);
+  assert.equal(errors.length, 0, `expected valid JS:\n${code}\n${JSON.stringify(errors)}`);
 };
 
 describe("pruneServerBoundaries", () => {
@@ -65,6 +71,78 @@ describe("pruneServerBoundaries", () => {
       assert.ok(result.code.includes("failure: F"));
       assertValid(result.code);
     });
+
+    it("strips a shorthand property (`{ provide }`)", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, provide, load: a }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!/\bprovide\b/.test(result.code), "shorthand provide removed");
+      assert.ok(!/\bload\b/.test(result.code), "load removed");
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("strips a method-shorthand property (`{ load() {} }`)", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, load() { return 1; } }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!result.code.includes("load"), "method-shorthand load removed");
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("collapses an all-pruned object to valid JS even with a trailing comma", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ load: a, provide: b, }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!result.code.includes("load"));
+      assert.ok(!result.code.includes("provide"));
+      // The dangling trailing comma must be swallowed — not left as `{ , }`.
+      assertValid(result.code);
+    });
+
+    it("keeps a trailing comma valid when a property survives", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, load: a, }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!result.code.includes("load"));
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("emits a source map with mappings for the edits", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ load: a, provide: p, schema: S }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(result.map, "a source map object is produced");
+      assert.ok(
+        typeof result.map.mappings === "string" && result.map.mappings.length > 0,
+        "the source map carries non-empty mappings",
+      );
+    });
+  });
+
+  // Guards the test helper itself: `parseSync` is error-tolerant, so a naive
+  // `doesNotThrow` would pass on invalid JS — `assertValid` must catch it.
+  describe("assertValid helper", () => {
+    it("rejects syntactically invalid output", () => {
+      assert.throws(() => assertValid("const n = x({ , }, r);"));
+    });
   });
 
   describe("AC-4 — match precision", () => {
@@ -112,6 +190,95 @@ describe("pruneServerBoundaries", () => {
         `const n = Boundary["server"]({ load: a, provide: p, schema: S });`,
       ].join("\n");
       assert.equal(prune(code), null);
+    });
+
+    it("prunes a static string-literal computed key (`{ ['load']: a }`)", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, ["load"]: a, ["provide"]: b }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      // `["load"]` is a statically-known string, identical in meaning to `load:`.
+      assert.ok(result?.changed);
+      assert.ok(!result.code.includes("load"));
+      assert.ok(!result.code.includes("provide"));
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("does NOT prune a dynamic computed key (`{ [load]: a }`)", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, [load]: a }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      // `[load]` is the *variable* load, not the property name — never prune it.
+      assert.equal(result?.changed ?? false, false);
+    });
+
+    it("prunes getter-form load/provide (`{ get load() {} }`)", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server(`,
+        `  { get load() { return f; }, get provide() { return L; }, schema: S },`,
+        `  (d) => d,`,
+        `);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!result.code.includes("load"));
+      assert.ok(!result.code.includes("provide"));
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("does not match a binding shadowed by a catch-clause param", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `try {} catch (Boundary) {`,
+        `  Boundary.server({ load: a, provide: b, schema: S }, (d) => d);`,
+        `}`,
+      ].join("\n");
+      // The catch param shadows the import — pruning it would corrupt unrelated code.
+      assert.equal(prune(code), null);
+    });
+
+    it("does not match a binding shadowed by a block-scoped const", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `{`,
+        `  const Boundary = { server: (o, r) => r };`,
+        `  Boundary.server({ load: a, provide: b, schema: S }, (d) => d);`,
+        `}`,
+      ].join("\n");
+      assert.equal(prune(code), null);
+    });
+
+    it("does not match a binding shadowed by a for-of loop variable", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `for (const Boundary of items) {`,
+        `  Boundary.server({ load: a, provide: b, schema: S }, (d) => d);`,
+        `}`,
+      ].join("\n");
+      assert.equal(prune(code), null);
+    });
+
+    it("still prunes a module-scope call when an unrelated block shadows it", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `export const outer = Boundary.server({ load: a, provide: b, schema: S }, (d) => d);`,
+        `{`,
+        `  const Boundary = { server: (o, r) => r };`,
+        `  Boundary.server({ load: a, provide: b, schema: S }, (d) => d);`,
+        `}`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      // Only the shadowed (block-scoped) call retains load/provide.
+      assert.equal(result.code.match(/load:/g)?.length, 1);
+      assert.equal(result.code.match(/provide:/g)?.length, 1);
+      assertValid(result.code);
     });
 
     it("returns null when @effect-ui/core is not imported", () => {

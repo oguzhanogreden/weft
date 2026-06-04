@@ -45,8 +45,12 @@ apply: "build", transform }`.
   `Boundary` imported from `@effect-ui/core` (including aliases,
   `import { Boundary as B }`). Match `MemberExpression` calls
   `<binding>.server(…)`. A binding shadowed by an inner declaration is **not**
-  matched. Prune only when the first argument is an inline `ObjectExpression`
-  with no `SpreadElement`; otherwise skip and emit a build warning.
+  matched — this covers function params/hoisted names **and** lexical shadows
+  introduced by a block, a `catch` clause, a `for`/`for-in`/`for-of` head, or a
+  `switch` block (each handled as its own scope, over-approximated so that the
+  bias is always toward _not_ pruning). Prune only when the first argument is an
+  inline `ObjectExpression` with no `SpreadElement`; otherwise skip and emit a
+  build warning.
 - **Strip shape:** remove the `load` and `provide` `Property` nodes (and their
   separating commas) entirely. Retain `schema`, `render` (the second argument),
   and `failure`.
@@ -103,6 +107,13 @@ modules that contain no matching call are returned untouched regardless.
   never has to reason about values it cannot see at the call site.
 - **Namespace imports** (`import * as Core from "@effect-ui/core"` then
   `Core.Boundary.server(…)`) are not matched; use a named import.
+- **Dynamic computed keys** (`{ [k]: … }`, `{ [`lo${x}`]: … }`) are not pruned —
+  the key is not statically known. This is not a real gap: `ServerProps` requires
+  `load`/`provide`/`schema` as statically-named keys, so a dynamic key can never
+  _be_ `load`/`provide` (only an extra property). Static string-literal computed
+  keys (`{ ["load"]: … }`) and getter/method forms (`{ get load() {} }`) **are**
+  pruned. A computed **identifier** key (`{ [load]: … }`) is deliberately left
+  alone — there the identifier is the _variable_ `load`, not the property name.
 - DCE is the bundler's job. The plugin only removes the references; whether the
   server-only module is actually dropped depends on it being otherwise unreferenced
   and free of import side effects.

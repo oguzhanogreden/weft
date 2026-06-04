@@ -50,13 +50,19 @@ function isNode(value: unknown): value is AstNode {
   return typeof value === "object" && value !== null && typeof (value as AstNode).type === "string";
 }
 
-/** Resolve a `Property`/member key to its static name, or `null` if dynamic. */
-function staticKeyName(key: AstNode): string | null {
-  if (key.type === "Identifier") return key["name"] as string;
+/**
+ * Resolve a property key to its static name, or `null` if dynamic. A string
+ * `Literal` is static regardless of `computed` (`{ "load": x }` and
+ * `{ ["load"]: x }` both name `load`). A bare `Identifier` is static **only when
+ * not computed**: in a computed key `{ [load]: x }` the identifier is the
+ * *variable* `load`, not the property name, and must never be treated as static.
+ */
+function staticKeyName(key: AstNode, computed: boolean): string | null {
   if (key.type === "Literal") {
     const value = key["value"];
     return typeof value === "string" ? value : null;
   }
+  if (!computed && key.type === "Identifier") return key["name"] as string;
   return null;
 }
 
@@ -169,6 +175,70 @@ function collectHoistedNames(node: AstNode, out: Set<string>): void {
   visit(node);
 }
 
+/** Collect the lexical names declared *directly* by a list of statements. */
+function collectLexicalBindings(statements: ReadonlyArray<AstNode>, out: Set<string>): void {
+  for (const stmt of statements) {
+    switch (stmt.type) {
+      case "VariableDeclaration":
+        for (const decl of (stmt["declarations"] as AstNode[]) ?? [])
+          collectPatternNames(decl["id"] as AstNode, out);
+        break;
+      case "FunctionDeclaration":
+      case "ClassDeclaration": {
+        const id = stmt["id"] as AstNode | undefined;
+        if (id && id.type === "Identifier") out.add(id["name"] as string);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+/** Collect the binding pattern names of a `for`/`for-in`/`for-of` head, if lexical. */
+function collectForBindings(head: AstNode | undefined, out: Set<string>): void {
+  if (head && head.type === "VariableDeclaration")
+    for (const decl of (head["declarations"] as AstNode[]) ?? [])
+      collectPatternNames(decl["id"] as AstNode, out);
+}
+
+/**
+ * Names a **non-function** scope binds directly: the lexical declarations of a
+ * block/switch, a `catch` clause's param, and the binding of a `for`/`for-in`/
+ * `for-of` head. Does not descend into nested blocks or functions — each gets its
+ * own scope as the walker reaches it. Like {@link collectFunctionScope} this is a
+ * deliberate over-approximation (a name declared anywhere in the construct treats
+ * the outer `Boundary` as shadowed across all of it); the bias is toward *not*
+ * pruning, which is always safe. Without this, a `.server` call on a binding
+ * shadowed by a `catch`/block/loop declaration would be pruned incorrectly.
+ */
+function collectBlockScope(node: AstNode): Set<string> {
+  const names = new Set<string>();
+  switch (node.type) {
+    case "BlockStatement":
+    case "StaticBlock":
+      collectLexicalBindings((node["body"] as AstNode[]) ?? [], names);
+      break;
+    case "CatchClause":
+      collectPatternNames(node["param"] as AstNode | undefined, names);
+      break;
+    case "ForStatement":
+      collectForBindings(node["init"] as AstNode | undefined, names);
+      break;
+    case "ForInStatement":
+    case "ForOfStatement":
+      collectForBindings(node["left"] as AstNode | undefined, names);
+      break;
+    case "SwitchStatement":
+      for (const switchCase of (node["cases"] as AstNode[]) ?? [])
+        collectLexicalBindings((switchCase["consequent"] as AstNode[]) ?? [], names);
+      break;
+    default:
+      break;
+  }
+  return names;
+}
+
 /**
  * Find every `<binding>.server(…)` call whose `<binding>` resolves to a live
  * (non-shadowed) `Boundary` import, invoking `onCall` for each.
@@ -217,11 +287,11 @@ function findServerCalls(
       node.type === "FunctionDeclaration" ||
       node.type === "FunctionExpression" ||
       node.type === "ArrowFunctionExpression";
-    let scopeNames: Set<string> | null = null;
-    if (isFunction) {
-      scopeNames = collectFunctionScope(node);
-      pushScope(scopeNames);
-    }
+    // Functions bind params + hoisted names; all other constructs (blocks,
+    // catch, loops, switch) bind their lexical declarations. Both shadow the
+    // outer `Boundary` import for the duration of the node's children.
+    const scopeNames = isFunction ? collectFunctionScope(node) : collectBlockScope(node);
+    if (scopeNames.size > 0) pushScope(scopeNames);
 
     for (const key in node) {
       if (key === "type" || key === "start" || key === "end") continue;
@@ -230,7 +300,7 @@ function findServerCalls(
       else walk(child);
     }
 
-    if (scopeNames) popScope(scopeNames);
+    if (scopeNames.size > 0) popScope(scopeNames);
   };
 
   walk(program);
@@ -260,6 +330,18 @@ function commaBetween(code: string, from: number, limit: number): number {
 }
 
 /**
+ * End offset of a trailing comma following the last property, if any: scans
+ * `[from, limit)` (where `limit` is the object's closing `}`) and returns the
+ * index *after* the comma so it is swallowed, else `from`. Removing the last
+ * property without this would leave a dangling `,` (e.g. `{ , }`) when every
+ * property is pruned.
+ */
+function trailingCommaEnd(code: string, from: number, limit: number): number {
+  for (let i = from; i < limit; i++) if (code[i] === ",") return i + 1;
+  return from;
+}
+
+/**
  * Build the removal ranges for the target properties, each extended to swallow
  * its separating comma so the surviving object stays syntactically valid.
  */
@@ -273,10 +355,12 @@ function removalRanges(code: string, object: AstNode, targets: AstNode[]): Range
       // Not last: drop the property up to the next one (its trailing comma + ws).
       ranges.push([target.start, next.start]);
     } else {
-      // Last: drop the preceding comma too, so no dangling separator remains.
+      // Last: drop the preceding comma (so no dangling separator remains) and a
+      // trailing comma if present (so an all-pruned object collapses to `{}`
+      // rather than `{ , }`). `object.end - 1` is the closing `}`.
       const prev = props[idx - 1];
       const from = prev ? commaBetween(code, prev.end, target.start) : target.start;
-      ranges.push([from, target.end]);
+      ranges.push([from, trailingCommaEnd(code, target.end, object.end - 1)]);
     }
   }
   return mergeRanges(ranges);
@@ -323,7 +407,9 @@ export function pruneServerBoundaries(code: string, program: AstNode): PruneResu
     }
 
     const targets = ((first["properties"] as AstNode[]) ?? []).filter(
-      (p) => p.type === "Property" && p["computed"] !== true && hasStrippedKey(p),
+      // Getters/methods are `Property` too and prune safely; `hasStrippedKey`
+      // gates computed keys (static string literal yes, dynamic identifier no).
+      (p) => p.type === "Property" && hasStrippedKey(p),
     );
     if (targets.length === 0) continue; // already pruned, or nothing to strip
 
@@ -343,6 +429,6 @@ export function pruneServerBoundaries(code: string, program: AstNode): PruneResu
 function hasStrippedKey(prop: AstNode): boolean {
   const key = prop["key"] as AstNode | undefined;
   if (!key) return false;
-  const name = staticKeyName(key);
+  const name = staticKeyName(key, prop["computed"] === true);
   return name !== null && STRIPPED_KEYS.has(name);
 }
