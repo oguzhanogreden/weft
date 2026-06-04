@@ -323,22 +323,58 @@ function mergeRanges(ranges: Range[]): Range[] {
   return merged;
 }
 
-/** Index of the first comma in `code` within `[from, limit)`, else `from`. */
+/**
+ * Index of the first **real** comma in `code` within `[from, limit)`, else
+ * `from`. "Real" means lexically outside any comment: the gap between two object
+ * properties may legally hold a `/* … *\/` or `// … ` comment, and a comma inside
+ * one is not the property separator. Without this skip, `{ a: x /*, *\/, b: y }`
+ * would match the comment's comma and corrupt the output (e.g. an unterminated
+ * comment). No string-literal state is needed — these gaps only ever contain
+ * whitespace, commas, and comments, never string values.
+ */
 function commaBetween(code: string, from: number, limit: number): number {
-  for (let i = from; i < limit; i++) if (code[i] === ",") return i;
-  return from;
+  const i = findRealComma(code, from, limit);
+  return i === -1 ? from : i;
 }
 
 /**
  * End offset of a trailing comma following the last property, if any: scans
- * `[from, limit)` (where `limit` is the object's closing `}`) and returns the
- * index *after* the comma so it is swallowed, else `from`. Removing the last
- * property without this would leave a dangling `,` (e.g. `{ , }`) when every
+ * `[from, limit)` (where `limit` is the object's closing `}`) for the first
+ * **real** comma (see {@link commaBetween} — commas inside comments are skipped)
+ * and returns the index *after* it so it is swallowed, else `from`. Removing the
+ * last property without this would leave a dangling `,` (e.g. `{ , }`) when every
  * property is pruned.
  */
 function trailingCommaEnd(code: string, from: number, limit: number): number {
-  for (let i = from; i < limit; i++) if (code[i] === ",") return i + 1;
-  return from;
+  const i = findRealComma(code, from, limit);
+  return i === -1 ? from : i + 1;
+}
+
+/**
+ * Index of the first `,` in `code` within `[from, limit)` that lies outside any
+ * `/* … *\/` block comment or `// … ` line comment, or `-1` if none. The scan is
+ * a minimal comment-state machine; it does not track string literals because the
+ * ranges it is applied to (between object properties, or between the last
+ * property and the closing `}`) never contain string values.
+ */
+function findRealComma(code: string, from: number, limit: number): number {
+  let i = from;
+  while (i < limit) {
+    const ch = code[i];
+    if (ch === "/" && code[i + 1] === "*") {
+      const close = code.indexOf("*/", i + 2);
+      i = close === -1 || close >= limit ? limit : close + 2;
+      continue;
+    }
+    if (ch === "/" && code[i + 1] === "/") {
+      const nl = code.indexOf("\n", i + 2);
+      i = nl === -1 || nl >= limit ? limit : nl + 1;
+      continue;
+    }
+    if (ch === ",") return i;
+    i++;
+  }
+  return -1;
 }
 
 /**

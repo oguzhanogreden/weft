@@ -122,6 +122,47 @@ describe("pruneServerBoundaries", () => {
       assertValid(result.code);
     });
 
+    it("ignores a comma inside an interior comment between properties", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S /*, */, load: a }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!/\bload\b/.test(result.code), "load removed");
+      assert.ok(result.code.includes("schema: S"), "schema retained");
+      // The comment's comma must not be treated as the separator (which would
+      // leave an unterminated `/*`); the output must still be valid JS.
+      assertValid(result.code);
+    });
+
+    it("ignores a comma inside a trailing block comment when pruning the last prop", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({ schema: S, load: a /*, */ }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!/\bload\b/.test(result.code), "load removed");
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
+    it("ignores a comma inside a line comment between properties", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `const n = Boundary.server({`,
+        `  schema: S, // a, b`,
+        `  load: a,`,
+        `}, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.ok(!/\bload\b/.test(result.code), "load removed");
+      assert.ok(result.code.includes("schema: S"));
+      assertValid(result.code);
+    });
+
     it("emits a source map with mappings for the edits", () => {
       const code = [
         `import { Boundary } from "@effect-ui/core";`,
@@ -284,6 +325,30 @@ describe("pruneServerBoundaries", () => {
     it("returns null when @effect-ui/core is not imported", () => {
       const code = `const n = Boundary.server({ load: a, provide: p, schema: S });`;
       assert.equal(prune(code), null);
+    });
+
+    it("does not match a namespace import (`import * as Core`)", () => {
+      const code = [
+        `import * as Core from "@effect-ui/core";`,
+        `const n = Core.Boundary.server({ load: a, provide: p, schema: S }, (d) => d);`,
+      ].join("\n");
+      // Namespace imports are a documented limitation — bind a named `Boundary`.
+      assert.equal(prune(code), null);
+    });
+
+    it("prunes two independent live Boundary.server calls in one module", () => {
+      const code = [
+        `import { Boundary } from "@effect-ui/core";`,
+        `export const a = Boundary.server({ load: f, provide: L, schema: S1 }, (d) => d);`,
+        `export const b = Boundary.server({ load: g, provide: M, schema: S2 }, (d) => d);`,
+      ].join("\n");
+      const result = prune(code);
+      assert.ok(result?.changed);
+      assert.equal(result.code.match(/load:/g), null, "both load keys removed");
+      assert.equal(result.code.match(/provide:/g), null, "both provide keys removed");
+      assert.ok(result.code.includes("schema: S1"));
+      assert.ok(result.code.includes("schema: S2"));
+      assertValid(result.code);
     });
   });
 

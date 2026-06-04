@@ -117,3 +117,11 @@ modules that contain no matching call are returned untouched regardless.
 - DCE is the bundler's job. The plugin only removes the references; whether the
   server-only module is actually dropped depends on it being otherwise unreferenced
   and free of import side effects.
+
+## Edge cases handled
+
+- **Comments between properties.** Removal ranges are extended to swallow a
+  property's separating comma by scanning the source for `,`; that scan skips
+  `/* … */` and `// … ` comments, so a comma _inside_ a comment
+  (`{ schema: S /*, */, load: a }`) is never mistaken for the separator. Without
+  this the rewrite could emit an unterminated comment / invalid JS.
