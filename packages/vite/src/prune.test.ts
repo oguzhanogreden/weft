@@ -1,10 +1,10 @@
 import * as assert from "node:assert/strict";
-import { parseAst } from "vite-plus";
+import { parseSync } from "vite-plus";
 import { describe, it } from "vite-plus/test";
 import { type AstNode, pruneServerBoundaries } from "./prune";
 
 /** Parse a source string to the ESTree program the prune core consumes. */
-const parse = (code: string): AstNode => parseAst(code) as unknown as AstNode;
+const parse = (code: string): AstNode => parseSync("module.ts", code).program as unknown as AstNode;
 
 /** Run the prune core over a source string. */
 const prune = (code: string) => pruneServerBoundaries(code, parse(code));

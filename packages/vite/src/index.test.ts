@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { parseAst } from "vite-plus";
+import { parseSync } from "vite-plus";
 import { describe, it } from "vite-plus/test";
 import { effectUiPrune } from "./index";
 
@@ -15,7 +15,8 @@ function runTransform(
 ): { result: { code: string } | undefined; warnings: string[] } {
   const warnings: string[] = [];
   const ctx = {
-    parse: (c: string) => parseAst(c),
+    // Mirrors the plugin context's `this.parse`: returns the ESTree Program.
+    parse: (c: string) => parseSync("module.ts", c).program,
     warn: (message: string) => warnings.push(message),
   };
   const plugin = effectUiPrune();
