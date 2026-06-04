@@ -137,10 +137,28 @@ Errors that fail their `match` condition (e.g. wrong tag in `catchTag`) re-raise
 
 See [examples/error-boundary](../../examples/error-boundary) for a runnable demo of all six variants.
 
+## Server-side rendering
+
+Render on the server and hydrate on the client with `@effect-ui/dom/server` + `hydrate`. `Boundary.server` loads data on the server, serializes it into the HTML, and replays it on the client without re-running the load:
+
+```typescript
+import { Boundary, h } from "@effect-ui/core";
+import { Layer, Schema } from "effect";
+
+const ProductPage = () =>
+  Boundary.server(
+    { load: () => fetchProduct(), provide: Layer.empty, schema: ProductSchema },
+    (product) => h.div({}, product.name),
+  );
+```
+
+See the [Server-side rendering guide](./server-side-rendering.md) for the full model, typed-failure replay, `ServerTag`, and bundle pruning.
+
 ## Next steps
 
 - [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
 - [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
 - [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
+- [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, `Boundary.server`, and the `@effect-ui/vite` prune plugin
 - [API Reference](../api/core.md) — complete `@effect-ui/core` API reference
 - [examples/](../../examples/) — nine runnable examples covering common patterns
