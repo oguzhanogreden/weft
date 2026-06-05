@@ -98,13 +98,13 @@ describe("router-ssr example", () => {
         {
           component: Component.gen(function* () {
             const outlet = yield* Router.Outlet;
-            return yield* h.div({}, [outlet]);
+            return yield* h.div([outlet]);
           }),
         },
         [
           Router.route("", {
             component: Component.make(() =>
-              h.div({}, [h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")]),
+              h.div([h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")]),
             ),
           }),
           Router.route("gone", { component: () => notFound("/gone") }),

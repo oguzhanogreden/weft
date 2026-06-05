@@ -20,13 +20,15 @@ effect-ui is a reactive DOM rendering library built on Effect's combinator API. 
 - **Ephemeral components**: Components run once, streams drive all updates
 - **SSR + Hydration**: `renderToString`, `renderToStream`, and flash-free `hydrate()` for full-stack apps
 - **Progressive streaming**: `renderToStream` emits HTML chunks in document order as slow nodes resolve
+- **Universal routing**: `@effect-ui/router` maps a URL to a nested page tree on both server and client, with type-safe params and persistent layouts
 
 ## Packages
 
-effect-ui is a monorepo with two packages:
+effect-ui is a monorepo with three packages:
 
 - **`@effect-ui/core`**: Combinator builders and type definitions. Exports `h`, `h.fragment`, `Component` (with `Component.gen` / `Component.make`), `Suspense`, `Boundary` (six error-boundary variants), and the `Node<E, R>` / `Source<A, E, R>` types.
 - **`@effect-ui/dom`**: The renderer. `mount` and `hydrate` for the browser; `renderToString`, `renderToStringHydratable`, `renderToStream`, and `renderToStreamHydratable` for the server (imported from `@effect-ui/dom/server`).
+- **`@effect-ui/router`**: Universal nested router. Authors a route tree with `Router.route` / `Router.layout` / `Router.router`, renders it on the server (`@effect-ui/router/server`) and the client (`@effect-ui/router/client`), with type-safe `href`s and dependency-injected params. See the [Routing guide](./docs/guides/routing.md).
 
 ## Installation
 
@@ -53,11 +55,11 @@ const fetchUser = (id: number) =>
 
 const UserProfile = ({ id }: { id: number }) =>
   Stream.concat(
-    Stream.make(h.div({}, "Loading...")),
+    Stream.make(h.div("Loading...")),
     Stream.fromEffect(
       fetchUser(id).pipe(
-        Effect.flatMap((user) => h.div({}, user.name)),
-        Effect.catchAll(() => h.div({}, "Failed to load user")),
+        Effect.flatMap((user) => h.div(user.name)),
+        Effect.catchAll(() => h.div("Failed to load user")),
       ),
     ),
   );
@@ -102,23 +104,21 @@ void Effect.runPromise(
 
 ### Reactive State with SubscriptionRef
 
-SubscriptionRef provides reactive state with automatic stream-based updates:
+SubscriptionRef provides reactive state with automatic stream-based updates. Reach for `Component.gen` for stateful components — the generator body sets up local state before rendering, and the caller's reactive prop/children channels flow into the returned node's type:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
-import { Effect, SubscriptionRef } from "effect";
+import { Component, h } from "@effect-ui/core";
+import { SubscriptionRef } from "effect";
 
-const Counter = () =>
-  Effect.gen(function* () {
-    const count = yield* SubscriptionRef.make(0);
+const Counter = Component.gen(function* () {
+  const count = yield* SubscriptionRef.make(0);
 
-    return yield* h.div({}, [
-      h.span({}, [count.changes]),
-      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
-      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
-    ]);
-  });
+  return yield* h.div([
+    h.span([count.changes]),
+    h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
+    h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
+  ]);
+});
 ```
 
 ### Derived Streams
@@ -126,23 +126,22 @@ const Counter = () =>
 Transform reactive values with standard Stream operations:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { Effect, Stream, SubscriptionRef } from "effect";
+import { Component, h } from "@effect-ui/core";
+import { Stream, SubscriptionRef } from "effect";
 
-const Dashboard = () =>
-  Effect.gen(function* () {
-    const count = yield* SubscriptionRef.make(0);
+const Dashboard = Component.gen(function* () {
+  const count = yield* SubscriptionRef.make(0);
 
-    const doubled = Stream.map(count.changes, (n) => n * 2);
-    const status = Stream.map(count.changes, (n) => (n > 10 ? "High" : "Normal"));
+  const doubled = Stream.map(count.changes, (n) => n * 2);
+  const status = Stream.map(count.changes, (n) => (n > 10 ? "High" : "Normal"));
 
-    return yield* h.div({}, [
-      h.p({}, ["Count: ", count.changes]),
-      h.p({}, ["Doubled: ", doubled]),
-      h.p({}, ["Status: ", status]),
-      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "Increment"),
-    ]);
-  });
+  return yield* h.div([
+    h.p(["Count: ", count.changes]),
+    h.p(["Doubled: ", doubled]),
+    h.p(["Status: ", status]),
+    h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "Increment"),
+  ]);
+});
 ```
 
 ### SSR + Hydration
@@ -176,17 +175,17 @@ void Effect.runPromise(hydrate(App({ initialValue: 0 }), document.getElementById
 
 ```typescript
 // yield* in Effect.gen
-const node = yield * h.div({}, "Hello");
+const node = yield * h.div("Hello");
 
 // pipe / Effect.provide
-const provided = Effect.provide(h.div({}, userStream), UserServiceLive);
+const provided = Effect.provide(h.div(userStream), UserServiceLive);
 ```
 
 **Stream children**: pass any `Stream` as a child; each emission replaces the previous:
 
 ```typescript
 const message = Stream.make("Loading...", "Ready!");
-h.div({}, [message]);
+h.div([message]);
 ```
 
 **Stream props**: any prop accepts a stream for reactive updates:
@@ -209,7 +208,7 @@ h.div({ style: Stream.make({ color: "red" }, { color: "blue" }) });
 const Counter = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
-    return yield* h.span({}, [count.changes]);
+    return yield* h.span([count.changes]);
   });
 ```
 
@@ -233,10 +232,10 @@ const Avatar = Component.make((props: { src: string }) => h.img({ src: props.src
 // Function-children (render-prop pattern)
 const List = Component.make(
   (props: { items: readonly string[] }, renderItem: (item: string) => readonly Child[]) =>
-    h.ul({}, props.items.flatMap(renderItem)),
+    h.ul(props.items.flatMap(renderItem)),
 );
 
-List({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+List({ items: ["a", "b"] }, (item) => [h.li(item)]);
 ```
 
 ## SSR & Hydration
@@ -268,6 +267,7 @@ The [examples/](./examples) directory contains standalone applications you can r
 | `ssr-hydration`              | Server rendering with `renderToStringHydratable` and client `hydrate`      |
 | `suspense`                   | Suspense boundaries for streaming SSR and client-side coordination         |
 | `error-boundary`             | All six `Boundary.*` variants: catchAll, catchTag, catchTags, and more     |
+| `router-ssr`                 | Universal nested routing with `@effect-ui/router`: SSR, hydration, layouts |
 
 ## Development
 

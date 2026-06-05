@@ -27,12 +27,12 @@ import { App } from "./app";
 export const documentShell = Component.gen(function* () {
   const app = yield* Router.Outlet;
   return yield* h.html({ lang: "en" }, [
-    h.head({}, [
+    h.head([
       h.meta({ charset: "utf-8" }),
       h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
-      h.title({}, "effect-ui — router SSR"),
+      h.title("effect-ui — router SSR"),
     ]),
-    h.body({}, [
+    h.body([
       h.div({ id: "root" }, [app]),
       h.script({ type: "module", src: "/src/entry-client.ts" }),
     ]),

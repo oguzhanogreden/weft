@@ -32,7 +32,7 @@ export const settingsRoute = Router.route("users/:id/settings", {
   path: idParam,
   component: Component.gen(function* () {
     const { id } = yield* Router.params(idParam);
-    return yield* h.section({ id: "page" }, [h.h2({}, `Settings page for user ${id}`)]);
+    return yield* h.section({ id: "page" }, [h.h2(`Settings page for user ${id}`)]);
   }),
 });
 
@@ -44,7 +44,7 @@ export const postsRoute = Router.route("users/:id/posts", {
     const { id } = yield* Router.params(idParam);
     const { sort } = yield* Router.query(sortQuery);
     return yield* h.section({ id: "page" }, [
-      h.h2({}, `Posts page for user ${id}`),
+      h.h2(`Posts page for user ${id}`),
       h.p({ id: "sort" }, `sort: ${sort ?? "none"}`),
     ]);
   }),
@@ -58,8 +58,8 @@ export const postsRoute = Router.route("users/:id/posts", {
 export const homeRoute = Router.route("", {
   component: Component.make(() =>
     h.section({ id: "page" }, [
-      h.h2({}, "Home page"),
-      h.nav({}, [
+      h.h2("Home page"),
+      h.nav([
         h.a({ href: href(settingsRoute, { path: { id: 1 } }) }, "Open user 1"),
         " · ",
         h.a({ href: href(settingsRoute, { path: { id: 2 } }) }, "Open user 2"),
@@ -69,7 +69,7 @@ export const homeRoute = Router.route("", {
 });
 
 /** App-level not-found page (HTTP 404 on the server). */
-const NotFound = () => h.section({ id: "page" }, [h.h2({}, "404 — page not found")]);
+const NotFound = () => h.section({ id: "page" }, [h.h2("404 — page not found")]);
 
 /**
  * The sealed router definition. The whole tree is authored with the namespaced
@@ -84,8 +84,8 @@ export const App = Router.router(
       component: Component.gen(function* () {
         const outlet = yield* Router.Outlet;
         return yield* h.div({ id: "app" }, [
-          h.header({}, [h.strong({}, "router-ssr"), h.nav({}, [h.a({ href: "/" }, "Home")])]),
-          h.main({}, [outlet]),
+          h.header([h.strong("router-ssr"), h.nav([h.a({ href: "/" }, "Home")])]),
+          h.main([outlet]),
         ]);
       }),
     },
@@ -101,8 +101,8 @@ export const App = Router.router(
             const outlet = yield* Router.Outlet;
             const count = yield* SubscriptionRef.make(0);
             return yield* h.div({ "data-user-layout": "" }, [
-              h.h1({}, `User ${id}`),
-              h.p({}, [
+              h.h1(`User ${id}`),
+              h.p([
                 h.button(
                   {
                     type: "button",
@@ -114,7 +114,7 @@ export const App = Router.router(
                 " visits to this layout: ",
                 h.span({ id: "count" }, [count.changes]),
               ]),
-              h.nav({}, [
+              h.nav([
                 h.a({ href: href(settingsRoute, { path: { id } }) }, "Settings"),
                 " · ",
                 h.a({ href: href(postsRoute, { path: { id } }) }, "Posts"),
