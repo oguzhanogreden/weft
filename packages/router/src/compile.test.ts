@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";
@@ -8,9 +8,18 @@ import { Router } from "~/index";
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
+/** A layout `component` that wraps the injected outlet in a `div`. */
+const wrap = (attrs: Record<string, string>) =>
+  Component.gen(function* () {
+    const outlet = yield* Router.Outlet;
+    return yield* h.div(attrs, [outlet]);
+  });
+
+const idParam = { id: Schema.NumberFromString };
+
 function fixture() {
   return Router.router(
-    Router.layout("", { render: ({ outlet }) => h.div({ class: "shell" }, [outlet]) }, [
+    Router.layout({ component: wrap({ class: "shell" }) }, [
       Router.route("", { component: Page("home") }),
       Router.route("about", { component: Page("about") }),
       Router.route("users/new", { component: Page("new") }),
@@ -18,14 +27,10 @@ function fixture() {
         query: { q: Schema.optional(Schema.String) },
         component: Page("search"),
       }),
-      Router.layout(
-        "users/:id",
-        { path: { id: Schema.NumberFromString }, render: ({ outlet }) => h.div({}, [outlet]) },
-        [
-          Router.route("settings", { component: Page("settings") }),
-          Router.route("posts", { component: Page("posts") }),
-        ],
-      ),
+      Router.layout({ component: wrap({}) }, [
+        Router.route("users/:id/settings", { path: idParam, component: Page("settings") }),
+        Router.route("users/:id/posts", { path: idParam, component: Page("posts") }),
+      ]),
     ]),
     { notFound: NotFound },
   );
@@ -60,7 +65,7 @@ describe("compile", () => {
     const { compiled } = fixture();
     const settings = leafByPattern(compiled.leaves, "/users/:id/settings");
     assert.deepEqual(settings.paramNames, ["id"]);
-    // id is owned by the parent layout's NumberFromString schema, merged down.
+    // id is declared on the leaf route (NumberFromString) for its `:id` placeholder.
     const decoded = Schema.decodeUnknownSync(settings.pathSchema)({ id: "42" });
     assert.deepEqual(decoded, { id: 42 });
   });
@@ -75,7 +80,7 @@ describe("compile", () => {
 
   test("C6: an undeclared `:name` placeholder defaults to Schema.String", () => {
     const { compiled } = Router.router(
-      Router.layout("", { render: ({ outlet }) => outlet }, [
+      Router.layout({ component: wrap({}) }, [
         Router.route("tags/:tag", { component: Page("tag") }),
       ]),
       { notFound: NotFound },

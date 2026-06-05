@@ -28,3 +28,26 @@ export const notFound = (path?: string): Effect.Effect<never, RouterNotFound> =>
 /** Type guard recognising a {@link RouterNotFound} value regardless of its prototype. */
 export const isRouterNotFound = (u: unknown): u is RouterNotFound =>
   typeof u === "object" && u !== null && "_tag" in u && u._tag === "RouterNotFound";
+
+/**
+ * Tagged error raised by `Router.params` / `Router.query` when the live match does
+ * not satisfy the requested fields — either no route is matched, or a requested
+ * key is missing / fails its schema's `Type`-side validation. `source` records
+ * whether the failure was on the path params or the query, and `keys` lists the
+ * requested field names for diagnostics.
+ *
+ * It bubbles up through the route tree's aggregate error channel, so a user may
+ * place a `Boundary.catchTag("RouterParamsError", …)` to recover within a subtree.
+ *
+ * Modeled as a `Schema.TaggedError` so it can be encoded/decoded across the wire
+ * the same way `RouterNotFound` and `Boundary.server` replay typed failures.
+ */
+export class RouterParamsError extends Schema.TaggedError<RouterParamsError>()(
+  "RouterParamsError",
+  {
+    /** Which side of the match failed validation. */
+    source: Schema.Literal("path", "query"),
+    /** The requested field names, for diagnostics. */
+    keys: Schema.Array(Schema.String),
+  },
+) {}

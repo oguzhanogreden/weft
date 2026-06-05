@@ -31,51 +31,86 @@ authoring namespace; the two roles merge by declaration. The tree is the source
 of truth. `HttpApi` is the **compilation target** (generated from the tree by
 `toHttpApi`), never the authoring surface.
 
-Every combinator is **fully typed**: a route's `component` and a layout's `render`
-return a precise `Node<E, R>`, the `outlet` handed to a layout carries the union
-of its whole subtree's channels (plus the universal `Router` requirement and the
-possible `RouterNotFound` error), and those channels aggregate up so the sealed
-`RouterDef` — and `RouterApp(def)` — surface a concrete `Node` type with **no
-`Node<any, any>`** on the authoring surface.
+Every combinator is **fully typed**: a route's and a layout's `component` slot is
+a thunk `() => Node<E, R>` (authored with `Component.make` / `Component.gen`, or a
+plain `() => Effect.gen(…)`) that the router invokes at render time — mirroring the
+`notFound: () => Node` slot, and deferring construction so `href(…)` runs after the
+tree is compiled. Those channels aggregate up so the sealed `RouterDef` — and
+`RouterApp(def)` — surface a concrete `Node` type with **no `Node<any, any>`** on
+the authoring surface.
+
+### Dependency-injection surface
+
+The outlet and the current match's params/query are delivered by **dependency
+injection**, not callback arguments:
+
+- **`Router.Outlet`** — a `Context.Tag` whose value is the node to splice. A
+  layout's `component` thunk reads it with `const outlet = yield* Router.Outlet`
+  and places `[outlet]` like an `h`-style child; the server document shell thunk
+  does the same to place the app. It is typed **opaque** as `Node<never, never>` so
+  splicing adds nothing to
+  the reader's local channels — the subtree's real `E`/`R` are aggregated
+  structurally by `Router.layout` / `Router.router`. The router discharges it via
+  `Effect.provideService(node, Router.Outlet, …)` at render time, so it is
+  **excluded** from a layout's (and the document's) aggregate requirement channel.
+- **`Router.params(fields)` / `Router.query(fields)`** — validating accessors that
+  read the **live match** (`yield* Router` → `currentMatch.get`), pick the
+  requested `fields` keys from the decoded path/query, and validate them against
+  the `Type` side of `Schema.Struct(fields)`. They return the typed values, or
+  fail with a tagged **`RouterParamsError`** (`source: "path" | "query"`, plus the
+  requested `keys`) when no route matches or a key is missing/invalid. Any
+  component — not just the leaf — may read them; the `RouterParamsError` bubbles to
+  the app node's `E` (a user may `Boundary.catchTag("RouterParamsError", …)`).
 
 ## Module map
 
-| Module                        | Side   | Responsibility                                                               |
-| ----------------------------- | ------ | ---------------------------------------------------------------------------- |
-| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types      |
-| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + match chains                 |
-| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query       |
-| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                  |
-| `src/router-service.ts`       | shared | `Router` `Context.Tag` + the merged `Router.{route,layout,router}` namespace |
-| `src/errors.ts`               | shared | `RouterNotFound` tagged error + `notFound()` helper                          |
-| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`       |
-| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                   |
-| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                        |
-| `src/server/to-http-api.ts`   | server | generate `HttpApi` from the compiled tree                                    |
-| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                   |
+| Module                        | Side   | Responsibility                                                              |
+| ----------------------------- | ------ | --------------------------------------------------------------------------- |
+| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types     |
+| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + match chains                |
+| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query      |
+| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                 |
+| `src/router-service.ts`       | shared | `Router` `Context.Tag` + `Router.{route,layout,router,Outlet,params,query}` |
+| `src/errors.ts`               | shared | `RouterNotFound` + `RouterParamsError` tagged errors + `notFound()` helper  |
+| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`      |
+| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                  |
+| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                       |
+| `src/server/to-http-api.ts`   | server | generate `HttpApi` from the compiled tree                                   |
+| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                  |
 
 ## Authoring API
 
 ```ts
-// A leaf page. `component` receives its typed { path, query }.
+// A leaf page. `component` is a ComponentSlot reading params via Router.params/query.
 Router.route(segment, { path?, query?, component })
 
-// A layout wrapping an outlet. `render` receives { path, outlet }.
-Router.layout(segment, { path?, render }, children)
+// A layout wrapping an outlet. `component` is a ComponentSlot splicing Router.Outlet.
+// A layout owns no path/segment — it is purely UI nesting.
+Router.layout({ component }, children)
 
 // Seal the tree into a RouterDef.
 Router.router(root, { notFound })
 ```
 
-- `segment` is **relative to the parent** and may contain `:name` path-param
-  placeholders (e.g. `"users/:id"`). A leading/trailing `/` is tolerated.
-- `path` / `query` are `Schema.Struct.Fields` (record of name → `Schema`). Path
-  param fields default to `Schema.String` when a `:name` placeholder has no
+- `segment` is a **route-only** argument, **relative to the parent** and may
+  contain `:name` path-param placeholders (e.g. `"users/:id"`). A leading/trailing
+  `/` is tolerated. Each child route carries its **full relative path** down to the
+  leaf (e.g. `"users/:id/settings"`).
+- **Layouts have no `segment` or `path`** — they only wrap an outlet (purely UI
+  nesting); all path structure lives on routes. A layout that needs a param reads
+  it via `Router.params`.
+- `path` / `query` are `Schema.Struct.Fields` (record of name → `Schema`) declared
+  **only on routes**. The compiler covers every `:name` on the route's pattern in
+  the leaf's `pathSchema`, defaulting to `Schema.String` when a placeholder has no
   declared field. Query fields are all optional by default.
-- A page `component` is `(args: { path, query }) => Node`. A layout `render` is
-  `(args: { path, outlet }) => Node` — the `outlet` is a fully-typed `Node`
-  (mirroring the route component's single args object), placed in the returned
-  tree wherever the child level should appear.
+- Both a page's and a layout's `component` is a **`ComponentSlot`** — a callable
+  producing a `Node`, passed **uncalled**: a `Component.make(() => …)` /
+  `Component.gen(function* () { … })` component, or a plain `() => Node` thunk (e.g.
+  `() => Effect.gen(…)`). The router invokes it per render: a page reads
+  `Router.params` / `Router.query`; a layout splices `yield* Router.Outlet` wherever
+  the child level should appear. Its `E`/`R` channels are recovered (via `SlotNode`)
+  and propagate up the tree. The callable form matches `notFound` and defers `href`
+  resolution to render time.
 
 ## Acceptance criteria
 
@@ -83,17 +118,19 @@ Router.router(root, { notFound })
 
 - **C1** `compile(def)` returns one **leaf descriptor** per `route()` in the
   tree, in document order.
-- **C2** Each leaf's `fullPathPattern` is the `/`-joined concatenation of every
-  ancestor segment plus its own, normalized to a single leading `/` and no
-  trailing `/` (root leaf ⇒ `/`).
+- **C2** Each leaf's `fullPathPattern` is the `/`-joined concatenation of the
+  **route** segments on its branch (layouts contribute none), normalized to a
+  single leading `/` and no trailing `/` (root leaf ⇒ `/`).
 - **C3** Each leaf's `pathSchema` is a `Schema.Struct` merging the path fields
   declared at **every level down its branch** (leaf wins on key collision).
 - **C4** Each leaf's `querySchema` is the `Schema.Struct` of its own query
   fields (empty struct when none).
 - **C5** Each leaf carries its `layoutChain`: the ordered list of ancestor
   layouts (root → … → parent) plus the leaf component, used to build the nested
-  UI.
-- **C6** Every `:name` placeholder in any segment on the branch has a
+  UI. Each layout's dedupe `patternPrefix` is the **longest common path prefix of
+  the leaves in its subtree** (so an ancestor layout persists across navigation and
+  re-renders only when a param shared by all its leaves changes).
+- **C6** Every `:name` placeholder in a **route** segment on the branch has a
   corresponding key in `pathSchema` (defaulted to `Schema.String` if not
   declared).
 
@@ -142,8 +179,12 @@ Router.router(root, { notFound })
 ### Server render + 404 (`server/router-server.ts`)
 
 - **S1** `RouterServer.render(def, { document, url })` matches `url`, builds a
-  fixed-match server `Router`, and renders `document(RouterApp(def))` via
-  `renderToStringHydratable`, returning `{ html, status: 200 }`.
+  fixed-match server `Router`, injects `RouterApp(def)` into the `document` shell
+  via `Router.Outlet`, and renders it via `renderToStringHydratable`, returning
+  `{ html, status: 200 }`. `document` is a `ComponentSlot` (the same callable form
+  as the route/layout `component` slot — a plain `() => Node` thunk or a
+  `Component.make` / `Component.gen` component); `render` provides both `Router.Outlet`
+  (the app, per request) and `Router`, so the shell may use either.
 - **S2** When no route matches (or a page raises `RouterNotFound`), the
   not-found page renders and `status` is `404`.
 - **S3** The server `Router`'s `navigate` is a no-op-ish failure path (navigation
@@ -151,6 +192,23 @@ Router.router(root, { notFound })
 - **S4** `toHttpApi(def)` produces an `HttpApi` with one `"pages"` group whose
   endpoints are GET endpoints, one per leaf, at each leaf's `fullPathPattern`,
   with `setPath(pathSchema)` and `setUrlParams(querySchema)`.
+
+### Dependency injection (`router-service.ts`, `outlet.ts`)
+
+- **D1** A layout's `component` thunk reads its outlet via `yield* Router.Outlet`; the router
+  provides it per render, and the layout's aggregate `R` (and the sealed app's `R`)
+  **excludes** `Router.Outlet`.
+- **D2** `Router.params(fields)` returns the live match's decoded path params for
+  the requested `fields`, typed as `Schema.Struct.Type<fields>`; `Router.query`
+  does the same for the query. Both are readable from **any** component, not just
+  the leaf.
+- **D3** `Router.params` / `Router.query` fail with a `RouterParamsError`
+  (`source: "path" | "query"`, carrying the requested `keys`) when no route is
+  matched or a requested key is missing / fails `Type`-side validation. The error
+  bubbles into the app node's aggregate `E`.
+- **D4** A layout declares **no** `path`; a `:name` introduced by a layout segment
+  is keyed on the leaf's `pathSchema` (defaulted to `Schema.String`), and a layout
+  that needs the value reads it via `Router.params`.
 
 ### Not-found (`errors.ts`)
 

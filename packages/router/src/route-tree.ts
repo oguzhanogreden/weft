@@ -1,6 +1,5 @@
-import type { Node } from "@effect-ui/core";
+import type { Component, Node } from "@effect-ui/core";
 import type { Schema } from "effect";
-import type { RouterNotFound } from "./errors";
 import type { Router } from "./router-service";
 
 /** Record of field name → `Schema` used for path-param and query schemas. */
@@ -10,29 +9,41 @@ export type Fields = Schema.Struct.Fields;
 export type FieldsType<F extends Fields> = Schema.Struct.Type<F>;
 
 /**
- * Arguments handed to a leaf page `component`: the decoded path params and query
- * for the current match. Path is the leaf's **own** declared params; the runtime
- * value additionally carries any ancestor params merged down the branch.
+ * The shape of a route/layout `component` slot: a callable producing a {@link Node},
+ * invoked by the router at render time. It accepts both a plain zero-arg thunk
+ * (`() => h.div(…)`) and a {@link Component} produced by `Component.make` /
+ * `Component.gen` (a generic `(props, children?) => Node`). The `props: any` arm —
+ * rather than `()` — is what keeps a required-props `Component<…>` structurally
+ * assignable; the router calls the slot with no arguments.
  */
-export interface RouteArgs<Path extends Fields, Query extends Fields> {
-  readonly path: FieldsType<Path>;
-  readonly query: FieldsType<Query>;
-}
+export type ComponentSlot<N extends Node<any, any> = Node<any, any>> = (props: any) => N;
 
 /**
- * Arguments handed to a layout `render`: the decoded path params for the level
- * plus the fully-typed `outlet` (the next level down). The outlet's channels are
- * the union of every descendant's channels, plus the router's own (`Router` is
- * required, a page may raise {@link RouterNotFound}).
+ * The {@link Node} a {@link ComponentSlot} produces when the router invokes it with no
+ * props/children — used to recover the slot's `E`/`R` channels for the route tree.
+ *
+ * A plain zero-arg thunk is matched first (`() => infer N`): a required-props
+ * `Component` is *not* assignable to `() => unknown`, so it falls through to the
+ * `Component` arm, where the internal `E`/`R` type parameters are read directly. This
+ * two-step form is deliberate — `ReturnType<S>` collapses a generic `Component`'s
+ * channels to `unknown` (they depend on the erased `GenP`/`GenC`), whereas extracting
+ * the `Component<…, E, R>` parameters preserves them. Caller prop/children channels are
+ * never relevant here because the router supplies neither.
  */
-export interface LayoutRenderArgs<Path extends Fields, C extends readonly TreeNode[]> {
-  readonly path: FieldsType<Path>;
-  readonly outlet: Node<SubtreeE<C> | RouterNotFound, SubtreeR<C> | Router>;
-}
+export type SlotNode<S> = S extends () => infer N
+  ? N
+  : S extends Component.Component<any, any, infer E, infer R>
+    ? Node<E, R>
+    : never;
 
 /**
- * A leaf page in the route tree. Its `component` is its handler. `E`/`R` capture
- * the component node's error / requirement channels so they propagate up the tree.
+ * A leaf page in the route tree. Its `component` *is* its handler — a
+ * {@link ComponentSlot} (a `Component.gen` / `Component.make` component, or a plain
+ * `() => Node` thunk) that the router invokes at render time and that reads the live
+ * match's params via `Router.params` / `Router.query`. `Path`/`Query` drive matching
+ * and `href`; `E`/`R` are phantom markers carrying the node's channels (recovered via
+ * {@link SlotNode}) so they propagate up the tree. The callable slot defers
+ * construction (so `href(…)` runs after compile) and mirrors the `notFound` slot.
  */
 export interface RouteNode<
   Path extends Fields = {},
@@ -44,47 +55,48 @@ export interface RouteNode<
   readonly segment: string;
   readonly path: Path;
   readonly query: Query;
-  readonly component: (args: RouteArgs<Path, Query>) => Node<E, R>;
+  readonly component: ComponentSlot;
+  /** Phantom marker for this leaf's error channel (see {@link TreeE}). */
+  readonly _E?: E;
+  /** Phantom marker for this leaf's requirement channel (see {@link TreeR}). */
+  readonly _R?: R;
 }
 
 /**
- * A layout wrapping an outlet (the next level down) in the route tree. `E`/`R`
- * are the aggregate channels of this layout's `render` together with its whole
- * subtree, so a sealed tree's channels are recoverable from the root.
+ * A layout wrapping an outlet (the next level down) in the route tree. A layout is
+ * **purely UI nesting** — it owns **no path or segment**; all path structure lives
+ * on routes. Its `component` is a {@link ComponentSlot} that splices the injected
+ * outlet via `yield* Router.Outlet`; the router invokes it per render and discharges
+ * that `Outlet` requirement. A layout that needs a param reads it via `Router.params`.
+ * `E`/`R` are the aggregate channels of this layout's `component` (with `Outlet`
+ * excluded) together with its whole subtree, so a sealed tree's channels are
+ * recoverable from the root.
  */
-export interface LayoutNode<Path extends Fields = {}, E = never, R = never> {
+export interface LayoutNode<E = never, R = never> {
   readonly _tag: "Layout";
-  readonly segment: string;
-  readonly path: Path;
-  readonly render: (args: {
-    readonly path: FieldsType<Path>;
-    readonly outlet: Node<any, any>;
-  }) => Node<any, any>;
+  readonly component: ComponentSlot;
   readonly children: readonly TreeNode[];
-  /** Phantom marker for this layout subtree's aggregate error channel (see {@link TreeE}). */
-  readonly _E?: (e: E) => void;
+  /**
+   * Phantom marker for this layout subtree's aggregate error channel (see
+   * {@link TreeE}). Covariant (stores `E` directly) so a fully-discharged layout
+   * (`LayoutNode<never, never>` — its `Outlet` provided, no subtree errors) stays
+   * assignable to the `LayoutNode<any, any>` arm of {@link TreeNode}.
+   */
+  readonly _E?: E;
   /** Phantom marker for this layout subtree's aggregate requirement channel (see {@link TreeR}). */
-  readonly _R?: (r: R) => void;
+  readonly _R?: R;
 }
 
 /** Any node in the route tree. */
-export type TreeNode = RouteNode<any, any, any, any> | LayoutNode<any, any, any>;
+export type TreeNode = RouteNode<any, any, any, any> | LayoutNode<any, any>;
 
 /** Extracts the error channel from a single {@link TreeNode}. */
 export type TreeE<T> =
-  T extends RouteNode<any, any, infer E, any>
-    ? E
-    : T extends LayoutNode<any, infer E, any>
-      ? E
-      : never;
+  T extends RouteNode<any, any, infer E, any> ? E : T extends LayoutNode<infer E, any> ? E : never;
 
 /** Extracts the requirement channel from a single {@link TreeNode}. */
 export type TreeR<T> =
-  T extends RouteNode<any, any, any, infer R>
-    ? R
-    : T extends LayoutNode<any, any, infer R>
-      ? R
-      : never;
+  T extends RouteNode<any, any, any, infer R> ? R : T extends LayoutNode<any, infer R> ? R : never;
 
 /** Aggregate error channel over a children tuple (distributes over `C[number]`). */
 export type SubtreeE<C extends readonly TreeNode[]> = TreeE<C[number]>;
@@ -92,105 +104,75 @@ export type SubtreeE<C extends readonly TreeNode[]> = TreeE<C[number]>;
 /** Aggregate requirement channel over a children tuple (distributes over `C[number]`). */
 export type SubtreeR<C extends readonly TreeNode[]> = TreeR<C[number]>;
 
-/** Config object accepted by {@link route}. The `component` *is* the route handler. */
-export interface RouteConfig<
-  Path extends Fields = {},
-  Query extends Fields = {},
-  N extends Node<any, any> = Node,
-> {
-  /** Path-param field schemas for `:name` placeholders on this branch (leaf-owned). */
-  readonly path?: Path;
-  /** Query field schemas; query keys are typically optional. */
-  readonly query?: Query;
-  /** The page component, receiving its typed `{ path, query }`. */
-  readonly component: (args: RouteArgs<Path, Query>) => N;
-}
-
-/** Config object accepted by {@link layout}. */
-export interface LayoutConfig<
-  Path extends Fields = {},
-  C extends readonly TreeNode[] = readonly TreeNode[],
-  N extends Node<any, any> = Node,
-> {
-  /** Path-param field schemas introduced by this layout's segment. */
-  readonly path?: Path;
-  /** Renders the layout around the typed `outlet`, receiving its typed `{ path }`. */
-  readonly render: (args: LayoutRenderArgs<Path, C>) => N;
-}
-
 /**
- * Declares a leaf page. The `component` *is* the route handler and receives its
- * typed `{ path, query }`; its error / requirement channels propagate up the tree.
+ * Declares a leaf page. The `component` *is* the route handler — a thunk
+ * `() => Node` the router invokes at render time, reading its params via
+ * `Router.params` / `Router.query`; its error / requirement channels propagate up
+ * the tree. Use `Component.make` / `Component.gen` (or a plain `() => …`).
  *
  * @example
  * ```ts
- * Router.route("about", { component: () => h.h1({}, "About") });
+ * Router.route("about", { component: Component.make(() => h.h1({}, "About")) });
  * Router.route("users/:id", {
  *   path: { id: Schema.NumberFromString },
- *   component: ({ path }) => h.div({}, `User ${path.id}`),
+ *   component: Component.gen(function* () {
+ *     const { id } = yield* Router.params({ id: Schema.NumberFromString });
+ *     return yield* h.div({}, `User ${id}`);
+ *   }),
  * });
  * ```
  */
 export function makeRoute<
   Path extends Fields = {},
   Query extends Fields = {},
-  N extends Node<any, any> = Node,
+  S extends ComponentSlot = ComponentSlot,
 >(
   segment: string,
   config: {
     readonly path?: Path;
     readonly query?: Query;
-    readonly component: (args: RouteArgs<Path, Query>) => N;
+    readonly component: S;
   },
-): RouteNode<Path, Query, Node.Error<N>, Node.Context<N>> {
+): RouteNode<Path, Query, Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>> {
   return {
     _tag: "Route",
     segment,
     path: (config.path ?? {}) as Path,
     query: (config.query ?? {}) as Query,
-    component: config.component as RouteNode<
-      Path,
-      Query,
-      Node.Error<N>,
-      Node.Context<N>
-    >["component"],
+    component: config.component,
   };
 }
 
 /**
- * Declares a layout. `render` receives the next level down as a typed `outlet`
- * (place it in the returned tree) plus the layout's typed `{ path }`. The layout's
- * aggregate channels are its `render`'s channels unioned with its whole subtree's.
+ * Declares a layout. `component` is a {@link ComponentSlot} that splices the next
+ * level down via `yield* Router.Outlet` (place it in the returned tree). The
+ * router invokes it per render and provides that outlet, so `Router.Outlet` is
+ * **excluded** from the layout's aggregate requirement channel; the subtree's
+ * real channels are unioned in.
  *
  * @example
  * ```ts
  * Router.layout(
- *   "",
- *   { render: ({ outlet }) => h.div({ class: "shell" }, [Header(), outlet]) },
- *   [Router.route("", { component: () => Home() })],
+ *   {
+ *     component: Component.gen(function* () {
+ *       const outlet = yield* Router.Outlet;
+ *       return yield* h.div({ class: "shell" }, [Header(), outlet]);
+ *     }),
+ *   },
+ *   [Router.route("", { component: Home })],
  * );
  * ```
  */
-export function makeLayout<
-  Path extends Fields = {},
-  C extends readonly TreeNode[] = readonly TreeNode[],
-  N extends Node<any, any> = Node,
->(
-  segment: string,
-  config: {
-    readonly path?: Path;
-    readonly render: (args: {
-      readonly path: FieldsType<Path>;
-      readonly outlet: Node<SubtreeE<C> | RouterNotFound, SubtreeR<C> | Router>;
-    }) => N;
-  },
+export function makeLayout<C extends readonly TreeNode[], S extends ComponentSlot = ComponentSlot>(
+  config: { readonly component: S },
   children: C,
-): LayoutNode<Path, Node.Error<N> | SubtreeE<C>, Node.Context<N> | SubtreeR<C>> {
+): LayoutNode<
+  Node.Error<SlotNode<S>> | SubtreeE<C>,
+  Exclude<Node.Context<SlotNode<S>>, Router.Outlet> | SubtreeR<C>
+> {
   return {
     _tag: "Layout",
-    segment,
-    path: (config.path ?? {}) as Path,
-    render: config.render as LayoutNode<Path>["render"],
+    component: config.component,
     children,
   };
 }

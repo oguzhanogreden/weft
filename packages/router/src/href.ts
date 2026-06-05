@@ -28,7 +28,7 @@ export type HrefArgs<Path extends Fields, Query extends Fields> = ({} extends Fi
  *   path: { id: Schema.NumberFromString },
  *   component: …,
  * });
- * Router.router(Router.layout("", { render: … }, [userRoute]), { notFound });
+ * Router.router(Router.layout({ component: … }, [userRoute]), { notFound });
  * href(userRoute, { path: { id: 42 } }); // "/users/42"
  * ```
  */

@@ -3,6 +3,7 @@ import { renderToStringHydratable } from "@effect-ui/dom/server";
 import { Effect, Stream, Subscribable } from "effect";
 import type { RouterDef } from "../compile";
 import { match, type RouteMatch } from "../matcher";
+import type { ComponentSlot } from "../route-tree";
 import { RouterApp } from "../outlet";
 import { Router } from "../router-service";
 
@@ -13,14 +14,18 @@ import { Router } from "../router-service";
  * `RouterNotFound`).
  */
 export namespace RouterServer {
-  /** Shared server options. */
+  /**
+   * Shared server options. The document shell is a {@link ComponentSlot} that splices
+   * the app via `yield* Router.Outlet` (the router provides it per request) —
+   * typically `<html><head>…</head><body><div id="root">{app}</div><script …></body></html>`.
+   * `render` provides both `Router.Outlet` (the app, per request) and `Router` (to read
+   * params), so the document may use either. Mirrors the route/layout `component` slot,
+   * so it accepts both a plain thunk and a `Component.make` / `Component.gen` component.
+   * `<!DOCTYPE html>` is prepended at serialize time.
+   */
   export interface Options {
-    /**
-     * Builds the document shell around the app node — typically
-     * `<html><head>…</head><body><div id="root">{app}</div><script …></body></html>`.
-     * `<!DOCTYPE html>` is prepended at serialize time.
-     */
-    readonly document: (app: Node<any, any>) => Node<any, any>;
+    /** The document shell slot; reads the app to splice via `yield* Router.Outlet`. */
+    readonly document: ComponentSlot;
   }
 
   /** The result of {@link render}. */
@@ -54,8 +59,13 @@ export namespace RouterServer {
       // by the internal boundary) also reports 404 without altering the render tree.
       let status = matched._tag === "NotFound" ? 404 : 200;
       const router = serverRouter(matched);
-      const app = options.document(RouterApp(def, { onNotFound: () => void (status = 404) }));
-      const html = yield* renderToStringHydratable(app).pipe(Effect.provideService(Router, router));
+      // The app is injected into the document shell via `Router.Outlet`, mirroring
+      // how a layout receives its outlet; the shell reads it with `yield* Router.Outlet`.
+      const app = RouterApp(def, { onNotFound: () => void (status = 404) }) as Node<never, never>;
+      const document = Effect.provideService(options.document({}), Router.Outlet, app);
+      const html = yield* renderToStringHydratable(document).pipe(
+        Effect.provideService(Router, router),
+      );
       return { html: `<!DOCTYPE html>\n${html}`, status };
     });
   }

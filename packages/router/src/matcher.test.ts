@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { match } from "~/matcher";
@@ -8,9 +8,15 @@ import { Router } from "~/index";
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
+/** A passthrough layout `component`: renders the injected outlet directly. */
+const passthrough = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* outlet;
+});
+
 function fixture() {
   return Router.router(
-    Router.layout("", { render: ({ outlet }) => outlet }, [
+    Router.layout({ component: passthrough }, [
       Router.route("about", { component: Page("about") }),
       Router.route("users/new", { component: Page("new") }),
       Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),

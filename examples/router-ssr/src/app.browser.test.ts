@@ -8,7 +8,7 @@
  * value. A second case asserts the not-found page renders for an unmatched URL.
  */
 
-import { h } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { mount, type MountHandle } from "@effect-ui/dom/client";
 import { notFound, type RouterDef } from "@effect-ui/router";
 import { Router, RouterApp, RouterLive } from "@effect-ui/router/client";
@@ -94,13 +94,22 @@ describe("router-ssr example", () => {
   it("renders the not-found page when a page raises notFound() during client navigation (N3)", async () => {
     // A tiny local tree: home links to `/gone`, whose page raises RouterNotFound.
     const def = Router.router(
-      Router.layout("", { render: ({ outlet }) => h.div({}, [outlet]) }, [
-        Router.route("", {
-          component: () =>
-            h.div({}, [h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")]),
-        }),
-        Router.route("gone", { component: () => notFound("/gone") }),
-      ]),
+      Router.layout(
+        {
+          component: Component.gen(function* () {
+            const outlet = yield* Router.Outlet;
+            return yield* h.div({}, [outlet]);
+          }),
+        },
+        [
+          Router.route("", {
+            component: Component.make(() =>
+              h.div({}, [h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")]),
+            ),
+          }),
+          Router.route("gone", { component: () => notFound("/gone") }),
+        ],
+      ),
       { notFound: () => h.h2({ id: "nf" }, "client 404") },
     );
 

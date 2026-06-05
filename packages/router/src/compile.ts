@@ -1,21 +1,21 @@
 import type { Node } from "@effect-ui/core";
 import { Schema } from "effect";
-import type { LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
+import type { ComponentSlot, LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
 
 /**
- * A compiled layout level: its render function plus the cumulative pattern prefix
- * (root → this layout) used by the client outlet to key the level for dedupe.
+ * A compiled layout level: its component slot plus the dedupe `patternPrefix` used
+ * by the client outlet to key the level. A layout owns no path of its own, so the
+ * prefix is derived as the **longest common path-segment prefix of every leaf in
+ * the layout's subtree** — it changes (and the level re-renders) exactly when a
+ * param shared by all those leaves changes, and persists otherwise.
  */
 export interface CompiledLayout {
-  readonly segment: string;
-  /** Cumulative pattern from the root through this layout, e.g. `/users/:id`. */
+  /** Longest common path prefix of the layout's subtree leaves, e.g. `/users/:id`. */
   readonly patternPrefix: string;
   /** Param names appearing in `patternPrefix`. */
   readonly paramNames: readonly string[];
-  readonly render: (args: {
-    path: Record<string, unknown>;
-    outlet: Node<any, any>;
-  }) => Node<any, any>;
+  /** The layout's component slot; invoked per render with the outlet injected via `Router.Outlet`. */
+  readonly component: ComponentSlot;
 }
 
 /**
@@ -32,10 +32,8 @@ export interface CompiledLeaf {
   readonly paramNames: readonly string[];
   readonly pathSchema: Schema.Schema<Record<string, unknown>, Record<string, unknown>>;
   readonly querySchema: Schema.Schema<Record<string, unknown>, Record<string, unknown>>;
-  readonly component: (args: {
-    path: Record<string, unknown>;
-    query: Record<string, unknown>;
-  }) => Node<any, any>;
+  /** The page's component slot; invoked per render, reads params via `Router.params` / `Router.query`. */
+  readonly component: ComponentSlot;
   /** Ancestor layouts (root → parent) wrapping this leaf. */
   readonly layoutChain: readonly CompiledLayout[];
 }
@@ -56,10 +54,14 @@ export interface RouterDef<E = any, R = any> {
   readonly root: TreeNode;
   readonly notFound: () => Node<any, any>;
   readonly compiled: Compiled;
-  /** Phantom marker for the tree's aggregate error channel. */
-  readonly _E?: (e: E) => void;
+  /**
+   * Phantom marker for the tree's aggregate error channel. Covariant (stores `E`
+   * directly) so a fully-static `RouterDef<never, never>` stays assignable to the
+   * `RouterDef<any, any>` arms used internally (mirrors {@link LayoutNode}).
+   */
+  readonly _E?: E;
   /** Phantom marker for the tree's aggregate requirement channel. */
-  readonly _R?: (r: R) => void;
+  readonly _R?: R;
 }
 
 /** Options for {@link router}. */
@@ -99,60 +101,120 @@ function patternToId(pattern: string, index: number): string {
   return base.length === 0 ? `root_${index}` : `${base}_${index}`;
 }
 
+/** The longest leading run of path parts shared by every entry in `partsList`. */
+function longestCommonSegmentPrefix(partsList: readonly (readonly string[])[]): readonly string[] {
+  const first = partsList[0];
+  if (first === undefined) return [];
+  const prefix: string[] = [];
+  for (let i = 0; i < first.length; i++) {
+    const part = first[i];
+    if (part === undefined) break;
+    let common = true;
+    for (let j = 1; j < partsList.length; j++) {
+      if (partsList[j]?.[i] !== part) {
+        common = false;
+        break;
+      }
+    }
+    if (!common) break;
+    prefix.push(part);
+  }
+  return prefix;
+}
+
+/** A leaf collected during the walk, tagged with its ancestor layouts. */
+interface LeafWork {
+  readonly node: RouteNode<any, any, any, any>;
+  /** Full path parts from the root (only routes contribute parts). */
+  readonly parts: readonly string[];
+  /** Path-param schemas declared on this leaf (and any ancestor route). */
+  readonly pathFields: Record<string, Schema.Schema.Any>;
+  readonly query: Record<string, Schema.Schema.Any>;
+  /** Ancestor layout nodes, root → parent. */
+  readonly ancestors: readonly LayoutNode<any, any>[];
+}
+
 /**
- * Walks a route tree once into a flat list of {@link CompiledLeaf}s, assembling
- * full patterns and merging path-param schemas down each branch (C1–C6).
+ * Compiles a route tree into a flat list of {@link CompiledLeaf}s (C1–C6).
+ *
+ * Pass 1 walks the tree: only **routes** contribute path parts (layouts own no
+ * path), so each leaf's `parts` come solely from the route segments on its branch,
+ * and its ancestor `LayoutNode`s are recorded in order. Pass 2 derives one shared
+ * {@link CompiledLayout} per distinct layout node — its `patternPrefix` is the
+ * longest common path prefix of that layout's subtree leaves — then assembles each
+ * leaf's `layoutChain` (root → parent) and merged path schema.
  */
 export function compile(def: { root: TreeNode; notFound: () => Node<any, any> }): Compiled {
-  const leaves: CompiledLeaf[] = [];
+  const leafWorks: LeafWork[] = [];
 
   const walk = (
     node: TreeNode,
     parentParts: readonly string[],
     parentPathFields: Record<string, Schema.Schema.Any>,
-    chain: readonly CompiledLayout[],
+    ancestors: readonly LayoutNode<any, any>[],
   ): void => {
-    const parts = [...parentParts, ...splitSegment(node.segment)];
-    const mergedFields = {
-      ...parentPathFields,
-      ...(node.path as Record<string, Schema.Schema.Any>),
-    };
-
     if (node._tag === "Layout") {
-      const compiledLayout: CompiledLayout = {
-        segment: node.segment,
-        patternPrefix: toPattern(parts),
-        paramNames: extractParams(parts),
-        render: (node as LayoutNode<any, any, any>).render as unknown as CompiledLayout["render"],
-      };
+      // Layouts own no path: recurse with the parent's parts unchanged. Their
+      // dedupe `patternPrefix` is derived (pass 2) as the LCP of subtree leaves.
       for (const child of node.children) {
-        walk(child, parts, mergedFields, [...chain, compiledLayout]);
+        walk(child, parentParts, parentPathFields, [...ancestors, node]);
       }
       return;
     }
 
-    const fullPathPattern = toPattern(parts);
-    const paramNames = extractParams(parts);
+    leafWorks.push({
+      node,
+      parts: [...parentParts, ...splitSegment(node.segment)],
+      pathFields: { ...parentPathFields, ...(node.path as Record<string, Schema.Schema.Any>) },
+      query: node.query as Record<string, Schema.Schema.Any>,
+      ancestors,
+    });
+  };
+
+  walk(def.root, [], {}, []);
+
+  // Pass 2a: group each layout's subtree leaf-parts, then compute its LCP prefix.
+  const layoutLeafParts = new Map<LayoutNode<any, any>, (readonly string[])[]>();
+  for (const work of leafWorks) {
+    for (const ancestor of work.ancestors) {
+      const list = layoutLeafParts.get(ancestor) ?? [];
+      list.push(work.parts);
+      layoutLeafParts.set(ancestor, list);
+    }
+  }
+  const compiledLayouts = new Map<LayoutNode<any, any>, CompiledLayout>();
+  for (const [node, partsList] of layoutLeafParts) {
+    const lcp = longestCommonSegmentPrefix(partsList);
+    compiledLayouts.set(node, {
+      patternPrefix: toPattern(lcp),
+      paramNames: extractParams(lcp),
+      component: node.component,
+    });
+  }
+
+  // Pass 2b: assemble each leaf with its layout chain and merged path schema.
+  const leaves: CompiledLeaf[] = [];
+  for (const work of leafWorks) {
+    const fullPathPattern = toPattern(work.parts);
+    const paramNames = extractParams(work.parts);
     const pathFields: Record<string, Schema.Schema.Any> = {};
     for (const name of paramNames) {
-      pathFields[name] = mergedFields[name] ?? Schema.String;
+      pathFields[name] = work.pathFields[name] ?? Schema.String;
     }
     const leaf: CompiledLeaf = {
       id: patternToId(fullPathPattern, leaves.length),
       fullPathPattern,
       paramNames,
       pathSchema: Schema.Struct(pathFields) as unknown as CompiledLeaf["pathSchema"],
-      querySchema: Schema.Struct(
-        (node as RouteNode<any, any, any, any>).query as Record<string, Schema.Schema.Any>,
-      ) as unknown as CompiledLeaf["querySchema"],
-      component: (node as RouteNode<any, any, any, any>).component as CompiledLeaf["component"],
-      layoutChain: chain,
+      querySchema: Schema.Struct(work.query) as unknown as CompiledLeaf["querySchema"],
+      component: work.node.component,
+      // Every ancestor was compiled in pass 2a, so the lookup is total.
+      layoutChain: work.ancestors.map((a) => compiledLayouts.get(a)!),
     };
     leaves.push(leaf);
-    leafRegistry.set(node as RouteNode<any, any, any, any>, leaf);
-  };
+    leafRegistry.set(work.node, leaf);
+  }
 
-  walk(def.root, [], {}, []);
   return { leaves, notFound: def.notFound };
 }
 

@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Effect, Exit, Schema, Scope } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, test } from "vite-plus/test";
@@ -8,10 +8,16 @@ import { installLinkInterceptor } from "~/client/link";
 
 const Page = (label: string) => () => h.div({}, label);
 
+/** A passthrough layout `component`: renders the injected outlet directly. */
+const passthrough = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* outlet;
+});
+
 /** A small two-route tree: `/about` (static) and `/users/:id` (param). */
 function fixture() {
   return Router.router(
-    Router.layout("", { render: ({ outlet }) => outlet }, [
+    Router.layout({ component: passthrough }, [
       Router.route("about", { component: Page("about") }),
       Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
     ]),

@@ -1,26 +1,32 @@
 /**
  * Server entry: renders the matched route to a hydratable HTML document.
  *
- * `documentShell` is the typed document shell — it builds `<html>/<head>/<body>`
- * with the `#root` mount point and the client entry `<script>`. `RouterServer`
- * matches the request URL, renders `RouterApp(App)` inside the shell to hydratable
- * HTML, and reports the status (404 for not-found). `<!DOCTYPE html>` is prepended
- * by `RouterServer`.
+ * `documentShell` is the typed document shell `Node` — it builds `<html>/<head>/
+ * <body>` with the `#root` mount point and the client entry `<script>`, splicing
+ * the app via `yield* Router.Outlet` (injected per request by `RouterServer`).
+ * `RouterServer` matches the request URL, renders `RouterApp(App)` inside the
+ * shell to hydratable HTML, and reports the status (404 for not-found).
+ * `<!DOCTYPE html>` is prepended by `RouterServer`.
  *
  * Both `render` (returning `{ html, status }`) and the `@effect/platform`-style
  * `handler` (`Request → Response`, via `RouterServer.toWebHandler`) are exported;
  * the dev server uses `handler` and post-processes the HTML for Vite HMR.
  */
 
-import { h } from "@effect-ui/core";
-import type { Node } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
+import { Router } from "@effect-ui/router";
 import { RouterServer } from "@effect-ui/router/server";
 import { Effect } from "effect";
 import { App } from "./app";
 
-/** The document shell wrapping the app node. */
-export const documentShell = (app: Node<any, any>): Node<any, any> =>
-  h.html({ lang: "en" }, [
+/**
+ * The document shell `component` thunk. Splices the app via `yield* Router.Outlet`
+ * (the router injects it per request) — same callback form as a route/layout
+ * `component`, no `app` arg and no `Node<any, any>`.
+ */
+export const documentShell = Component.gen(function* () {
+  const app = yield* Router.Outlet;
+  return yield* h.html({ lang: "en" }, [
     h.head({}, [
       h.meta({ charset: "utf-8" }),
       h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
@@ -31,6 +37,7 @@ export const documentShell = (app: Node<any, any>): Node<any, any> =>
       h.script({ type: "module", src: "/src/entry-client.ts" }),
     ]),
   ]);
+});
 
 /** Renders `url` to `{ html, status }`. */
 export const render = (url: string): Promise<{ html: string; status: number }> =>

@@ -1,6 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h } from "@effect-ui/core";
-import type { Node } from "@effect-ui/core";
+import { Component, h } from "@effect-ui/core";
 import { Effect } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, notFound } from "~/index";
@@ -12,16 +11,27 @@ const Gone = () => notFound("/gone");
 const NotFound = () => h.h1({}, "404 — not found");
 
 const def = Router.router(
-  Router.layout("", { render: ({ outlet }) => h.div({ class: "shell" }, [outlet]) }, [
-    Router.route("", { component: Home }),
-    Router.route("about", { component: About }),
-    Router.route("gone", { component: Gone }),
-  ]),
+  Router.layout(
+    {
+      component: Component.gen(function* () {
+        const outlet = yield* Router.Outlet;
+        return yield* h.div({ class: "shell" }, [outlet]);
+      }),
+    },
+    [
+      Router.route("", { component: Home }),
+      Router.route("about", { component: About }),
+      Router.route("gone", { component: Gone }),
+    ],
+  ),
   { notFound: NotFound },
 );
 
-const document = (app: Node<any, any>): Node<any, any> =>
-  h.html([h.head([h.title({}, "Test")]), h.body([h.div({ id: "root" }, [app])])]);
+/** The document shell `component` — splices the app via the injected `Router.Outlet`. */
+const document = Component.gen(function* () {
+  const app = yield* Router.Outlet;
+  return yield* h.html([h.head([h.title({}, "Test")]), h.body([h.div({ id: "root" }, [app])])]);
+});
 
 describe("RouterServer.render", () => {
   test("S1: renders the matched route to a hydratable document with status 200", async () => {
