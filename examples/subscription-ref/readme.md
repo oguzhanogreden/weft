@@ -22,10 +22,7 @@ const Counter = () =>
 
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
-    return yield* h.div({}, [
-      h.span({}, [count.changes]),
-      h.button({ onclick: () => increment() }, "+"),
-    ]);
+    return yield* h.div([h.span([count.changes]), h.button({ onclick: () => increment() }, "+")]);
   });
 ```
 
@@ -53,7 +50,7 @@ const Counter = () =>
 const count = yield * SubscriptionRef.make(0);
 
 // Display current value
-h.span({}, [count.changes]);
+h.span([count.changes]);
 
 // Update
 h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+");
@@ -66,8 +63,8 @@ const count = yield * SubscriptionRef.make(0);
 const doubled = Stream.map(count.changes, (n) => n * 2);
 const isEven = Stream.map(count.changes, (n) => (n % 2 === 0 ? "Yes" : "No"));
 
-h.p({}, ["Doubled: ", doubled]);
-h.p({}, ["Even: ", isEven]);
+h.p(["Doubled: ", doubled]);
+h.p(["Even: ", isEven]);
 ```
 
 ### Object State with Schema Validation
@@ -116,7 +113,7 @@ const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (firs
   `${first} ${last}`.trim(),
 );
 
-h.span({}, ["Full name: ", fullName]);
+h.span(["Full name: ", fullName]);
 ```
 
 ### Array State

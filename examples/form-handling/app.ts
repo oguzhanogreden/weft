@@ -16,7 +16,7 @@ const BasicInput = () =>
   Effect.gen(function* () {
     const value = yield* SubscriptionRef.make("");
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.input({
         type: "text",
         placeholder: "Type something...",
@@ -55,13 +55,13 @@ const SchemaEmailInput = () =>
     });
 
     return yield* h.div({ class: "form-group" }, [
-      h.label({}, "Email (Schema validated)"),
+      h.label("Email (Schema validated)"),
       h.input({
         type: "email",
         placeholder: "user@example.com",
         oninput: (e) => SubscriptionRef.set(email, (e.target as HTMLInputElement).value),
       }),
-      h.div({}, [
+      h.div([
         Stream.map(validationStream, ({ valid, error }) =>
           error
             ? h.span({ class: "error-text" }, error)
@@ -86,7 +86,7 @@ const CharacterCounter = () =>
     const remainingStream = Stream.map(countStream, (count) => maxLength - count);
 
     return yield* h.div({ class: "form-group" }, [
-      h.label({}, `Bio (max ${maxLength} chars)`),
+      h.label(`Bio (max ${maxLength} chars)`),
       h.textarea({
         placeholder: "Tell us about yourself...",
         oninput: (e) => SubscriptionRef.set(text, (e.target as HTMLTextAreaElement).value),
@@ -125,17 +125,15 @@ const LoginForm = () =>
       },
       [
         h.div({ class: "form-group" }, [
-          h.label({}, "Username"),
+          h.label("Username"),
           h.input({ type: "text", placeholder: "Enter username" }),
         ]),
         h.div({ class: "form-group" }, [
-          h.label({}, "Password"),
+          h.label("Password"),
           h.input({ type: "password", placeholder: "Enter password" }),
         ]),
         h.button({ type: "submit" }, "Login"),
-        h.div({ class: "preview" }, [
-          Stream.map(status.changes, (s) => (s ? h.span({}, s) : null)),
-        ]),
+        h.div({ class: "preview" }, [Stream.map(status.changes, (s) => (s ? h.span(s) : null))]),
       ],
     );
   });
@@ -241,7 +239,7 @@ const SchemaForm = () =>
       },
       [
         h.div({ class: "form-group" }, [
-          h.label({}, "Username"),
+          h.label("Username"),
           h.input({
             type: "text",
             placeholder: "min 3 chars, alphanumeric",
@@ -250,7 +248,7 @@ const SchemaForm = () =>
           Stream.map(usernameError, (err) => (err ? h.span({ class: "error-text" }, err) : null)),
         ]),
         h.div({ class: "form-group" }, [
-          h.label({}, "Password"),
+          h.label("Password"),
           h.input({
             type: "password",
             placeholder: "min 8 chars, uppercase + number",
@@ -259,7 +257,7 @@ const SchemaForm = () =>
           Stream.map(passwordError, (err) => (err ? h.span({ class: "error-text" }, err) : null)),
         ]),
         h.div({ class: "form-group" }, [
-          h.label({}, "Age"),
+          h.label("Age"),
           h.input({
             type: "text",
             placeholder: "18+",
@@ -270,9 +268,7 @@ const SchemaForm = () =>
         h.button({ type: "submit" }, [
           Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields")),
         ]),
-        h.div({ class: "preview" }, [
-          Stream.map(statusRef.changes, (s) => (s ? h.span({}, s) : null)),
-        ]),
+        h.div({ class: "preview" }, [Stream.map(statusRef.changes, (s) => (s ? h.span(s) : null))]),
       ],
     );
   });
@@ -291,7 +287,7 @@ const SearchPreview = () =>
       return items.filter((item) => item.toLowerCase().includes(q.toLowerCase()));
     });
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.input({
         type: "search",
         placeholder: "Search fruits...",
@@ -300,11 +296,8 @@ const SearchPreview = () =>
       h.div({ class: "preview" }, [
         Stream.map(resultsStream, (results) =>
           results.length > 0
-            ? h.ul(
-                {},
-                results.map((item) => h.li({}, item)),
-              )
-            : h.span({}, "Type at least 2 characters to search"),
+            ? h.ul(results.map((item) => h.li(item)))
+            : h.span("Type at least 2 characters to search"),
         ),
       ]),
     ]);
@@ -315,18 +308,18 @@ const SearchPreview = () =>
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "Form Handling"),
+  h.div([
+    h.h1("Form Handling"),
 
-    h.section({}, [h.h2({}, "1. Basic Reactive Input"), BasicInput()]),
+    h.section([h.h2("1. Basic Reactive Input"), BasicInput()]),
 
-    h.section({}, [h.h2({}, "2. Schema Validation"), SchemaEmailInput()]),
+    h.section([h.h2("2. Schema Validation"), SchemaEmailInput()]),
 
-    h.section({}, [h.h2({}, "3. Character Counter"), CharacterCounter()]),
+    h.section([h.h2("3. Character Counter"), CharacterCounter()]),
 
-    h.section({}, [h.h2({}, "4. Form Submit with Effect"), LoginForm()]),
+    h.section([h.h2("4. Form Submit with Effect"), LoginForm()]),
 
-    h.section({}, [h.h2({}, "5. Complete Schema Form"), SchemaForm()]),
+    h.section([h.h2("5. Complete Schema Form"), SchemaForm()]),
 
-    h.section({}, [h.h2({}, "6. Live Search Preview"), SearchPreview()]),
+    h.section([h.h2("6. Live Search Preview"), SearchPreview()]),
   ]);

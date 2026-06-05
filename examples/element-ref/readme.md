@@ -99,9 +99,9 @@ const Measure = () =>
       Effect.fork,
     );
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.div({ ref, style: { width: "200px", height: "100px" } }, "Box"),
-      h.p({}, ["Size: ", size.changes]),
+      h.p(["Size: ", size.changes]),
     ]);
   });
 ```
@@ -121,7 +121,7 @@ const ScrollToElement = () =>
         }
       });
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.button({ onclick: () => scrollTo() }, "Scroll to Target"),
       h.div({ ref: targetRef }, "Target Element"),
     ]);

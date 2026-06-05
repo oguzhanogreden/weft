@@ -29,7 +29,7 @@ When a prop value is an `Effect`, it runs once and the resulting value is applie
 const username = Effect.map(fetchProfile(), (p) => p.name);
 
 // Renders the username once it resolves
-h.span({}, [username]);
+h.span([username]);
 ```
 
 The `E` and `R` channels of the Effect flow into the node's own channels.
@@ -44,7 +44,7 @@ import { SubscriptionRef, Stream } from "effect";
 const count = yield * SubscriptionRef.make(0);
 
 // count.changes is a Stream<number> — each new value updates the text node
-h.span({}, [count.changes]);
+h.span([count.changes]);
 
 // Stream as a prop — each emission sets the attribute
 const isDisabled = Stream.map(count.changes, (n) => n >= 10);
@@ -56,7 +56,7 @@ Streams can also supply entire child arrays. Each emission replaces the previous
 ```typescript
 const todos = yield * SubscriptionRef.make<string[]>([]);
 
-h.ul({}, [Stream.map(todos.changes, (list) => list.map((item) => h.li({}, item)))]);
+h.ul([Stream.map(todos.changes, (list) => list.map((item) => h.li(item)))]);
 ```
 
 ## Derived streams
@@ -70,10 +70,10 @@ const doubled = Stream.map(count.changes, (n) => n * 2);
 const formatted = Stream.map(count.changes, (n) => `Count: ${n}`);
 const isHigh = Stream.map(count.changes, (n) => n > 10);
 
-h.div({}, [
-  h.p({}, [count.changes]),
-  h.p({}, [doubled]),
-  h.p({}, [formatted]),
+h.div([
+  h.p([count.changes]),
+  h.p([doubled]),
+  h.p([formatted]),
   h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
 ]);
 ```

@@ -64,9 +64,9 @@ function AsyncCard({ id }: { id: number }) {
 }
 
 function App() {
-  return h.div({}, [
+  return h.div([
     Suspense({ fallback: h.div({ class: "fallback" }, "Loading...") }, [
-      h.div({}, [AsyncCard({ id: 1 }), AsyncCard({ id: 2 }), AsyncCard({ id: 3 })]),
+      h.div([AsyncCard({ id: 1 }), AsyncCard({ id: 2 }), AsyncCard({ id: 3 })]),
     ]),
   ]);
 }

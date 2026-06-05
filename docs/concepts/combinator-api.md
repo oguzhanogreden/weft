@@ -28,7 +28,7 @@ import { Effect } from "effect";
 const node = yield * h.div({ class: "container" }, "Hello");
 
 // pipe — chain Effect operators directly
-const provided = Effect.provide(h.div({}, userStream), UserServiceLive);
+const provided = Effect.provide(h.div(userStream), UserServiceLive);
 
 // Effect.flatMap — sequence node creation with async logic
 const card = fetchCard(id).pipe(Effect.flatMap((data) => h.div({ class: "card" }, data.title)));
@@ -41,7 +41,7 @@ const card = fetchCard(id).pipe(Effect.flatMap((data) => h.div({ class: "card" }
 ```typescript
 import { h } from "@effect-ui/core";
 
-h.div({ class: "container" }, [h.span({}, "Hello"), h.p({}, "World")]);
+h.div({ class: "container" }, [h.span("Hello"), h.p("World")]);
 h.input({ type: "text", placeholder: "Search..." });
 h.button({ type: "button", onclick: () => handleClick() }, "Submit");
 ```
@@ -87,7 +87,7 @@ declare const nodeA: Node<never, ServiceA>;
 declare const nodeB: Node<never, ServiceB>;
 
 // Node<never, ServiceA | ServiceB>
-const parent = h.div({}, [nodeA, nodeB]);
+const parent = h.div([nodeA, nodeB]);
 ```
 
 Static values (strings, numbers, plain functions) contribute `never` to both channels.
@@ -101,7 +101,7 @@ import { h } from "@effect-ui/core";
 
 // Renders as three adjacent <td> elements with no wrapping element
 const TableRow = ({ user }: { user: User }) =>
-  h.fragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
+  h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
 ```
 
 ## Custom components with `Component.gen` / `Component.make`

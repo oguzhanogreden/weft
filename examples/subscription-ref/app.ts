@@ -23,7 +23,7 @@ const Counter = () =>
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.div({ class: "counter" }, [count.changes]),
       h.button({ type: "button", onclick: () => decrement() }, "-"),
       h.button({ type: "button", onclick: () => increment() }, "+"),
@@ -44,11 +44,11 @@ const DerivedState = () =>
 
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
-    return yield* h.div({}, [
-      h.p({}, ["Count: ", h.strong({}, [count.changes])]),
-      h.p({}, ["Doubled: ", h.span({ class: "derived" }, [doubled])]),
-      h.p({}, ["Squared: ", h.span({ class: "derived" }, [squared])]),
-      h.p({}, ["Is Even: ", h.span({ class: "derived" }, [isEven])]),
+    return yield* h.div([
+      h.p(["Count: ", h.strong([count.changes])]),
+      h.p(["Doubled: ", h.span({ class: "derived" }, [doubled])]),
+      h.p(["Squared: ", h.span({ class: "derived" }, [squared])]),
+      h.p(["Is Even: ", h.span({ class: "derived" }, [isEven])]),
       h.button({ type: "button", onclick: () => increment() }, "Increment"),
     ]);
   });
@@ -108,9 +108,9 @@ const ObjectState = () =>
       (s) => s.name.length > 0 && s.email.length > 0 && !s.errors.name && !s.errors.email,
     );
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.div({ style: { marginBottom: "0.5rem" } }, [
-        h.label({}, "Name: "),
+        h.label("Name: "),
         h.input({
           type: "text",
           placeholder: "Min 2 characters",
@@ -123,7 +123,7 @@ const ObjectState = () =>
         ),
       ]),
       h.div({ style: { marginBottom: "0.5rem" } }, [
-        h.label({}, "Email: "),
+        h.label("Email: "),
         h.input({
           type: "email",
           placeholder: "user@example.com",
@@ -142,7 +142,7 @@ const ObjectState = () =>
       ]),
       h.p({ style: { marginTop: "0.5rem" } }, [
         "Valid: ",
-        h.strong({}, [Stream.map(isValid, (v) => (v ? "Yes" : "No"))]),
+        h.strong([Stream.map(isValid, (v) => (v ? "Yes" : "No"))]),
       ]),
     ]);
   });
@@ -173,8 +173,8 @@ const TodoList = () =>
     const completedCount = Stream.map(todos.changes, (list) => list.filter((t) => t.done).length);
     const totalCount = Stream.map(todos.changes, (list) => list.length);
 
-    return yield* h.div({}, [
-      h.p({}, ["Completed: ", h.span({ class: "derived" }, [completedCount]), " / ", totalCount]),
+    return yield* h.div([
+      h.p(["Completed: ", h.span({ class: "derived" }, [completedCount]), " / ", totalCount]),
       h.ul({ style: { listStyle: "none", padding: 0 } }, [
         Stream.map(todos.changes, (list) =>
           list.map((todo) =>
@@ -212,7 +212,7 @@ const CoordinatedRefs = () =>
       return `${first} ${last}`.trim();
     });
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.div({ style: { marginBottom: "0.5rem" } }, [
         h.input({
           type: "text",
@@ -227,7 +227,7 @@ const CoordinatedRefs = () =>
           oninput: (e) => SubscriptionRef.set(lastName, (e.target as HTMLInputElement).value),
         }),
       ]),
-      h.p({}, ["Full name: ", h.strong({}, [fullName])]),
+      h.p(["Full name: ", h.strong([fullName])]),
     ]);
   });
 
@@ -236,36 +236,32 @@ const CoordinatedRefs = () =>
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "SubscriptionRef"),
+  h.div([
+    h.h1("SubscriptionRef"),
 
-    h.section({}, [
-      h.h2({}, "1. Basic Counter"),
-      h.p({}, "Simple counter with increment/decrement."),
+    h.section([
+      h.h2("1. Basic Counter"),
+      h.p("Simple counter with increment/decrement."),
       Counter(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "2. Derived State"),
-      h.p({}, "Compute derived values from base state."),
+    h.section([
+      h.h2("2. Derived State"),
+      h.p("Compute derived values from base state."),
       DerivedState(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "3. Object State with Schema"),
-      h.p({}, "Form state with Schema validation."),
+    h.section([
+      h.h2("3. Object State with Schema"),
+      h.p("Form state with Schema validation."),
       ObjectState(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "4. Todo List"),
-      h.p({}, "Array state with toggle functionality."),
-      TodoList(),
-    ]),
+    h.section([h.h2("4. Todo List"), h.p("Array state with toggle functionality."), TodoList()]),
 
-    h.section({}, [
-      h.h2({}, "5. Coordinated Refs"),
-      h.p({}, "Combine multiple refs into derived state."),
+    h.section([
+      h.h2("5. Coordinated Refs"),
+      h.p("Combine multiple refs into derived state."),
       CoordinatedRefs(),
     ]),
   ]);
