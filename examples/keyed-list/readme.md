@@ -22,7 +22,7 @@ node and tears down every nested subscription, so on each update:
 ```typescript
 import { h, List } from "@effect-ui/core";
 
-h.ul({}, [
+h.ul([
   List.each({ of: rows.changes, by: (row) => row.id }, (row) =>
     h.li({ id: `row-${row.id}` }, [
       /* … per-row content … */

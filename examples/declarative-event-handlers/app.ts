@@ -47,7 +47,7 @@ const StreamCounter = () =>
 
     const count = Stream.concat(Stream.make(0), clickStream);
 
-    return h.div({}, [
+    return h.div([
       h.span({ class: "counter" }, [count]),
       h.button({ type: "button", id: decId }, "-"),
       h.button({ type: "button", id: incId }, "+"),
@@ -138,23 +138,23 @@ const ConditionalButton = ({ enabled }: { enabled: boolean }) =>
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "Event Handler Examples"),
+  h.div([
+    h.h1("Event Handler Examples"),
 
-    h.section({}, [
-      h.h2({}, "1. Stream Composition Counter"),
-      h.p({}, "Built from Stream.fromEventListener, merge, and scan."),
+    h.section([
+      h.h2("1. Stream Composition Counter"),
+      h.p("Built from Stream.fromEventListener, merge, and scan."),
       StreamCounter(),
     ]),
 
-    h.section({}, [h.h2({}, "2. Effect-Returning Handler"), LoggingButton()]),
+    h.section([h.h2("2. Effect-Returning Handler"), LoggingButton()]),
 
-    h.section({}, [h.h2({}, "3. Service Access in Handler"), TrackedButton()]),
+    h.section([h.h2("3. Service Access in Handler"), TrackedButton()]),
 
-    h.section({}, [h.h2({}, "4. Reactive Handler"), ToggleHandler()]),
+    h.section([h.h2("4. Reactive Handler"), ToggleHandler()]),
 
-    h.section({}, [
-      h.h2({}, "5. Conditional Handler"),
+    h.section([
+      h.h2("5. Conditional Handler"),
       ConditionalButton({ enabled: true }),
       ConditionalButton({ enabled: false }),
     ]),

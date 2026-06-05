@@ -97,7 +97,7 @@ const Labeled = Component.make(
     h.div({ class: "field" }, children(props.label)),
 );
 
-Labeled({ label: "Name" }, (label) => [h.label({}, label), h.input({})]);
+Labeled({ label: "Name" }, (label) => [h.label(label), h.input()]);
 ```
 
 > For rendering a reactive collection, reach for the built-in [`List.each`](#listeach)
@@ -251,8 +251,8 @@ Inner boundaries shadow outer ones for their subtree — the innermost boundary 
 
 ```typescript
 // Inner catches FooError; BarError propagates to outer
-Boundary.catchAll({ fallback: (e) => h.div({}, `Outer: ${e.message}`) }, [
-  Boundary.catchTag({ tag: "Foo", fallback: (e) => h.span({}, `Foo: ${e.msg}`) }, [
+Boundary.catchAll({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
+  Boundary.catchTag({ tag: "Foo", fallback: (e) => h.span(`Foo: ${e.msg}`) }, [
     ChildWithFooOrBarError(),
   ]),
 ]);
@@ -295,7 +295,7 @@ The keyed-list combinator. It is the opt-in alternative to wholesale child rebui
 ```typescript
 import { h, List } from "@effect-ui/core";
 
-h.ul({}, [List.each({ of: rows.changes, by: (row) => row.id }, (row) => h.li({}, row.name))]);
+h.ul([List.each({ of: rows.changes, by: (row) => row.id }, (row) => h.li(row.name))]);
 ```
 
 #### `List.each`

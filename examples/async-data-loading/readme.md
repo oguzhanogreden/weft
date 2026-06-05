@@ -19,10 +19,10 @@ import { Effect, Stream } from "effect";
 // Loading → Data pattern with Stream.concat
 const AsyncComponent = () =>
   Stream.concat(
-    Stream.make(h.span({}, "Loading...")),
+    Stream.make(h.span("Loading...")),
     Stream.fromEffect(
       fetchData().pipe(
-        Effect.flatMap((data) => h.div({}, data.value)),
+        Effect.flatMap((data) => h.div(data.value)),
         Effect.catchAll((err) => h.div({ class: "error" }, err.message)),
       ),
     ),
@@ -32,7 +32,7 @@ const AsyncComponent = () =>
 const DelayedComponent = () =>
   Effect.gen(function* () {
     const data = yield* fetchData();
-    return yield* h.div({}, data.value);
+    return yield* h.div(data.value);
   });
 ```
 
@@ -59,8 +59,8 @@ const DelayedComponent = () =>
 ```typescript
 const LoadingData = () =>
   Stream.concat(
-    Stream.make(h.span({}, "Loading...")),
-    Stream.fromEffect(fetchData().pipe(Effect.flatMap((data) => h.div({}, data.value)))),
+    Stream.make(h.span("Loading...")),
+    Stream.fromEffect(fetchData().pipe(Effect.flatMap((data) => h.div(data.value)))),
   );
 ```
 
@@ -69,7 +69,7 @@ const LoadingData = () =>
 ```typescript
 const SafeData = () =>
   Stream.concat(
-    Stream.make(h.span({}, "Loading...")),
+    Stream.make(h.span("Loading...")),
     Stream.fromEffect(
       fetchData().pipe(
         Effect.flatMap((data) => h.div({ class: "success" }, data.value)),
@@ -85,7 +85,7 @@ const SafeData = () =>
 const UserProfile = ({ id }: { id: number }) =>
   Effect.gen(function* () {
     const user = yield* fetchUser(id);
-    return yield* h.div({}, user.name);
+    return yield* h.div(user.name);
   });
 ```
 
@@ -93,9 +93,9 @@ const UserProfile = ({ id }: { id: number }) =>
 
 ```typescript
 const MultiStep = () =>
-  Stream.make(h.span({}, "Step 1...")).pipe(
-    Stream.concat(Stream.fromEffect(step1().pipe(Effect.flatMap(() => h.span({}, "Step 2..."))))),
-    Stream.concat(Stream.fromEffect(step2().pipe(Effect.flatMap(() => h.span({}, "Done!"))))),
+  Stream.make(h.span("Step 1...")).pipe(
+    Stream.concat(Stream.fromEffect(step1().pipe(Effect.flatMap(() => h.span("Step 2..."))))),
+    Stream.concat(Stream.fromEffect(step2().pipe(Effect.flatMap(() => h.span("Done!"))))),
   );
 ```
 

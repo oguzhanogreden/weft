@@ -59,14 +59,14 @@ const program = Effect.gen(function* () {
 
     return h.li({ id: `row-${row.id}` }, [
       h.span({ class: "key" }, `#${row.id}`),
-      h.span({}, row.label),
+      h.span(row.label),
       h.input({ placeholder: "type here…" }),
       h.span({ class: "count" }, ["ticks: ", counter]),
     ]);
   };
 
-  return h.div({}, [
-    h.h1({}, "Keyed List — List.each"),
+  return h.div([
+    h.h1("Keyed List — List.each"),
     h.p(
       { class: "hint" },
       "Type into a row, start its counter, then shuffle. Focus, the typed value, and the running counter all survive the move.",
@@ -84,7 +84,7 @@ const program = Effect.gen(function* () {
       h.button({ onclick: () => update((c) => c.slice(1)) }, "Remove first"),
     ]),
 
-    h.ul({}, [List.each({ of: rows.changes, by: (row: Row) => row.id }, renderRow)]),
+    h.ul([List.each({ of: rows.changes, by: (row: Row) => row.id }, renderRow)]),
   ]);
 });
 

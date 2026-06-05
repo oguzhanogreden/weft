@@ -15,10 +15,7 @@ import { Schedule, Stream } from "effect";
 const StaticList = () => {
   const items = ["Apple", "Banana", "Cherry", "Date", "Elderberry"];
 
-  return h.ul(
-    {},
-    items.map((item) => h.li({}, item)),
-  );
+  return h.ul(items.map((item) => h.li(item)));
 };
 
 // ============================================================================
@@ -32,7 +29,7 @@ interface User {
 }
 
 const TableRow = ({ user }: { user: User }) =>
-  h.fragment([h.td({}, user.name), h.td({}, user.role), h.td({}, user.status)]);
+  h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
 
 const UserTable = () => {
   const users: User[] = [
@@ -41,12 +38,9 @@ const UserTable = () => {
     { name: "Charlie", role: "User", status: "Inactive" },
   ];
 
-  return h.table({}, [
-    h.thead({}, [h.tr({}, [h.th({}, "Name"), h.th({}, "Role"), h.th({}, "Status")])]),
-    h.tbody(
-      {},
-      users.map((user) => h.tr({}, [TableRow({ user })])),
-    ),
+  return h.table([
+    h.thead([h.tr([h.th("Name"), h.th("Role"), h.th("Status")])]),
+    h.tbody(users.map((user) => h.tr([TableRow({ user })]))),
   ]);
 };
 
@@ -60,7 +54,7 @@ const GrowingList = () => {
     `Item ${items.length + 1}`,
   ]).pipe(Stream.schedule(Schedule.spaced("1 second")), Stream.take(5));
 
-  return h.ul({}, [Stream.map(itemsStream, (items) => items.map((item) => h.li({}, item)))]);
+  return h.ul([Stream.map(itemsStream, (items) => items.map((item) => h.li(item)))]);
 };
 
 // ============================================================================
@@ -75,14 +69,10 @@ const NestedList = () => {
   ];
 
   return h.div(
-    {},
     categories.map((category) =>
       h.div({ style: { marginBottom: "1rem" } }, [
-        h.strong({}, category.name),
-        h.ul(
-          {},
-          category.items.map((item) => h.li({}, item)),
-        ),
+        h.strong(category.name),
+        h.ul(category.items.map((item) => h.li(item))),
       ]),
     ),
   );
@@ -102,7 +92,7 @@ const TagList = ({ tags }: { tags: string[] }) =>
 const BadgeDemo = () => {
   const skills = ["TypeScript", "Effect", "React", "Node.js", "GraphQL"];
 
-  return h.div({}, [h.p({}, "Skills: "), TagList({ tags: skills })]);
+  return h.div([h.p("Skills: "), TagList({ tags: skills })]);
 };
 
 // ============================================================================
@@ -118,10 +108,7 @@ const LiveCounterList = () => {
     ),
   }));
 
-  return h.ul(
-    {},
-    counters.map((counter) => h.li({}, [`Counter ${counter.id}: `, counter.valueStream])),
-  );
+  return h.ul(counters.map((counter) => h.li([`Counter ${counter.id}: `, counter.valueStream])));
 };
 
 // ============================================================================
@@ -129,42 +116,38 @@ const LiveCounterList = () => {
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "List Rendering"),
+  h.div([
+    h.h1("List Rendering"),
 
-    h.section({}, [
-      h.h2({}, "1. Static Array"),
-      h.p({}, "Simple array.map() to render items."),
-      StaticList(),
-    ]),
+    h.section([h.h2("1. Static Array"), h.p("Simple array.map() to render items."), StaticList()]),
 
-    h.section({}, [
-      h.h2({}, "2. Fragment for Table Rows"),
-      h.p({}, "Fragment returns multiple td elements without wrapper."),
+    h.section([
+      h.h2("2. Fragment for Table Rows"),
+      h.p("Fragment returns multiple td elements without wrapper."),
       UserTable(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "3. Growing List (Stream of Arrays)"),
-      h.p({}, "List grows over time via stream."),
+    h.section([
+      h.h2("3. Growing List (Stream of Arrays)"),
+      h.p("List grows over time via stream."),
       GrowingList(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "4. Nested Iterables"),
-      h.p({}, "Arrays within arrays flatten correctly."),
+    h.section([
+      h.h2("4. Nested Iterables"),
+      h.p("Arrays within arrays flatten correctly."),
       NestedList(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "5. Badges with Fragment"),
-      h.p({}, "Fragment component returns inline badges."),
+    h.section([
+      h.h2("5. Badges with Fragment"),
+      h.p("Fragment component returns inline badges."),
       BadgeDemo(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "6. Live Counters"),
-      h.p({}, "Each list item has its own reactive stream."),
+    h.section([
+      h.h2("6. Live Counters"),
+      h.p("Each list item has its own reactive stream."),
       LiveCounterList(),
     ]),
   ]);

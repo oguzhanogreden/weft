@@ -55,7 +55,7 @@ const SafeWidget = () =>
 Boundary.catchTag(
   {
     tag: "AuthError",
-    fallback: (e) => h.div({}, `Please log in: ${e.reason}`),
+    fallback: (e) => h.div(`Please log in: ${e.reason}`),
   },
   [ProtectedComponent()],
 );
@@ -66,8 +66,8 @@ Boundary.catchTag(
 ```typescript
 Boundary.catchTags(
   {
-    NetworkError: (e) => h.div({}, `${e.status} ${e.url}`),
-    AuthError: (e) => h.div({}, `Auth: ${e.reason}`),
+    NetworkError: (e) => h.div(`${e.status} ${e.url}`),
+    AuthError: (e) => h.div(`Auth: ${e.reason}`),
   },
   [ChildComponent()],
 );
@@ -78,8 +78,7 @@ Boundary.catchTags(
 ```typescript
 Boundary.catchSome(
   {
-    fallback: (e) =>
-      e.status === 503 ? Option.some(h.div({}, "Service unavailable")) : Option.none(), // re-raise anything else
+    fallback: (e) => (e.status === 503 ? Option.some(h.div("Service unavailable")) : Option.none()), // re-raise anything else
   },
   [ChildComponent()],
 );
@@ -91,7 +90,7 @@ Boundary.catchSome(
 Boundary.catchIf(
   {
     predicate: (e) => e.status >= 500, // only server errors
-    fallback: (e) => h.div({}, "Server error"),
+    fallback: (e) => h.div("Server error"),
   },
   [ChildComponent()],
 );
@@ -102,7 +101,7 @@ Boundary.catchIf(
 ```typescript
 Boundary.catchAllCause(
   {
-    fallback: (cause) => h.div({}, `Unexpected: ${String(cause)}`),
+    fallback: (cause) => h.div(`Unexpected: ${String(cause)}`),
   },
   [ComponentThatMayThrow()],
 );
@@ -113,7 +112,7 @@ Boundary.catchAllCause(
 ```typescript
 // Inner catches AuthError; NetworkError re-raises to outer
 Boundary.catchAll({ fallback: (e) => h.div({ class: "outer-error" }, `Outer: ${e._tag}`) }, [
-  Boundary.catchTag({ tag: "AuthError", fallback: (e) => h.div({}, `Auth: ${e.reason}`) }, [
+  Boundary.catchTag({ tag: "AuthError", fallback: (e) => h.div(`Auth: ${e.reason}`) }, [
     ComponentWithMixedErrors(),
   ]),
 ]);

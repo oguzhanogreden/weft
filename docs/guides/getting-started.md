@@ -25,7 +25,7 @@ import { mount } from "@effect-ui/dom/client";
 import { Effect } from "effect";
 
 function App() {
-  return h.div({ class: "app" }, [h.h1({}, "Hello, effect-ui"), h.p({}, "A minimal app.")]);
+  return h.div({ class: "app" }, [h.h1("Hello, effect-ui"), h.p("A minimal app.")]);
 }
 
 void Effect.runPromise(mount(App(), document.getElementById("root")!));
@@ -46,8 +46,8 @@ const Counter = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    return yield* h.div({}, [
-      h.span({}, [count.changes]),
+    return yield* h.div([
+      h.span([count.changes]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
     ]);
@@ -105,11 +105,11 @@ import { Effect, Stream } from "effect";
 
 const AsyncGreeting = ({ name }: { name: string }) =>
   Stream.concat(
-    Stream.make(h.span({}, "Loading...")),
+    Stream.make(h.span("Loading...")),
     Stream.fromEffect(
       Effect.gen(function* () {
         yield* Effect.sleep("1 second");
-        return yield* h.span({}, `Hello, ${name}!`);
+        return yield* h.span(`Hello, ${name}!`);
       }),
     ),
   );
@@ -148,7 +148,7 @@ import { Layer, Schema } from "effect";
 const ProductPage = () =>
   Boundary.server(
     { load: () => fetchProduct(), provide: Layer.empty, schema: ProductSchema },
-    (product) => h.div({}, product.name),
+    (product) => h.div(product.name),
   );
 ```
 
@@ -160,5 +160,6 @@ See the [Server-side rendering guide](./server-side-rendering.md) for the full m
 - [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
 - [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
 - [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, `Boundary.server`, and the `@effect-ui/vite` prune plugin
-- [API Reference](../api/core.md) — complete `@effect-ui/core` API reference
-- [examples/](../../examples/) — nine runnable examples covering common patterns
+- [Routing](./routing.md) — universal nested routing with `@effect-ui/router`
+- [`@effect-ui/core` API Reference](../api/core.md) and [`@effect-ui/router` API Reference](../api/router.md)
+- [examples/](../../examples/) — runnable examples covering common patterns

@@ -22,7 +22,7 @@
   "devDependencies": {
     "@effect-ui/core": "workspace:*",
     "@types/node": "^25.9.1",
-    "effect": "^3.21.2",
+    "effect": "catalog:",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

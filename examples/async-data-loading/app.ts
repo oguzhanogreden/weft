@@ -53,9 +53,7 @@ const UserCard = ({ id }: { id: number }) =>
     Stream.make(h.div({ class: "loading" }, `Loading user ${id}...`)),
     Stream.fromEffect(
       fetchUser(id).pipe(
-        Effect.flatMap((user) =>
-          h.div({ class: "user-card" }, [h.h3({}, user.name), h.p({}, user.email)]),
-        ),
+        Effect.flatMap((user) => h.div({ class: "user-card" }, [h.h3(user.name), h.p(user.email)])),
         Effect.catchAll((error) =>
           h.div({ class: "error" }, `Error loading user ${id}: ${error.message}`),
         ),
@@ -121,30 +119,30 @@ const SequentialLoad = () =>
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "Async Data Loading"),
+  h.div([
+    h.h1("Async Data Loading"),
 
-    h.section({}, [
-      h.h2({}, "1. Loading State Pattern"),
-      h.p({}, "Shows loading, then data after delay."),
+    h.section([
+      h.h2("1. Loading State Pattern"),
+      h.p("Shows loading, then data after delay."),
       h.div({ style: { marginTop: "0.5rem" } }, [LoadingThenData()]),
     ]),
 
-    h.section({}, [
-      h.h2({}, "2. Effect Component (Direct)"),
-      h.p({}, "Component returns Effect directly."),
+    h.section([
+      h.h2("2. Effect Component (Direct)"),
+      h.p("Component returns Effect directly."),
       h.div({ style: { marginTop: "0.5rem" } }, [DelayedGreeting({ name: "World" })]),
     ]),
 
-    h.section({}, [
-      h.h2({}, "3. Parallel Loading with Error Handling"),
-      h.p({}, "Multiple users load in parallel. User 3 will fail."),
+    h.section([
+      h.h2("3. Parallel Loading with Error Handling"),
+      h.p("Multiple users load in parallel. User 3 will fail."),
       h.div({ style: { marginTop: "0.5rem" } }, [Dashboard()]),
     ]),
 
-    h.section({}, [
-      h.h2({}, "4. Sequential Loading Steps"),
-      h.p({}, "Multi-step process with status updates."),
+    h.section([
+      h.h2("4. Sequential Loading Steps"),
+      h.p("Multi-step process with status updates."),
       h.div({ style: { marginTop: "0.5rem" } }, [SequentialLoad()]),
     ]),
   ]);

@@ -22,17 +22,17 @@ export const App = (props: { initialValue: number }) =>
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 
-    return yield* h.div({}, [
-      h.h1({}, "SSR + Hydration"),
-      h.p({}, [
+    return yield* h.div([
+      h.h1("SSR + Hydration"),
+      h.p([
         "This page was rendered to HTML on the server and hydrated in the browser. The counter below shows ",
-        h.code({}, "3"),
+        h.code("3"),
         " before any JavaScript runs; once hydrated, the buttons work and the count node resumes in place — no flash.",
       ]),
       h.div({ class: "count" }, [count.changes]),
       h.button({ type: "button", onclick: () => decrement() }, "-"),
       h.button({ type: "button", onclick: () => increment() }, "+"),
 
-      h.div({}, [h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
+      h.div([h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
     ]);
   });

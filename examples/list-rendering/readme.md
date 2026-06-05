@@ -17,18 +17,14 @@ import { h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 // Static array mapping
-h.ul(
-  {},
-  items.map((item) => h.li({}, item)),
-);
+h.ul(items.map((item) => h.li(item)));
 
 // Fragment for multiple elements without a wrapper
-const TableRow = ({ user }: { user: User }) =>
-  h.fragment([h.td({}, user.name), h.td({}, user.role)]);
+const TableRow = ({ user }: { user: User }) => h.fragment([h.td(user.name), h.td(user.role)]);
 
 // Stream of arrays — entire list re-renders on each emission
 const itemsStream = Stream.iterate([], (items) => [...items, newItem]);
-h.ul({}, [Stream.map(itemsStream, (items) => items.map((i) => h.li({}, i)))]);
+h.ul([Stream.map(itemsStream, (items) => items.map((i) => h.li(i)))]);
 ```
 
 ## How It Works
@@ -53,24 +49,16 @@ h.ul({}, [Stream.map(itemsStream, (items) => items.map((i) => h.li({}, i)))]);
 
 ```typescript
 const items = ["A", "B", "C"];
-h.ul(
-  {},
-  items.map((item) => h.li({}, item)),
-);
+h.ul(items.map((item) => h.li(item)));
 ```
 
 ### Fragment Component
 
 ```typescript
 const TableRow = ({ data }: { data: { name: string; value: string } }) =>
-  h.fragment([h.td({}, data.name), h.td({}, data.value)]);
+  h.fragment([h.td(data.name), h.td(data.value)]);
 
-h.table({}, [
-  h.tbody(
-    {},
-    rows.map((row) => h.tr({}, [TableRow({ data: row })])),
-  ),
-]);
+h.table([h.tbody(rows.map((row) => h.tr([TableRow({ data: row })])))]);
 ```
 
 ### Growing List
@@ -81,7 +69,7 @@ const itemsStream = Stream.iterate(["Initial"], (items) => [
   `Item ${items.length + 1}`,
 ]).pipe(Stream.schedule(Schedule.spaced("1 second")));
 
-h.ul({}, [Stream.map(itemsStream, (items) => items.map((item) => h.li({}, item)))]);
+h.ul([Stream.map(itemsStream, (items) => items.map((item) => h.li(item)))]);
 ```
 
 ### Items with Individual Streams
@@ -92,10 +80,7 @@ const items = ids.map((id) => ({
   valueStream: fetchDataStream(id),
 }));
 
-h.ul(
-  {},
-  items.map((item) => h.li({}, [`${item.id}: `, item.valueStream])),
-);
+h.ul(items.map((item) => h.li([`${item.id}: `, item.valueStream])));
 ```
 
 ### Nested Lists
@@ -106,18 +91,7 @@ const categories = [
   { name: "B", items: ["B1", "B2"] },
 ];
 
-h.div(
-  {},
-  categories.map((cat) =>
-    h.div({}, [
-      h.h3({}, cat.name),
-      h.ul(
-        {},
-        cat.items.map((i) => h.li({}, i)),
-      ),
-    ]),
-  ),
-);
+h.div(categories.map((cat) => h.div([h.h3(cat.name), h.ul(cat.items.map((i) => h.li(i)))])));
 ```
 
 ### Badges with Fragment

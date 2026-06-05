@@ -38,8 +38,8 @@ const AutoFocusInput = () =>
       Effect.forkScoped,
     );
 
-    return yield* h.div({}, [
-      h.p({}, "This input is automatically focused on mount:"),
+    return yield* h.div([
+      h.p("This input is automatically focused on mount:"),
       h.input({
         ref: inputRef,
         type: "text",
@@ -78,7 +78,7 @@ const MeasureElement = () =>
       Effect.forkScoped,
     );
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.div(
         {
           ref: boxRef,
@@ -94,7 +94,7 @@ const MeasureElement = () =>
         },
         "Measured Box",
       ),
-      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong({}, [dimensions.changes])]),
+      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong([dimensions.changes])]),
     ]);
   });
 
@@ -139,8 +139,8 @@ const CanvasDrawing = () =>
       Effect.forkScoped,
     );
 
-    return yield* h.div({}, [
-      h.p({}, "Shapes drawn on canvas after mount:"),
+    return yield* h.div([
+      h.p("Shapes drawn on canvas after mount:"),
       h.canvas({
         ref: canvasRef,
         width: 300,
@@ -172,7 +172,7 @@ const ScrollIntoView = () =>
         }
       });
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.button({ type: "button", onclick: () => scrollToTarget() }, "Scroll to Target"),
       h.div(
         {
@@ -218,30 +218,30 @@ const ScrollIntoView = () =>
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "Element Ref"),
+  h.div([
+    h.h1("Element Ref"),
 
-    h.section({}, [
-      h.h2({}, "1. Auto-focus Input"),
-      h.p({}, "Focus an input element immediately after mount."),
+    h.section([
+      h.h2("1. Auto-focus Input"),
+      h.p("Focus an input element immediately after mount."),
       AutoFocusInput(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "2. Measure Element Dimensions"),
-      h.p({}, "Get element dimensions using getBoundingClientRect()."),
+    h.section([
+      h.h2("2. Measure Element Dimensions"),
+      h.p("Get element dimensions using getBoundingClientRect()."),
       MeasureElement(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "3. Canvas Drawing"),
-      h.p({}, "Draw on a canvas element after mount."),
+    h.section([
+      h.h2("3. Canvas Drawing"),
+      h.p("Draw on a canvas element after mount."),
       CanvasDrawing(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "4. Scroll Into View"),
-      h.p({}, "Scroll to an element using scrollIntoView()."),
+    h.section([
+      h.h2("4. Scroll Into View"),
+      h.p("Scroll to an element using scrollIntoView()."),
       ScrollIntoView(),
     ]),
   ]);

@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/node": "^25.9.1",
     "csstype": "^3.2.3",
-    "effect": "^3.21.2",
+    "effect": "catalog:",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"

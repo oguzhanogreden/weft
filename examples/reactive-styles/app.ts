@@ -131,36 +131,36 @@ const GrowingBox = () => {
 // ============================================================================
 
 export const App = () =>
-  h.div({}, [
-    h.h1({}, "Reactive Styles"),
+  h.div([
+    h.h1("Reactive Styles"),
 
-    h.section({}, [
-      h.h2({}, "1. Animated Hue (Individual Property Stream)"),
-      h.p({}, "Background color cycles through the color wheel."),
+    h.section([
+      h.h2("1. Animated Hue (Individual Property Stream)"),
+      h.p("Background color cycles through the color wheel."),
       AnimatedHue(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "2. Object Form Styles (Static)"),
-      h.p({}, "Standard object syntax for style properties."),
+    h.section([
+      h.h2("2. Object Form Styles (Static)"),
+      h.p("Standard object syntax for style properties."),
       ObjectStyleBox(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "3. Style Object Stream"),
-      h.p({}, "Entire style object changes over time."),
+    h.section([
+      h.h2("3. Style Object Stream"),
+      h.p("Entire style object changes over time."),
       StyleSwitcher(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "4. Pulsing Opacity"),
-      h.p({}, "Opacity alternates between values."),
+    h.section([
+      h.h2("4. Pulsing Opacity"),
+      h.p("Opacity alternates between values."),
       PulsingBox(),
     ]),
 
-    h.section({}, [
-      h.h2({}, "5. Growing Size"),
-      h.p({}, "Width and height animate via streams."),
+    h.section([
+      h.h2("5. Growing Size"),
+      h.p("Width and height animate via streams."),
       GrowingBox(),
     ]),
   ]);

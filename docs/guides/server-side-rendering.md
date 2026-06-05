@@ -69,8 +69,7 @@ const ProductPage = () =>
       provide: DatabaseLive,
       schema: ProductSchema,
     },
-    (product) =>
-      h.div({ class: "product" }, [h.h1({}, product.name), h.p({}, `$${product.price}`)]),
+    (product) => h.div({ class: "product" }, [h.h1(product.name), h.p(`$${product.price}`)]),
   );
 ```
 
@@ -107,7 +106,7 @@ Boundary.catchAll({ fallback: (e: ProductLoadError) => h.div({ class: "error" },
       schema: ProductSchema,
       failure: ProductLoadError,
     },
-    (product) => h.div({}, product.name),
+    (product) => h.div(product.name),
   ),
 ]);
 ```
@@ -121,7 +120,7 @@ On the server the typed error is encoded into an inline failure payload and the 
 ```typescript
 Boundary.server(
   { load: () => Effect.succeed({ name: "Static", price: 0 }), schema: ProductSchema },
-  (product) => h.div({}, product.name),
+  (product) => h.div(product.name),
 );
 ```
 
@@ -154,6 +153,7 @@ export default defineConfig({
 
 ## See also
 
+- [Routing](./routing.md) — `@effect-ui/router` builds on this SSR + hydration model for full-page nested routing
 - [`Boundary.server` API reference](../api/core.md#boundaryserver)
 - [`ServerTag` API reference](../api/core.md#servertag)
 - [examples/server-boundary](../../examples/server-boundary) — a runnable product page with success and typed-failure replay, the prune plugin wired in, and an observable proof that `load` never runs on the client

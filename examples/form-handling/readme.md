@@ -20,12 +20,12 @@ const ReactiveInput = () =>
   Effect.gen(function* () {
     const value = yield* SubscriptionRef.make("");
 
-    return yield* h.div({}, [
+    return yield* h.div([
       h.input({
         type: "text",
         oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
       }),
-      h.div({}, ["You typed: ", value.changes]),
+      h.div(["You typed: ", value.changes]),
     ]);
   });
 ```
@@ -59,7 +59,7 @@ h.input({
 });
 
 // Show current value reactively
-h.div({}, ["You typed: ", value.changes]);
+h.div(["You typed: ", value.changes]);
 ```
 
 ### Schema Validation
@@ -100,7 +100,7 @@ const remainingStream = Stream.map(countStream, (c) => 100 - c);
 h.textarea({
   oninput: (e) => SubscriptionRef.set(text, (e.target as HTMLTextAreaElement).value),
 });
-h.span({}, [remainingStream, " characters remaining"]);
+h.span([remainingStream, " characters remaining"]);
 ```
 
 ### Effect Submit Handler

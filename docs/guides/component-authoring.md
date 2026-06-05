@@ -35,14 +35,14 @@ const Counter = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    return yield* h.div({}, [
-      h.span({}, [count.changes]),
+    return yield* h.div([
+      h.span([count.changes]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
     ]);
   });
 ```
 
-The return type here is `Effect.Effect<Node, never, never>` — itself a valid `Node`, so it composes naturally with other tree-building calls.
+The return type here is `Effect.Effect<Node, never, never>` — itself a valid `Node`, so it composes naturally with other tree-building calls. As soon as such a component is reused or takes props, prefer wrapping the same generator in [`Component.gen`](#componentgen--componentmake-for-reusable-components) (below) so the caller's reactive prop and children channels flow into its node type.
 
 ## Component scope and background effects
 
@@ -153,10 +153,10 @@ The function form is the render-prop / slot pattern — the component invokes th
 ```typescript
 const ItemList = Component.make(
   (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
-    h.ul({}, props.items.flatMap(renderItem)),
+    h.ul(props.items.flatMap(renderItem)),
 );
 
-ItemList({ items: ["a", "b"] }, (item) => [h.li({}, item)]);
+ItemList({ items: ["a", "b"] }, (item) => [h.li(item)]);
 ```
 
 ## Props typing
@@ -185,7 +185,7 @@ import { h } from "@effect-ui/core";
 function App() {
   return h.div({ class: "app" }, [
     Header({ title: "My App" }),
-    h.main({}, [Sidebar(), h.article({}, [Content({ id: 1 })])]),
+    h.main([Sidebar(), h.article([Content({ id: 1 })])]),
     Footer(),
   ]);
 }
@@ -226,7 +226,7 @@ When a component needs to return multiple sibling elements without a wrapper, us
 import { h } from "@effect-ui/core";
 
 const TableCells = ({ row }: { row: Row }) =>
-  h.fragment([h.td({}, row.name), h.td({}, row.value), h.td({}, row.status)]);
+  h.fragment([h.td(row.name), h.td(row.value), h.td(row.status)]);
 ```
 
 `h.fragment` returns a `Node<E, R>` that accumulates channels from all its children.

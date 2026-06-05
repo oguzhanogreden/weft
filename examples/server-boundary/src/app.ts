@@ -118,7 +118,7 @@ export const App = () =>
         const decrement = () => SubscriptionRef.update(qty, (n) => Math.max(1, n - 1));
 
         return yield* h.div({ class: "product" }, [
-          h.h1({}, product.name),
+          h.h1(product.name),
           h.p({ class: "blurb" }, product.blurb),
           h.p({ class: "price" }, `$${product.price}`),
           h.div({ class: "qty" }, [
@@ -126,7 +126,7 @@ export const App = () =>
             h.span({ id: "qty" }, [qty.changes]),
             h.button({ type: "button", onclick: () => increment() }, "+"),
           ]),
-          h.div({}, [h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
+          h.div([h.span({ class: "status", id: "status" }, "[SSR — not yet interactive]")]),
         ]);
       }),
   );
@@ -146,7 +146,7 @@ export const FailingApp = () =>
     {
       fallback: (error: ProductLoadError) =>
         h.div({ class: "load-error" }, [
-          h.h1({}, "Out of stock"),
+          h.h1("Out of stock"),
           h.p({ class: "reason" }, error.reason),
         ]),
     },
