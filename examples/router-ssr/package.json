@@ -1,16 +1,18 @@
 {
-  "name": "error-boundary",
+  "name": "router-ssr",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
     "@effect-ui/core": "workspace:*",
     "@effect-ui/dom": "workspace:*",
-    "@types/node": "^25.9.1",
+    "@effect-ui/router": "workspace:*",
+    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "vite": "catalog:",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
     "vite-plus": "catalog:"
   }
 }

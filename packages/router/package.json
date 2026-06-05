@@ -1,7 +1,7 @@
 {
-  "name": "@effect-ui/dom",
+  "name": "@effect-ui/router",
   "version": "0.0.0",
-  "description": "Client-side DOM renderer for effect-ui",
+  "description": "Universal nested router for effect-ui",
   "license": "MIT",
   "author": "Stef van Wijchen",
   "type": "module",
@@ -20,7 +20,9 @@
     }
   },
   "dependencies": {
-    "@effect-ui/core": "workspace:*"
+    "@effect-ui/core": "workspace:*",
+    "@effect-ui/dom": "workspace:*",
+    "@effect/platform": "catalog:"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",
