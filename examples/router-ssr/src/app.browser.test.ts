@@ -10,7 +10,7 @@
 
 import { h } from "@effect-ui/core";
 import { mount, type MountHandle } from "@effect-ui/dom/client";
-import { layout, notFound, route, router, type RouterDef } from "@effect-ui/router";
+import { notFound, type RouterDef } from "@effect-ui/router";
 import { Router, RouterApp, RouterLive } from "@effect-ui/router/client";
 import { Effect, ManagedRuntime } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -93,10 +93,13 @@ describe("router-ssr example", () => {
 
   it("renders the not-found page when a page raises notFound() during client navigation (N3)", async () => {
     // A tiny local tree: home links to `/gone`, whose page raises RouterNotFound.
-    const def = router(
-      layout("", (outlet) => h.div({}, [outlet]), [
-        route("", () => h.div({}, [h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")])),
-        route("gone", () => notFound("/gone")),
+    const def = Router.router(
+      Router.layout("", { render: ({ outlet }) => h.div({}, [outlet]) }, [
+        Router.route("", {
+          component: () =>
+            h.div({}, [h.a({ href: "/gone" }, "go"), h.span({ id: "home" }, "home")]),
+        }),
+        Router.route("gone", { component: () => notFound("/gone") }),
       ]),
       { notFound: () => h.h2({ id: "nf" }, "client 404") },
     );

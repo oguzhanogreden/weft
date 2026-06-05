@@ -19,18 +19,21 @@ export type HrefArgs<Path extends Fields, Query extends Fields> = ({} extends Fi
  * {@link route}). Path params are encoded into the pattern and query values are
  * encoded into a key-sorted search string (H1–H4). Round-trips with `match`.
  *
- * The leaf must belong to a tree that has been sealed with `router()` (which
- * stamps the leaf registry); otherwise an error is thrown.
+ * The leaf must belong to a tree that has been sealed with `Router.router()`
+ * (which stamps the leaf registry); otherwise an error is thrown.
  *
  * @example
  * ```ts
- * const userRoute = route("users/:id", { path: { id: Schema.NumberFromString } }, …);
- * router(layout("", …, [userRoute]), { notFound });
+ * const userRoute = Router.route("users/:id", {
+ *   path: { id: Schema.NumberFromString },
+ *   component: …,
+ * });
+ * Router.router(Router.layout("", { render: … }, [userRoute]), { notFound });
  * href(userRoute, { path: { id: 42 } }); // "/users/42"
  * ```
  */
 export function href<Path extends Fields, Query extends Fields>(
-  ref: RouteNode<Path, Query>,
+  ref: RouteNode<Path, Query, any, any>,
   ...args: {} extends HrefArgs<Path, Query>
     ? [args?: HrefArgs<Path, Query>]
     : [args: HrefArgs<Path, Query>]
@@ -38,7 +41,7 @@ export function href<Path extends Fields, Query extends Fields>(
   const leaf = leafRegistry.get(ref);
   if (leaf === undefined) {
     throw new Error(
-      "href: route has not been compiled. Seal the tree with router() before calling href().",
+      "href: route has not been compiled. Seal the tree with Router.router() before calling href().",
     );
   }
   const { path = {}, query = {} } = (args[0] ?? {}) as {

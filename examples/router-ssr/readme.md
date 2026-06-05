@@ -7,7 +7,7 @@ A server-rendered, client-hydrated nested-routing example built on
 
 The app is an explicit nested route tree — a root `Shell` layout wrapping a
 `/users/:id` layout, which wraps `/users/:id/settings` and `/users/:id/posts`
-pages — sealed with `router(...)` into a single `RouterDef` (`App`). The same
+pages — sealed with `Router.router(...)` into a single `RouterDef` (`App`). The same
 `App` drives both sides:
 
 - **Server** (`entry-server.ts`): `RouterServer` matches the request URL, renders
@@ -39,8 +39,9 @@ nesting level is a reactive **stream child** keyed by its resolved path prefix a
 
 ## How It Works
 
-- `app.ts` (side-effect-free) declares the tree with `route()` / `layout()` and
-  exports the sealed `App` plus the leaf routes used for type-safe `href`s.
+- `app.ts` (side-effect-free) declares the tree with `Router.route()` /
+  `Router.layout()` and exports the sealed `App` plus the leaf routes used for
+  type-safe `href`s.
 - The `/users/:id` layout owns a `SubscriptionRef` counter. Navigating between
   `settings` and `posts` (same `:id`) changes only the leaf level — the layout's
   DOM node and its counter persist, which the browser test asserts directly.

@@ -3,17 +3,17 @@ import { h } from "@effect-ui/core";
 import { Effect, Exit, Schema, Scope } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, test } from "vite-plus/test";
-import { layout, route, router } from "~/index";
+import { Router } from "~/index";
 import { installLinkInterceptor } from "~/client/link";
 
 const Page = (label: string) => () => h.div({}, label);
 
 /** A small two-route tree: `/about` (static) and `/users/:id` (param). */
 function fixture() {
-  return router(
-    layout("", (outlet) => outlet, [
-      route("about", Page("about")),
-      route("users/:id", { path: { id: Schema.NumberFromString } }, Page("user")),
+  return Router.router(
+    Router.layout("", { render: ({ outlet }) => outlet }, [
+      Router.route("about", { component: Page("about") }),
+      Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
     ]),
     { notFound: () => h.h1({}, "404") },
   ).compiled;

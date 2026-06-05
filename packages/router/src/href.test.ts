@@ -4,21 +4,23 @@ import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { href } from "~/href";
 import { match } from "~/matcher";
-import { layout, route, router } from "~/index";
+import { Router } from "~/index";
 
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
-const userRoute = route("users/:id", { path: { id: Schema.NumberFromString } }, Page("user"));
-const searchRoute = route(
-  "search",
-  { query: { q: Schema.optional(Schema.String), page: Schema.optional(Schema.NumberFromString) } },
-  Page("search"),
-);
-const aboutRoute = route("about", Page("about"));
+const userRoute = Router.route("users/:id", {
+  path: { id: Schema.NumberFromString },
+  component: Page("user"),
+});
+const searchRoute = Router.route("search", {
+  query: { q: Schema.optional(Schema.String), page: Schema.optional(Schema.NumberFromString) },
+  component: Page("search"),
+});
+const aboutRoute = Router.route("about", { component: Page("about") });
 
-const def = router(
-  layout("", (outlet) => outlet, [userRoute, searchRoute, aboutRoute]),
+const def = Router.router(
+  Router.layout("", { render: ({ outlet }) => outlet }, [userRoute, searchRoute, aboutRoute]),
   {
     notFound: NotFound,
   },

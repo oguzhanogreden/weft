@@ -2,16 +2,19 @@ import * as assert from "node:assert/strict";
 import { h } from "@effect-ui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
-import { layout, route, router } from "~/index";
+import { Router } from "~/index";
 import { toHttpApi } from "~/server/to-http-api";
 
 const Page = (label: string) => () => h.div({}, label);
 
-const def = router(
-  layout("", (outlet) => outlet, [
-    route("about", Page("about")),
-    route("users/:id", { path: { id: Schema.NumberFromString } }, Page("user")),
-    route("search", { query: { q: Schema.optional(Schema.String) } }, Page("search")),
+const def = Router.router(
+  Router.layout("", { render: ({ outlet }) => outlet }, [
+    Router.route("about", { component: Page("about") }),
+    Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
+    Router.route("search", {
+      query: { q: Schema.optional(Schema.String) },
+      component: Page("search"),
+    }),
   ]),
   { notFound: () => h.h1({}, "404") },
 );

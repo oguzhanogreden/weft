@@ -3,23 +3,28 @@ import { h } from "@effect-ui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";
-import { layout, route, router } from "~/index";
+import { Router } from "~/index";
 
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
 function fixture() {
-  return router(
-    layout("", (outlet) => h.div({ class: "shell" }, [outlet]), [
-      route("", Page("home")),
-      route("about", Page("about")),
-      route("users/new", Page("new")),
-      route("search", { query: { q: Schema.optional(Schema.String) } }, Page("search")),
-      layout(
+  return Router.router(
+    Router.layout("", { render: ({ outlet }) => h.div({ class: "shell" }, [outlet]) }, [
+      Router.route("", { component: Page("home") }),
+      Router.route("about", { component: Page("about") }),
+      Router.route("users/new", { component: Page("new") }),
+      Router.route("search", {
+        query: { q: Schema.optional(Schema.String) },
+        component: Page("search"),
+      }),
+      Router.layout(
         "users/:id",
-        { path: { id: Schema.NumberFromString } },
-        (outlet) => h.div({}, [outlet]),
-        [route("settings", Page("settings")), route("posts", Page("posts"))],
+        { path: { id: Schema.NumberFromString }, render: ({ outlet }) => h.div({}, [outlet]) },
+        [
+          Router.route("settings", { component: Page("settings") }),
+          Router.route("posts", { component: Page("posts") }),
+        ],
       ),
     ]),
     { notFound: NotFound },
@@ -69,8 +74,10 @@ describe("compile", () => {
   });
 
   test("C6: an undeclared `:name` placeholder defaults to Schema.String", () => {
-    const { compiled } = router(
-      layout("", (outlet) => outlet, [route("tags/:tag", Page("tag"))]),
+    const { compiled } = Router.router(
+      Router.layout("", { render: ({ outlet }) => outlet }, [
+        Router.route("tags/:tag", { component: Page("tag") }),
+      ]),
       { notFound: NotFound },
     );
     const tag = leafByPattern(compiled.leaves, "/tags/:tag");

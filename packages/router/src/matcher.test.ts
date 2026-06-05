@@ -3,18 +3,21 @@ import { h } from "@effect-ui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { match } from "~/matcher";
-import { layout, route, router } from "~/index";
+import { Router } from "~/index";
 
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
 function fixture() {
-  return router(
-    layout("", (outlet) => outlet, [
-      route("about", Page("about")),
-      route("users/new", Page("new")),
-      route("users/:id", { path: { id: Schema.NumberFromString } }, Page("user")),
-      route("search", { query: { q: Schema.optional(Schema.String) } }, Page("search")),
+  return Router.router(
+    Router.layout("", { render: ({ outlet }) => outlet }, [
+      Router.route("about", { component: Page("about") }),
+      Router.route("users/new", { component: Page("new") }),
+      Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
+      Router.route("search", {
+        query: { q: Schema.optional(Schema.String) },
+        component: Page("search"),
+      }),
     ]),
     { notFound: NotFound },
   ).compiled;

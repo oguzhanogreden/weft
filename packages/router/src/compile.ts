@@ -1,6 +1,6 @@
 import type { Node } from "@effect-ui/core";
 import { Schema } from "effect";
-import type { LayoutNode, RouteNode, TreeNode } from "./route-tree";
+import type { LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
 
 /**
  * A compiled layout level: its render function plus the cumulative pattern prefix
@@ -12,10 +12,10 @@ export interface CompiledLayout {
   readonly patternPrefix: string;
   /** Param names appearing in `patternPrefix`. */
   readonly paramNames: readonly string[];
-  readonly render: (
-    outlet: Node<any, any>,
-    args: { path: Record<string, unknown> },
-  ) => Node<any, any>;
+  readonly render: (args: {
+    path: Record<string, unknown>;
+    outlet: Node<any, any>;
+  }) => Node<any, any>;
 }
 
 /**
@@ -46,17 +46,26 @@ export interface Compiled {
   readonly notFound: () => Node<any, any>;
 }
 
-/** A sealed, compiled router definition. The unit passed to the client and server. */
-export interface RouterDef {
+/**
+ * A sealed, compiled router definition. The unit passed to the client and server.
+ * `E`/`R` are phantom: they carry the aggregate error / requirement channels of
+ * the whole tree (plus the not-found page) so {@link RouterApp} / {@link outletNode}
+ * can surface a precise `Node` type instead of `Node<any, any>`.
+ */
+export interface RouterDef<E = any, R = any> {
   readonly root: TreeNode;
   readonly notFound: () => Node<any, any>;
   readonly compiled: Compiled;
+  /** Phantom marker for the tree's aggregate error channel. */
+  readonly _E?: (e: E) => void;
+  /** Phantom marker for the tree's aggregate requirement channel. */
+  readonly _R?: (r: R) => void;
 }
 
 /** Options for {@link router}. */
-export interface RouterOptions {
+export interface RouterOptions<NF extends Node<any, any> = Node<any, any>> {
   /** App-level not-found page, rendered when no route matches or a page raises `RouterNotFound`. */
-  readonly notFound: () => Node<any, any>;
+  readonly notFound: () => NF;
 }
 
 /**
@@ -64,7 +73,7 @@ export interface RouterOptions {
  * {@link compile} (via {@link router}) and read by `href` so a leaf reference can
  * resolve its full pattern and schemas.
  */
-export const leafRegistry: WeakMap<RouteNode<any, any>, CompiledLeaf> = new WeakMap();
+export const leafRegistry: WeakMap<RouteNode<any, any, any, any>, CompiledLeaf> = new WeakMap();
 
 /** Splits a segment string into its non-empty path parts. */
 function splitSegment(segment: string): readonly string[] {
@@ -114,7 +123,7 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
         segment: node.segment,
         patternPrefix: toPattern(parts),
         paramNames: extractParams(parts),
-        render: (node as LayoutNode<any>).render as CompiledLayout["render"],
+        render: (node as LayoutNode<any, any, any>).render as unknown as CompiledLayout["render"],
       };
       for (const child of node.children) {
         walk(child, parts, mergedFields, [...chain, compiledLayout]);
@@ -134,13 +143,13 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
       paramNames,
       pathSchema: Schema.Struct(pathFields) as unknown as CompiledLeaf["pathSchema"],
       querySchema: Schema.Struct(
-        (node as RouteNode<any, any>).query as Record<string, Schema.Schema.Any>,
+        (node as RouteNode<any, any, any, any>).query as Record<string, Schema.Schema.Any>,
       ) as unknown as CompiledLeaf["querySchema"],
-      component: (node as RouteNode<any, any>).component as CompiledLeaf["component"],
+      component: (node as RouteNode<any, any, any, any>).component as CompiledLeaf["component"],
       layoutChain: chain,
     };
     leaves.push(leaf);
-    leafRegistry.set(node as RouteNode<any, any>, leaf);
+    leafRegistry.set(node as RouteNode<any, any, any, any>, leaf);
   };
 
   walk(def.root, [], {}, []);
@@ -150,8 +159,13 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
 /**
  * Seals a route tree into a {@link RouterDef}, compiling it eagerly (so leaf
  * references are stamped for `href`) and capturing the app-level not-found page.
+ * The tree's aggregate channels (plus the not-found page's) are carried on the
+ * returned `RouterDef`'s phantom `E`/`R` params.
  */
-export function router(root: TreeNode, options: RouterOptions): RouterDef {
+export function makeRouter<T extends TreeNode, NF extends Node<any, any> = Node>(
+  root: T,
+  options: RouterOptions<NF>,
+): RouterDef<TreeE<T> | Node.Error<NF>, TreeR<T> | Node.Context<NF>> {
   return {
     root,
     notFound: options.notFound,

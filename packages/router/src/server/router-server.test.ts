@@ -3,7 +3,7 @@ import { h } from "@effect-ui/core";
 import type { Node } from "@effect-ui/core";
 import { Effect } from "effect";
 import { describe, test } from "vite-plus/test";
-import { layout, notFound, route, router } from "~/index";
+import { Router, notFound } from "~/index";
 import { RouterServer } from "~/server/router-server";
 
 const Home = () => h.h1({}, "Home page");
@@ -11,11 +11,11 @@ const About = () => h.h1({}, "About page");
 const Gone = () => notFound("/gone");
 const NotFound = () => h.h1({}, "404 — not found");
 
-const def = router(
-  layout("", (outlet) => h.div({ class: "shell" }, [outlet]), [
-    route("", Home),
-    route("about", About),
-    route("gone", Gone),
+const def = Router.router(
+  Router.layout("", { render: ({ outlet }) => h.div({ class: "shell" }, [outlet]) }, [
+    Router.route("", { component: Home }),
+    Router.route("about", { component: About }),
+    Router.route("gone", { component: Gone }),
   ]),
   { notFound: NotFound },
 );

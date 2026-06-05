@@ -23,40 +23,48 @@ client-side async with `Boundary.suspend`.
 
 ### Authoring surface — explicit nested route tree
 
-The tree is authored with `layout(...)` and `route(...)` combinators and sealed
-with `router(...)`. The tree is the source of truth. `HttpApi` is the
-**compilation target** (generated from the tree by `toHttpApi`), never the
-authoring surface.
+The tree is authored with the namespaced `Router.layout(...)` and
+`Router.route(...)` combinators and sealed with `Router.router(...)` (mirroring
+the namespaced core surface — `Component.gen`, `Boundary.catchTag`, `h.div`). The
+`Router` symbol is both the service `Context.Tag` (`yield* Router`) and the
+authoring namespace; the two roles merge by declaration. The tree is the source
+of truth. `HttpApi` is the **compilation target** (generated from the tree by
+`toHttpApi`), never the authoring surface.
+
+Every combinator is **fully typed**: a route's `component` and a layout's `render`
+return a precise `Node<E, R>`, the `outlet` handed to a layout carries the union
+of its whole subtree's channels (plus the universal `Router` requirement and the
+possible `RouterNotFound` error), and those channels aggregate up so the sealed
+`RouterDef` — and `RouterApp(def)` — surface a concrete `Node` type with **no
+`Node<any, any>`** on the authoring surface.
 
 ## Module map
 
-| Module                        | Side   | Responsibility                                                         |
-| ----------------------------- | ------ | ---------------------------------------------------------------------- |
-| `src/route-tree.ts`           | shared | `route()`, `layout()`, `router()` combinators + node types             |
-| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + match chains           |
-| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query |
-| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                            |
-| `src/router-service.ts`       | shared | `Router` `Context.Tag` + `RouteMatch` types                            |
-| `src/errors.ts`               | shared | `RouterNotFound` tagged error + `notFound()` helper                    |
-| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch` |
-| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                             |
-| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                  |
-| `src/server/to-http-api.ts`   | server | generate `HttpApi` from the compiled tree                              |
-| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                             |
+| Module                        | Side   | Responsibility                                                               |
+| ----------------------------- | ------ | ---------------------------------------------------------------------------- |
+| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types      |
+| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + match chains                 |
+| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query       |
+| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                  |
+| `src/router-service.ts`       | shared | `Router` `Context.Tag` + the merged `Router.{route,layout,router}` namespace |
+| `src/errors.ts`               | shared | `RouterNotFound` tagged error + `notFound()` helper                          |
+| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`       |
+| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                   |
+| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                        |
+| `src/server/to-http-api.ts`   | server | generate `HttpApi` from the compiled tree                                    |
+| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                   |
 
 ## Authoring API
 
 ```ts
 // A leaf page. `component` receives its typed { path, query }.
-route(segment, component)
-route(segment, { path?, query? }, component)
+Router.route(segment, { path?, query?, component })
 
-// A layout wrapping an outlet. `render` receives (outlet, { path }).
-layout(segment, render, children)
-layout(segment, { path? }, render, children)
+// A layout wrapping an outlet. `render` receives { path, outlet }.
+Router.layout(segment, { path?, render }, children)
 
 // Seal the tree into a RouterDef.
-router(root, { notFound })
+Router.router(root, { notFound })
 ```
 
 - `segment` is **relative to the parent** and may contain `:name` path-param
@@ -65,7 +73,9 @@ router(root, { notFound })
   param fields default to `Schema.String` when a `:name` placeholder has no
   declared field. Query fields are all optional by default.
 - A page `component` is `(args: { path, query }) => Node`. A layout `render` is
-  `(outlet: Node, args: { path }) => Node`.
+  `(args: { path, outlet }) => Node` — the `outlet` is a fully-typed `Node`
+  (mirroring the route component's single args object), placed in the returned
+  tree wherever the child level should appear.
 
 ## Acceptance criteria
 
