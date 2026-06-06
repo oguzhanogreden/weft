@@ -37,3 +37,7 @@ dist
 
 # Claude Code worktrees (isolated repo copies — must stay invisible to tooling)
 .claude/worktrees/
+
+# Graphify
+graphify-out/cost.json
+graphify-out/cache/
