@@ -1,18 +1,13 @@
-# Graph Report - effect-ui  (2026-06-06)
+# Graph Report - .  (2026-06-06)
 
 ## Corpus Check
-- 258 files · ~191,455 words
+- 275 files · ~191,158 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1864 nodes · 2989 edges · 162 communities (131 shown, 31 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 108 edges (avg confidence: 0.82)
-- Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `c74499bc`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
+- 1833 nodes · 2962 edges · 159 communities (129 shown, 30 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 110 edges (avg confidence: 0.82)
+- Token cost: 633,438 input · 0 output
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_HTML Attribute Types|HTML Attribute Types]]
@@ -153,9 +148,6 @@
 - [[_COMMUNITY_packagesroutersrc|packages/router/src]]
 - [[_COMMUNITY_packagesroutersrc|packages/router/src]]
 - [[_COMMUNITY_packagesroutersrc|packages/router/src]]
-- [[_COMMUNITY_Community 159|Community 159]]
-- [[_COMMUNITY_Community 160|Community 160]]
-- [[_COMMUNITY_Community 161|Community 161]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `HTMLAttributeSource` - 135 edges
@@ -218,7 +210,7 @@
 - **Server-boundary prune pipeline: find bindings, find .server calls, compute removal ranges** — vite_prune_prune_server_boundaries, vite_prune_find_boundary_bindings, vite_prune_find_server_calls, vite_prune_removal_ranges [EXTRACTED 0.90]
 - **Boundary feature lifecycle docs: plan, tests/impl plan, delivery report** — plan_boundary_component, plan_boundary_tests_impl, plan_boundary_delivery_report [INFERRED 0.85]
 
-## Communities (162 total, 31 thin omitted)
+## Communities (159 total, 30 thin omitted)
 
 ### Community 0 - "HTML Attribute Types"
 Cohesion: 0.06
@@ -273,12 +265,12 @@ Cohesion: 0.12
 Nodes (29): AdoptedItem, collectItemRange(), describeKey(), flattenChildren(), HydrateError, hydrateFirstEmission(), hydrateFirstListEmission(), hydrateItem() (+21 more)
 
 ### Community 13 - "Source Primitive"
-Cohesion: 0.09
-Nodes (21): _C1, _C2, _C3, _C4, DataService, _E1, _E2, _E3 (+13 more)
+Cohesion: 0.07
+Nodes (27): Context, Error, NoPropValue, Success, Boom, toSubscribable(), _C1, _C2 (+19 more)
 
 ### Community 14 - "Project Config + CI"
-Cohesion: 0.13
-Nodes (13): Setup Composite Action, Browser Test Separation, Oxlint + Oxfmt Toolchain (Vite+), vp run Task Pipeline, Dependabot Config, Workspace package.json, branches, plugins (+5 more)
+Cohesion: 0.08
+Nodes (26): Setup Composite Action, effect-ui CLAUDE.md Project Instructions, Browser Test Separation, Combinator API (h, h.fragment, Component), No JSX / Components Are Called Functions, Node<E,R> is an Effect, Oxlint + Oxfmt Toolchain (Vite+), Pack-First Validation Step (+18 more)
 
 ### Community 15 - "Router package.json"
 Cohesion: 0.07
@@ -313,8 +305,8 @@ Cohesion: 0.12
 Nodes (17): Compiled, CompiledLeaf, RouterParamsError, compileMatchers(), match(), MatcherEntry, matchersCache, parseQuery() (+9 more)
 
 ### Community 23 - "Boundary Catch Combinators"
-Cohesion: 0.10
-Nodes (25): Boundary rendering-path errors concept, BarError, fallbackNode, FooError, Boundary namespace, catchAll(), catchAllCause(), catchIf() (+17 more)
+Cohesion: 0.13
+Nodes (19): catchAll(), catchAllCause(), catchIf(), catchSome(), catchTag(), CatchTagE, catchTags(), CatchTagsE (+11 more)
 
 ### Community 24 - "Core package.json"
 Cohesion: 0.09
@@ -493,8 +485,8 @@ Cohesion: 0.33
 Nodes (9): camelToKebab(), ESCAPE_MAP, escapeHtml(), isEventHandler(), SCRIPT_JSON_UNSAFE_CODES, serializeAttribute(), serializeProps(), serializeStyle() (+1 more)
 
 ### Community 68 - "packages/core/src/boundary"
-Cohesion: 0.06
-Nodes (30): Architecture, Architecture & Patterns, Building, Checking (format + lint + typecheck), Code Reuse, Code Style, Coding Standards, Development Commands (+22 more)
+Cohesion: 0.22
+Nodes (7): Boundary rendering-path errors concept, BarError, fallbackNode, FooError, Boundary namespace, FAILURE_BOUNDARY, SERVER_BOUNDARY
 
 ### Community 69 - "packages/core/src/combinator"
 Cohesion: 0.31
@@ -652,30 +644,22 @@ Nodes (3): derived state via Stream.map on changes, SubscriptionRef as reactive 
 Cohesion: 0.67
 Nodes (3): reactive styles via streams, style object stream (spread reactive), Reactive Styles example README
 
-### Community 159 - "Community 159"
-Cohesion: 0.23
-Nodes (7): Context, Error, NoPropValue, Source, Success, Boom, toSubscribable()
-
-### Community 160 - "Community 160"
-Cohesion: 0.31
-Nodes (9): Combinator API (h, h.fragment, Component), Node<E,R> is an Effect, SSR + Flash-Free Hydration, stream-start/stream-end Hydration Markers, Universal Nested Router, @effect-ui/core, @effect-ui/dom, @effect-ui/router (+1 more)
-
 ## Knowledge Gaps
-- **785 isolated node(s):** `PreToolUse`, `Project Overview`, `Requirements`, `The `pack` step (read this first)`, `Building` (+780 more)
+- **758 isolated node(s):** `branches`, `plugins`, `tagFormat`, `initialVersion`, `User` (+753 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `walk()` connect `packages/dom/src` to `Router Service + Compile`, `Stream Rendering Helpers`, `Combinator Core (h/Component)`, `Vite Plugin + Bundle Pruning`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `getElementDescriptor()` connect `Combinator Core (h/Component)` to `Hydrate Node Walkers`, `Streaming SSR Render`, `DOM Render + Hydrate Internals`, `packages/dom/src`, `List Combinator`, `Stream Rendering Helpers`, `Boundary Catch Combinators`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `isStream()` connect `Stream Rendering Helpers` to `Hydrate Node Walkers`, `Streaming SSR Render`, `DOM Render + Hydrate Internals`, `packages/dom/src`, `Community 159`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **What connects `PreToolUse`, `Project Overview`, `Requirements` to the rest of the system?**
-  _799 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `getElementDescriptor()` connect `Combinator Core (h/Component)` to `packages/core/src/boundary`, `Hydrate Node Walkers`, `Streaming SSR Render`, `DOM Render + Hydrate Internals`, `packages/dom/src`, `List Combinator`, `Stream Rendering Helpers`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **Why does `compile()` connect `Router Service + Compile` to `packages/dom/src`?**
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **What connects `branches`, `plugins`, `tagFormat` to the rest of the system?**
+  _772 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `HTML Attribute Types` be split into smaller, more focused modules?**
   _Cohesion score 0.06405375139977604 - nodes in this community are weakly interconnected._
 - **Should `SVG Attribute Types` be split into smaller, more focused modules?**
