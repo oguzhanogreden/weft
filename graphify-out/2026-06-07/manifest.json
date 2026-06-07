@@ -765,8 +765,8 @@
     "semantic_hash": "324deadca64fc919cf7aa37763f00bbf"
   },
   "packages/dom/src/client/render.ts": {
-    "mtime": 1780812930.9236455,
-    "ast_hash": "263ae3e469e294dcd92fe3098d0de64a",
+    "mtime": 1780813938.493034,
+    "ast_hash": "75555b98eb05edbb3f52a542252ab4db",
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
@@ -780,8 +780,8 @@
     "semantic_hash": "015c7a0d36775e73c7ef33d9f9fe52be"
   },
   "packages/dom/src/data.ts": {
-    "mtime": 1780812587.4082856,
-    "ast_hash": "86379da2a08a1a0d3319829c5934d287",
+    "mtime": 1780813928.5875044,
+    "ast_hash": "5028c339137be74b05c75b00bae3f3b0",
     "semantic_hash": ""
   },
   "packages/dom/src/index.ts": {
@@ -1430,8 +1430,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-ready.specs.md": {
-    "mtime": 1780812990.2816832,
-    "ast_hash": "ea09651bca4b3edc619486c4f21656f3",
+    "mtime": 1780813954.7715473,
+    "ast_hash": "9744c682837011e1ab0fee763a07ac8f",
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-ready.test.ts": {

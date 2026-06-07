@@ -3439,7 +3439,7 @@
       "source_file": "examples/server-boundary/src/entry-server.ts",
       "source_location": "L1",
       "id": "examples_server_boundary_src_entry_server_ts_src_entry_server",
-      "community": 4,
+      "community": 228,
       "norm_label": "entry-server.ts"
     },
     {
@@ -3448,7 +3448,7 @@
       "source_file": "examples/server-boundary/src/entry-server.ts",
       "source_location": "L17",
       "id": "examples_server_boundary_src_entry_server_ts_src_entry_server_render",
-      "community": 4,
+      "community": 228,
       "norm_label": "render()"
     },
     {
@@ -3691,7 +3691,7 @@
       "source_file": "examples/ssr-hydration/src/entry-server.ts",
       "source_location": "L1",
       "id": "examples_ssr_hydration_src_entry_server_ts_src_entry_server",
-      "community": 4,
+      "community": 228,
       "norm_label": "entry-server.ts"
     },
     {
@@ -3700,7 +3700,7 @@
       "source_file": "examples/ssr-hydration/src/entry-server.ts",
       "source_location": "L14",
       "id": "examples_ssr_hydration_src_entry_server_ts_src_entry_server_render",
-      "community": 4,
+      "community": 228,
       "norm_label": "render()"
     },
     {
@@ -5626,7 +5626,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L1",
       "id": "boundary_boundary_test",
-      "community": 89,
+      "community": 23,
       "norm_label": "boundary.test.ts"
     },
     {
@@ -5635,7 +5635,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L10",
       "id": "boundary_boundary_test_fooerror",
-      "community": 89,
+      "community": 23,
       "norm_label": "fooerror"
     },
     {
@@ -5644,7 +5644,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L11",
       "id": "boundary_boundary_test_barerror",
-      "community": 89,
+      "community": 23,
       "norm_label": "barerror"
     },
     {
@@ -5653,7 +5653,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L13",
       "id": "boundary_boundary_test_fallbacknode",
-      "community": 89,
+      "community": 23,
       "norm_label": "fallbacknode"
     },
     {
@@ -5662,7 +5662,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L15",
       "id": "boundary_boundary_test_extractdescriptor",
-      "community": 89,
+      "community": 23,
       "norm_label": "extractdescriptor()"
     },
     {
@@ -5671,7 +5671,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L377",
       "id": "boundary_boundary_test_loaderror",
-      "community": 89,
+      "community": 23,
       "norm_label": "loaderror"
     },
     {
@@ -5716,7 +5716,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L15",
       "id": "boundary_index_failure_boundary",
-      "community": 89,
+      "community": 23,
       "norm_label": "failure_boundary"
     },
     {
@@ -5734,7 +5734,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L27",
       "id": "boundary_index_server_boundary",
-      "community": 89,
+      "community": 23,
       "norm_label": "server_boundary"
     },
     {
@@ -5842,7 +5842,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L252",
       "id": "boundary_index_suspend",
-      "community": 23,
+      "community": 69,
       "norm_label": "suspend()"
     },
     {
@@ -6742,7 +6742,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L1",
       "id": "combinator_descriptor",
-      "community": 6,
+      "community": 69,
       "norm_label": "descriptor.ts"
     },
     {
@@ -6751,7 +6751,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L10",
       "id": "combinator_descriptor_element_descriptor",
-      "community": 6,
+      "community": 69,
       "norm_label": "element_descriptor"
     },
     {
@@ -6760,7 +6760,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L22",
       "id": "combinator_descriptor_elementnode",
-      "community": 23,
+      "community": 69,
       "norm_label": "elementnode()"
     },
     {
@@ -6769,7 +6769,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L36",
       "id": "combinator_descriptor_getelementdescriptor",
-      "community": 129,
+      "community": 77,
       "norm_label": "getelementdescriptor()"
     },
     {
@@ -6814,7 +6814,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L46",
       "id": "combinator_element_h",
-      "community": 6,
+      "community": 18,
       "norm_label": "h"
     },
     {
@@ -6823,7 +6823,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L66",
       "id": "combinator_element_createelementfn",
-      "community": 23,
+      "community": 6,
       "norm_label": "createelementfn()"
     },
     {
@@ -6868,7 +6868,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L1",
       "id": "combinator_list_test",
-      "community": 129,
+      "community": 69,
       "norm_label": "list.test.ts"
     },
     {
@@ -6877,7 +6877,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L7",
       "id": "combinator_list_test_person",
-      "community": 129,
+      "community": 69,
       "norm_label": "person"
     },
     {
@@ -6886,7 +6886,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L12",
       "id": "combinator_list_test_people",
-      "community": 129,
+      "community": 69,
       "norm_label": "people"
     },
     {
@@ -6895,7 +6895,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L1",
       "id": "combinator_list",
-      "community": 129,
+      "community": 69,
       "norm_label": "list.ts"
     },
     {
@@ -6904,7 +6904,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L10",
       "id": "combinator_list_list",
-      "community": 129,
+      "community": 69,
       "norm_label": "list"
     },
     {
@@ -6913,7 +6913,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L13",
       "id": "combinator_list_itemof",
-      "community": 129,
+      "community": 69,
       "norm_label": "itemof"
     },
     {
@@ -6922,7 +6922,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L26",
       "id": "combinator_list_options",
-      "community": 129,
+      "community": 69,
       "norm_label": "options"
     },
     {
@@ -6940,7 +6940,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L77",
       "id": "combinator_list_error",
-      "community": 129,
+      "community": 69,
       "norm_label": "error"
     },
     {
@@ -6949,7 +6949,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L82",
       "id": "combinator_list_context",
-      "community": 129,
+      "community": 69,
       "norm_label": "context"
     },
     {
@@ -7048,7 +7048,7 @@
       "source_file": "packages/core/src/index.ts",
       "source_location": "L1",
       "id": "packages_core_src_index_ts_src_index",
-      "community": 211,
+      "community": 129,
       "norm_label": "index.ts"
     },
     {
@@ -7309,7 +7309,7 @@
       "source_file": "packages/core/src/source/index.ts",
       "source_location": "L1",
       "id": "source_index",
-      "community": 13,
+      "community": 129,
       "norm_label": "index.ts"
     },
     {
@@ -7318,7 +7318,7 @@
       "source_file": "packages/core/src/source/source.test.ts",
       "source_location": "L1",
       "id": "source_source_test",
-      "community": 13,
+      "community": 129,
       "norm_label": "source.test.ts"
     },
     {
@@ -7327,7 +7327,7 @@
       "source_file": "packages/core/src/source/source.test.ts",
       "source_location": "L19",
       "id": "source_source_test_scoped",
-      "community": 13,
+      "community": 129,
       "norm_label": "scoped()"
     },
     {
@@ -7336,7 +7336,7 @@
       "source_file": "packages/core/src/source/source.test.ts",
       "source_location": "L206",
       "id": "source_source_test_boom",
-      "community": 13,
+      "community": 129,
       "norm_label": "boom"
     },
     {
@@ -7345,7 +7345,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L1",
       "id": "source_source",
-      "community": 13,
+      "community": 129,
       "norm_label": "source.ts"
     },
     {
@@ -7354,7 +7354,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L20",
       "id": "source_source_nopropvalue",
-      "community": 13,
+      "community": 129,
       "norm_label": "nopropvalue"
     },
     {
@@ -7363,7 +7363,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L31",
       "id": "source_source_source",
-      "community": 13,
+      "community": 129,
       "norm_label": "source"
     },
     {
@@ -7372,7 +7372,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L46",
       "id": "source_source_success",
-      "community": 13,
+      "community": 129,
       "norm_label": "success"
     },
     {
@@ -7381,7 +7381,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L56",
       "id": "source_source_error",
-      "community": 13,
+      "community": 129,
       "norm_label": "error"
     },
     {
@@ -7390,7 +7390,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L66",
       "id": "source_source_context",
-      "community": 13,
+      "community": 129,
       "norm_label": "context"
     },
     {
@@ -7399,7 +7399,7 @@
       "source_file": "packages/core/src/source/source.ts",
       "source_location": "L90",
       "id": "source_source_tosubscribable",
-      "community": 13,
+      "community": 129,
       "norm_label": "tosubscribable()"
     },
     {
@@ -7408,7 +7408,7 @@
       "source_file": "packages/core/src/stream/index.ts",
       "source_location": "L1",
       "id": "stream_index",
-      "community": 12,
+      "community": 57,
       "norm_label": "index.ts"
     },
     {
@@ -7417,7 +7417,7 @@
       "source_file": "packages/core/src/stream/stream.test.ts",
       "source_location": "L1",
       "id": "stream_stream_test",
-      "community": 12,
+      "community": 57,
       "norm_label": "stream.test.ts"
     },
     {
@@ -7426,7 +7426,7 @@
       "source_file": "packages/core/src/stream/stream.test.ts",
       "source_location": "L6",
       "id": "stream_stream_test_collect",
-      "community": 12,
+      "community": 57,
       "norm_label": "collect()"
     },
     {
@@ -7435,7 +7435,7 @@
       "source_file": "packages/core/src/stream/stream.ts",
       "source_location": "L1",
       "id": "stream_stream",
-      "community": 12,
+      "community": 57,
       "norm_label": "stream.ts"
     },
     {
@@ -7444,7 +7444,7 @@
       "source_file": "packages/core/src/stream/stream.ts",
       "source_location": "L7",
       "id": "stream_stream_isstream",
-      "community": 12,
+      "community": 57,
       "norm_label": "isstream()"
     },
     {
@@ -7453,7 +7453,7 @@
       "source_file": "packages/core/src/stream/stream.ts",
       "source_location": "L17",
       "id": "stream_stream_tostream",
-      "community": 12,
+      "community": 57,
       "norm_label": "tostream()"
     },
     {
@@ -7462,7 +7462,7 @@
       "source_file": "packages/core/src/types/html/aria.ts",
       "source_location": "L1",
       "id": "html_aria",
-      "community": 0,
+      "community": 208,
       "norm_label": "aria.ts"
     },
     {
@@ -7543,7 +7543,7 @@
       "source_file": "packages/core/src/types/html/dom.ts",
       "source_location": "L20",
       "id": "html_dom_domattributes",
-      "community": 0,
+      "community": 164,
       "norm_label": "domattributes"
     },
     {
@@ -8326,7 +8326,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L1",
       "id": "html_svg",
-      "community": 1,
+      "community": 164,
       "norm_label": "svg.ts"
     },
     {
@@ -8335,7 +8335,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L6",
       "id": "html_svg_svgpreserveaspectratio",
-      "community": 1,
+      "community": 164,
       "norm_label": "svgpreserveaspectratio"
     },
     {
@@ -8344,7 +8344,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L35",
       "id": "html_svg_imagepreserveaspectratio",
-      "community": 1,
+      "community": 164,
       "norm_label": "imagepreserveaspectratio"
     },
     {
@@ -8353,7 +8353,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L65",
       "id": "html_svg_svgunits",
-      "community": 1,
+      "community": 164,
       "norm_label": "svgunits"
     },
     {
@@ -8362,7 +8362,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L66",
       "id": "html_svg_svgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "svgattributes"
     },
     {
@@ -8371,7 +8371,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L83",
       "id": "html_svg_stylablesvgattributes",
-      "community": 164,
+      "community": 1,
       "norm_label": "stylablesvgattributes"
     },
     {
@@ -8443,7 +8443,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L127",
       "id": "html_svg_presentationsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "presentationsvgattributes"
     },
     {
@@ -8506,7 +8506,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L271",
       "id": "html_svg_gradientelementsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "gradientelementsvgattributes"
     },
     {
@@ -8524,7 +8524,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L293",
       "id": "html_svg_lightsourceelementsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "lightsourceelementsvgattributes"
     },
     {
@@ -8560,7 +8560,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L352",
       "id": "html_svg_zoomandpansvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "zoomandpansvgattributes"
     },
     {
@@ -8623,7 +8623,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L411",
       "id": "html_svg_descsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "descsvgattributes"
     },
     {
@@ -8704,7 +8704,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L490",
       "id": "html_svg_fedistantlightsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "fedistantlightsvgattributes"
     },
     {
@@ -8722,7 +8722,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L499",
       "id": "html_svg_fefuncsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "fefuncsvgattributes"
     },
     {
@@ -8758,7 +8758,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L524",
       "id": "html_svg_femergenodesvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "femergenodesvgattributes"
     },
     {
@@ -8785,7 +8785,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L541",
       "id": "html_svg_fepointlightsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "fepointlightsvgattributes"
     },
     {
@@ -8803,7 +8803,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L557",
       "id": "html_svg_fespotlightsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "fespotlightsvgattributes"
     },
     {
@@ -8830,7 +8830,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L580",
       "id": "html_svg_filtersvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "filtersvgattributes"
     },
     {
@@ -8875,7 +8875,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L639",
       "id": "html_svg_lineargradientsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "lineargradientsvgattributes"
     },
     {
@@ -8902,7 +8902,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L672",
       "id": "html_svg_metadatasvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "metadatasvgattributes"
     },
     {
@@ -8947,7 +8947,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L723",
       "id": "html_svg_radialgradientsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "radialgradientsvgattributes"
     },
     {
@@ -8965,7 +8965,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L745",
       "id": "html_svg_stopsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "stopsvgattributes"
     },
     {
@@ -9037,7 +9037,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L849",
       "id": "html_svg_viewsvgattributes",
-      "community": 1,
+      "community": 164,
       "norm_label": "viewsvgattributes"
     },
     {
@@ -9055,7 +9055,7 @@
       "source_file": "packages/core/src/types/index.ts",
       "source_location": "L1",
       "id": "types_index",
-      "community": 6,
+      "community": 208,
       "norm_label": "index.ts"
     },
     {
@@ -9064,7 +9064,7 @@
       "source_file": "packages/core/src/types/index.ts",
       "source_location": "L4",
       "id": "types_index_elementtype",
-      "community": 6,
+      "community": 208,
       "norm_label": "elementtype"
     },
     {
@@ -9901,7 +9901,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L1",
       "id": "client_hydrate_ready_test",
-      "community": 31,
+      "community": 228,
       "norm_label": "hydrate-ready.test.ts"
     },
     {
@@ -9910,7 +9910,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L19",
       "id": "client_hydrate_ready_test_createtestdom",
-      "community": 31,
+      "community": 228,
       "norm_label": "createtestdom()"
     },
     {
@@ -9919,7 +9919,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L29",
       "id": "client_hydrate_ready_test_createroot",
-      "community": 31,
+      "community": 228,
       "norm_label": "createroot()"
     },
     {
@@ -9928,7 +9928,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L35",
       "id": "client_hydrate_ready_test_seedserverhtml",
-      "community": 31,
+      "community": 228,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -9937,7 +9937,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L42",
       "id": "client_hydrate_ready_test_waitfor",
-      "community": 31,
+      "community": 228,
       "norm_label": "waitfor()"
     },
     {
@@ -9946,7 +9946,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L47",
       "id": "client_hydrate_ready_test_withtimeout",
-      "community": 31,
+      "community": 228,
       "norm_label": "withtimeout()"
     },
     {
@@ -9955,7 +9955,7 @@
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L57",
       "id": "client_hydrate_ready_test_delayedregion",
-      "community": 31,
+      "community": 228,
       "norm_label": "delayedregion()"
     },
     {
@@ -10009,7 +10009,7 @@
       "source_file": "packages/dom/src/client/index.ts",
       "source_location": "L1",
       "id": "packages_dom_src_client_index_ts_client_index",
-      "community": 31,
+      "community": 12,
       "norm_label": "index.ts"
     },
     {
@@ -10252,7 +10252,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L87",
       "id": "client_render_setelementprops",
-      "community": 12,
+      "community": 57,
       "norm_label": "setelementprops()"
     },
     {
@@ -10270,7 +10270,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L149",
       "id": "client_render_setproperty",
-      "community": 12,
+      "community": 57,
       "norm_label": "setproperty()"
     },
     {
@@ -10279,7 +10279,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L182",
       "id": "client_render_setattribute",
-      "community": 12,
+      "community": 57,
       "norm_label": "setattribute()"
     },
     {
@@ -10297,7 +10297,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L251",
       "id": "client_render_handlestyle",
-      "community": 12,
+      "community": 57,
       "norm_label": "handlestyle()"
     },
     {
@@ -10306,7 +10306,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L299",
       "id": "client_render_setstylefromobject",
-      "community": 12,
+      "community": 57,
       "norm_label": "setstylefromobject()"
     },
     {
@@ -10324,7 +10324,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L340",
       "id": "client_render_subscribetostream",
-      "community": 12,
+      "community": 57,
       "norm_label": "subscribetostream()"
     },
     {
@@ -10333,7 +10333,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L370",
       "id": "client_render_seteventhandler",
-      "community": 12,
+      "community": 57,
       "norm_label": "seteventhandler()"
     },
     {
@@ -10342,7 +10342,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L448",
       "id": "client_render_renderboundary",
-      "community": 12,
+      "community": 20,
       "norm_label": "renderboundary()"
     },
     {
@@ -10351,7 +10351,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L538",
       "id": "client_render_rendersuspenseboundary",
-      "community": 20,
+      "community": 8,
       "norm_label": "rendersuspenseboundary()"
     },
     {
@@ -10360,7 +10360,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L663",
       "id": "client_render_rendernode",
-      "community": 12,
+      "community": 57,
       "norm_label": "rendernode()"
     },
     {
@@ -10378,7 +10378,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L789",
       "id": "client_render_renderchildren",
-      "community": 12,
+      "community": 57,
       "norm_label": "renderchildren()"
     },
     {
@@ -10387,7 +10387,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L825",
       "id": "client_render_renderfragment",
-      "community": 12,
+      "community": 57,
       "norm_label": "renderfragment()"
     },
     {
@@ -10396,7 +10396,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L847",
       "id": "client_render_renderelement",
-      "community": 12,
+      "community": 57,
       "norm_label": "renderelement()"
     },
     {
@@ -10405,7 +10405,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L898",
       "id": "client_render_rendercomponent",
-      "community": 12,
+      "community": 57,
       "norm_label": "rendercomponent()"
     },
     {
@@ -10414,7 +10414,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L966",
       "id": "client_render_handlestreamchild",
-      "community": 12,
+      "community": 57,
       "norm_label": "handlestreamchild()"
     },
     {
@@ -10432,7 +10432,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1059",
       "id": "client_render_updatestreamchild",
-      "community": 12,
+      "community": 231,
       "norm_label": "updatestreamchild()"
     },
     {
@@ -10441,7 +10441,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1111",
       "id": "client_render_istextvalue",
-      "community": 12,
+      "community": 231,
       "norm_label": "istextvalue()"
     },
     {
@@ -10450,7 +10450,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1121",
       "id": "client_render_staticelementdescriptor",
-      "community": 12,
+      "community": 231,
       "norm_label": "staticelementdescriptor()"
     },
     {
@@ -10459,7 +10459,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1146",
       "id": "client_render_patchelementinplace",
-      "community": 12,
+      "community": 231,
       "norm_label": "patchelementinplace()"
     },
     {
@@ -10468,7 +10468,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1179",
       "id": "client_render_patchchildreninplace",
-      "community": 12,
+      "community": 231,
       "norm_label": "patchchildreninplace()"
     },
     {
@@ -10477,7 +10477,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1239",
       "id": "client_render_appendrenderedchildren",
-      "community": 12,
+      "community": 57,
       "norm_label": "appendrenderedchildren()"
     },
     {
@@ -10522,7 +10522,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1340",
       "id": "client_render_renderlist",
-      "community": 12,
+      "community": 20,
       "norm_label": "renderlist()"
     },
     {
@@ -10549,7 +10549,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1534",
       "id": "client_render_renderitem",
-      "community": 8,
+      "community": 20,
       "norm_label": "renderitem()"
     },
     {
@@ -10594,7 +10594,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1663",
       "id": "client_render_mounthandle",
-      "community": 31,
+      "community": 12,
       "norm_label": "mounthandle"
     },
     {
@@ -10612,7 +10612,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1819",
       "id": "client_render_hydrate",
-      "community": 31,
+      "community": 12,
       "norm_label": "hydrate()"
     },
     {
@@ -10630,7 +10630,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1903",
       "id": "client_render_hydratenode",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratenode()"
     },
     {
@@ -10639,17 +10639,17 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2010",
       "id": "client_render_hydratetext",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratetext()"
     },
     {
-      "label": "makeReadyLatch()",
+      "label": "makeHydrationReady()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2046",
-      "id": "client_render_makereadylatch",
-      "community": 31,
-      "norm_label": "makereadylatch()"
+      "id": "client_render_makehydrationready",
+      "community": 12,
+      "norm_label": "makehydrationready()"
     },
     {
       "label": "makeSettleOnce()",
@@ -10657,7 +10657,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2071",
       "id": "client_render_makesettleonce",
-      "community": 57,
+      "community": 12,
       "norm_label": "makesettleonce()"
     },
     {
@@ -10666,7 +10666,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2086",
       "id": "client_render_hydratereactive",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratereactive()"
     },
     {
@@ -10675,7 +10675,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2165",
       "id": "client_render_hydratefirstemission",
-      "community": 12,
+      "community": 231,
       "norm_label": "hydratefirstemission()"
     },
     {
@@ -10684,7 +10684,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2214",
       "id": "client_render_hydratefailureboundary",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratefailureboundary()"
     },
     {
@@ -10702,7 +10702,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2302",
       "id": "client_render_makeclientresource",
-      "community": 57,
+      "community": 12,
       "norm_label": "makeclientresource()"
     },
     {
@@ -10711,7 +10711,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2366",
       "id": "client_render_hydrateserverboundary",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydrateserverboundary()"
     },
     {
@@ -10720,7 +10720,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2438",
       "id": "client_render_hydrateelement",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydrateelement()"
     },
     {
@@ -10729,7 +10729,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2468",
       "id": "client_render_hydratechildren",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratechildren()"
     },
     {
@@ -10747,7 +10747,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2517",
       "id": "client_render_hydratelist",
-      "community": 57,
+      "community": 12,
       "norm_label": "hydratelist()"
     },
     {
@@ -10756,7 +10756,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2617",
       "id": "client_render_collectadopteditems",
-      "community": 20,
+      "community": 12,
       "norm_label": "collectadopteditems()"
     },
     {
@@ -10783,7 +10783,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2833",
       "id": "client_render_seedstreamidcounter",
-      "community": 20,
+      "community": 12,
       "norm_label": "seedstreamidcounter()"
     },
     {
@@ -10792,7 +10792,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2851",
       "id": "client_render_findmatchingend",
-      "community": 57,
+      "community": 12,
       "norm_label": "findmatchingend()"
     },
     {
@@ -10801,7 +10801,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2877",
       "id": "client_render_describenode",
-      "community": 57,
+      "community": 12,
       "norm_label": "describenode()"
     },
     {
@@ -10810,7 +10810,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2893",
       "id": "client_render_mismatch",
-      "community": 57,
+      "community": 12,
       "norm_label": "mismatch()"
     },
     {
@@ -10819,7 +10819,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L1",
       "id": "client_server_boundary_hydrate_test",
-      "community": 211,
+      "community": 229,
       "norm_label": "server-boundary-hydrate.test.ts"
     },
     {
@@ -10828,7 +10828,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L19",
       "id": "client_server_boundary_hydrate_test_fromvalue",
-      "community": 211,
+      "community": 229,
       "norm_label": "fromvalue()"
     },
     {
@@ -10837,7 +10837,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L31",
       "id": "client_server_boundary_hydrate_test_createtestdom",
-      "community": 211,
+      "community": 229,
       "norm_label": "createtestdom()"
     },
     {
@@ -10846,7 +10846,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L40",
       "id": "client_server_boundary_hydrate_test_createroot",
-      "community": 211,
+      "community": 229,
       "norm_label": "createroot()"
     },
     {
@@ -10855,7 +10855,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L47",
       "id": "client_server_boundary_hydrate_test_seedserverhtml",
-      "community": 211,
+      "community": 229,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -10864,7 +10864,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L54",
       "id": "client_server_boundary_hydrate_test_waitfor",
-      "community": 211,
+      "community": 229,
       "norm_label": "waitfor()"
     },
     {
@@ -10873,7 +10873,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L62",
       "id": "client_server_boundary_hydrate_test_productshape",
-      "community": 211,
+      "community": 229,
       "norm_label": "productshape"
     },
     {
@@ -10882,7 +10882,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L67",
       "id": "client_server_boundary_hydrate_test_product",
-      "community": 211,
+      "community": 229,
       "norm_label": "product"
     },
     {
@@ -10891,7 +10891,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L73",
       "id": "client_server_boundary_hydrate_test_makedatabase",
-      "community": 131,
+      "community": 229,
       "norm_label": "makedatabase()"
     },
     {
@@ -10900,7 +10900,7 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L327",
       "id": "client_server_boundary_hydrate_test_loaderror",
-      "community": 211,
+      "community": 229,
       "norm_label": "loaderror"
     },
     {
@@ -11255,21 +11255,21 @@
       "norm_label": "renderresult"
     },
     {
-      "label": "ReadyLatch",
+      "label": "HydrationReady",
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
-      "source_location": "L103",
-      "id": "src_data_readylatch",
+      "source_location": "L105",
+      "id": "src_data_hydrationready",
       "community": 211,
-      "norm_label": "readylatch"
+      "norm_label": "hydrationready"
     },
     {
       "label": "RenderContext",
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
-      "source_location": "L116",
+      "source_location": "L118",
       "id": "src_data_rendercontext",
-      "community": 12,
+      "community": 20,
       "norm_label": "rendercontext"
     },
     {
@@ -11422,7 +11422,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L115",
       "id": "server_render_to_stream_buildpatch",
-      "community": 20,
+      "community": 8,
       "norm_label": "buildpatch()"
     },
     {
@@ -11431,7 +11431,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L149",
       "id": "server_render_to_stream_rendersuspensessrinline",
-      "community": 20,
+      "community": 8,
       "norm_label": "rendersuspensessrinline()"
     },
     {
@@ -11611,7 +11611,7 @@
       "source_file": "packages/dom/src/server/render-to-string.ts",
       "source_location": "L26",
       "id": "server_render_to_string_rendertostringhydratable",
-      "community": 4,
+      "community": 228,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -11701,7 +11701,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L134",
       "id": "server_serialize_resolvevalue",
-      "community": 8,
+      "community": 57,
       "norm_label": "resolvevalue()"
     },
     {
@@ -11728,7 +11728,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L1",
       "id": "server_server_boundary_ssr_test",
-      "community": 4,
+      "community": 230,
       "norm_label": "server-boundary-ssr.test.ts"
     },
     {
@@ -11737,7 +11737,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L16",
       "id": "server_server_boundary_ssr_test_fromvalue",
-      "community": 4,
+      "community": 230,
       "norm_label": "fromvalue()"
     },
     {
@@ -11746,7 +11746,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L28",
       "id": "server_server_boundary_ssr_test_productshape",
-      "community": 4,
+      "community": 230,
       "norm_label": "productshape"
     },
     {
@@ -11755,7 +11755,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L34",
       "id": "server_server_boundary_ssr_test_database",
-      "community": 4,
+      "community": 230,
       "norm_label": "database"
     },
     {
@@ -11764,7 +11764,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L39",
       "id": "server_server_boundary_ssr_test_databaselive",
-      "community": 4,
+      "community": 230,
       "norm_label": "databaselive"
     },
     {
@@ -11773,7 +11773,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L43",
       "id": "server_server_boundary_ssr_test_product",
-      "community": 4,
+      "community": 230,
       "norm_label": "product"
     },
     {
@@ -11782,7 +11782,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L46",
       "id": "server_server_boundary_ssr_test_productboundary",
-      "community": 4,
+      "community": 230,
       "norm_label": "productboundary()"
     },
     {
@@ -11791,7 +11791,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L60",
       "id": "server_server_boundary_ssr_test_decodescript",
-      "community": 4,
+      "community": 230,
       "norm_label": "decodescript()"
     },
     {
@@ -11800,7 +11800,7 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L178",
       "id": "server_server_boundary_ssr_test_loaderror",
-      "community": 4,
+      "community": 230,
       "norm_label": "loaderror"
     },
     {
@@ -11845,7 +11845,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L55",
       "id": "src_shared_suspensestarttext",
-      "community": 20,
+      "community": 8,
       "norm_label": "suspensestarttext()"
     },
     {
@@ -11854,7 +11854,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L63",
       "id": "src_shared_suspenseendtext",
-      "community": 20,
+      "community": 8,
       "norm_label": "suspenseendtext()"
     },
     {
@@ -11872,7 +11872,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L81",
       "id": "src_shared_parsesuspensemarker",
-      "community": 20,
+      "community": 12,
       "norm_label": "parsesuspensemarker()"
     },
     {
@@ -11881,7 +11881,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L104",
       "id": "src_shared_boundarystarttext",
-      "community": 12,
+      "community": 20,
       "norm_label": "boundarystarttext()"
     },
     {
@@ -11890,7 +11890,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L112",
       "id": "src_shared_boundaryendtext",
-      "community": 12,
+      "community": 20,
       "norm_label": "boundaryendtext()"
     },
     {
@@ -11899,7 +11899,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L126",
       "id": "src_shared_parsestreammarker",
-      "community": 57,
+      "community": 12,
       "norm_label": "parsestreammarker()"
     },
     {
@@ -11908,7 +11908,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L152",
       "id": "src_shared_listitemstarttext",
-      "community": 8,
+      "community": 20,
       "norm_label": "listitemstarttext()"
     },
     {
@@ -11917,7 +11917,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L160",
       "id": "src_shared_listitemendtext",
-      "community": 8,
+      "community": 20,
       "norm_label": "listitemendtext()"
     },
     {
@@ -11935,7 +11935,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L183",
       "id": "src_shared_parselistitemmarker",
-      "community": 20,
+      "community": 12,
       "norm_label": "parselistitemmarker()"
     },
     {
@@ -11944,7 +11944,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
       "id": "src_utilities",
-      "community": 12,
+      "community": 20,
       "norm_label": "utilities.ts"
     },
     {
@@ -11953,7 +11953,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
       "id": "src_utilities_nextstreamid",
-      "community": 12,
+      "community": 20,
       "norm_label": "nextstreamid()"
     },
     {
@@ -11962,7 +11962,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L28",
       "id": "src_utilities_nextboundaryid",
-      "community": 12,
+      "community": 20,
       "norm_label": "nextboundaryid()"
     },
     {
@@ -21817,7 +21817,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L20",
       "id": "src_utilities_nextsuspenseid",
-      "community": 20,
+      "community": 8,
       "norm_label": "nextsuspenseid"
     },
     {
@@ -21875,13 +21875,22 @@
       "norm_label": "querystream"
     },
     {
-      "label": "HydrationReady",
+      "label": "makeReadyLatch()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2046",
+      "community": 12,
+      "norm_label": "makereadylatch()",
+      "id": "client_render_makereadylatch"
+    },
+    {
+      "label": "ReadyLatch",
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
-      "source_location": "L104",
+      "source_location": "L103",
       "community": 211,
-      "norm_label": "hydrationready",
-      "id": "src_data_hydrationready"
+      "norm_label": "readylatch",
+      "id": "src_data_readylatch"
     },
     {
       "label": "`mount` symmetry (optional extension)",
@@ -21915,7 +21924,7 @@
       "file_type": "code",
       "source_file": "packages/router/src/server/index.ts",
       "source_location": "L1",
-      "community": 211,
+      "community": 129,
       "norm_label": "index.ts",
       "id": "server_index"
     },
@@ -43767,8 +43776,18 @@
       "source_location": "L2046",
       "weight": 1.0,
       "source": "client_render",
-      "target": "client_render_makereadylatch",
+      "target": "client_render_makehydrationready",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2046",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "client_render",
+      "target": "client_render_makereadylatch"
     },
     {
       "relation": "contains",
@@ -44121,9 +44140,9 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "client_render",
-      "target": "src_data_readylatch",
-      "confidence_score": 1.0
+      "target": "src_data_readylatch"
     },
     {
       "relation": "imports",
@@ -45277,8 +45296,19 @@
       "source_location": "L1837",
       "weight": 1.0,
       "source": "client_render_hydrate",
-      "target": "client_render_makereadylatch",
+      "target": "client_render_makehydrationready",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L1837",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "client_render_hydrate",
+      "target": "client_render_makereadylatch"
     },
     {
       "relation": "calls",
@@ -46323,9 +46353,9 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L103",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_data",
-      "target": "src_data_readylatch",
-      "confidence_score": 1.0
+      "target": "src_data_readylatch"
     },
     {
       "relation": "contains",
@@ -60311,9 +60341,9 @@
       "source_file": "packages/dom/src/client/hydrate-ready.specs.md",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "client_hydrate_ready_specs_hydrate_interactivity_barrier_hydrate_ready_specification",
-      "target": "client_hydrate_ready_specs_mount_symmetry_investigated_and_rejected_2026_06_07",
-      "confidence_score": 1.0
+      "target": "client_hydrate_ready_specs_mount_symmetry_investigated_and_rejected_2026_06_07"
     },
     {
       "relation": "contains",
