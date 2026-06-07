@@ -1,8 +1,12 @@
 # hydrate interactivity barrier ("hydrate-ready") — Specification
 
-> Status: **DRAFT / proposed** (2026-06-07). Not yet implemented. Captures the fix
-> for the forked-fiber hydration-timing gap discovered while writing
-> `examples/router-ssr/src/refetch.browser.test.ts` (Stage 7 of the
+> Status: **IMPLEMENTED** (2026-06-07). Latch threaded via `RenderContext.hydrationReady`
+> (the `HydrationReady` type in `data.ts`, built by `makeHydrationReady`); instrumented at
+> `hydrateReactive` / `hydrateList`; awaited in `hydrate` between the adopt-walk and
+> handle return. Covered by `hydrate-ready.test.ts` (AC-R1..R9). `mount` symmetry was
+> prototyped on the same latch and **rejected as unsound** — see the `mount` symmetry
+> section. Captures the fix for the forked-fiber hydration-timing gap discovered while
+> writing `examples/router-ssr/src/refetch.browser.test.ts` (Stage 7 of the
 > `Boundary.server` refetch feature).
 
 ## Overview
@@ -11,26 +15,26 @@
 reactive subscriptions in place, and resolves to a `MountHandle`. Today the
 returned promise resolving does **not** mean the page is fully interactive:
 reactive regions are hydrated in **forked fibers**, so their event listeners (and
-nested regions) finish attaching *after* `hydrate` returns.
+nested regions) finish attaching _after_ `hydrate` returns.
 
 The two forked spots reached during a hydrate walk:
 
 - **Reactive region** (`hydrateReactive`): the first (server-rendered) emission is
   hydrated inside `Stream.runForEach`, forked via `Effect.forkIn(effect,
-  context.scope)` — `render.ts:2080`. `hydrate` does **not** await that fiber.
+context.scope)` — `render.ts:2080`. `hydrate` does **not** await that fiber.
 - **Keyed list** (`hydrateList`): the first emission is materialized by
   `hydrateFirstListEmission` inside the same forked `runForEach` —
   `render.ts:2512`. Again not awaited.
 
 The router **outlet** is a reactive region (`outlet.ts:80` → a `Stream` child), so
-*every* SSR-hydrated router page's interactive content lives behind one of these
+_every_ SSR-hydrated router page's interactive content lives behind one of these
 forks. Concretely: a `button.click()` / `dispatchEvent` issued immediately after
 `await hydrate(...)` is **silently lost** — the listener is not attached yet. The
 gap is normally sub-millisecond (the first-emission work is synchronous: decode →
 build → attach), but:
 
 1. It makes `MountHandle` a misleading "done" signal — `await hydrate(...);
-   el.click()` races. (This is exactly what forced the Stage-7 test to re-dispatch
+el.click()` races. (This is exactly what forced the Stage-7 test to re-dispatch
    the click inside `vi.waitFor`.)
 2. The gap grows with nesting depth and with any genuinely-async first emission.
 3. It surprises both test authors and app authors who sequence post-hydrate code.
@@ -137,7 +141,7 @@ nested reactive regions register, as above.)
   Current hydrate surfaces `HydrationMismatchError` etc. as recoverable (logged).
   Decide: keep recoverable + always-resolve, or surface fatal first-emission
   errors through the returned effect. (Lean: keep current recoverable semantics;
-  the latch only governs *timing*, not which errors are fatal.)
+  the latch only governs _timing_, not which errors are fatal.)
 - **Timeout / escape hatch:** none proposed — the barrier is structurally bounded
   (first emission only). If a future async first emission is pathologically slow,
   that is a server-render problem too. Revisit only if real cases appear.
@@ -149,14 +153,32 @@ nested reactive regions register, as above.)
 - Not changing flash-free adoption or which errors are fatal.
 - Not introducing a user-visible loading state.
 
-## `mount` symmetry (optional extension)
+## `mount` symmetry — investigated and REJECTED (2026-06-07)
 
 `mount` (`api.ts` / `render.ts:1694`) has the **same** forked first-render pattern
-(`handleStreamChild` `render.ts:1004`, list `render.ts:1380`) and the same leaky
-"resolved ≠ interactive" contract. The identical latch can back a `mount`
-interactivity barrier so `await mount(...)` is also interactive on resolve. Can be
-the same stage (shared machinery) or a fast follow; the hydrate path is the
-reported bug and the priority.
+(`handleStreamChild`, `renderList`), so a blanket `mount` interactivity barrier was
+prototyped on the shared `HydrationReady`. **It is unsound and was reverted.**
+
+The asymmetry the latch can't bridge: a `mount` region's first emission may be
+genuinely **event-/data-driven** and arrive _after_ `mount` resolves (websocket,
+user action, a controlled `Deferred`). Awaiting it deadlocks. Concrete repro from
+the existing suite: `boundary.test.ts > AC19 "boundary markers survive after
+post-mount stream failure swap"` mounts `Stream.fromEffect(Deferred.await(signal))`
+and only fails `signal` **after** `await mount(...)` — the barrier waits for a first
+emission that the caller is waiting on `mount` to trigger ⇒ deadlock (5s timeout).
+There is no static way to tell "synchronous first emission not yet flushed" from
+"first emission gated on a post-mount event," so the barrier can't be scoped safely.
+
+Why hydrate is different (and stays barriered): every hydrated region's first
+emission **already exists** (the server rendered it) and is re-derived imminently,
+so the wait is bounded by work SSR already paid. And hydrate's leak is _insidious_
+— the server-rendered button is in the DOM but its listener isn't wired yet (silent
+lost click). Mount's "leak" is benign by comparison: at resolve the reactive content
+isn't in the DOM at all (`querySelector` returns `null`), so callers already must
+wait — no "looks ready but isn't wired" trap.
+
+If a fast "shell mounted" + separate "interactive" signal is ever wanted for mount,
+use the rejected `handle.ready` opt-in below rather than blocking `mount` itself.
 
 ## Rejected alternative
 
@@ -168,7 +190,8 @@ reported bug and the priority.
 ## Reuse (don't reinvent)
 
 - Suspense readiness latch — `render.ts:548-559` (`pendingRef` + `allSettled` +
-  sentinel + `settle`). Generalize this into the `HydrationReady` service.
+  sentinel + `settle`). Generalized into `makeHydrationReady` (the `HydrationReady` type in
+  `data.ts`), threaded via `RenderContext.hydrationReady`.
 - Forked first-emission spots to instrument — `hydrateReactive` `render.ts:2080`,
   `hydrateList` `render.ts:2512`.
 - `hydrate` entry / handle construction — `render.ts:1818-1872` (await the latch

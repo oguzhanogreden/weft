@@ -100,15 +100,16 @@ describe("router-ssr example — Boundary.server client refetch", () => {
     const valueBefore = Number(metricEl?.textContent);
 
     // (b) Click Refresh → derived HttpApiClient hits /_eui/data → server re-runs
-    //     `load` (strictly larger value) → region patches in place. The outlet's
-    //     reactive region (and so the button's click listener) finishes hydrating in
-    //     a forked fiber after `hydrate` resolves, so re-dispatch the click each poll
-    //     until the live listener fires a refetch.
+    //     `load` (strictly larger value) → region patches in place. `hydrate`'s
+    //     interactivity barrier (hydrate-ready.specs.md) guarantees the outlet's
+    //     reactive region — and so the button's click listener — is live the moment
+    //     `hydrate` resolves, so a single dispatch suffices; only the async refetch
+    //     result is polled.
     const refresh = container.querySelector<HTMLButtonElement>("#refresh");
     expect(refresh).not.toBeNull();
 
+    refresh!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await vi.waitFor(() => {
-      refresh!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       expect(Number(metricEl?.textContent)).toBeGreaterThan(valueBefore);
     });
 

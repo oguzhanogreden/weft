@@ -86,6 +86,32 @@ export class SuspenseContext extends Context.Tag("SuspenseContext")<
 export type RenderResult = Node | readonly Node[] | null;
 
 /**
+ * Hydration interactivity-barrier latch threaded through {@link RenderContext}
+ * for the duration of a `hydrate` call. Generalizes the Suspense boundary's
+ * countdown latch (`render.ts`) so the barrier spans the transitive closure of
+ * initial reactive regions.
+ *
+ * Each forked first-emission region calls {@link register} before `Effect.forkIn`
+ * and {@link settle} exactly once when its first emission has hydrated (matched,
+ * recoverable-divergence patched, or errored via `ensuring`). `hydrate` seeds a
+ * sentinel slot, runs the adopt walk, releases the sentinel, then awaits the
+ * latch before returning the `MountHandle`, so the page is interactive when the
+ * promise settles.
+ *
+ * Hydrate-only: `mount` does not provide it (a blanket mount barrier deadlocks on
+ * regions whose first emission arrives post-mount — see hydrate-ready.specs.md
+ * §mount symmetry). Reactive hydrate spots read it optionally.
+ */
+export type HydrationReady = {
+  /** Increment the pending count; call before forking a first-emission fiber. */
+  readonly register: Effect.Effect<void>;
+  /** Decrement the pending count; completes the latch when it reaches zero. */
+  readonly settle: Effect.Effect<void>;
+  /** Resolves once every registered first emission has settled. */
+  readonly awaitReady: Effect.Effect<void>;
+};
+
+/**
  * Service for managing rendering context including runtime, scope, and stream IDs
  */
 
@@ -101,5 +127,12 @@ export class RenderContext extends Context.Tag("RenderContext")<
      */
     readonly scope: Scope.Scope;
     readonly streamIdCounter: { current: number };
+    /**
+     * Hydration interactivity-barrier latch (see {@link HydrationReady}).
+     * Provided for the duration of a `hydrate` call so it resolves only once
+     * every initial reactive region's first emission has hydrated. Absent during
+     * `mount`.
+     */
+    readonly hydrationReady?: HydrationReady;
   }
 >() {}

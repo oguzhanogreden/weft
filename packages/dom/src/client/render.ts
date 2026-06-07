@@ -45,6 +45,7 @@ import {
   RenderError,
   type RenderResult,
   type StreamSubscriptionError,
+  type HydrationReady,
   RenderContext,
   SuspenseContext,
 } from "~/data";
@@ -1829,10 +1830,17 @@ export function hydrate(
     const runtime = ManagedRuntime.make(Layer.succeedContext(effectContext));
     const scope = yield* Scope.make();
 
+    // Interactivity barrier: each forked first-emission region registers before
+    // its fork and settles once its first emission has hydrated; `hydrate` awaits
+    // the latch before returning the handle, so the page is interactive on
+    // resolve (hydrate-ready.specs.md).
+    const hydrationReady = yield* makeHydrationReady();
+
     const context = {
       runtime,
       scope,
       streamIdCounter: { current: 0 },
+      hydrationReady,
     };
 
     // Advance the id counter past every marker already in the server DOM, so ids
@@ -1854,6 +1862,13 @@ export function hydrate(
       Effect.provideService(Scope.Scope, scope),
       Effect.tapError(() => cleanup),
     );
+
+    // Release the sentinel, then wait for every registered first emission to
+    // hydrate. Fast path (no reactive regions): count is already 0, resolves
+    // immediately. Bounded: each region settles after its FIRST emission, never
+    // on stream completion, so infinite/empty streams can't deadlock.
+    yield* hydrationReady.settle;
+    yield* hydrationReady.awaitReady;
 
     let unmounted = false;
 
@@ -2022,6 +2037,47 @@ function hydrateText(
 }
 
 /**
+ * Builds the hydration interactivity-barrier latch: a countdown `Ref` seeded with
+ * a sentinel of `1` (so a fast region can't settle before the adopt walk has
+ * registered all siblings) plus a `Deferred` that completes when the count
+ * returns to zero. Generalizes the Suspense readiness latch
+ * (`renderSuspenseBoundary`).
+ */
+function makeHydrationReady(): Effect.Effect<HydrationReady> {
+  return Effect.gen(function* () {
+    const pendingRef = yield* Ref.make(1);
+    const allSettled = yield* Deferred.make<void>();
+    const settle: Effect.Effect<void> = pipe(
+      Ref.updateAndGet(pendingRef, (n) => n - 1),
+      Effect.flatMap((n) =>
+        n <= 0 ? Effect.asVoid(Deferred.succeed(allSettled, undefined)) : Effect.void,
+      ),
+    );
+    return {
+      register: Ref.update(pendingRef, (n) => n + 1),
+      settle,
+      awaitReady: Deferred.await(allSettled),
+    };
+  });
+}
+
+/**
+ * Builds an idempotent `settle` for the interactivity-barrier latch. The
+ * underlying {@link HydrationReady.settle} decrements a shared counter, so it must
+ * fire exactly once per registered region; this guards against the two settle
+ * sites (first-emission completion and stream-exit `ensuring`) both decrementing.
+ * A no-op when no latch is present.
+ */
+function makeSettleOnce(ready: HydrationReady | undefined): Effect.Effect<void> {
+  let settled = false;
+  return Effect.suspend(() => {
+    if (settled || ready === undefined) return Effect.void;
+    settled = true;
+    return ready.settle;
+  });
+}
+
+/**
  * Hydrates a reactive region: pairs the start/end markers around the
  * server-rendered content, then subscribes to the stream. The **first** emission
  * is hydrated against the adopted content in place (see {@link hydrateFirstEmission});
@@ -2057,6 +2113,10 @@ function hydrateReactive(
     // content (flash-free). Later emissions are client-rendered: patch via the
     // shared update flow. Content scope is rotated per emission (same rule as
     // handleStreamChild) so nested fibers don't accumulate across re-emits.
+    // Interactivity latch: settle once the first emission has hydrated, or on
+    // stream exit (empty/errored) so the region never hangs hydrate's barrier.
+    const settleOnce = makeSettleOnce(context.hydrationReady);
+
     let isFirst = true;
     let currentContentScope: Scope.CloseableScope | null = null;
     const effect = Stream.runForEach(stream, (value) =>
@@ -2067,16 +2127,26 @@ function hydrateReactive(
         currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
         const contentContext = { ...context, scope: currentContentScope };
 
-        yield* (
-          isFirst
-            ? ((isFirst = false), hydrateFirstEmission(value, startMarker, endMarker, path))
-            : updateStreamChild(startMarker, endMarker, value)
-        ).pipe(
+        yield* Effect.gen(function* () {
+          if (isFirst) {
+            isFirst = false;
+            yield* hydrateFirstEmission(value, startMarker, endMarker, path);
+            yield* settleOnce;
+          } else {
+            yield* updateStreamChild(startMarker, endMarker, value);
+          }
+        }).pipe(
           Effect.provideService(RenderContext, contentContext),
           Effect.provideService(Scope.Scope, currentContentScope),
         );
       }),
-    );
+    ).pipe(Effect.ensuring(settleOnce));
+
+    // Register before the fork so hydrate's sentinel release can't settle the
+    // latch before this region is accounted for.
+    if (context.hydrationReady !== undefined) {
+      yield* context.hydrationReady.register;
+    }
     yield* Effect.forkIn(effect, context.scope);
 
     return endMarker.nextSibling;
@@ -2485,6 +2555,10 @@ function hydrateList(
     let state: ListState = { records: HashMap.empty(), order: [] };
     let isFirst = true;
 
+    // Interactivity latch: settle once the first emission is materialized, or on
+    // stream exit (empty/errored) so the region never hangs hydrate's barrier.
+    const settleOnce = makeSettleOnce(context.hydrationReady);
+
     const effect = Stream.runForEach(changes, (iterable) =>
       Effect.gen(function* () {
         const items = Array.from(iterable);
@@ -2501,13 +2575,19 @@ function hydrateList(
             context,
             path,
           );
+          yield* settleOnce;
         } else {
           // KR6 already materialized; later emissions reconcile like mount.
           state = yield* reconcileList(items, by, render, state, regionScope, endMarker, context);
         }
       }),
-    );
+    ).pipe(Effect.ensuring(settleOnce));
 
+    // Register before the fork so hydrate's sentinel release can't settle the
+    // latch before this region is accounted for.
+    if (context.hydrationReady !== undefined) {
+      yield* context.hydrationReady.register;
+    }
     // Subscription fiber lives in the region scope; failures route to a boundary.
     const fiber = yield* Effect.forkIn(effect, regionScope);
     const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);

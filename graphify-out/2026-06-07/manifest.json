@@ -330,8 +330,8 @@
     "semantic_hash": "b8fc6e78373a1d6766ad359df5db211d"
   },
   "examples/router-ssr/src/app.ts": {
-    "mtime": 1780745124.7477453,
-    "ast_hash": "ec447a165b6c88461403671ce68b1540",
+    "mtime": 1780766686.6618516,
+    "ast_hash": "ba1df4e577bda8b6f54d983b15dfdc93",
     "semantic_hash": ""
   },
   "examples/router-ssr/src/entry-client.ts": {
@@ -765,8 +765,8 @@
     "semantic_hash": "324deadca64fc919cf7aa37763f00bbf"
   },
   "packages/dom/src/client/render.ts": {
-    "mtime": 1780763938.897812,
-    "ast_hash": "100209902a686ca27fde86f7dfe687c8",
+    "mtime": 1780812930.9236455,
+    "ast_hash": "263ae3e469e294dcd92fe3098d0de64a",
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
@@ -780,9 +780,9 @@
     "semantic_hash": "015c7a0d36775e73c7ef33d9f9fe52be"
   },
   "packages/dom/src/data.ts": {
-    "mtime": 1780249714.352155,
-    "ast_hash": "19561d9f33ccd21b3c9da4d67efb1a6d",
-    "semantic_hash": "19561d9f33ccd21b3c9da4d67efb1a6d"
+    "mtime": 1780812587.4082856,
+    "ast_hash": "86379da2a08a1a0d3319829c5934d287",
+    "semantic_hash": ""
   },
   "packages/dom/src/index.ts": {
     "mtime": 1779651070.738932,
@@ -1195,8 +1195,8 @@
     "semantic_hash": "0a1bb29616d51d183e5c9d1920fa882d"
   },
   "examples/router-ssr/readme.md": {
-    "mtime": 1780745154.4590492,
-    "ast_hash": "c6e7901526896c3743f8e9f69b2a0955",
+    "mtime": 1780811081.9044914,
+    "ast_hash": "0bedc3337c05ef507e35b561f21584b1",
     "semantic_hash": ""
   },
   "examples/server-boundary/index.html": {
@@ -1422,6 +1422,21 @@
   "packages/router/src/data-endpoint.test.ts": {
     "mtime": 1780765705.1096854,
     "ast_hash": "a8a086e693dc3d8f7a25bda6cd811299",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/refetch.browser.test.ts": {
+    "mtime": 1780812127.256982,
+    "ast_hash": "e4d0731571b6cc07080945fffb88fc40",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/hydrate-ready.specs.md": {
+    "mtime": 1780812990.2816832,
+    "ast_hash": "ea09651bca4b3edc619486c4f21656f3",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/hydrate-ready.test.ts": {
+    "mtime": 1780812059.33823,
+    "ast_hash": "d88590a06132cfe2e8bc68609b7bce71",
     "semantic_hash": ""
   }
 }
