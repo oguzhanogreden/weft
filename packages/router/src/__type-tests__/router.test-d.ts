@@ -1,6 +1,7 @@
 import { Component, h } from "@effect-ui/core";
 import type { Node } from "@effect-ui/core";
 import { Context, Effect, Schema } from "effect";
+import { navigate, push, replace } from "~/client/navigation";
 import { href, Router, RouterApp, RouterParamsError } from "~/index";
 
 // ── Router.params / Router.query: typed values + RouterParamsError in E ────────
@@ -48,6 +49,34 @@ Router.route("users/:id", {
 
 // @ts-expect-error — a bare Node is not accepted; the slot is a thunk `() => Node`.
 Router.route("bare", { component: h.div({}, "bare") });
+
+// ── Leaf handler-arg props: decoded { path, query } inferred from the route ────
+
+// The props form: `component` receives `{ path, query }` typed from the route's
+// `path`/`query` fields — no annotation needed, the slot param is contextually typed.
+const orderRoute = Router.route("orders/:oid", {
+  path: { oid: Schema.NumberFromString },
+  query: { page: Schema.optional(Schema.NumberFromString) },
+  component: ({ path, query }) => {
+    // Should compile — `oid` decodes to a number, `page` to `number | undefined`.
+    const _oid: number = path.oid;
+    const _page: number | undefined = query.page;
+    return h.div({}, `${_oid}${_page ?? ""}`);
+  },
+});
+
+// `href` still works on a props-form route (path required, query optional).
+href(orderRoute, { path: { oid: 1 } });
+href(orderRoute, { path: { oid: 1 }, query: { page: 2 } });
+
+Router.route("orders/:oid", {
+  path: { oid: Schema.NumberFromString },
+  component: ({ path }) => {
+    // @ts-expect-error — `oid` is a number, not a string.
+    const _wrong: string = path.oid;
+    return h.div({}, `${_wrong}`);
+  },
+});
 
 // ── Layout component is a thunk Node that splices the injected Outlet ──────────
 
@@ -141,3 +170,27 @@ href(userRoute, { path: { id: "not-a-number" } });
 
 // @ts-expect-error — unknown query key.
 href(userRoute, { path: { id: 1 }, query: { nope: "x" } });
+
+// ── navigate(ref, args) inference (mirrors href requiredness) ──────────────────
+
+// Should compile — typed args, optional trailing NavigateOptions, returns an
+// Effect requiring only the `Router` service.
+const _nav: Effect.Effect<void, never, Router> = navigate(userRoute, { path: { id: 1 } });
+navigate(userRoute, { path: { id: 1 }, query: { sort: "x" } }, { replace: true });
+
+// Should compile — a no-param/no-query route needs no args; options still allowed.
+navigate(aboutRoute);
+navigate(aboutRoute, undefined, { replace: true });
+
+// @ts-expect-error — path is required when the route has path params.
+navigate(userRoute, {});
+
+// @ts-expect-error — `id` must be a number.
+navigate(userRoute, { path: { id: "not-a-number" } });
+
+// @ts-expect-error — unknown query key.
+navigate(userRoute, { path: { id: 1 }, query: { nope: "x" } });
+
+// push / replace take a raw string and require the `Router` service.
+const _push: Effect.Effect<void, never, Router> = push("/about");
+const _replace: Effect.Effect<void, never, Router> = replace("/about");

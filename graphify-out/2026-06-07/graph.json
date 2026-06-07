@@ -2834,7 +2834,7 @@
       "label": "idParam",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L37",
+      "source_location": "L31",
       "id": "src_app_idparam",
       "community": 76,
       "norm_label": "idparam"
@@ -2843,52 +2843,16 @@
       "label": "sortQuery",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L40",
+      "source_location": "L34",
       "id": "src_app_sortquery",
       "community": 76,
       "norm_label": "sortquery"
     },
     {
-      "label": "Metrics",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L47",
-      "id": "src_app_metrics",
-      "community": 76,
-      "norm_label": "metrics"
-    },
-    {
-      "label": "MetricsLive",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L60",
-      "id": "src_app_metricslive",
-      "community": 76,
-      "norm_label": "metricslive"
-    },
-    {
-      "label": "Metric",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L65",
-      "id": "src_app_metric",
-      "community": 76,
-      "norm_label": "metric"
-    },
-    {
-      "label": "dashboardRoute",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L74",
-      "id": "src_app_dashboardroute",
-      "community": 76,
-      "norm_label": "dashboardroute"
-    },
-    {
       "label": "settingsRoute",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L106",
+      "source_location": "L40",
       "id": "src_app_settingsroute",
       "community": 76,
       "norm_label": "settingsroute"
@@ -2897,7 +2861,7 @@
       "label": "postsRoute",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L115",
+      "source_location": "L49",
       "id": "src_app_postsroute",
       "community": 76,
       "norm_label": "postsroute"
@@ -2906,7 +2870,7 @@
       "label": "homeRoute",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L130",
+      "source_location": "L64",
       "id": "src_app_homeroute",
       "community": 76,
       "norm_label": "homeroute"
@@ -2915,7 +2879,7 @@
       "label": "NotFound()",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L144",
+      "source_location": "L78",
       "id": "src_app_notfound",
       "community": 76,
       "norm_label": "notfound()"
@@ -2924,7 +2888,7 @@
       "label": "App",
       "file_type": "code",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L152",
+      "source_location": "L86",
       "id": "examples_router_ssr_src_app_ts_src_app_app",
       "community": 76,
       "norm_label": "app"
@@ -3063,42 +3027,6 @@
       "id": "src_navigation_browser_test_waitforhome",
       "community": 210,
       "norm_label": "waitforhome()"
-    },
-    {
-      "label": "refetch.browser.test.ts",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L1",
-      "id": "src_refetch_browser_test",
-      "community": 97,
-      "norm_label": "refetch.browser.test.ts"
-    },
-    {
-      "label": "serverHandler",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L37",
-      "id": "src_refetch_browser_test_serverhandler",
-      "community": 97,
-      "norm_label": "serverhandler"
-    },
-    {
-      "label": "ssrDocument()",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L66",
-      "id": "src_refetch_browser_test_ssrdocument",
-      "community": 97,
-      "norm_label": "ssrdocument()"
-    },
-    {
-      "label": "ssrAndHydrate()",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L74",
-      "id": "src_refetch_browser_test_ssrandhydrate",
-      "community": 97,
-      "norm_label": "ssrandhydrate()"
     },
     {
       "label": "tsconfig.json",
@@ -3439,7 +3367,7 @@
       "source_file": "examples/server-boundary/src/entry-server.ts",
       "source_location": "L1",
       "id": "examples_server_boundary_src_entry_server_ts_src_entry_server",
-      "community": 4,
+      "community": 57,
       "norm_label": "entry-server.ts"
     },
     {
@@ -3448,7 +3376,7 @@
       "source_file": "examples/server-boundary/src/entry-server.ts",
       "source_location": "L17",
       "id": "examples_server_boundary_src_entry_server_ts_src_entry_server_render",
-      "community": 4,
+      "community": 57,
       "norm_label": "render()"
     },
     {
@@ -3691,7 +3619,7 @@
       "source_file": "examples/ssr-hydration/src/entry-server.ts",
       "source_location": "L1",
       "id": "examples_ssr_hydration_src_entry_server_ts_src_entry_server",
-      "community": 4,
+      "community": 57,
       "norm_label": "entry-server.ts"
     },
     {
@@ -3700,7 +3628,7 @@
       "source_file": "examples/ssr-hydration/src/entry-server.ts",
       "source_location": "L14",
       "id": "examples_ssr_hydration_src_entry_server_ts_src_entry_server_render",
-      "community": 4,
+      "community": 57,
       "norm_label": "render()"
     },
     {
@@ -6769,7 +6697,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L36",
       "id": "combinator_descriptor_getelementdescriptor",
-      "community": 77,
+      "community": 8,
       "norm_label": "getelementdescriptor()"
     },
     {
@@ -9901,7 +9829,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L1",
       "id": "client_hydrate_test",
-      "community": 4,
+      "community": 57,
       "norm_label": "hydrate.test.ts"
     },
     {
@@ -9910,7 +9838,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L15",
       "id": "client_hydrate_test_createtestdom",
-      "community": 4,
+      "community": 57,
       "norm_label": "createtestdom()"
     },
     {
@@ -9919,7 +9847,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L24",
       "id": "client_hydrate_test_createroot",
-      "community": 4,
+      "community": 57,
       "norm_label": "createroot()"
     },
     {
@@ -9928,7 +9856,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L31",
       "id": "client_hydrate_test_seedserverhtml",
-      "community": 4,
+      "community": 57,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -9937,7 +9865,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L38",
       "id": "client_hydrate_test_waitfor",
-      "community": 4,
+      "community": 57,
       "norm_label": "waitfor()"
     },
     {
@@ -9955,7 +9883,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L1",
       "id": "client_list_hydrate_test",
-      "community": 4,
+      "community": 192,
       "norm_label": "list.hydrate.test.ts"
     },
     {
@@ -9964,7 +9892,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L14",
       "id": "client_list_hydrate_test_createtestdom",
-      "community": 4,
+      "community": 192,
       "norm_label": "createtestdom()"
     },
     {
@@ -9973,7 +9901,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L23",
       "id": "client_list_hydrate_test_createroot",
-      "community": 4,
+      "community": 192,
       "norm_label": "createroot()"
     },
     {
@@ -9982,7 +9910,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L30",
       "id": "client_list_hydrate_test_seedserverhtml",
-      "community": 4,
+      "community": 192,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -9991,7 +9919,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L37",
       "id": "client_list_hydrate_test_waitfor",
-      "community": 4,
+      "community": 192,
       "norm_label": "waitfor()"
     },
     {
@@ -10000,7 +9928,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L41",
       "id": "client_list_hydrate_test_waitforstream",
-      "community": 4,
+      "community": 192,
       "norm_label": "waitforstream()"
     },
     {
@@ -10009,7 +9937,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L42",
       "id": "client_list_hydrate_test_waitforstreamupdate",
-      "community": 4,
+      "community": 192,
       "norm_label": "waitforstreamupdate()"
     },
     {
@@ -10018,7 +9946,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L44",
       "id": "client_list_hydrate_test_person",
-      "community": 4,
+      "community": 192,
       "norm_label": "person"
     },
     {
@@ -10027,7 +9955,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L49",
       "id": "client_list_hydrate_test_p",
-      "community": 4,
+      "community": 192,
       "norm_label": "p()"
     },
     {
@@ -10036,7 +9964,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L52",
       "id": "client_list_hydrate_test_itemids",
-      "community": 4,
+      "community": 192,
       "norm_label": "itemids()"
     },
     {
@@ -10045,7 +9973,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L57",
       "id": "client_list_hydrate_test_commentdata",
-      "community": 4,
+      "community": 192,
       "norm_label": "commentdata()"
     },
     {
@@ -10054,7 +9982,7 @@
       "source_file": "packages/dom/src/client/list.hydrate.test.ts",
       "source_location": "L66",
       "id": "client_list_hydrate_test_persondata",
-      "community": 4,
+      "community": 192,
       "norm_label": "persondata"
     },
     {
@@ -10288,7 +10216,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L537",
       "id": "client_render_rendersuspenseboundary",
-      "community": 184,
+      "community": 8,
       "norm_label": "rendersuspenseboundary()"
     },
     {
@@ -10369,7 +10297,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1058",
       "id": "client_render_updatestreamchild",
-      "community": 77,
+      "community": 12,
       "norm_label": "updatestreamchild()"
     },
     {
@@ -10378,7 +10306,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1110",
       "id": "client_render_istextvalue",
-      "community": 77,
+      "community": 12,
       "norm_label": "istextvalue()"
     },
     {
@@ -10387,7 +10315,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1120",
       "id": "client_render_staticelementdescriptor",
-      "community": 77,
+      "community": 12,
       "norm_label": "staticelementdescriptor()"
     },
     {
@@ -10396,7 +10324,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1145",
       "id": "client_render_patchelementinplace",
-      "community": 20,
+      "community": 12,
       "norm_label": "patchelementinplace()"
     },
     {
@@ -10405,7 +10333,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1178",
       "id": "client_render_patchchildreninplace",
-      "community": 77,
+      "community": 12,
       "norm_label": "patchchildreninplace()"
     },
     {
@@ -10459,7 +10387,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1339",
       "id": "client_render_renderlist",
-      "community": 12,
+      "community": 20,
       "norm_label": "renderlist()"
     },
     {
@@ -10567,7 +10495,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1888",
       "id": "client_render_hydratenode",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratenode()"
     },
     {
@@ -10576,7 +10504,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1995",
       "id": "client_render_hydratetext",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratetext()"
     },
     {
@@ -10585,7 +10513,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2030",
       "id": "client_render_hydratereactive",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratereactive()"
     },
     {
@@ -10594,7 +10522,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2095",
       "id": "client_render_hydratefirstemission",
-      "community": 77,
+      "community": 12,
       "norm_label": "hydratefirstemission()"
     },
     {
@@ -10603,7 +10531,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2144",
       "id": "client_render_hydratefailureboundary",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratefailureboundary()"
     },
     {
@@ -10621,7 +10549,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2232",
       "id": "client_render_makeclientresource",
-      "community": 159,
+      "community": 12,
       "norm_label": "makeclientresource()"
     },
     {
@@ -10630,7 +10558,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2296",
       "id": "client_render_hydrateserverboundary",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydrateserverboundary()"
     },
     {
@@ -10639,7 +10567,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2368",
       "id": "client_render_hydrateelement",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydrateelement()"
     },
     {
@@ -10648,7 +10576,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2398",
       "id": "client_render_hydratechildren",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratechildren()"
     },
     {
@@ -10666,7 +10594,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2447",
       "id": "client_render_hydratelist",
-      "community": 159,
+      "community": 12,
       "norm_label": "hydratelist()"
     },
     {
@@ -10711,7 +10639,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2771",
       "id": "client_render_findmatchingend",
-      "community": 159,
+      "community": 12,
       "norm_label": "findmatchingend()"
     },
     {
@@ -10720,7 +10648,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2797",
       "id": "client_render_describenode",
-      "community": 159,
+      "community": 12,
       "norm_label": "describenode()"
     },
     {
@@ -10729,7 +10657,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2813",
       "id": "client_render_mismatch",
-      "community": 159,
+      "community": 12,
       "norm_label": "mismatch()"
     },
     {
@@ -10828,7 +10756,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L1",
       "id": "client_server_boundary_refetch_test",
-      "community": 4,
+      "community": 57,
       "norm_label": "server-boundary-refetch.test.ts"
     },
     {
@@ -10837,7 +10765,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L14",
       "id": "client_server_boundary_refetch_test_createtestdom",
-      "community": 4,
+      "community": 57,
       "norm_label": "createtestdom()"
     },
     {
@@ -10846,7 +10774,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L23",
       "id": "client_server_boundary_refetch_test_createroot",
-      "community": 4,
+      "community": 57,
       "norm_label": "createroot()"
     },
     {
@@ -10855,7 +10783,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L29",
       "id": "client_server_boundary_refetch_test_seedserverhtml",
-      "community": 4,
+      "community": 57,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -10864,7 +10792,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L36",
       "id": "client_server_boundary_refetch_test_waitfor",
-      "community": 4,
+      "community": 57,
       "norm_label": "waitfor()"
     },
     {
@@ -10873,7 +10801,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L40",
       "id": "client_server_boundary_refetch_test_productshape",
-      "community": 4,
+      "community": 57,
       "norm_label": "productshape"
     },
     {
@@ -10882,7 +10810,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L44",
       "id": "client_server_boundary_refetch_test_product",
-      "community": 4,
+      "community": 57,
       "norm_label": "product"
     },
     {
@@ -10891,7 +10819,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L47",
       "id": "client_server_boundary_refetch_test_envelope",
-      "community": 4,
+      "community": 57,
       "norm_label": "envelope()"
     },
     {
@@ -10900,7 +10828,7 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L55",
       "id": "client_server_boundary_refetch_test_captureresource",
-      "community": 4,
+      "community": 57,
       "norm_label": "captureresource()"
     },
     {
@@ -11179,7 +11107,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L92",
       "id": "src_data_rendercontext",
-      "community": 12,
+      "community": 57,
       "norm_label": "rendercontext"
     },
     {
@@ -11332,7 +11260,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L115",
       "id": "server_render_to_stream_buildpatch",
-      "community": 184,
+      "community": 8,
       "norm_label": "buildpatch()"
     },
     {
@@ -11341,7 +11269,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L149",
       "id": "server_render_to_stream_rendersuspensessrinline",
-      "community": 184,
+      "community": 8,
       "norm_label": "rendersuspensessrinline()"
     },
     {
@@ -11521,7 +11449,7 @@
       "source_file": "packages/dom/src/server/render-to-string.ts",
       "source_location": "L26",
       "id": "server_render_to_string_rendertostringhydratable",
-      "community": 4,
+      "community": 57,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -11530,7 +11458,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L1",
       "id": "server_serialize",
-      "community": 8,
+      "community": 159,
       "norm_label": "serialize.ts"
     },
     {
@@ -11539,7 +11467,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L8",
       "id": "server_serialize_iseventhandler",
-      "community": 8,
+      "community": 159,
       "norm_label": "iseventhandler()"
     },
     {
@@ -11548,7 +11476,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L20",
       "id": "server_serialize_void_elements",
-      "community": 8,
+      "community": 159,
       "norm_label": "void_elements"
     },
     {
@@ -11557,7 +11485,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L37",
       "id": "server_serialize_escape_map",
-      "community": 8,
+      "community": 159,
       "norm_label": "escape_map"
     },
     {
@@ -11566,7 +11494,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L50",
       "id": "server_serialize_escapehtml",
-      "community": 8,
+      "community": 159,
       "norm_label": "escapehtml()"
     },
     {
@@ -11575,7 +11503,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L64",
       "id": "server_serialize_script_json_unsafe_codes",
-      "community": 8,
+      "community": 159,
       "norm_label": "script_json_unsafe_codes"
     },
     {
@@ -11593,7 +11521,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L95",
       "id": "server_serialize_cameltokebab",
-      "community": 8,
+      "community": 159,
       "norm_label": "cameltokebab()"
     },
     {
@@ -11602,7 +11530,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L106",
       "id": "server_serialize_serializeprops",
-      "community": 8,
+      "community": 159,
       "norm_label": "serializeprops()"
     },
     {
@@ -11611,7 +11539,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L134",
       "id": "server_serialize_resolvevalue",
-      "community": 20,
+      "community": 159,
       "norm_label": "resolvevalue()"
     },
     {
@@ -11620,7 +11548,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L147",
       "id": "server_serialize_serializeattribute",
-      "community": 8,
+      "community": 159,
       "norm_label": "serializeattribute()"
     },
     {
@@ -11629,7 +11557,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L169",
       "id": "server_serialize_serializestyle",
-      "community": 8,
+      "community": 159,
       "norm_label": "serializestyle()"
     },
     {
@@ -11719,7 +11647,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L1",
       "id": "src_shared",
-      "community": 184,
+      "community": 8,
       "norm_label": "shared.ts"
     },
     {
@@ -11746,7 +11674,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L37",
       "id": "src_shared_streammarker",
-      "community": 184,
+      "community": 8,
       "norm_label": "streammarker"
     },
     {
@@ -11755,7 +11683,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L55",
       "id": "src_shared_suspensestarttext",
-      "community": 184,
+      "community": 8,
       "norm_label": "suspensestarttext()"
     },
     {
@@ -11764,7 +11692,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L63",
       "id": "src_shared_suspenseendtext",
-      "community": 184,
+      "community": 8,
       "norm_label": "suspenseendtext()"
     },
     {
@@ -11773,7 +11701,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L70",
       "id": "src_shared_suspensemarker",
-      "community": 184,
+      "community": 8,
       "norm_label": "suspensemarker"
     },
     {
@@ -11809,7 +11737,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L126",
       "id": "src_shared_parsestreammarker",
-      "community": 159,
+      "community": 12,
       "norm_label": "parsestreammarker()"
     },
     {
@@ -11836,7 +11764,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L167",
       "id": "src_shared_listitemmarker",
-      "community": 184,
+      "community": 8,
       "norm_label": "listitemmarker"
     },
     {
@@ -11854,7 +11782,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
       "id": "src_utilities",
-      "community": 12,
+      "community": 57,
       "norm_label": "utilities.ts"
     },
     {
@@ -11863,7 +11791,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
       "id": "src_utilities_nextstreamid",
-      "community": 12,
+      "community": 20,
       "norm_label": "nextstreamid()"
     },
     {
@@ -17726,19 +17654,10 @@
       "norm_label": "`@effect/platform` is the spine"
     },
     {
-      "label": "`Boundary.server` client refetch",
-      "file_type": "document",
-      "source_file": "examples/router-ssr/readme.md",
-      "source_location": "L76",
-      "id": "router_ssr_readme_boundary_server_client_refetch",
-      "community": 40,
-      "norm_label": "`boundary.server` client refetch"
-    },
-    {
       "label": "Programmatic navigation",
       "file_type": "document",
       "source_file": "examples/router-ssr/readme.md",
-      "source_location": "L91",
+      "source_location": "L76",
       "id": "router_ssr_readme_programmatic_navigation",
       "community": 40,
       "norm_label": "programmatic navigation"
@@ -17747,7 +17666,7 @@
       "label": "Running",
       "file_type": "document",
       "source_file": "examples/router-ssr/readme.md",
-      "source_location": "L99",
+      "source_location": "L84",
       "id": "router_ssr_readme_running",
       "community": 40,
       "norm_label": "running"
@@ -17756,7 +17675,7 @@
       "label": "When to Use",
       "file_type": "document",
       "source_file": "examples/router-ssr/readme.md",
-      "source_location": "L106",
+      "source_location": "L91",
       "id": "router_ssr_readme_when_to_use",
       "community": 40,
       "norm_label": "when to use"
@@ -21583,7 +21502,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L20",
       "id": "src_utilities_nextsuspenseid",
-      "community": 184,
+      "community": 8,
       "norm_label": "nextsuspenseid"
     },
     {
@@ -29099,16 +29018,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L74",
-      "weight": 1.0,
-      "source": "examples_router_ssr_src_app_ts_src_app",
-      "target": "src_app_dashboardroute",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/app.ts",
       "source_location": "L58",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -29124,36 +29033,6 @@
       "confidence_score": 1.0,
       "source": "examples_router_ssr_src_app_ts_src_app",
       "target": "src_app_idparam"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L65",
-      "weight": 1.0,
-      "source": "examples_router_ssr_src_app_ts_src_app",
-      "target": "src_app_metric",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L47",
-      "weight": 1.0,
-      "source": "examples_router_ssr_src_app_ts_src_app",
-      "target": "src_app_metrics",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/app.ts",
-      "source_location": "L60",
-      "weight": 1.0,
-      "source": "examples_router_ssr_src_app_ts_src_app",
-      "target": "src_app_metricslive",
-      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -29246,17 +29125,6 @@
       "target": "src_entry_server_handler"
     },
     {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L29",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test",
-      "target": "src_entry_server_documentshell",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "examples/router-ssr/src/navigation.browser.test.ts",
@@ -29346,69 +29214,6 @@
       "source_location": "L80",
       "weight": 1.0,
       "source": "src_navigation_browser_test_mountat",
-      "target": "client_router_live_routerlive"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L37",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test",
-      "target": "src_refetch_browser_test_serverhandler",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L74",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test",
-      "target": "src_refetch_browser_test_ssrandhydrate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L66",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test",
-      "target": "src_refetch_browser_test_ssrdocument",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L75",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test_ssrandhydrate",
-      "target": "src_refetch_browser_test_ssrdocument",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L82",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test_ssrandhydrate",
-      "target": "client_render_hydrate"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
-      "source_location": "L81",
-      "weight": 1.0,
-      "source": "src_refetch_browser_test_ssrandhydrate",
       "target": "client_router_live_routerlive"
     },
     {
@@ -32158,9 +31963,9 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L377",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "boundary_boundary_test",
-      "target": "boundary_boundary_test_loaderror"
+      "target": "boundary_boundary_test_loaderror",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -32213,9 +32018,9 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L4",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "boundary_boundary_test",
-      "target": "boundary_registry_lookup"
+      "target": "boundary_registry_lookup",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -45838,9 +45643,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L8",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_render"
+      "target": "client_render",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -46740,9 +46545,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L8",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_render_hydrate"
+      "target": "client_render_hydrate",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -47155,9 +46960,9 @@
       "source_file": "packages/dom/src/client/server-boundary-hydrate.test.ts",
       "source_location": "L19",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_hydrate_test",
-      "target": "client_server_boundary_hydrate_test_fromvalue"
+      "target": "client_server_boundary_hydrate_test_fromvalue",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47280,9 +47085,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L55",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_captureresource"
+      "target": "client_server_boundary_refetch_test_captureresource",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47290,9 +47095,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L23",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_createroot"
+      "target": "client_server_boundary_refetch_test_createroot",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47300,9 +47105,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L14",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_createtestdom"
+      "target": "client_server_boundary_refetch_test_createtestdom",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47310,9 +47115,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L47",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_envelope"
+      "target": "client_server_boundary_refetch_test_envelope",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47320,9 +47125,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L44",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_product"
+      "target": "client_server_boundary_refetch_test_product",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47330,9 +47135,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L40",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_productshape"
+      "target": "client_server_boundary_refetch_test_productshape",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47340,9 +47145,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L29",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_seedserverhtml"
+      "target": "client_server_boundary_refetch_test_seedserverhtml",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -47350,9 +47155,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L36",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "client_server_boundary_refetch_test_waitfor"
+      "target": "client_server_boundary_refetch_test_waitfor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -47361,9 +47166,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test",
-      "target": "server_render_to_string_rendertostringhydratable"
+      "target": "server_render_to_string_rendertostringhydratable",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -47372,9 +47177,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L30",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test_seedserverhtml",
-      "target": "client_server_boundary_refetch_test_createroot"
+      "target": "client_server_boundary_refetch_test_createroot",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -47383,9 +47188,9 @@
       "source_file": "packages/dom/src/client/server-boundary-refetch.test.ts",
       "source_location": "L31",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_server_boundary_refetch_test_seedserverhtml",
-      "target": "server_render_to_string_rendertostringhydratable"
+      "target": "server_render_to_string_rendertostringhydratable",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -49244,9 +49049,9 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L16",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "server_server_boundary_ssr_test",
-      "target": "server_server_boundary_ssr_test_fromvalue"
+      "target": "server_server_boundary_ssr_test_fromvalue",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -49295,9 +49100,9 @@
       "source_file": "packages/dom/src/server/server-boundary-ssr.test.ts",
       "source_location": "L54",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "server_server_boundary_ssr_test_productboundary",
-      "target": "server_server_boundary_ssr_test_fromvalue"
+      "target": "server_server_boundary_ssr_test_fromvalue",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -51955,9 +51760,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_data_endpoint"
+      "target": "src_data_endpoint",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -51966,9 +51771,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_data_endpoint_serveboundarydata"
+      "target": "src_data_endpoint_serveboundarydata",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -51976,9 +51781,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L45",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_data_endpoint_test_inventory"
+      "target": "src_data_endpoint_test_inventory",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -51986,9 +51791,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L16",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_data_endpoint_test_product"
+      "target": "src_data_endpoint_test_product",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -51996,9 +51801,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L12",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_data_endpoint_test_productshape"
+      "target": "src_data_endpoint_test_productshape",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -52007,9 +51812,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L6",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_errors"
+      "target": "src_errors",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -52018,9 +51823,9 @@
       "source_file": "packages/router/src/data-endpoint.test.ts",
       "source_location": "L6",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_data_endpoint_test",
-      "target": "src_errors_boundarydatanotfound"
+      "target": "src_errors_boundarydatanotfound",
+      "confidence_score": 1.0
     },
     {
       "relation": "re_exports",
@@ -58662,16 +58467,6 @@
       "confidence_score": 1.0,
       "source": "router_ssr_readme_router_ssr",
       "target": "router_ssr_readme_when_to_use"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/readme.md",
-      "source_location": "L76",
-      "weight": 1.0,
-      "source": "router_ssr_readme_how_it_works",
-      "target": "router_ssr_readme_boundary_server_client_refetch",
-      "confidence_score": 1.0
     },
     {
       "relation": "contains",

@@ -14,9 +14,12 @@ import {
   Schema,
   Scope,
   Stream,
+  Subscribable,
+  SubscriptionRef,
   pipe,
 } from "effect";
 import {
+  BoundaryDataClientTag,
   FAILURE_BOUNDARY,
   FRAGMENT,
   getElementDescriptor,
@@ -2202,22 +2205,88 @@ function hydrateFailureBoundary(
  * Client-side props read from a {@link Boundary.server} descriptor during
  * hydration. `load` and `provide` are intentionally absent from the type: the
  * client **never** runs `load` — it replays the server result from the inline
- * payload — so only `schema` (to decode the payload) and `render` (to rebuild
- * the subtree from the decoded data) are needed.
+ * payload, then serves later refetches through the injected
+ * {@link BoundaryDataClientTag} transport (never `load`). The fields the client
+ * keeps are `id` (the registry/endpoint key passed to a refetch), `schema` (to
+ * decode the inline payload **and** the refetch envelope) and `render` (to build
+ * the subtree from the live {@link Boundary.Resource}).
  */
 interface ServerBoundaryProps {
+  readonly id: string;
   readonly schema: Schema.Schema<unknown, unknown>;
-  readonly render: (data: unknown) => Renderable;
+  readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
+}
+
+/**
+ * Builds the live, client-side {@link Boundary.Resource} a hydrated
+ * {@link Boundary.server} region hands to `render`. `value` is seeded from the
+ * replayed SSR `data` so its first emission matches the adopted DOM (no flash);
+ * `refetch` re-reads the data through the injected {@link BoundaryDataClientTag}
+ * transport (never `load`), decoding the envelope via the **same** `schema` as the
+ * inline payload, then `SubscriptionRef.set`s `value` so the subtree patches in
+ * place. A refetch is **stale-on-error**: a transport/decode failure leaves the
+ * previous `value` intact, sets `error` to `Some`, and never raises into an
+ * enclosing failure `Boundary`. When no transport is present (`Option.none` —
+ * server, or a router-less mount) `refetch` is a no-op.
+ */
+function makeClientResource(
+  id: string,
+  schema: Schema.Schema<unknown, unknown>,
+  data: unknown,
+  client: Option.Option<BoundaryDataClientTag["Type"]>,
+): Effect.Effect<Boundary.Resource<unknown>> {
+  return Effect.gen(function* () {
+    const valueRef = yield* SubscriptionRef.make(data);
+    const pendingRef = yield* SubscriptionRef.make(false);
+    const errorRef = yield* SubscriptionRef.make<Option.Option<unknown>>(Option.none());
+
+    const refetch: Effect.Effect<void> = Option.match(client, {
+      // No transport (server / router-less mount): refetch cannot reach the
+      // endpoint, so it is a no-op — the region stays at its seeded value.
+      onNone: () => Effect.void,
+      onSome: (dataClient) =>
+        Effect.gen(function* () {
+          yield* SubscriptionRef.set(pendingRef, true);
+          // Decode the envelope through the SAME schema the inline payload used
+          // (`server.specs.md` AC-D6), so refetch and hydrate share one decode path.
+          const next = yield* dataClient.fetch({ id }).pipe(
+            Effect.flatMap((envelope) =>
+              Effect.try({ try: () => JSON.parse(envelope) as unknown, catch: (cause) => cause }),
+            ),
+            Effect.flatMap((encoded) => Schema.decodeUnknown(schema)(encoded)),
+            Effect.either,
+          );
+          if (next._tag === "Right") {
+            // Success: push the new value (subtree patches in place) and clear error.
+            yield* SubscriptionRef.set(valueRef, next.right);
+            yield* SubscriptionRef.set(errorRef, Option.none());
+          } else {
+            // Stale-on-error: keep the previous value, surface the error inline.
+            yield* SubscriptionRef.set(errorRef, Option.some(next.left));
+          }
+          yield* SubscriptionRef.set(pendingRef, false);
+        }),
+    });
+
+    return {
+      value: valueRef as Subscribable.Subscribable<unknown>,
+      refetch,
+      pending: pendingRef as Subscribable.Subscribable<boolean>,
+      error: errorRef as Subscribable.Subscribable<Option.Option<unknown>>,
+    };
+  });
 }
 
 /**
  * Hydrates a {@link Boundary.server} region. The hydratable server renderer
  * emitted the encoded `load` result inline as a `<script type="application/json">`
- * payload at the region cursor, followed by the `render(data)` HTML. Here we
+ * payload at the region cursor, followed by the `render(resource)` HTML. Here we
  * **replay** that result — `load` is never run on the client: the payload is
- * decoded through `schema` and `render(data)` is hydrated against the adopted
- * DOM at `script.nextSibling`. The payload script is then removed so it does not
- * linger in the live document.
+ * decoded through `schema`, seeded into a live {@link Boundary.Resource} (see
+ * {@link makeClientResource}), and `render(resource)` is hydrated against the
+ * adopted DOM at `script.nextSibling`. The payload script is then removed so it
+ * does not linger in the live document. The region stays **live**: a later
+ * `resource.refetch` re-fetches through the endpoint and patches it in place.
  *
  * A missing payload, malformed JSON, or a value that fails `schema` decoding is
  * a {@link HydrationMismatchError} (recoverable, logged) — the same typed,
@@ -2277,9 +2346,15 @@ function hydrateServerBoundary(
       }),
     );
 
-    // Hydrate render(data) against the adopted DOM following the payload script,
-    // then drop the script — it is consumed only by hydration.
-    const next = yield* hydrateNode(props.render(data), script.nextSibling, path);
+    // Seed a live Resource from the replayed data and (optionally) the injected
+    // refetch transport, then hydrate render(resource) against the adopted DOM
+    // following the payload script. `value`'s first emission is the seeded data,
+    // so the adopt-walk matches the server DOM (no fallback flash). The script is
+    // then dropped — it is consumed only by hydration; the region stays live for
+    // subsequent refetches.
+    const client = yield* Effect.serviceOption(BoundaryDataClientTag);
+    const resource = yield* makeClientResource(props.id, props.schema, data, client);
+    const next = yield* hydrateNode(props.render(resource), script.nextSibling, path);
     script.remove();
     return next;
   });

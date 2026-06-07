@@ -1,9 +1,25 @@
 import * as assert from "node:assert/strict";
 import { Boundary, ServerTag, h } from "@effect-ui/core";
+import type { Node } from "@effect-ui/core";
 import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
+
+/**
+ * Adapts a v1-style `(data) => Node` render to the v3 `(resource) => Node`
+ * signature by reading the resource's **seeded** value once. The static resource
+ * the SSR renderer builds is await-first, so `value.get` resolves synchronously
+ * to the loaded data and the produced HTML is byte-identical to the bare-data
+ * render these tests were written against (no reactive-region markers).
+ */
+const fromValue =
+  <A, E, R>(f: (a: A) => Node<E, R>) =>
+  (resource: Boundary.Resource<A>) =>
+    Effect.gen(function* () {
+      const data = yield* resource.value.get;
+      return yield* f(data);
+    });
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -30,11 +46,12 @@ const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
 const ProductBoundary = () =>
   Boundary.server(
     {
+      id: "product",
       load: () => Effect.flatMap(Database, (db) => db.getProduct()),
       provide: DatabaseLive,
       schema: Product,
     },
-    (data) => h.div({ class: "product" }, data.name),
+    fromValue((data) => h.div({ class: "product" }, data.name)),
   );
 
 const SCRIPT_RE = /<script type="application\/json">(.*?)<\/script>/;
@@ -88,8 +105,12 @@ describe("Boundary.server — omitted provide defaults to Layer.empty", () => {
   // `Effect.provide(load(), provide)` still has a real layer to discharge.
   const NoProvideBoundary = () =>
     Boundary.server(
-      { load: () => Effect.succeed({ name: "Plain", price: 1 }), schema: Product },
-      (data) => h.div({ class: "product" }, data.name),
+      {
+        id: "no-provide",
+        load: () => Effect.succeed({ name: "Plain", price: 1 }),
+        schema: Product,
+      },
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
   it("renders the loaded data without an explicit provide", async () => {
@@ -111,22 +132,25 @@ describe("Boundary.server — nesting", () => {
     const Nested = () =>
       Boundary.server(
         {
+          id: "nested-outer",
           load: () => Effect.succeed({ name: "Outer", price: 1 }),
           provide: Layer.empty,
           schema: Product,
         },
-        (outer) =>
+        fromValue((outer) =>
           h.div({}, [
             outer.name,
             Boundary.server(
               {
+                id: "nested-inner",
                 load: () => Effect.succeed({ name: "Inner", price: 2 }),
                 provide: Layer.empty,
                 schema: Product,
               },
-              (inner) => h.span({}, inner.name),
+              fromValue((inner) => h.span({}, inner.name)),
             ),
           ]),
+        ),
       );
 
     const html = await Effect.runPromise(renderToStringHydratable(Nested()));
@@ -161,12 +185,13 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
   const failingBoundary = () =>
     Boundary.server(
       {
+        id: "failing",
         load: () => Effect.fail(new LoadError({ reason: "db down" })),
         provide: Layer.empty,
         schema: Product,
         failure: LoadError,
       },
-      (data) => h.div({ class: "product" }, data.name),
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
   it("plain SSR shows the fallback with no failure payload (AC-8)", async () => {
@@ -222,11 +247,12 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
     const node = Boundary.catchAllCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
       Boundary.server(
         {
+          id: "defect",
           load: () => Effect.die(new Error("kaboom")),
           provide: Layer.empty,
           schema: Product,
         },
-        (data) => h.div({}, data.name),
+        fromValue((data) => h.div({}, data.name)),
       ),
     ]);
 
@@ -243,11 +269,12 @@ describe("Boundary.server — encode failure (server-side)", () => {
     // stream failure rather than emitting a corrupt payload.
     const node = Boundary.server(
       {
+        id: "encode-failure",
         load: () => Effect.succeed({ name: 123, price: 9 } as unknown as ProductShape),
         provide: Layer.empty,
         schema: Product,
       },
-      (data) => h.div({ class: "product" }, String(data.name)),
+      fromValue((data) => h.div({ class: "product" }, String(data.name))),
     );
 
     const exit = await Effect.runPromiseExit(renderToStringHydratable(node));
@@ -260,6 +287,7 @@ describe("Boundary.server — payload escaping (XSS-safe)", () => {
     const Evil = Schema.Struct({ html: Schema.String });
     const node = Boundary.server(
       {
+        id: "xss",
         load: () => Effect.succeed({ html: "</script><script>alert(1)</script>" }),
         provide: Layer.empty,
         schema: Evil,

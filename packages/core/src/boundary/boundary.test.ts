@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Effect, Layer, Option, pipe, Schema } from "effect";
-import { FAILURE_BOUNDARY, SERVER_BOUNDARY, Boundary } from "./index";
+import { Cause, Data, Effect, Layer, Option, pipe, Schema, Stream, Subscribable } from "effect";
+import { FAILURE_BOUNDARY, SERVER_BOUNDARY, Boundary, lookup } from "./index";
 import type { Renderable, Node } from "~/combinator/types";
 import { getElementDescriptor, h } from "~/combinator";
 
@@ -308,24 +308,27 @@ describe("AC23/24: call shape", () => {
 describe("Boundary.server: descriptor shape", () => {
   const Product = Schema.Struct({ name: Schema.String });
 
-  it("returns { type: SERVER_BOUNDARY, props: { load, provide, schema, render } }", () => {
+  it("returns { type: SERVER_BOUNDARY, props: { id, load, provide, schema, render } }", () => {
     const node = Boundary.server(
       {
+        id: "shape",
         load: () => Effect.succeed({ name: "Widget" }),
         provide: Layer.empty,
         schema: Product,
       },
-      (data) => h.div(data.name),
+      () => h.div("Widget"),
     );
     const descriptor = getElementDescriptor(node);
     assert.ok(descriptor, "descriptor should be readable without running the node");
     assert.equal(descriptor.type, SERVER_BOUNDARY);
     const props = descriptor.props as {
+      id: unknown;
       load: unknown;
       provide: unknown;
       schema: unknown;
       render: unknown;
     };
+    assert.equal(props.id, "shape");
     assert.equal(typeof props.load, "function");
     assert.ok(props.provide);
     assert.ok(props.schema);
@@ -336,6 +339,7 @@ describe("Boundary.server: descriptor shape", () => {
     let loaded = false;
     const node = Boundary.server(
       {
+        id: "no-eager-load",
         load: () =>
           Effect.sync(() => {
             loaded = true;
@@ -344,9 +348,99 @@ describe("Boundary.server: descriptor shape", () => {
         provide: Layer.empty,
         schema: Product,
       },
-      (data) => h.div(data.name),
+      () => h.div("Widget"),
     );
     getElementDescriptor(node);
     assert.equal(loaded, false);
+  });
+});
+
+// ── AC-18: registry registration at descriptor-build time ─────────────────────
+
+describe("Boundary.server: registry (AC-18)", () => {
+  const Product = Schema.Struct({ name: Schema.String });
+
+  it("registers { id → { load, provide, schema, failure } } when constructed", () => {
+    const load = () => Effect.succeed({ name: "Registered" });
+    const provide = Layer.empty;
+    Boundary.server({ id: "registry-basic", load, provide, schema: Product }, () => h.div("x"));
+
+    const entry = lookup("registry-basic");
+    assert.ok(entry, "expected a registry entry under the boundary id");
+    assert.equal(typeof entry?.load, "function");
+    assert.equal(entry?.provide, provide);
+    assert.equal(entry?.schema, Product);
+    assert.equal(entry?.failure, undefined);
+  });
+
+  it("registers the `failure` schema when `load` can fail", () => {
+    class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+      reason: Schema.String,
+    }) {}
+    Boundary.server(
+      {
+        id: "registry-failure",
+        load: () => Effect.fail(new LoadError({ reason: "x" })),
+        provide: Layer.empty,
+        schema: Product,
+        failure: LoadError,
+      },
+      () => h.div("x"),
+    );
+
+    const entry = lookup("registry-failure");
+    assert.equal(entry?.failure, LoadError);
+  });
+
+  it("a duplicate id overwrites the previous entry (last registration wins)", () => {
+    const Other = Schema.Struct({ name: Schema.String });
+    Boundary.server(
+      { id: "registry-dup", load: () => Effect.succeed({ name: "first" }), schema: Product },
+      () => h.div("x"),
+    );
+    Boundary.server(
+      { id: "registry-dup", load: () => Effect.succeed({ name: "second" }), schema: Other },
+      () => h.div("x"),
+    );
+    assert.equal(lookup("registry-dup")?.schema, Other);
+  });
+
+  it("returns undefined for an unknown id", () => {
+    assert.equal(lookup("registry-never-registered"), undefined);
+  });
+
+  it("hands `render` a resource-shaped argument (value/refetch/pending/error)", () => {
+    let received: Boundary.Resource<{ readonly name: string }> | undefined;
+    const node = Boundary.server(
+      { id: "registry-resource", load: () => Effect.succeed({ name: "r" }), schema: Product },
+      (resource) => {
+        received = resource;
+        return h.div("x");
+      },
+    );
+    // `server()` does not invoke `render`; pull it off the descriptor and call it
+    // with the static resource the SSR renderer would build, proving it carries
+    // the reactive Resource shape (value/refetch/pending/error).
+    const render = getElementDescriptor(node)?.props.render as (
+      r: Boundary.Resource<{ readonly name: string }>,
+    ) => Renderable;
+    const stub: Boundary.Resource<{ readonly name: string }> = {
+      value: Subscribable.make({
+        get: Effect.succeed({ name: "r" }),
+        changes: Stream.make({ name: "r" }),
+      }),
+      refetch: Effect.void,
+      pending: Subscribable.make({ get: Effect.succeed(false), changes: Stream.make(false) }),
+      error: Subscribable.make({
+        get: Effect.succeed(Option.none()),
+        changes: Stream.make(Option.none()),
+      }),
+    };
+    render(stub);
+    assert.ok(received, "render should have been invoked with a resource");
+    assert.ok(received?.value);
+    assert.ok(received?.refetch);
+    assert.ok(received?.pending);
+    assert.ok(received?.error);
   });
 });

@@ -9,6 +9,15 @@ and the **client** replays that serialized result during `hydrate` — never run
 `load`. It gives a component a server-only data dependency while staying co-located
 in the universal tree.
 
+After hydration the region is **no longer inert**: the serialized result seeds a
+live, reactive `Resource<A>` handed to `render`, and the client can **refetch** the
+same data on demand. Refetch is **endpoint-backed** — it never runs `load` on the
+client. Each boundary registers its `load` under a required, stable `id`; the
+router exposes a same-origin data endpoint (`GET /_eui/data`) that re-runs the
+registered `load` server-side and returns the `schema`-encoded result, which the
+client decodes and pushes into the resource so `render`'s subtree patches in place.
+One `load` definition therefore serves both the SSR snapshot and client refetch.
+
 Like the other boundaries, `Boundary.server` returns a plain descriptor
 `{ type, props }` (tagged with the {@link SERVER_BOUNDARY} symbol) built via
 `elementNode`, so the renderer detects and handles it synchronously via the
@@ -27,12 +36,20 @@ DOM package; this file states the contract those renderers must honour.
   client into the nearest enclosing failure `Boundary`, reproducing the same
   fallback DOM the server rendered. Both are **replay, never retry** — `load`
   never runs on the client.
+- **Endpoint-backed client refetch** (phase 3). After a successful SSR hydrate the
+  client can re-fetch the data via the router's same-origin data endpoint and
+  update the rendered subtree in place. The endpoint re-runs the registered `load`
+  **on the server**; the client never runs `load` (so `AssertNoServerOnly` still
+  holds). Refetch requires the boundary to carry a required `id` (the registry +
+  endpoint key) and the router's data endpoint to be mounted.
 - **Out of scope:** a `load` **defect** (a `Die`, not an expected `ELoad`) is not
   replayed — it has no `Cause.failureOption`, so no failure payload is emitted and
   it propagates as before (server renders the enclosing fallback; the client
-  hydrate produces a recoverable mismatch). The prune plugin and the optional-
-  `provide` ergonomic refinement have shipped; progressive/streamed `load` and
-  client refetch remain deferred (see below).
+  hydrate produces a recoverable mismatch). **Client-first mount** of a
+  `Boundary.server` with no SSR payload is out of scope for this phase: refetch is
+  only available after an SSR hydrate seeds the resource; reach for
+  `Boundary.suspend` for client-first data. Progressive/**streamed `load`** also
+  remains deferred (see below).
 
 ---
 
@@ -44,15 +61,22 @@ DOM package; this file states the contract those renderers must honour.
    carried on the node via `elementNode` — readable through `getElementDescriptor`
    **without running the node** (and therefore without running `load`).
 2. `props` contains:
+   - `id: string` — **required**, stable identity of the boundary. It is the key
+     under which `load`/`provide`/`schema`/`failure` are registered (see AC-18) and
+     the key the client refetch passes to the data endpoint. Author-supplied so it
+     is stable across the SSR render and any later refetch, and across server
+     processes/instances.
    - `load: () => Effect.Effect<A, ELoad, RServer>` — a **thunk** (defers
      construction so `load` is built/run only on the server)
    - `provide?: Layer.Layer<RServer>` — discharges `load`'s server-only
      requirements; **required when `RServer ≠ never`**, omittable when `load` has
      no requirements (defaults to `Layer.empty`)
-   - `schema: Schema.Schema<A, any>` — the wire contract for `A`
+   - `schema: Schema.Schema<A, any>` — the wire contract for `A`, used for both the
+     inline SSR payload and the refetch endpoint envelope
    - `failure?: Schema.Schema<ELoad, any>` — the wire contract for a typed `load`
      failure; **required when `ELoad ≠ never`**, omittable when `load` cannot fail
-   - `render: (data: A) => C` — builds the subtree from the loaded data
+   - `render: (resource: Resource<A>) => C` — builds the subtree from a reactive
+     `Resource<A>` (see AC-17), **not** a bare `A`.
 3. The `SERVER_BOUNDARY` symbol is exported from `@effect-ui/core` for renderers.
 
 ### Signature / channel algebra
@@ -98,9 +122,11 @@ DOM package; this file states the contract those renderers must honour.
 12. **No-JS:** the server emits full `render(data)` HTML, complete without JS; the
     inline payload is consumed only by `hydrate`.
 13. **Client (`hydrate`):** does **not** run `load`. Reads the inline payload at the
-    cursor, `JSON.parse` → `Schema.decode` → `data`, hydrates `render(data)` against
-    the adopted DOM, and steps over/removes the payload script so the cursor stays
-    aligned. **Replays, never retries.**
+    cursor, `JSON.parse` → `Schema.decode` → `data`, **seeds a live `Resource<A>`**
+    with `data` (AC-17), hydrates `render(resource)` against the adopted DOM, and
+    steps over/removes the payload script so the cursor stays aligned. The seeded
+    `value` emits `data` first, so the adopt-walk matches the server DOM. **Replays,
+    never retries `load`**; the region stays live for subsequent `refetch`.
 14. Region location during `hydrate` is **positional** (the payload sits at the
     cursor inside the region), matching the determinism the renderer already relies
     on for suspense / `List.each`.
@@ -133,6 +159,44 @@ DOM package; this file states the contract those renderers must honour.
     indexed; it degrades to a recoverable hydration mismatch (as a missing
     payload would).
 
+### Client refetch (phase 3)
+
+17. **`Resource<A>` handed to `render`.** `render` receives a `Resource<A>`, not a
+    bare `A`:
+    - `value: Subscribable.Subscribable<A>` — the current data. On the **server**
+      and on the **first client paint after hydrate** it is seeded with the SSR
+      `data` (await-first, emits the seed immediately), so SSR HTML and the adopted
+      DOM are byte-identical — no fallback flash. A successful refetch pushes the
+      new value here, so the subtree patches in place via the renderer's existing
+      reactive-child machinery.
+    - `refetch: Effect.Effect<void>` — triggers an endpoint-backed reload (client
+      only; a no-op on the server). It calls the router data endpoint, decodes the
+      envelope via `schema`, and sets `value`.
+    - `pending: Subscribable.Subscribable<boolean>` — `true` while a refetch is in
+      flight (`false` on server / before any refetch).
+    - `error: Subscribable.Subscribable<Option.Option<unknown>>` — `Some` with the
+      last refetch error, else `None`. A failed refetch leaves the previous `value`
+      intact (stale-on-error); it does **not** unmount the subtree or raise into an
+      enclosing failure `Boundary`. (First-load failure is still the SSR/replay path
+      via `failure`; refetch failures are surfaced through this channel for inline
+      handling, never via suspense — refetch must not flash a fallback.)
+18. **Registry.** Constructing a `Boundary.server` registers
+    `{ id → { load, provide, schema, failure } }` in a module-level registry
+    (`~/boundary/registry`) at **descriptor-build time**, independent of render, so
+    any server process that has loaded the module graph can serve a refetch for that
+    `id`. The registry is consulted only on the **server** (by the router data
+    endpoint). On the **client** the prune plugin has stripped `load`/`provide`, so
+    the client-side registry entry holds `undefined` for them — harmless, since the
+    client never serves the endpoint. A duplicate `id` registration overwrites the
+    previous entry (last registration wins; authors must keep `id`s unique).
+19. **Endpoint replay (honoured by `@effect-ui/router`; spec'd there).** The router
+    exposes `GET /_eui/data?id=<id>&params=<json>` returning a `schema`-encoded
+    envelope. The handler looks up `id` in the registry, runs
+    `Effect.provide(load(), provide)` **on the server**, `Schema.encode`s via the
+    boundary's `schema`, and returns it. An unknown `id` ⇒ 404 (`BoundaryDataNotFound`).
+    `load`/`provide`/`RServer` never leave the server; the client only ever holds a
+    decoded `A`. See `packages/router/src/data-endpoint.specs.md`.
+
 ### Edge cases
 
 - **Nesting:** a `Boundary.server` nested inside another emits its payload
@@ -160,15 +224,23 @@ DOM package; this file states the contract those renderers must honour.
 ```ts
 export const SERVER_BOUNDARY: unique symbol;
 
+interface Resource<A> {
+  readonly value: Subscribable.Subscribable<A>;
+  readonly refetch: Effect.Effect<void>;
+  readonly pending: Subscribable.Subscribable<boolean>;
+  readonly error: Subscribable.Subscribable<Option.Option<unknown>>;
+}
+
 Boundary.server<A, ELoad, RServer, C extends Node<any, any>>(
   props: {
+    id: string;
     load: () => Effect.Effect<A, ELoad, RServer>;
     provide?: Layer.Layer<RServer>;
     schema: Schema.Schema<A, any>;
     failure?: Schema.Schema<ELoad, any>;
   } & ([ELoad] extends [never] ? unknown : { failure: Schema.Schema<ELoad, any> })
     & ([RServer] extends [never] ? unknown : { provide: Layer.Layer<RServer> }),
-  render: (data: A) => C,
+  render: (resource: Resource<A>) => C,
 ): Node<Node.Error<C> | ELoad, Node.Context<C>>;
 
 // Server-only dependency brand
@@ -188,9 +260,8 @@ handler, which holds the cause and renders the fallback, never inside the
 discarded children buffer.)
 
 The phases below remain intentionally out of scope; each needs its own spec
-discussion before any code. They are **not** versioned `vN` — v1/v2 above are the
-shipped phases; these are the remaining roadmap in rough priority order. **The
-next session starts with phase 2, progressive load & client refetch.**
+discussion before any code. They are **not** versioned `vN` — v1/v2/v3 above are the
+shipped phases; these are the remaining roadmap in rough priority order.
 
 ### 1. Prune plugin — bundle-size correctness (SHIPPED)
 
@@ -206,14 +277,23 @@ the first. The optional-`provide` overload has since shipped (phase 3); `VITE_`
 env gating remains a follow-on. (Until a project adopts the plugin, the unpruned
 client bundle is runtime-safe-but-larger.)
 
-### 2. Progressive load & client refetch
+### 2. Endpoint-backed client refetch (SHIPPED — phase 3)
+
+Shipped: after a successful SSR hydrate the region is a live, reactive
+`Resource<A>` and the client can `refetch` on demand. Refetch is **endpoint-backed**
+— it re-runs the registered `load` on the **server** via the router's same-origin
+`GET /_eui/data` endpoint and pushes the decoded result into the resource, so the
+subtree patches in place. `load` never runs on the client (`AssertNoServerOnly`
+holds). See AC-17 … AC-19 above and `packages/router/src/data-endpoint.specs.md`.
+
+### 3. Progressive load & client-first mount
 
 - **Streamed `load`** returning a `Stream` (stream-the-shell-then-fill). Today's
   workaround: nest `Boundary.server` inside `Boundary.suspend`, which already
   owns the fallback + streaming-patch machinery.
-- **Client-side mutation/refetch** of server data (re-running `load` on the
-  client). v1 is strictly replay-only; reach for ordinary client services to
-  refresh.
+- **Client-first mount** (mounting a `Boundary.server` with no SSR payload, fetching
+  on mount). Out of scope for phase 3 — refetch is only available after an SSR
+  hydrate seeds the resource. Reach for `Boundary.suspend` for client-first data.
 
 ### 3. Ergonomic polish
 

@@ -7,7 +7,7 @@ import {
   SERVER_BOUNDARY,
   SUSPENSE_BOUNDARY,
 } from "@effect-ui/core";
-import type { ElementDescriptor, Renderable } from "@effect-ui/core";
+import type { Boundary, ElementDescriptor, Renderable } from "@effect-ui/core";
 import { Effect, type Schema } from "effect";
 
 /**
@@ -31,7 +31,7 @@ export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
  */
 export interface ServerBoundaryReplayProps {
   readonly schema: Schema.Schema<unknown, unknown>;
-  readonly render: (data: unknown) => Renderable;
+  readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
   readonly failure?: Schema.Schema<unknown, unknown>;
 }
 

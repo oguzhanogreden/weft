@@ -107,12 +107,16 @@ export const getFailingLoadAttempts = (): number => failingLoadAttempts;
 export const App = () =>
   Boundary.server(
     {
+      id: "product",
       load: () => Effect.flatMap(Database, (db) => db.getProduct()),
       provide: DatabaseLive,
       schema: Product,
     },
-    (product) =>
+    (resource) =>
       Effect.gen(function* () {
+        // Read the seeded value (await-first: resolves to the SSR `data` first),
+        // so the product fields render byte-identically on server and client.
+        const product = yield* resource.value.get;
         const qty = yield* SubscriptionRef.make(1);
         const increment = () => SubscriptionRef.update(qty, (n) => n + 1);
         const decrement = () => SubscriptionRef.update(qty, (n) => Math.max(1, n - 1));
@@ -153,6 +157,7 @@ export const FailingApp = () =>
     [
       Boundary.server(
         {
+          id: "failing-product",
           load: () =>
             Effect.sync(() => {
               failingLoadAttempts += 1;
@@ -165,7 +170,13 @@ export const FailingApp = () =>
           schema: Product,
           failure: ProductLoadError,
         },
-        (product) => h.div({ class: "product" }, product.name),
+        // `load` fails, so `render` never runs (the enclosing catchAll fallback is
+        // shown); read the seeded value to satisfy the resource-shaped signature.
+        (resource) =>
+          Effect.gen(function* () {
+            const product = yield* resource.value.get;
+            return yield* h.div({ class: "product" }, product.name);
+          }),
       ),
     ],
   );

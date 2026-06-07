@@ -1,6 +1,12 @@
-import { Cause, type Effect, Layer, Option, type Schema } from "effect";
+import { Cause, type Effect, Layer, Option, type Schema, type Subscribable } from "effect";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
+import { register } from "./registry";
+
+export { register, lookup } from "./registry";
+export type { RegisteredBoundary } from "./registry";
+export { BoundaryDataClientTag } from "./data-client";
+export type { BoundaryDataClient } from "./data-client";
 
 /**
  * Unique type tag used by renderers to identify a failure `Boundary` descriptor.
@@ -256,6 +262,41 @@ export namespace Boundary {
   }
 
   /**
+   * Reactive handle handed to a {@link server} boundary's `render`. After
+   * hydrate the region is no longer inert: `value` is seeded with the SSR
+   * payload and the client can {@link Resource.refetch} the same data on demand,
+   * patching the rendered subtree in place via the renderer's existing
+   * reactive-child machinery.
+   *
+   * On the **server** and on the **first client paint after hydrate** `value`
+   * emits the SSR `data` first (await-first), so SSR HTML and the adopted DOM are
+   * byte-identical — no fallback flash.
+   *
+   * @typeParam A - The loaded data shape.
+   */
+  export interface Resource<A> {
+    /**
+     * The current data. Seeded with the SSR `data`; a successful refetch pushes
+     * the new value here so the subtree patches in place.
+     */
+    readonly value: Subscribable.Subscribable<A>;
+    /**
+     * Triggers an endpoint-backed reload (client only; a no-op on the server).
+     * Calls the router data endpoint, decodes the envelope via `schema`, and sets
+     * {@link Resource.value}.
+     */
+    readonly refetch: Effect.Effect<void>;
+    /** `true` while a refetch is in flight (`false` on the server / before any refetch). */
+    readonly pending: Subscribable.Subscribable<boolean>;
+    /**
+     * `Some` with the last refetch error, else `None`. A failed refetch leaves
+     * the previous `value` intact (stale-on-error) — it does **not** unmount the
+     * subtree or raise into an enclosing failure `Boundary`.
+     */
+    readonly error: Subscribable.Subscribable<Option.Option<unknown>>;
+  }
+
+  /**
    * Props for the {@link server} boundary — read by the server renderer to run
    * `load`, by both renderers to encode/decode through `schema`, and (via
    * `render`) to build the subtree from the loaded data.
@@ -265,6 +306,14 @@ export namespace Boundary {
    * @typeParam RServer - Server-only requirements of `load`, discharged by `provide`.
    */
   export interface ServerProps<A, ELoad, RServer> {
+    /**
+     * **Required**, stable identity of the boundary. It is the key under which
+     * `load`/`provide`/`schema`/`failure` are registered (see {@link register})
+     * and the key the client refetch passes to the router data endpoint.
+     * Author-supplied so it is stable across the SSR render and any later
+     * refetch, and across server processes/instances.
+     */
+    readonly id: string;
     /**
      * Thunk producing the server `load` effect. Deferred so it is constructed and
      * run **only on the server** — never during client `hydrate`.
@@ -338,18 +387,29 @@ export namespace Boundary {
     props: ServerProps<A, ELoad, RServer> &
       ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }) &
       ([RServer] extends [never] ? unknown : { readonly provide: Layer.Layer<RServer> }),
-    render: (data: A) => C,
+    render: (resource: Resource<A>) => C,
   ): Node<Node.Error<C> | ELoad, Node.Context<C>> {
+    // `provide` is omittable only when `RServer = never` (the signature requires
+    // it otherwise), so default it to `Layer.empty` to keep the descriptor's
+    // runtime contract — the renderer always `Effect.provide`s a real layer.
+    const provide = props.provide ?? Layer.empty;
+    // Register the load definition under `id` at descriptor-build time (not at
+    // render), so any server process that loaded the module graph can serve a
+    // refetch. On a pruned client bundle `load`/`provide` are stripped, leaving
+    // the client entry harmlessly partial — the client never serves the endpoint.
+    register(props.id, {
+      load: props.load as () => Effect.Effect<unknown, unknown, unknown>,
+      provide: provide as Layer.Layer<unknown>,
+      schema: props.schema,
+      failure: props.failure,
+    });
     // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it
     // synchronously via the {type, props} branch. RServer is consumed by
     // `provide`, so it is absent from the returned R; no Exclude is applied to
     // render's R, leaving any accidental server-tag leak visible for hydrate.
-    // `provide` is omittable only when `RServer = never` (the signature requires
-    // it otherwise), so default it to `Layer.empty` to keep the descriptor's
-    // runtime contract — the renderer always `Effect.provide`s a real layer.
     return elementNode({
       type: SERVER_BOUNDARY,
-      props: { ...props, provide: props.provide ?? Layer.empty, render } as Record<string, unknown>,
+      props: { ...props, provide, render } as Record<string, unknown>,
     });
   }
 }

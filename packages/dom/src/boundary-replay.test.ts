@@ -19,8 +19,13 @@ const S = Schema.Struct({ name: Schema.String });
  */
 const serverBoundary = (name: string) => {
   const node = Boundary.server(
-    { load: () => Effect.succeed({ name }), provide: Layer.empty, schema: S },
-    (d) => h.div({}, d.name),
+    {
+      id: `boundary-${name}`,
+      load: () => Effect.succeed({ name }),
+      provide: Layer.empty,
+      schema: S,
+    },
+    () => h.div({}, name),
   );
   const props = getElementDescriptor(node)?.props;
   assert.ok(props, "expected a server-boundary descriptor");
@@ -136,7 +141,12 @@ describe("collectServerBoundaries — AC-BR4: does not descend data-dependent re
   it("does not descend another Boundary.server's render output", () => {
     const inner = serverBoundary("inner");
     const outer = Boundary.server(
-      { load: () => Effect.succeed({ name: "outer" }), provide: Layer.empty, schema: S },
+      {
+        id: "outer",
+        load: () => Effect.succeed({ name: "outer" }),
+        provide: Layer.empty,
+        schema: S,
+      },
       // The inner boundary is only produced once `load` resolves — not static.
       () => inner.node,
     );

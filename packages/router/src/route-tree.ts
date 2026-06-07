@@ -9,6 +9,21 @@ export type Fields = Schema.Struct.Fields;
 export type FieldsType<F extends Fields> = Schema.Struct.Type<F>;
 
 /**
+ * The handler-arg props a leaf `component` may declare: the live match's decoded
+ * path params and query, derived from the route's `path` / `query` {@link Fields}.
+ * The router passes `{ path, query }` into the leaf slot at render time (the
+ * {@link makeRoute} props-form overload), so a page can read them directly as props
+ * instead of via the `Router.params` / `Router.query` dependency-injection
+ * accessors. Layouts and deeper nodes — which can't take handler args — keep DI.
+ */
+export interface RouteHandlerProps<Path extends Fields = {}, Query extends Fields = {}> {
+  /** The live match's decoded path params (`Type` side of the route's `path`). */
+  readonly path: FieldsType<Path>;
+  /** The live match's decoded query (`Type` side of the route's `query`). */
+  readonly query: FieldsType<Query>;
+}
+
+/**
  * The shape of a route/layout `component` slot: a callable producing a {@link Node},
  * invoked by the router at render time. It accepts both a plain zero-arg thunk
  * (`() => h.div(…)`) and a {@link Component} produced by `Component.make` /
@@ -105,12 +120,27 @@ export type SubtreeE<C extends readonly TreeNode[]> = TreeE<C[number]>;
 export type SubtreeR<C extends readonly TreeNode[]> = TreeR<C[number]>;
 
 /**
- * Declares a leaf page. The `component` *is* the route handler — a thunk
- * `() => Node` the router invokes at render time, reading its params via
- * `Router.params` / `Router.query`; its error / requirement channels propagate up
- * the tree. Use `Component.make` / `Component.gen` (or a plain `() => …`).
+ * Declares a leaf page. The `component` *is* the route handler — a thunk the
+ * router invokes at render time; its error / requirement channels propagate up the
+ * tree. Two authoring forms are accepted:
  *
- * @example
+ * - **Handler-arg props** — the slot declares `(props: {@link RouteHandlerProps})`
+ *   and the router passes the live match's decoded `{ path, query }` in directly
+ *   (first overload; `path`/`query` are inferred from the route's `path`/`query`
+ *   fields). A plain zero-arg thunk works too — it just ignores the props.
+ * - **Dependency injection** — a `Component.make` / `Component.gen` component that
+ *   reads the live match via `Router.params` / `Router.query` (second overload).
+ *
+ * @example Handler-arg props (decoded `{ path, query }`)
+ * ```ts
+ * Router.route("users/:id", {
+ *   path: { id: Schema.NumberFromString },
+ *   query: { tab: Schema.optional(Schema.String) },
+ *   component: ({ path, query }) => h.div({}, `User ${path.id} (${query.tab ?? "info"})`),
+ * });
+ * ```
+ *
+ * @example Dependency injection (`Router.params` / a `Component`)
  * ```ts
  * Router.route("about", { component: Component.make(() => h.h1({}, "About")) });
  * Router.route("users/:id", {
@@ -125,6 +155,19 @@ export type SubtreeR<C extends readonly TreeNode[]> = TreeR<C[number]>;
 export function makeRoute<
   Path extends Fields = {},
   Query extends Fields = {},
+  E = never,
+  R = never,
+>(
+  segment: string,
+  config: {
+    readonly path?: Path;
+    readonly query?: Query;
+    readonly component: (props: RouteHandlerProps<Path, Query>) => Node<E, R>;
+  },
+): RouteNode<Path, Query, E, R>;
+export function makeRoute<
+  Path extends Fields = {},
+  Query extends Fields = {},
   S extends ComponentSlot = ComponentSlot,
 >(
   segment: string,
@@ -133,12 +176,20 @@ export function makeRoute<
     readonly query?: Query;
     readonly component: S;
   },
-): RouteNode<Path, Query, Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>> {
+): RouteNode<Path, Query, Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>>;
+export function makeRoute(
+  segment: string,
+  config: {
+    readonly path?: Fields;
+    readonly query?: Fields;
+    readonly component: ComponentSlot;
+  },
+): RouteNode<any, any, any, any> {
   return {
     _tag: "Route",
     segment,
-    path: (config.path ?? {}) as Path,
-    query: (config.query ?? {}) as Query,
+    path: config.path ?? {},
+    query: config.query ?? {},
     component: config.component,
   };
 }

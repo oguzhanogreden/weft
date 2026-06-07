@@ -10,7 +10,19 @@ import {
   type Renderable,
 } from "@effect-ui/core";
 import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
-import { Cause, Effect, Exit, type Layer, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
+import {
+  Cause,
+  Effect,
+  Exit,
+  type Layer,
+  Option,
+  Queue,
+  Ref,
+  Schema,
+  Scope,
+  Stream,
+  Subscribable,
+} from "effect";
 import {
   listItemEndText,
   listItemStartText,
@@ -269,7 +281,7 @@ interface ServerBoundarySSRProps {
   readonly load: () => Effect.Effect<unknown, Error, unknown>;
   readonly provide: Layer.Layer<unknown, never, never>;
   readonly schema: Schema.Schema<unknown, unknown>;
-  readonly render: (data: unknown) => Renderable;
+  readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
   /**
    * Wire contract for a typed `load` failure (typed-failure replay). Present when
    * `ELoad ≠ never`; used to `Schema.encode` the error for the failure payload.
@@ -310,6 +322,26 @@ function stashServerBoundaryFailure(
 }
 
 /**
+ * Builds the **static-seeded** {@link Boundary.Resource} handed to `render` on the
+ * server. `value` is a static `Subscribable` around the loaded `data` (await-first
+ * `get` and a single-emission `changes`), so the reactive-child render seam takes
+ * `data` as its first emission and the SSR HTML is byte-identical to the hydrated
+ * DOM. `refetch` is a no-op (the server is the data origin, not a client), `pending`
+ * is constant `false`, and `error` is constant `None`.
+ */
+function staticResource(data: unknown): Boundary.Resource<unknown> {
+  return {
+    value: Subscribable.make({ get: Effect.succeed(data), changes: Stream.make(data) }),
+    refetch: Effect.void,
+    pending: Subscribable.make({ get: Effect.succeed(false), changes: Stream.make(false) }),
+    error: Subscribable.make({
+      get: Effect.succeed(Option.none()),
+      changes: Stream.make(Option.none()),
+    }),
+  };
+}
+
+/**
  * Renders a `Boundary.server` descriptor for SSR (success path). Runs
  * `Effect.provide(load(), provide)` to obtain `data` — the region **blocks** on
  * it, like `firstListEmission` — then renders `render(data)` HTML in place.
@@ -338,7 +370,7 @@ function renderServerBoundarySSR(
       const data = yield* Effect.provide(props.load(), props.provide).pipe(
         Effect.catchAllCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
       );
-      const childrenHtml = renderFn(props.render(data));
+      const childrenHtml = renderFn(props.render(staticResource(data)));
       if (!emitPayload) {
         return childrenHtml;
       }

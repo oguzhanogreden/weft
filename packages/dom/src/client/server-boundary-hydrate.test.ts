@@ -6,7 +6,23 @@ import { describe, it } from "vite-plus/test";
 import { HydrationMismatchError } from "~/data";
 import { renderToStringHydratable } from "~/server";
 import { hydrate } from "./render";
+import type { Node } from "@effect-ui/core";
 import type { Renderable } from "@effect-ui/core/types";
+
+/**
+ * Adapts a v1-style `(data) => Node` render to the v3 `(resource) => Node`
+ * signature by reading the resource's **seeded** value once. The replay seeds the
+ * resource with the decoded payload, so `value.get` resolves synchronously to the
+ * loaded data and the hydrated HTML is byte-identical to the bare-data render
+ * these replay tests were written against (no reactive-region markers).
+ */
+const fromValue =
+  <A, E, R>(f: (a: A) => Node<E, R>) =>
+  (resource: Boundary.Resource<A>) =>
+    Effect.gen(function* () {
+      const data = yield* resource.value.get;
+      return yield* f(data);
+    });
 
 // ---------------------------------------------------------------------------
 // Test setup
@@ -80,11 +96,12 @@ describe("Boundary.server hydrate — replay, not retry", () => {
     const { Database, layer } = makeDatabase();
     const app = Boundary.server(
       {
+        id: "replay-decode",
         load: () => Effect.flatMap(Database, (db) => db.getProduct()),
         provide: layer,
         schema: Product,
       },
-      (data) => h.div({ class: "product" }, data.name),
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
     const root = await seedServerHtml(app);
@@ -105,11 +122,12 @@ describe("Boundary.server hydrate — replay, not retry", () => {
     const { Database, layer, state } = makeDatabase();
     const app = Boundary.server(
       {
+        id: "replay-no-load",
         load: () => Effect.flatMap(Database, (db) => db.getProduct()),
         provide: layer,
         schema: Product,
       },
-      (data) => h.div({ class: "product" }, data.name),
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
     const root = await seedServerHtml(app);
@@ -126,11 +144,12 @@ describe("Boundary.server hydrate — replay, not retry", () => {
     createTestDOM();
     const app = Boundary.server(
       {
+        id: "replay-remove-script",
         load: () => Effect.succeed({ name: "Widget", price: 9 }),
         provide: Layer.empty,
         schema: Product,
       },
-      (data) => h.div({ class: "product" }, data.name),
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
     const root = await seedServerHtml(app);
@@ -152,15 +171,17 @@ describe("Boundary.server hydrate — interactivity", () => {
     let fired = 0;
     const app = Boundary.server(
       {
+        id: "interactivity",
         load: () => Effect.succeed({ name: "Widget", price: 9 }),
         provide: Layer.empty,
         schema: Product,
       },
-      (data) =>
+      fromValue((data) =>
         h.div({ class: "product" }, [
           h.span({}, data.name),
           h.button({ onclick: () => Effect.sync(() => void fired++) }, "buy"),
         ]),
+      ),
     );
 
     const root = await seedServerHtml(app);
@@ -185,11 +206,12 @@ describe("Boundary.server hydrate — cursor alignment", () => {
     const app = h.div({}, [
       Boundary.server(
         {
+          id: "cursor-align",
           load: () => Effect.succeed({ name: "Widget", price: 9 }),
           provide: Layer.empty,
           schema: Product,
         },
-        (data) => h.span({ class: "product" }, data.name),
+        fromValue((data) => h.span({ class: "product" }, data.name)),
       ),
       h.p({ class: "after" }, "after"),
     ]);
@@ -211,22 +233,25 @@ describe("Boundary.server hydrate — cursor alignment", () => {
     createTestDOM();
     const app = Boundary.server(
       {
+        id: "nested-outer",
         load: () => Effect.succeed({ name: "Outer", price: 1 }),
         provide: Layer.empty,
         schema: Product,
       },
-      (outer) =>
+      fromValue((outer) =>
         h.div({ class: "outer" }, [
           outer.name,
           Boundary.server(
             {
+              id: "nested-inner",
               load: () => Effect.succeed({ name: "Inner", price: 2 }),
               provide: Layer.empty,
               schema: Product,
             },
-            (inner) => h.span({ class: "inner" }, inner.name),
+            fromValue((inner) => h.span({ class: "inner" }, inner.name)),
           ),
         ]),
+      ),
     );
 
     const root = await seedServerHtml(app);
@@ -247,11 +272,12 @@ describe("Boundary.server hydrate — payload divergence", () => {
   const boundaryApp = () =>
     Boundary.server(
       {
+        id: "divergence",
         load: () => Effect.succeed({ name: "Widget", price: 9 }),
         provide: Layer.empty,
         schema: Product,
       },
-      (data) => h.div({ class: "product" }, data.name),
+      fromValue((data) => h.div({ class: "product" }, data.name)),
     );
 
   it("fails with HydrationMismatchError when the payload script is missing", async () => {
@@ -307,6 +333,7 @@ describe("Boundary.server hydrate — typed-failure replay", () => {
     Boundary.catchAll({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
       Boundary.server(
         {
+          id: "failure-replay",
           load: () =>
             Effect.sync(() => {
               calls.n++;
@@ -315,7 +342,7 @@ describe("Boundary.server hydrate — typed-failure replay", () => {
           schema: Product,
           failure: LoadError,
         },
-        (data) => h.div({ class: "product" }, data.name),
+        fromValue((data) => h.div({ class: "product" }, data.name)),
       ),
     ]);
 

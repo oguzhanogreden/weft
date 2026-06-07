@@ -52,31 +52,45 @@ const User = Router.route("users/:id", {
 
 > Authoring components with `Component.make` / `Component.gen` keeps every slot fully typed: the router never sees a `Node<any, any>`, and each component's `E`/`R` channels aggregate up through `Router.layout` / `Router.router` into the sealed `RouterDef`.
 
-## Params and query by dependency injection
+## Reading the match: handler-arg props vs. injection
 
-The current match's params and query are delivered by **dependency injection**, not callback arguments. Any component — not just the leaf — reads them:
+A leaf page reads the current match's decoded `path` / `query` in **either** of two forms.
+
+### Handler-arg props (leaf pages)
+
+The router passes the decoded `{ path, query }` straight into a leaf `component` as props (typed `RouteHandlerProps<Path, Query>`, inferred from the route's `path` / `query` fields). No `Router` access, no validation step — just read the props:
 
 ```typescript
-import { Schema } from "effect";
-
 const idParam = { id: Schema.NumberFromString };
 const sortQuery = { sort: Schema.optional(Schema.String) };
 
 Router.route("users/:id/posts", {
   path: idParam,
   query: sortQuery,
-  component: Component.gen(function* () {
-    const { id } = yield* Router.params(idParam);
-    const { sort } = yield* Router.query(sortQuery);
-    return yield* h.section({ id: "page" }, [
-      h.h2(`Posts for user ${id}`),
-      h.p(`sort: ${sort ?? "none"}`),
-    ]);
-  }),
+  // `path.id` is already a number; `query.sort` is `string | undefined`.
+  component: ({ path, query }) =>
+    h.section([h.h2(`Posts for user ${path.id}`), h.p(`sort: ${query.sort ?? "none"}`)]),
 });
 ```
 
-`Router.params(fields)` / `Router.query(fields)` read the live match, pick the requested `fields` keys, and validate them against `Schema.Struct(fields)`. They return the typed values, or fail with a tagged [`RouterParamsError`](#errors) (carrying `source: "path" | "query"` and the requested `keys`) when no route matches or a key is missing/invalid. That error bubbles into the app node's aggregate `E`, so a user may recover it with `Boundary.catchTag("RouterParamsError", …)`.
+This is the most direct form for a leaf. A plain zero-arg thunk works too — it just ignores the props.
+
+### Dependency injection (layouts and deep nodes)
+
+A **layout** sits above the leaf and so can't take handler args; it reads the match by **dependency injection** instead. `Router.params(fields)` / `Router.query(fields)` are readable from **any** component:
+
+```typescript
+// A /users/:id layout (above the leaf) reads `:id` by injection.
+const UserShell = Component.gen(function* () {
+  const { id } = yield* Router.params(idParam);
+  const outlet = yield* Router.Outlet;
+  return yield* h.div({ class: "user" }, [h.h1(`User ${id}`), outlet]);
+});
+```
+
+`Router.params(fields)` / `Router.query(fields)` read the live match and pick the requested `fields` keys (already decoded by the matcher, so no re-validation). They return the typed values, or fail with a tagged [`RouterParamsError`](#errors) (carrying `source: "path" | "query"` and the requested `keys`) when no route matches. That error bubbles into the app node's aggregate `E`, so a user may recover it with `Boundary.catchTag("RouterParamsError", …)`.
+
+> **Reactive accessors.** `Router.paramsStream(fields)` / `Router.queryStream(fields)` are the reactive counterparts — each resolves a `Subscribable` derived from `currentMatch.changes`, so a component can render `[(yield* Router.queryStream(sortQuery)).changes]` and update **in place** even when the same leaf stays mounted (the query-only case `Router.query` would miss). See [Programmatic navigation](#programmatic-navigation).
 
 ## Layouts and the outlet
 
@@ -174,6 +188,42 @@ For a client-only app (no SSR), swap `hydrate` for `mount` — everything else i
 
 A plain `h.a({ href })` to a same-origin, route-matching URL performs SPA navigation when clicked — no full page load. The interceptor leaves the browser's native behaviour untouched for modified clicks (ctrl/meta/shift/alt or non-left button), `target=_blank`, `download`, external origins, same-document (hash-only) navigations, and hrefs that don't resolve to a route. You don't wire anything up: `RouterLive` installs the delegated listener for the layer's lifetime and removes it on teardown.
 
+## Programmatic navigation
+
+For navigation that isn't a link click, `@effect-ui/router/client` exposes typed helpers. They run as `Effect`s within the `RouterLive` layer (except `back` / `forward`, which only touch `window.history`):
+
+```typescript
+import {
+  back,
+  forward,
+  navigate,
+  patchQuery,
+  push,
+  replace,
+  setQuery,
+} from "@effect-ui/router/client";
+
+// Typed: build the URL from a leaf ref + decoded args (same rules as `href`).
+yield * navigate(postsRoute, { path: { id: 42 }, query: { sort: "new" } });
+yield * navigate(settingsRoute, { path: { id: 42 } }, { replace: true });
+
+// Raw path + search string.
+yield * push("/users/1/posts?sort=new");
+yield * replace("/users/1/settings");
+
+// History stepping (popstate resyncs the router).
+yield * back();
+yield * forward();
+
+// Change only the current route's query, re-encoded through its query schema.
+// The path is kept, so the leaf stays mounted and `queryStream` readers update.
+yield * setQuery({ sort: "old" }); // replaces the query
+yield * patchQuery({ sort: "old" }); // merges into the current query
+```
+
+- **`navigate(ref, args)`** builds the URL via [`href`](#type-safe-links-with-href) (so it round-trips with the matcher) and pushes — or, with `{ replace: true }`, replaces — the History entry. `args` follows the same requiredness rules as `href`.
+- **`setQuery` / `patchQuery`** keep the path, so the active leaf is never remounted — pair them with `Router.queryStream` for in-place reactive updates. They are a no-op when no route is matched.
+
 ## Server setup
 
 On the server, `RouterServer` matches a request URL, builds a fixed-match `Router`, renders `RouterApp` to hydratable HTML inside a **document shell**, and reports a status (404 when no route matches or a page raises `RouterNotFound`).
@@ -209,9 +259,12 @@ export const handler = RouterServer.toWebHandler(App, { document: documentShell 
 
 `render` provides both `Router.Outlet` (the app, per request) and `Router` (so the shell may read params), and renders through `renderToStringHydratable` so the client can `hydrate` in place.
 
-### `@effect/platform` compilation target
+### `@effect/platform` is the spine
 
-The tree is the authoring surface; `HttpApi` is the **compilation target**. `toHttpApi(def)` (from `@effect-ui/router/server`) generates a flat `HttpApi` — a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `setPath(pathSchema)` and `setUrlParams(querySchema)` — for serving via `HttpApiBuilder` or deriving an `HttpApiClient`.
+The tree is the authoring surface, but `@effect/platform`'s `HttpApi` is the **single source of truth** for paths and schemas. Sealing the tree with `Router.router(...)` builds it once (`buildHttpApi`) and stamps it onto `def.httpApi`: a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `setPath(pathSchema)`, `setUrlParams(querySchema)`, and a `RouterNotFound → 404` error. Both sides read that one definition, so they always agree:
+
+- **Server** — `RouterServer` dispatches through `HttpApiBuilder` (platform owns request→leaf matching, path/query decode, and the 404 status).
+- **Client** — `RouterLive` derives a real `HttpApiClient` from the same `def.httpApi` (exposed as `Router.httpApiClient`) for network work. SPA URL→leaf resolution stays **local** (there is no public client-side "match this URL against my `HttpApi`" utility in platform), fed from the same endpoint definitions so it never drifts from the server.
 
 ## Errors
 
@@ -229,7 +282,7 @@ Initial SSR navigation works end to end: the server renders and inlines the `Bou
 ## See also
 
 - [`@effect-ui/router` API reference](../api/router.md)
-- [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, and the `@effect/platform` compilation target
+- [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `@effect/platform` spine
 - [Component Authoring](./component-authoring.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
 - [Server-Side Rendering](./server-side-rendering.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.server`
 - [`packages/router/router.specs.md`](../../packages/router/router.specs.md) — the full specification

@@ -14,13 +14,21 @@ is positioned on the inline `<script type="application/json">…</script>` paylo
 the hydratable server renderer emitted at the region cursor (followed by the
 `render(data)` HTML). The client renderer:
 
-1. **Does not run `load`.** It replays the server result — never retries.
+1. **Does not run `load`.** It replays the server result — never retries `load`.
 2. Reads the payload's text content, `JSON.parse` → `Schema.decode` → `data`.
-3. Hydrates `render(data)` against the adopted DOM starting at
+3. **Seeds a live `Resource<A>`** with `data`: a `SubscriptionRef` holding the
+   decoded value, exposed as `resource.value` (await-first, emits the seed first),
+   plus `refetch`/`pending`/`error`. `refetch` reads `Router.httpApiClient` and
+   calls the data endpoint for this boundary's `id`, decodes the envelope via
+   `schema`, and `SubscriptionRef.set`s `value`.
+4. Hydrates `render(resource)` against the adopted DOM starting at
    `script.nextSibling`, wiring event handlers and reactive subscriptions in
-   place (node identity preserved, no re-render).
-4. Removes the payload script (it is consumed only by hydration) and returns the
-   cursor following `render(data)`, so the surrounding adopt-walk stays aligned.
+   place (node identity preserved, no re-render). `resource.value` renders through
+   the renderer's existing reactive-child path; its first emission is the seeded
+   `data`, so the adopt-walk matches the server DOM (no fallback flash).
+5. Removes the payload script (it is consumed only by hydration) and returns the
+   cursor following `render(resource)`, so the surrounding adopt-walk stays aligned.
+   The region stays **live** afterwards — a later `refetch` patches it in place.
 
 Region location is **positional**: the payload sits at the region cursor and is
 read inline during the same depth-first walk the renderer already relies on — no
@@ -55,14 +63,34 @@ the success path must reject a failure-marked payload rather than mis-decode it.
 
 ## Acceptance Criteria
 
-### AC-H-S1: Replay decodes the inline payload (core AC-13)
+### AC-H-S1: Replay decodes the inline payload + seeds a live resource (core AC-13, AC-17)
 
 - **Given** server HTML containing a `Boundary.server` region (payload script +
-  `render(data)` HTML)
+  `render(resource)` HTML)
 - **When** `hydrate` reaches the region
-- **Then** it `JSON.parse` → `Schema.decode`s the payload to `data` and hydrates
-  `render(data)` against the adopted DOM, preserving node identity (the
-  server-rendered nodes are adopted in place, not re-created).
+- **Then** it `JSON.parse` → `Schema.decode`s the payload to `data`, seeds a live
+  `Resource<A>` (`value` emitting `data` first), and hydrates `render(resource)`
+  against the adopted DOM, preserving node identity (the server-rendered nodes are
+  adopted in place, not re-created). No fallback flash: the seeded `value`'s first
+  emission equals the server `data`.
+
+### AC-H-S8: Refetch patches the region in place (core AC-17, AC-19)
+
+- **Given** a hydrated `Boundary.server` region and a mounted router data endpoint
+- **When** `resource.refetch` runs
+- **Then** it calls `GET /_eui/data?id=<id>&params=…` via `Router.httpApiClient`,
+  `Schema.decode`s the envelope via `schema`, and `SubscriptionRef.set`s `value` —
+  so `render`'s subtree patches in place (no remount). `pending` is `true` during
+  the call and `false` after. `load` is **not** run on the client.
+
+### AC-H-S9: Refetch failure is stale-on-error
+
+- **Given** a hydrated region whose refetch endpoint call fails (network/4xx/decode)
+- **When** `resource.refetch` runs
+- **Then** the previous `value` is retained (subtree unchanged), `error` becomes
+  `Some(cause)`, `pending` returns to `false`, and the failure is **not** raised
+  into an enclosing failure `Boundary` (no fallback flash). A subsequent successful
+  refetch clears `error` to `None`.
 
 ### AC-H-S2: `load` is never run on the client
 

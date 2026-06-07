@@ -41,8 +41,8 @@ void Effect.runPromise(hydrate(h.div({}, "ok"), root));
 
 // A discharged server boundary leaves R = never.
 const discharged = Boundary.server(
-  { load: () => dbLoad, provide: DatabaseLive, schema: Product },
-  (p) => h.div({}, p.name),
+  { id: "discharged", load: () => dbLoad, provide: DatabaseLive, schema: Product },
+  () => h.div({}, "ok"),
 );
 void Effect.runPromise(hydrate(discharged, root));
 
@@ -65,7 +65,7 @@ void Effect.runPromise(hydrate(dbNode, root));
 
 // Same leak surfaced through a `Boundary.server` whose `render` references the tag.
 const leaky = Boundary.server(
-  { load: () => Effect.succeed({ name: "x" }), provide: Layer.empty, schema: Product },
+  { id: "leaky", load: () => Effect.succeed({ name: "x" }), provide: Layer.empty, schema: Product },
   (_p) => dbNode,
 );
 // @ts-expect-error — server-only Tag leaked into the client requirement channel R

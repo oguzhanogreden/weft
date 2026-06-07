@@ -27,9 +27,12 @@ The tree is authored with the namespaced `Router.layout(...)` and
 `Router.route(...)` combinators and sealed with `Router.router(...)` (mirroring
 the namespaced core surface — `Component.gen`, `Boundary.catchTag`, `h.div`). The
 `Router` symbol is both the service `Context.Tag` (`yield* Router`) and the
-authoring namespace; the two roles merge by declaration. The tree is the source
-of truth. `HttpApi` is the **compilation target** (generated from the tree by
-`toHttpApi`), never the authoring surface.
+authoring namespace; the two roles merge by declaration. The tree is the
+**authoring** surface; the compiled `HttpApi` is the **operational** source of
+truth. `compile` builds it (via `buildHttpApi`) and `makeRouter` stamps it onto
+`RouterDef.httpApi`, where it is the single definition the server dispatch and the
+client matcher both read from — so both sides agree on paths and schemas. `HttpApi`
+is never the authoring surface.
 
 Every combinator is **fully typed**: a route's and a layout's `component` slot is
 a thunk `() => Node<E, R>` (authored with `Component.make` / `Component.gen`, or a
@@ -53,21 +56,38 @@ injection**, not callback arguments:
   structurally by `Router.layout` / `Router.router`. The router discharges it via
   `Effect.provideService(node, Router.Outlet, …)` at render time, so it is
   **excluded** from a layout's (and the document's) aggregate requirement channel.
-- **`Router.params(fields)` / `Router.query(fields)`** — validating accessors that
-  read the **live match** (`yield* Router` → `currentMatch.get`), pick the
-  requested `fields` keys from the decoded path/query, and validate them against
-  the `Type` side of `Schema.Struct(fields)`. They return the typed values, or
-  fail with a tagged **`RouterParamsError`** (`source: "path" | "query"`, plus the
-  requested `keys`) when no route matches or a key is missing/invalid. Any
-  component — not just the leaf — may read them; the `RouterParamsError` bubbles to
-  the app node's `E` (a user may `Boundary.catchTag("RouterParamsError", …)`).
+- **`Router.params(fields)` / `Router.query(fields)`** — accessors that read the
+  **live match** (`yield* Router` → `currentMatch.get`) and pick the requested
+  `fields` keys from the decoded path/query, returning the typed values
+  **directly** — the matcher already decoded them against the leaf's full schema,
+  so there is no re-validation. They fail with a tagged **`RouterParamsError`**
+  (`source: "path" | "query"`, plus the requested `keys`) **only when no route
+  matches** (`NotFound`); a matched route that simply lacks a requested key reads
+  it as `undefined`. Any component — not just the leaf — may read them; the
+  `RouterParamsError` bubbles to the app node's `E` (a user may
+  `Boundary.catchTag("RouterParamsError", …)`).
+
+### Handler-arg props surface (leaf components)
+
+In addition to the DI accessors, a **leaf** `component` may declare typed
+handler-arg props and receive the live match's decoded data directly:
+
+- **`RouteHandlerProps<Path, Query>`** — `{ path: FieldsType<Path>; query:
+FieldsType<Query> }`. The router passes `{ path, query }` into the leaf slot at
+  render time (`outlet.ts` `renderLevel`); the slot's `path`/`query` are inferred
+  from the route's `path`/`query` fields (the `makeRoute` props-form overload), so
+  `component: ({ path, query }) => …` is fully typed with no annotation.
+- This is **leaf-only** — layouts and deeper nodes can't take handler args, so they
+  keep DI (`Router.params` / `Router.query` / `Router.Outlet`). A zero-arg thunk or
+  a `Component.make` / `Component.gen` leaf ignores the props and reads via DI; both
+  forms remain valid.
 
 ## Module map
 
 | Module                        | Side   | Responsibility                                                              |
 | ----------------------------- | ------ | --------------------------------------------------------------------------- |
 | `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types     |
-| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + match chains                |
+| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + build the `HttpApi` spine   |
 | `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query      |
 | `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                 |
 | `src/router-service.ts`       | shared | `Router` `Context.Tag` + `Router.{route,layout,router,Outlet,params,query}` |
@@ -75,13 +95,14 @@ injection**, not callback arguments:
 | `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`      |
 | `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                  |
 | `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                       |
-| `src/server/to-http-api.ts`   | server | generate `HttpApi` from the compiled tree                                   |
+| `src/client/navigation.ts`    | client | typed `navigate`/`push`/`replace`/`back`/`forward`/`setQuery`/`patchQuery`  |
 | `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                  |
 
 ## Authoring API
 
 ```ts
-// A leaf page. `component` is a ComponentSlot reading params via Router.params/query.
+// A leaf page. `component` reads the match either via handler-arg props
+// (`({ path, query }) => Node`) or via DI (`Router.params` / `Router.query`).
 Router.route(segment, { path?, query?, component })
 
 // A layout wrapping an outlet. `component` is a ComponentSlot splicing Router.Outlet.
@@ -136,6 +157,19 @@ Router.router(root, { notFound })
 
 ### Matching (`matcher.ts`)
 
+`match(def, url)` / `compileMatchers(def)` take the whole {@link RouterDef}. The
+patterns and path/query schemas are read from the authoritative `def.httpApi`
+`"pages"` endpoints — the **single source of truth** the server dispatch also reads
+— and each match's render-metadata `leaf` is resolved from `def.compiled` by endpoint
+`id` (the `httpApi ↔ compiled` join key). Matching itself stays **local** (SPA
+URL→leaf): platform has no client-side "match this URL locally" utility, so the regex
+matcher is fed from the HttpApi definition rather than running a platform server in the
+browser (refactor _Feasibility constraint_). The compiled entries are memoized per
+`RouterDef`.
+
+- **M0** `compileMatchers` sources every entry's path template + `pathSchema`/
+  `querySchema` from a `def.httpApi` `"pages"` endpoint, joining to the compiled
+  leaf by endpoint `id`; it does **not** read `Compiled.leaves` for patterns/schemas.
 - **M1** A static pattern (`/about`) matches exactly that path and nothing else.
 - **M2** A path-param pattern (`/users/:id`) matches `/users/42`, capturing
   `id = "42"` (raw), then decoded via `pathSchema` (e.g. to `number`).
@@ -178,20 +212,44 @@ Router.router(root, { notFound })
 
 ### Server render + 404 (`server/router-server.ts`)
 
-- **S1** `RouterServer.render(def, { document, url })` matches `url`, builds a
-  fixed-match server `Router`, injects `RouterApp(def)` into the `document` shell
-  via `Router.Outlet`, and renders it via `renderToStringHydratable`, returning
+Server dispatch runs **through `@effect/platform` `HttpApiBuilder`** — platform owns
+request→leaf matching and path/query decode. The handler builds a dispatch-only
+**server-local** `HttpApi`: `def.httpApi` (pristine — the client and S4 read it)
+extended with a second `"fallback"` group holding one catch-all `"*"` endpoint.
+`HttpApiBuilder.group("pages", …)` registers one handler per leaf `id` receiving the
+platform-decoded `{ path, urlParams }`; the `"fallback"` handler serves any URL no
+leaf claims (platform ranks static/param routes above the `"*"` wildcard). Status is
+sourced from this pipeline — there is **no render-time status side-channel**
+(`RouterApp` no longer takes an `onNotFound` callback; `RouterAppOptions` is removed).
+
+- **S1** `RouterServer.render(def, { document, url })` dispatches `url` through the
+  builder, builds a fixed-match server `Router` from the platform-decoded
+  `{ path, urlParams }`, injects the outlet into the `document` shell via
+  `Router.Outlet`, and renders it via `renderToStringHydratable`, returning
   `{ html, status: 200 }`. `document` is a `ComponentSlot` (the same callable form
   as the route/layout `component` slot — a plain `() => Node` thunk or a
-  `Component.make` / `Component.gen` component); `render` provides both `Router.Outlet`
-  (the app, per request) and `Router`, so the shell may use either.
-- **S2** When no route matches (or a page raises `RouterNotFound`), the
-  not-found page renders and `status` is `404`.
+  `Component.make` / `Component.gen` component); the router provides both
+  `Router.Outlet` (the app, per request) and `Router`, so the shell may use either.
+  Platform-decoded path params are readable by the page via `Router.params`.
+- **S2** `status` is `404` for both not-found shapes, sourced from the platform
+  pipeline. **No-match** routes to the catch-all handler, which renders the not-found
+  page **inside** the level-0 reactive region (markers present) — matching the client
+  outlet for an unmatched URL. A **page-raised `RouterNotFound`** surfaces from the
+  matched leaf handler (the server omits `RouterApp`'s boundary so the failure
+  propagates), and the page renders **directly** in the shell (no outlet markers) —
+  matching the client's internal not-found boundary fallback. Both align for hydration.
+- **S2a** `RouterServer.toWebHandler(def, { document })` returns the platform
+  `(Request) => Promise<Response>` directly (memoized per `(def, document)`); a
+  matched route replies `text/html` 200, a no-match replies the not-found page at 404.
 - **S3** The server `Router`'s `navigate` is a no-op-ish failure path (navigation
   is a client concern); `currentMatch` is the fixed match for the request.
-- **S4** `toHttpApi(def)` produces an `HttpApi` with one `"pages"` group whose
-  endpoints are GET endpoints, one per leaf, at each leaf's `fullPathPattern`,
-  with `setPath(pathSchema)` and `setUrlParams(querySchema)`.
+- **S4** `makeRouter(...)` stamps `RouterDef.httpApi` — built by `buildHttpApi` from
+  the compiled leaves — with one `"pages"` group whose endpoints are GET endpoints,
+  one per leaf, named by the leaf `id` (the `httpApi ↔ compiled` join key), at each
+  leaf's `fullPathPattern`, with `setPath(pathSchema)`, `setUrlParams(querySchema)`,
+  a `Schema.String` success, and a `RouterNotFound → 404` error. The leaf
+  `pathSchema`/`querySchema` encoded sides are typed string-encodeable, so the
+  `setPath`/`setUrlParams` bridge carries **no `as any`** casts.
 
 ### Dependency injection (`router-service.ts`, `outlet.ts`)
 
@@ -202,13 +260,19 @@ Router.router(root, { notFound })
   the requested `fields`, typed as `Schema.Struct.Type<fields>`; `Router.query`
   does the same for the query. Both are readable from **any** component, not just
   the leaf.
-- **D3** `Router.params` / `Router.query` fail with a `RouterParamsError`
-  (`source: "path" | "query"`, carrying the requested `keys`) when no route is
-  matched or a requested key is missing / fails `Type`-side validation. The error
-  bubbles into the app node's aggregate `E`.
+- **D3** `Router.params` / `Router.query` return the live match's already-decoded
+  values **directly** (no re-validation) and fail with a `RouterParamsError`
+  (`source: "path" | "query"`, carrying the requested `keys`) **only when no route
+  is matched** (`NotFound`). The error bubbles into the app node's aggregate `E`.
+  A matched route lacking a requested key reads it as `undefined`.
 - **D4** A layout declares **no** `path`; a `:name` introduced by a layout segment
   is keyed on the leaf's `pathSchema` (defaulted to `Schema.String`), and a layout
   that needs the value reads it via `Router.params`.
+- **D5** A **leaf** `component` may declare `RouteHandlerProps<Path, Query>` props;
+  the outlet passes the live match's decoded `{ path, query }` into the slot at
+  render time. The props' `path`/`query` are inferred from the route's
+  `path`/`query` fields. Layouts/deeper nodes keep DI (handler args are leaf-only);
+  a zero-arg or `Component` leaf ignores the props and reads via `Router.params`.
 
 ### Not-found (`errors.ts`)
 
@@ -227,6 +291,62 @@ Router.router(root, { notFound })
   load (interceptor does not call `preventDefault`).
 - **L3** The interceptor is attached for the lifetime of the `Router` layer scope
   and detached on teardown.
+
+### Client runtime — derived `HttpApiClient` (`client/router-live.ts`)
+
+- **CL1** `RouterLive(def, options?)` derives a real `HttpApiClient` from
+  `def.httpApi` (over `FetchHttpClient`) and exposes it on the `Router` service as
+  `httpApiClient: Option.some(client)` for network work (route prefetch, foundation
+  for future loaders/data). The server's fixed-match `Router` exposes
+  `Option.none()` — the server is itself the origin.
+- **CL2** The client `baseUrl` is configurable via `options.baseUrl`, defaulting to
+  the document's same origin (`window.location.origin`).
+- **CL3** Deriving the client does **not** change SPA resolution: `currentMatch` and
+  the link interceptor still resolve URLs through the **local** {@link match}er
+  (which reads the same `def.httpApi`), so both the local matcher and the network
+  client agree because they read one definition.
+
+### Reactive accessors (`router-service.ts`)
+
+`Router.paramsStream(fields)` / `Router.queryStream(fields)` are the **reactive**
+counterparts to the snapshot `Router.params` / `Router.query`. Each returns an
+`Effect<Subscribable<FieldsType<fields>>, never, Router>` derived from
+`currentMatch.changes`, so a component can render `[(yield* Router.queryStream(q)).changes]`
+and update **in place** without the outlet remounting the leaf.
+
+- **R1** `paramsStream(fields)` / `queryStream(fields)` resolve (via `yield* Router`)
+  to a `Subscribable` whose `get` reads the live match's decoded path/query for the
+  requested `fields` (same picked values as `Router.params` / `Router.query`).
+- **R2** The `Subscribable.changes` stream **re-emits** the picked values on every
+  `currentMatch` change (every navigation), including query-only changes that keep
+  the same leaf mounted (where a snapshot read would not update).
+- **R3** Unlike the snapshot accessors, the reactive form is **resilient on
+  `NotFound`**: it yields the empty subset (each requested field `undefined`) rather
+  than failing, so the stream stays live across navigations to/from unmatched URLs.
+
+### Client navigation (`client/navigation.ts`)
+
+Programmatic, type-safe navigation built on the `Router` service and the type-safe
+`href` builder, mirroring the History API the client `Router` layer is backed by.
+
+- **NV1** `navigate(ref, args, options?)` builds the URL via `href(ref, args)` (so it
+  round-trips with `match`) and navigates; `args` follows `href`'s requiredness
+  (`path` required when the route has params, `query` optional when all query fields
+  are optional). Returns `Effect<void, never, Router>`.
+- **NV2** `push(to)` / `replace(to)` navigate to a raw `path + search` string;
+  `replace` sets `options.replace` so the client layer uses `history.replaceState`
+  (no new history entry) while `push` uses `history.pushState`.
+- **NV3** `back()` / `forward()` step through History via `history.go(-1)` /
+  `history.go(1)`; the client layer's `popstate` handler resyncs `currentMatch`.
+  They require no service (only `window.history`).
+- **NV4** `setQuery(query, options?)` replaces the current route's query entirely;
+  `patchQuery(partial, options?)` merges into the current decoded query. Both
+  re-encode through the **matched leaf's `querySchema`**, preserve the path (so the
+  leaf — and any `queryStream` reader — stays mounted), and are a **no-op** when no
+  route is currently matched.
+- **NV5** The client `Router` service's `navigate(to, options?)` honours
+  `options.replace` (`history.replaceState` vs `pushState`); the server's fixed-match
+  `Router` ignores it (navigation is a client concern).
 
 ### Param / query decode on both sides
 

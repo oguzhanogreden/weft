@@ -22,7 +22,7 @@ function fixture() {
       Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
     ]),
     { notFound: () => h.h1({}, "404") },
-  ).compiled;
+  );
 }
 
 let dom: JSDOM;

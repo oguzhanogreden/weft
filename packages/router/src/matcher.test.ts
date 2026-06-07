@@ -26,10 +26,29 @@ function fixture() {
       }),
     ]),
     { notFound: NotFound },
-  ).compiled;
+  );
 }
 
 describe("match", () => {
+  test("M0: matcher entries are sourced from the httpApi pages endpoints", () => {
+    const def = fixture();
+    // The single source of truth: every leaf the matcher resolves corresponds to a
+    // `def.httpApi` "pages" endpoint (same id + path), not a parallel structure.
+    const endpoints = (
+      def.httpApi as unknown as {
+        groups: Record<string, { endpoints: Record<string, { name: string; path: string }> }>;
+      }
+    ).groups["pages"]?.endpoints;
+    assert.ok(endpoints !== undefined);
+    for (const endpoint of Object.values(endpoints)) {
+      // A static path resolves directly; the param leaf is keyed by its own id.
+      const probe = endpoint.path.replace(/:[^/]+/g, "42");
+      const m = match(def, probe);
+      assert.equal(m._tag, "Matched");
+      if (m._tag === "Matched") assert.equal(m.leaf.id, endpoint.name);
+    }
+  });
+
   test("M1: a static pattern matches exactly that path", () => {
     const m = match(fixture(), "/about");
     assert.equal(m._tag, "Matched");

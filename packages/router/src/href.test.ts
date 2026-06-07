@@ -45,7 +45,7 @@ describe("href", () => {
 
   test("H3: round-trips with match", () => {
     const url = href(userRoute, { path: { id: 7 } });
-    const m = match(def.compiled, url);
+    const m = match(def, url);
     assert.equal(m._tag, "Matched");
     if (m._tag === "Matched") {
       assert.equal(m.leaf.fullPathPattern, "/users/:id");

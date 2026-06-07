@@ -375,9 +375,9 @@
     "semantic_hash": "f28e5e0f5519232a78706bc2527153aa"
   },
   "examples/server-boundary/src/app.ts": {
-    "mtime": 1780725753.511111,
-    "ast_hash": "86e9e40c28409d9cba69b22e9e11b668",
-    "semantic_hash": "86e9e40c28409d9cba69b22e9e11b668"
+    "mtime": 1780765369.127884,
+    "ast_hash": "375ebd88b3658177b65540e177d49eb0",
+    "semantic_hash": ""
   },
   "examples/server-boundary/src/entry-client.ts": {
     "mtime": 1780600167.7891922,
@@ -545,14 +545,14 @@
     "semantic_hash": "b8daf69e3e89f6fa4d442dbf26bc8e2f"
   },
   "packages/core/src/boundary/__type-tests__/server.test-d.ts": {
-    "mtime": 1780600167.789898,
-    "ast_hash": "be4677635f11f6d23a007ac9deef02a2",
-    "semantic_hash": "be4677635f11f6d23a007ac9deef02a2"
+    "mtime": 1780765615.3084211,
+    "ast_hash": "1e2b342ec39d13ce81ae8ce5667c5e6f",
+    "semantic_hash": ""
   },
   "packages/core/src/boundary/boundary.test.ts": {
-    "mtime": 1780600167.7901,
-    "ast_hash": "365c95cf3a42f2227c63742208a8c5ed",
-    "semantic_hash": "365c95cf3a42f2227c63742208a8c5ed"
+    "mtime": 1780765108.004173,
+    "ast_hash": "d6a98e2b0b11c46d63aa3ddd6490b832",
+    "semantic_hash": ""
   },
   "packages/core/src/boundary/index.ts": {
     "mtime": 1780763853.6591556,
@@ -715,9 +715,9 @@
     "semantic_hash": "34b93aecd81b40214a7556f13c952324"
   },
   "packages/dom/src/boundary-replay.test.ts": {
-    "mtime": 1780600167.7915444,
-    "ast_hash": "9d20bb004b7994afc6af2ca51c38458b",
-    "semantic_hash": "9d20bb004b7994afc6af2ca51c38458b"
+    "mtime": 1780765482.9803076,
+    "ast_hash": "f7db28c22a92e3329c7391956fe1922d",
+    "semantic_hash": ""
   },
   "packages/dom/src/boundary-replay.ts": {
     "mtime": 1780763362.8513336,
@@ -725,9 +725,9 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/__type-tests__/hydrate.test-d.ts": {
-    "mtime": 1780600167.7919106,
-    "ast_hash": "fefb071795a55b63bc23bcbeb43b7f18",
-    "semantic_hash": "fefb071795a55b63bc23bcbeb43b7f18"
+    "mtime": 1780765353.7106135,
+    "ast_hash": "4592d0192f05b1f9f6e8afbf98cc2a37",
+    "semantic_hash": ""
   },
   "packages/dom/src/client/boundary.test.ts": {
     "mtime": 1780249714.3488274,
@@ -770,9 +770,9 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
-    "mtime": 1780600167.7945435,
-    "ast_hash": "d66e13e9a8f2b3d8caa64e7f248f7388",
-    "semantic_hash": "d66e13e9a8f2b3d8caa64e7f248f7388"
+    "mtime": 1780765589.8133607,
+    "ast_hash": "7a2e8058d8bfd0f4e9dd55249681df4f",
+    "semantic_hash": ""
   },
   "packages/dom/src/client/suspense.test.ts": {
     "mtime": 1780249714.351804,
@@ -825,9 +825,9 @@
     "semantic_hash": "7232bdd92783bfcd0803fc3a6b0c0f9a"
   },
   "packages/dom/src/server/server-boundary-ssr.test.ts": {
-    "mtime": 1780600167.79534,
-    "ast_hash": "f746b6bd663297d098211d3f1dd71fbf",
-    "semantic_hash": "f746b6bd663297d098211d3f1dd71fbf"
+    "mtime": 1780765578.3722527,
+    "ast_hash": "1cce0ef0161ee77b660e1e6ac003d10f",
+    "semantic_hash": ""
   },
   "packages/dom/src/shared.ts": {
     "mtime": 1780338022.5433652,
@@ -875,13 +875,13 @@
     "semantic_hash": ""
   },
   "packages/router/src/client/router-live.ts": {
-    "mtime": 1780763964.5750344,
-    "ast_hash": "7b4fc275d9a6b3ae8c2bdfe14383cdd2",
+    "mtime": 1780765482.8104703,
+    "ast_hash": "8c94a48db68b0c568a146300c32b15f2",
     "semantic_hash": ""
   },
   "packages/router/src/compile.test.ts": {
-    "mtime": 1780731756.309078,
-    "ast_hash": "3277bd845359fcefc7f5faa479109125",
+    "mtime": 1780765655.968985,
+    "ast_hash": "cc9034ec179526322e104a9d88099d96",
     "semantic_hash": ""
   },
   "packages/router/src/compile.ts": {
@@ -1412,6 +1412,16 @@
   "packages/core/src/boundary/data-client.ts": {
     "mtime": 1780763848.9026253,
     "ast_hash": "dccec925c0ee613f8504f619480a024e",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/server-boundary-refetch.test.ts": {
+    "mtime": 1780765597.6314793,
+    "ast_hash": "c35a9d217be2c76adb1cd43166a250d5",
+    "semantic_hash": ""
+  },
+  "packages/router/src/data-endpoint.test.ts": {
+    "mtime": 1780765705.1096854,
+    "ast_hash": "a8a086e693dc3d8f7a25bda6cd811299",
     "semantic_hash": ""
   }
 }

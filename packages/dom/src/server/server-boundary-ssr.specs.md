@@ -16,8 +16,13 @@ a `Boundary.server` descriptor, the renderer:
 1. Runs `Effect.provide(load(), provide)` to obtain `data: A`, **blocking** on it
    (like the first emission of a `List.each` source). `provide` discharges
    `load`'s server-only requirements, so SSR assumes no further `R`.
-2. Renders `render(data)` to HTML in place via the same recursive render
-   function, so any nested reactive regions inside it get their normal markers.
+2. Renders `render(resource)` to HTML in place via the same recursive render
+   function, where `resource` is a **static-seeded** `Resource<A>` (`value` is a
+   `Subscribable` over the loaded `data` that emits once; `pending` is `false`,
+   `error` is `None`, `refetch` is a no-op). Because `value` emits the seed
+   synchronously the SSR HTML is byte-identical to a bare `render(data)` — the
+   resource shape does not change the markup. Any nested reactive regions inside
+   `render`'s output get their normal markers.
 3. **Hydratable passes only:** emits the `Schema.encode`d, `JSON.stringify`d
    `data` inline as a `<script type="application/json">…</script>` **before** the
    `render(data)` HTML, XSS-escaped (see escaping below). The plain passes emit
@@ -62,12 +67,23 @@ Nothing is emitted inside the discarded region.
   - Its text content is valid JSON that, after `JSON.parse` → `Schema.decode`,
     equals the `data` produced by `load`.
 
-### AC-2: `render(data)` HTML is rendered in place (core AC-12)
+### AC-2: `render(resource)` HTML is rendered in place (core AC-12)
 
 - **Given** the node above
 - **When** rendered via any pass (plain or hydratable)
-- **Then** the serialized HTML of `render(data)` appears in the output, complete
-  and usable without JS.
+- **Then** the serialized HTML of `render(resource)` appears in the output,
+  complete and usable without JS, where `resource` is a static-seeded `Resource<A>`
+  whose `value` emits the loaded `data` synchronously. The markup is byte-identical
+  to what a bare `render(data)` would have produced.
+
+### AC-2b: SSR registers the boundary loader (core AC-18)
+
+- **Given** a `Boundary.server({ id, load, provide, schema, … }, render)` node
+- **When** the descriptor is constructed (module load / render)
+- **Then** `{ id → { load, provide, schema, failure } }` is present in the core
+  registry on the server, so the router data endpoint can serve a refetch for `id`.
+  (Registration happens in `@effect-ui/core`'s `Boundary.server`; the server
+  renderer relies on it but does not perform it.)
 
 ### AC-3: Plain passes emit no payload script (core AC-11)
 

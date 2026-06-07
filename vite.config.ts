@@ -34,10 +34,10 @@ export default defineConfig({
     exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**", "**/*.browser.test.{ts,tsx}"],
   },
   fmt: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**"],
+    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,

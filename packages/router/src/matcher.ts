@@ -1,5 +1,5 @@
-import { Either, Schema } from "effect";
-import type { Compiled, CompiledLeaf } from "./compile";
+import { Either, Option, Schema } from "effect";
+import type { CompiledLeaf, RouterDef } from "./compile";
 
 /** The resolved match for a URL: a leaf with decoded params/query, or not-found. */
 export type RouteMatch =
@@ -16,16 +16,52 @@ export type RouteMatch =
       readonly url: string;
     };
 
-/** A precompiled regex + param-name list for one leaf. */
+/** A string-encodeable schema as carried by an HttpApi endpoint's path/urlParams slot. */
+type ParamSchema = Schema.Schema<Record<string, unknown>, unknown, never>;
+
+/**
+ * The slice of an `HttpApiEndpoint` the matcher reads. `def.httpApi` is typed
+ * `HttpApi.Any` (its group/endpoint shapes are assembled in a runtime loop by
+ * `buildHttpApi`), so the endpoints are read through this structural view rather
+ * than platform's precise generic types.
+ */
+interface EndpointShape {
+  /** Endpoint name — the leaf `id`, the `httpApi ↔ compiled` join key. */
+  readonly name: string;
+  /** Full path template, e.g. `/users/:id` (same as the leaf's `fullPathPattern`). */
+  readonly path: string;
+  readonly pathSchema: Option.Option<ParamSchema>;
+  readonly urlParamsSchema: Option.Option<ParamSchema>;
+}
+
+/** Structural view of the compiled `HttpApi`: its `"pages"` group of leaf endpoints. */
+interface HttpApiShape {
+  readonly groups: Record<string, { readonly endpoints: Record<string, EndpointShape> }>;
+}
+
+/** A precompiled regex + decode schemas for one leaf, sourced from its HttpApi endpoint. */
 interface MatcherEntry {
+  /** The compiled leaf (render/nesting metadata), resolved from the endpoint id. */
   readonly leaf: CompiledLeaf;
   readonly regex: RegExp;
   readonly paramNames: readonly string[];
+  /** Path-param schema, read from the endpoint's `setPath` slot. */
+  readonly pathSchema: ParamSchema;
+  /** Query schema, read from the endpoint's `setUrlParams` slot. */
+  readonly querySchema: ParamSchema;
 }
 
 /** Escapes a literal path segment for inclusion in a `RegExp`. */
 function escapeRegex(literal: string): string {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** The `:name` placeholder names in a path template, in order. */
+function paramNamesOf(pattern: string): readonly string[] {
+  return pattern
+    .split("/")
+    .filter((s) => s.startsWith(":"))
+    .map((s) => s.slice(1));
 }
 
 /** Number of `:param` segments in a pattern; fewer params = more specific (M6). */
@@ -42,42 +78,64 @@ function patternToRegex(pattern: string): RegExp {
   return new RegExp(body.length === 0 ? "^/?$" : `^/${body}/?$`);
 }
 
+/** Empty-struct fallback for an endpoint with no declared path/query schema. */
+const emptySchema: ParamSchema = Schema.Struct({}) as unknown as ParamSchema;
+
 /**
- * Memoizes the compiled matcher entries per {@link Compiled} so the regexes are
+ * Memoizes the compiled matcher entries per {@link RouterDef} so the regexes are
  * built and sorted once, not on every `match()` call (which is on the hot path:
  * every navigation, every link-interceptor click, and once per server request).
  */
-const matchersCache: WeakMap<Compiled, readonly MatcherEntry[]> = new WeakMap();
+const matchersCache: WeakMap<RouterDef, readonly MatcherEntry[]> = new WeakMap();
 
 /**
- * Precompiles the leaves of a {@link Compiled} tree into ordered matcher entries
- * (memoized per `Compiled`). Entries are sorted most-specific first (fewer
- * params, then longer pattern) so a static segment wins over a param segment at
- * the same position (M6).
+ * Precompiles a {@link RouterDef} into ordered matcher entries (memoized per
+ * `RouterDef`). The patterns and path/query schemas are read from the authoritative
+ * `def.httpApi` `"pages"` endpoints — the single source of truth the server dispatch
+ * also reads — and each entry's render metadata leaf is resolved from `def.compiled`
+ * by endpoint id. Matching stays local (SPA URL→leaf); see the refactor plan's
+ * _Feasibility constraint_.
+ *
+ * Entries are sorted most-specific first (fewer params, then longer pattern) so a
+ * static segment wins over a param segment at the same position (M6).
  *
  * Note: the specificity order is a global heuristic (param count, then length).
  * It resolves the common "static beats param at the same position" case, but two
  * patterns with the same param count and length (e.g. `/a/:b/c` vs `/a/x/:d`)
- * fall back to document order.
+ * fall back to endpoint order.
  */
-export function compileMatchers(compiled: Compiled): readonly MatcherEntry[] {
-  const cached = matchersCache.get(compiled);
+export function compileMatchers(def: RouterDef): readonly MatcherEntry[] {
+  const cached = matchersCache.get(def);
   if (cached !== undefined) return cached;
-  const entries = compiled.leaves
-    .map(
-      (leaf): MatcherEntry => ({
-        leaf,
-        regex: patternToRegex(leaf.fullPathPattern),
-        paramNames: leaf.paramNames,
-      }),
-    )
-    .slice()
-    .sort((a, b) => {
-      const pc = paramCount(a.leaf.fullPathPattern) - paramCount(b.leaf.fullPathPattern);
-      if (pc !== 0) return pc;
-      return b.leaf.fullPathPattern.length - a.leaf.fullPathPattern.length;
+
+  const leafById = new Map<string, CompiledLeaf>();
+  for (const leaf of def.compiled.leaves) leafById.set(leaf.id, leaf);
+
+  const api = def.httpApi as unknown as HttpApiShape;
+  const endpoints = api.groups["pages"]?.endpoints ?? {};
+
+  const entries: MatcherEntry[] = [];
+  for (const endpoint of Object.values(endpoints)) {
+    const leaf = leafById.get(endpoint.name);
+    // Every "pages" endpoint is built from a compiled leaf (same id), so the join
+    // is total; guard only to satisfy the index-access type.
+    if (leaf === undefined) continue;
+    entries.push({
+      leaf,
+      regex: patternToRegex(endpoint.path),
+      paramNames: paramNamesOf(endpoint.path),
+      pathSchema: Option.getOrElse(endpoint.pathSchema, () => emptySchema),
+      querySchema: Option.getOrElse(endpoint.urlParamsSchema, () => emptySchema),
     });
-  matchersCache.set(compiled, entries);
+  }
+
+  entries.sort((a, b) => {
+    const pc = paramCount(a.leaf.fullPathPattern) - paramCount(b.leaf.fullPathPattern);
+    if (pc !== 0) return pc;
+    return b.leaf.fullPathPattern.length - a.leaf.fullPathPattern.length;
+  });
+
+  matchersCache.set(def, entries);
   return entries;
 }
 
@@ -106,12 +164,13 @@ function parseQuery(search: string): Record<string, string> {
 }
 
 /**
- * Matches a request URL against a compiled tree (M1–M7). Returns the decoded
+ * Matches a request URL against a {@link RouterDef} (M1–M7). Returns the decoded
  * `Matched` leaf, or `NotFound` when nothing matches or a path/query decode fails
- * (decode failure is treated as no-match, not an error).
+ * (decode failure is treated as no-match, not an error). Patterns and schemas come
+ * from `def.httpApi` via {@link compileMatchers}.
  */
-export function match(compiled: Compiled, url: string): RouteMatch {
-  const entries = compileMatchers(compiled);
+export function match(def: RouterDef, url: string): RouteMatch {
+  const entries = compileMatchers(def);
   const { path, search } = splitUrl(url);
   const normalizedUrl = search.length === 0 ? path : `${path}?${search}`;
 
@@ -125,14 +184,14 @@ export function match(compiled: Compiled, url: string): RouteMatch {
       if (raw !== undefined) rawParams[name] = decodeURIComponent(raw);
     });
 
-    const decodedPath = Schema.decodeUnknownEither(entry.leaf.pathSchema)(rawParams);
+    const decodedPath = Schema.decodeUnknownEither(entry.pathSchema)(rawParams);
     if (Either.isLeft(decodedPath)) continue;
 
     // M8: a query decode failure (a declared query field whose value violates its
     // schema, e.g. `?page=abc` for `NumberFromString`) is a no-match, like a path
     // decode failure — not a thrown error. Excess/undeclared query keys are
     // ignored by `Schema.Struct`, so only declared-but-invalid values 404.
-    const decodedQuery = Schema.decodeUnknownEither(entry.leaf.querySchema)(parseQuery(search));
+    const decodedQuery = Schema.decodeUnknownEither(entry.querySchema)(parseQuery(search));
     if (Either.isLeft(decodedQuery)) continue;
 
     return {

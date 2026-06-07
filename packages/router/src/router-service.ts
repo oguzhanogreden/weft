@@ -1,5 +1,6 @@
 import type { Node } from "@effect-ui/core";
-import { Context, Effect, Either, Schema, type Subscribable } from "effect";
+import type { HttpApiClient } from "@effect/platform";
+import { Context, Effect, type Option, Stream, Subscribable } from "effect";
 import { makeRouter } from "./compile";
 import { RouterParamsError } from "./errors";
 import type { RouteMatch } from "./matcher";
@@ -18,6 +19,25 @@ import { makeLayout, makeRoute } from "./route-tree";
  * match's params/query by dependency injection. The roles merge by declaration —
  * `yield* Router` reads the service; `Router.route(…)` authors a tree.
  */
+/**
+ * The platform `HttpApiClient` derived from a router's `HttpApi` spine. Typed
+ * opaquely (`Client<any, …>`) because the spine is `HttpApi.Any` — its
+ * group/endpoint shapes are assembled in a runtime loop by `buildHttpApi`, so a
+ * precise client type is not recoverable. Present (`Option.some`) on the client
+ * (`RouterLive`), absent (`Option.none`) on the server, which is itself the origin.
+ */
+export type RouterHttpApiClient = HttpApiClient.Client<any, any, never>;
+
+/** Options for a router {@link Router} `navigate` call. */
+export interface NavigateOptions {
+  /**
+   * Replace the current History entry (`history.replaceState`) instead of pushing
+   * a new one (`history.pushState`). Defaults to `false` (push). A no-op on the
+   * server, where navigation is a client concern.
+   */
+  readonly replace?: boolean;
+}
+
 export class Router extends Context.Tag("@effect-ui/router/Router")<
   Router,
   {
@@ -28,7 +48,14 @@ export class Router extends Context.Tag("@effect-ui/router/Router")<
      * pushes History state and re-renders the affected outlet; on the server it
      * is a no-op (navigation is a client concern).
      */
-    readonly navigate: (to: string) => Effect.Effect<void>;
+    readonly navigate: (to: string, options?: NavigateOptions) => Effect.Effect<void>;
+    /**
+     * The derived {@link RouterHttpApiClient} for network work (route prefetch,
+     * foundation for future loaders/data). `Option.some` on the client,
+     * `Option.none` on the server. SPA URL→leaf resolution does **not** use this —
+     * it stays local via the shared matcher (see the refactor _Feasibility constraint_).
+     */
+    readonly httpApiClient: Option.Option<RouterHttpApiClient>;
   }
 >() {}
 
@@ -57,10 +84,11 @@ function pick<F extends Fields>(
 
 /**
  * Reads the live match's **path params** for the requested `fields`. Snapshot
- * semantics — reads `yield* Router` then `currentMatch.get` — and validates the
- * already-decoded values against the `Type` side of `Schema.Struct(fields)`. Fails
- * with a {@link RouterParamsError} (`source: "path"`) when no route is matched or
- * a requested key is missing / invalid. Re-exported as `Router.params`.
+ * semantics — reads `yield* Router` then `currentMatch.get` — and returns the
+ * already-decoded values **directly**: the matcher decoded them against the leaf's
+ * full path schema, so no re-validation is needed (the cast is sound — the picked
+ * subset is the `Type` side of `fields`). Fails with a {@link RouterParamsError}
+ * (`source: "path"`) only when no route is matched. Re-exported as `Router.params`.
  */
 function readParams<F extends Fields>(
   fields: F,
@@ -68,23 +96,20 @@ function readParams<F extends Fields>(
   return Effect.gen(function* () {
     const router = yield* Router;
     const match = yield* router.currentMatch.get;
-    const keys = Object.keys(fields);
     if (match._tag === "NotFound") {
-      return yield* Effect.fail(new RouterParamsError({ source: "path", keys }));
+      return yield* Effect.fail(
+        new RouterParamsError({ source: "path", keys: Object.keys(fields) }),
+      );
     }
-    const result = Schema.validateEither(Schema.Struct(fields))(pick(fields, match.path));
-    if (Either.isLeft(result)) {
-      return yield* Effect.fail(new RouterParamsError({ source: "path", keys }));
-    }
-    // `validateEither` widens to a homomorphic mapped type; it is `FieldsType<F>`.
-    return result.right as FieldsType<F>;
+    return pick(fields, match.path) as FieldsType<F>;
   });
 }
 
 /**
  * Reads the live match's **query** for the requested `fields`. Same snapshot +
- * validation semantics as {@link readParams}, failing with a
- * {@link RouterParamsError} (`source: "query"`). Re-exported as `Router.query`.
+ * direct-read semantics as {@link readParams}, failing with a
+ * {@link RouterParamsError} (`source: "query"`) only on a no-match. Re-exported as
+ * `Router.query`.
  */
 function readQuery<F extends Fields>(
   fields: F,
@@ -92,17 +117,60 @@ function readQuery<F extends Fields>(
   return Effect.gen(function* () {
     const router = yield* Router;
     const match = yield* router.currentMatch.get;
-    const keys = Object.keys(fields);
     if (match._tag === "NotFound") {
-      return yield* Effect.fail(new RouterParamsError({ source: "query", keys }));
+      return yield* Effect.fail(
+        new RouterParamsError({ source: "query", keys: Object.keys(fields) }),
+      );
     }
-    const result = Schema.validateEither(Schema.Struct(fields))(pick(fields, match.query));
-    if (Either.isLeft(result)) {
-      return yield* Effect.fail(new RouterParamsError({ source: "query", keys }));
-    }
-    // `validateEither` widens to a homomorphic mapped type; it is `FieldsType<F>`.
-    return result.right as FieldsType<F>;
+    return pick(fields, match.query) as FieldsType<F>;
   });
+}
+
+/**
+ * Builds a reactive {@link Subscribable} of the picked `fields` from a `currentMatch`
+ * Subscribable, reading the `path` or `query` side. Unlike {@link readParams} /
+ * {@link readQuery} (snapshot accessors that fail on `NotFound`), the reactive form
+ * is **resilient**: a `NotFound` match yields the empty subset (each field
+ * `undefined`) rather than failing, so the stream stays live across navigations.
+ */
+function selectStream<F extends Fields>(
+  currentMatch: Subscribable.Subscribable<RouteMatch>,
+  fields: F,
+  source: "path" | "query",
+): Subscribable.Subscribable<FieldsType<F>> {
+  const select = (m: RouteMatch): FieldsType<F> =>
+    pick(fields, m._tag === "Matched" ? m[source] : {}) as FieldsType<F>;
+  return Subscribable.make({
+    get: Effect.map(currentMatch.get, select),
+    changes: Stream.map(currentMatch.changes, select),
+  });
+}
+
+/**
+ * Reactive counterpart to {@link readParams}: a {@link Subscribable} of the live
+ * match's **path params** for `fields`, derived from `currentMatch.changes`. It
+ * re-emits on every navigation and stays live across `NotFound` (yielding the empty
+ * subset), so a component can render `[(yield* Router.paramsStream(fields)).changes]`
+ * and update in place even when the outlet keeps the same leaf mounted. Re-exported
+ * as `Router.paramsStream`.
+ */
+function subscribeParams<F extends Fields>(
+  fields: F,
+): Effect.Effect<Subscribable.Subscribable<FieldsType<F>>, never, Router> {
+  return Effect.map(Router, (router) => selectStream(router.currentMatch, fields, "path"));
+}
+
+/**
+ * Reactive counterpart to {@link readQuery}: a {@link Subscribable} of the live
+ * match's **query** for `fields`. Especially useful for query-only changes
+ * (`setQuery` / `patchQuery`), which keep the same leaf mounted: a snapshot
+ * `Router.query` would not update, but this stream does. Re-exported as
+ * `Router.queryStream`.
+ */
+function subscribeQuery<F extends Fields>(
+  fields: F,
+): Effect.Effect<Subscribable.Subscribable<FieldsType<F>>, never, Router> {
+  return Effect.map(Router, (router) => selectStream(router.currentMatch, fields, "query"));
 }
 
 // oxlint-disable-next-line no-namespace -- declaration merge: authoring combinators on the Router Tag
@@ -121,4 +189,8 @@ export namespace Router {
   export const params = readParams;
   /** Reads the live match's query for the requested fields. See {@link readQuery}. */
   export const query = readQuery;
+  /** Reactive {@link Subscribable} of the live match's path params. See {@link subscribeParams}. */
+  export const paramsStream = subscribeParams;
+  /** Reactive {@link Subscribable} of the live match's query. See {@link subscribeQuery}. */
+  export const queryStream = subscribeQuery;
 }

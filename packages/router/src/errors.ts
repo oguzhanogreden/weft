@@ -30,6 +30,24 @@ export const isRouterNotFound = (u: unknown): u is RouterNotFound =>
   typeof u === "object" && u !== null && "_tag" in u && u._tag === "RouterNotFound";
 
 /**
+ * Tagged error raised by the router data endpoint (`GET /_eui/data`) when the
+ * requested boundary `id` is not present in the core boundary registry — i.e. no
+ * `Boundary.server` with that `id` was constructed in the loaded module graph.
+ * Mapped to HTTP 404 on the `"_eui_data"` group (see
+ * `packages/router/src/data-endpoint.specs.md`, AC-D3).
+ *
+ * Modeled as a `Schema.TaggedError` so it crosses the wire like the router's other
+ * typed failures.
+ */
+export class BoundaryDataNotFound extends Schema.TaggedError<BoundaryDataNotFound>()(
+  "BoundaryDataNotFound",
+  {
+    /** The boundary id that could not be resolved in the registry. */
+    id: Schema.String,
+  },
+) {}
+
+/**
  * Tagged error raised by `Router.params` / `Router.query` when the live match does
  * not satisfy the requested fields — either no route is matched, or a requested
  * key is missing / fails its schema's `Type`-side validation. `source` records

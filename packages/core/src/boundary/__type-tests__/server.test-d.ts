@@ -1,6 +1,6 @@
 // oxlint-disable no-unused-vars
 import { Boundary, ServerTag, type AssertNoServerOnly, type Node } from "@effect-ui/core";
-import { Effect, Layer, Schema } from "effect";
+import { Effect, Layer, Option, Schema, Subscribable } from "effect";
 
 // ── Type equality helpers ─────────────────────────────────────────────────────
 
@@ -40,7 +40,12 @@ declare const dbNode: Node<never, DatabaseReq>;
 // ── RServer is discharged: absent from output R ───────────────────────────────
 
 const _discharged = Boundary.server(
-  { load: () => Database.pipe(Effect.map((db) => db.q())), provide: DatabaseLive, schema: Product },
+  {
+    id: "discharged",
+    load: () => Database.pipe(Effect.map((db) => db.q())),
+    provide: DatabaseLive,
+    schema: Product,
+  },
   (_p) => staticNode,
 );
 type _TDischarged = Expect<Equal<typeof _discharged, Node<never, never>>>;
@@ -49,6 +54,7 @@ type _TDischarged = Expect<Equal<typeof _discharged, Node<never, never>>>;
 
 const _loadError = Boundary.server(
   {
+    id: "load-error",
     load: () => Effect.fail(new FooError({ msg: "x" })),
     provide: Layer.empty,
     schema: Product,
@@ -62,14 +68,19 @@ type _TLoadError = Expect<Equal<typeof _loadError, Node<FooError, never>>>;
 
 Boundary.server(
   // @ts-expect-error — `failure` is required when `load` can fail (ELoad ≠ never)
-  { load: () => Effect.fail(new FooError({ msg: "x" })), provide: Layer.empty, schema: Product },
+  {
+    id: "missing-failure",
+    load: () => Effect.fail(new FooError({ msg: "x" })),
+    provide: Layer.empty,
+    schema: Product,
+  },
   (_p) => staticNode,
 );
 
 // `failure` may be omitted when `load` cannot fail (ELoad = never); output type
 // is unchanged from v1 (RServer discharged, no error).
 const _noFailure = Boundary.server(
-  { load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
+  { id: "no-failure", load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
   (_p) => staticNode,
 );
 type _TNoFailure = Expect<Equal<typeof _noFailure, Node<never, never>>>;
@@ -77,7 +88,7 @@ type _TNoFailure = Expect<Equal<typeof _noFailure, Node<never, never>>>;
 // ── render's R passes through untouched (no Exclude) ──────────────────────────
 
 const _clientR = Boundary.server(
-  { load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
+  { id: "client-r", load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
   (_p) => clientNode,
 );
 type _TClientR = Expect<Equal<typeof _clientR, Node<never, ClientService>>>;
@@ -85,7 +96,7 @@ type _TClientR = Expect<Equal<typeof _clientR, Node<never, ClientService>>>;
 // A server-branded tag leaking into `render` is preserved in R (NOT erased),
 // so `hydrate` can later reject it via AssertNoServerOnly.
 const _leak = Boundary.server(
-  { load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
+  { id: "leak", load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
   (_p) => dbNode,
 );
 type _TLeak = Expect<Equal<Node.Context<typeof _leak>, DatabaseReq>>;
@@ -104,7 +115,7 @@ type _TReject = Expect<
 // Omittable when `load` has no requirements (RServer = never); it defaults to
 // `Layer.empty`, and the output type is unchanged from passing it explicitly.
 const _noProvide = Boundary.server(
-  { load: () => Effect.succeed(product), schema: Product },
+  { id: "no-provide", load: () => Effect.succeed(product), schema: Product },
   (_p) => staticNode,
 );
 type _TNoProvide = Expect<Equal<typeof _noProvide, Node<never, never>>>;
@@ -112,8 +123,39 @@ type _TNoProvide = Expect<Equal<typeof _noProvide, Node<never, never>>>;
 // Required when `load` has requirements (RServer ≠ never): omitting it leaves the
 // server requirement un-discharged.
 // @ts-expect-error — `provide` is required when RServer ≠ never
-Boundary.server({ load: () => dbLoad, schema: Product }, (_p) => staticNode);
+Boundary.server({ id: "needs-provide", load: () => dbLoad, schema: Product }, (_p) => staticNode);
 
 // `load` needs Database but `provide` (Layer.empty) does not supply it
-// @ts-expect-error — un-discharged server requirement
-Boundary.server({ load: () => dbLoad, provide: Layer.empty, schema: Product }, (_p) => staticNode);
+Boundary.server(
+  // @ts-expect-error — un-discharged server requirement
+  { id: "wrong-provide", load: () => dbLoad, provide: Layer.empty, schema: Product },
+  (_p) => staticNode,
+);
+
+// ── `id` is required (AC-2) ───────────────────────────────────────────────────
+
+Boundary.server(
+  // @ts-expect-error — `id` is required on every Boundary.server
+  { load: () => Effect.succeed(product), provide: Layer.empty, schema: Product },
+  (_p) => staticNode,
+);
+
+// ── `render` receives a reactive Resource<A>, not a bare A (AC-17) ─────────────
+
+Boundary.server(
+  { id: "resource-shape", load: () => Effect.succeed(product), schema: Product },
+  (resource) => {
+    // `value`/`pending`/`error` are Subscribables; `refetch` is an Effect.
+    const _value: Subscribable.Subscribable<ProductShape> = resource.value;
+    const _pending: Subscribable.Subscribable<boolean> = resource.pending;
+    const _error: Subscribable.Subscribable<Option.Option<unknown>> = resource.error;
+    const _refetch: Effect.Effect<void> = resource.refetch;
+    return staticNode;
+  },
+);
+
+Boundary.server(
+  { id: "not-bare-data", load: () => Effect.succeed(product), schema: Product },
+  // @ts-expect-error — `render`'s arg is a Resource<A>, not the bare data `A`
+  (data: ProductShape) => staticNode,
+);
