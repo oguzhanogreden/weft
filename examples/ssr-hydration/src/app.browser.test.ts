@@ -7,11 +7,18 @@
  * `hydrate` over it and verify the counter becomes interactive in place.
  */
 
+import { AppRpcClientTag } from "@effect-ui/core";
 import { hydrate, type MountHandle } from "@effect-ui/dom/client";
 import { renderToStringHydratable } from "@effect-ui/dom/server";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";
+
+// This example has no `Boundary.rpc`, but the SSR render fns require an
+// `AppRpcClientTag` in context unconditionally — discharge it with a no-op.
+const NoRpc = Layer.succeed(AppRpcClientTag, {
+  call: () => Effect.die(new Error("no rpc in this example")),
+});
 
 let container: HTMLElement;
 let handle: MountHandle;
@@ -29,7 +36,9 @@ afterEach(async () => {
 describe("ssr-hydration example", () => {
   it("renders on the server, then hydrates to an interactive counter", async () => {
     // 1. Server-render to hydratable HTML and install it as the static markup.
-    const html = await Effect.runPromise(renderToStringHydratable(App({ initialValue: 3 })));
+    const html = await Effect.runPromise(
+      Effect.provide(renderToStringHydratable(App({ initialValue: 3 })), NoRpc),
+    );
     container.innerHTML = html;
 
     // 2. The count is present in the static markup before hydration.

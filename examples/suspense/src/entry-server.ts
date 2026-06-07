@@ -15,9 +15,17 @@
  * that swap in the resolved content — visible with `curl -N`.
  */
 
+import { AppRpcClientTag } from "@effect-ui/core";
 import { renderToStreamHydratable } from "@effect-ui/dom/server";
-import type { Stream } from "effect";
+import { Effect, Layer, Stream } from "effect";
 import { App } from "./app";
 
+// This example has no `Boundary.rpc`, but the SSR render fns require an
+// `AppRpcClientTag` in context unconditionally — discharge it with a no-op.
+const NoRpc = Layer.succeed(AppRpcClientTag, {
+  call: () => Effect.die(new Error("no rpc in this example")),
+});
+
 /** Returns the live Effect Stream of HTML chunks. */
-export const renderStream = (): Stream.Stream<string, Error> => renderToStreamHydratable(App());
+export const renderStream = (): Stream.Stream<string, Error> =>
+  Stream.provideLayer(renderToStreamHydratable(App()), NoRpc);

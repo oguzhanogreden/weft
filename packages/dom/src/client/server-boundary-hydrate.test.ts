@@ -1,20 +1,21 @@
 import * as assert from "node:assert/strict";
-import { Boundary, ServerTag, h } from "@effect-ui/core";
+import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
+import type { AppRpcClient, Node } from "@effect-ui/core";
+import { Rpc } from "@effect/rpc";
 import { Cause, Effect, Exit, Layer, Schema } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { HydrationMismatchError } from "~/data";
 import { renderToStringHydratable } from "~/server";
 import { hydrate } from "./render";
-import type { Node } from "@effect-ui/core";
 import type { Renderable } from "@effect-ui/core/types";
 
 /**
- * Adapts a v1-style `(data) => Node` render to the v3 `(resource) => Node`
- * signature by reading the resource's **seeded** value once. The replay seeds the
- * resource with the decoded payload, so `value.get` resolves synchronously to the
- * loaded data and the hydrated HTML is byte-identical to the bare-data render
- * these replay tests were written against (no reactive-region markers).
+ * Adapts a bare `(data) => Node` render to the `(resource) => Node` signature by
+ * reading the resource's **seeded** value once. The replay seeds the resource with
+ * the decoded payload, so `value.get` resolves synchronously to the loaded data and
+ * the hydrated HTML is byte-identical to the bare-data render these replay tests
+ * assert (no reactive-region markers).
  */
 const fromValue =
   <A, E, R>(f: (a: A) => Node<E, R>) =>
@@ -43,10 +44,16 @@ function createRoot(): HTMLElement {
   return root;
 }
 
-/** Renders `app` to hydratable HTML and seeds it into a fresh root. */
-async function seedServerHtml(app: Renderable): Promise<HTMLElement> {
+/**
+ * Renders `app` to hydratable HTML — provided the in-process rpc client `layer`
+ * (the SSR seam) — and seeds it into a fresh root.
+ */
+async function seedServerHtml(
+  app: Renderable,
+  layer: Layer.Layer<AppRpcClientTag>,
+): Promise<HTMLElement> {
   const root = createRoot();
-  const html = await Effect.runPromise(renderToStringHydratable(app));
+  const html = await Effect.runPromise(Effect.provide(renderToStringHydratable(app), layer));
   root.innerHTML = html;
   return root;
 }
@@ -59,52 +66,57 @@ function waitFor(ms: number): Promise<void> {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-interface ProductShape {
-  readonly name: string;
-  readonly price: number;
-}
-
+const StockKey = Schema.Struct({ id: Schema.Number });
 const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
+type ProductShape = typeof Product.Type;
+
+class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+  reason: Schema.String,
+}) {}
+
+const GetProduct = Rpc.make("GetProduct", { payload: StockKey, success: Product });
+const Failing = Rpc.make("Failing", { payload: StockKey, success: Product, error: LoadError });
+
+const ProductBoundary = () =>
+  Boundary.rpc(
+    GetProduct,
+    () => ({ id: 1 }),
+    fromValue((data) => h.div({ class: "product" }, data.name)),
+  );
 
 /**
- * A server-only data source, discharged at the boundary via `provide`. `calls`
- * counts every `load` invocation so tests can prove the client never runs it.
+ * Stub in-process {@link AppRpcClientTag} whose `call` resolves `GetProduct` to a
+ * fixed product. `calls` counts every invocation so tests can prove the client
+ * resolves on the server but **never** during a client `hydrate` (replay).
  */
-const makeDatabase = () => {
+const makeClient = (
+  resolve: () => Effect.Effect<unknown, unknown> = () =>
+    Effect.succeed<ProductShape>({ name: "Widget", price: 9 }),
+) => {
   const state = { calls: 0 };
-  class Database extends ServerTag("Database")<
-    Database,
-    { readonly getProduct: () => Effect.Effect<ProductShape> }
-  >() {}
-  const layer = Layer.succeed(Database, {
-    getProduct: () =>
-      Effect.sync(() => {
-        state.calls++;
-        return { name: "Widget", price: 9 };
-      }),
-  });
-  return { Database, layer, state } as const;
+  const layer = Layer.succeed(AppRpcClientTag, {
+    call: () =>
+      Effect.flatMap(
+        Effect.sync(() => {
+          state.calls++;
+        }),
+        resolve,
+      ),
+  } satisfies AppRpcClient);
+  return { layer, state } as const;
 };
 
 // ---------------------------------------------------------------------------
-// AC-H-S1 / AC-H-S2: replay (decode) without running `load`
+// AC-H-S1 / AC-H-S2: replay (decode) without re-calling the rpc
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server hydrate — replay, not retry", () => {
+describe("Boundary.rpc hydrate — replay, not retry", () => {
   it("decodes the inline payload and adopts render(data) without re-creating it", async () => {
     createTestDOM();
-    const { Database, layer } = makeDatabase();
-    const app = Boundary.server(
-      {
-        id: "replay-decode",
-        load: () => Effect.flatMap(Database, (db) => db.getProduct()),
-        provide: layer,
-        schema: Product,
-      },
-      fromValue((data) => h.div({ class: "product" }, data.name)),
-    );
+    const { layer } = makeClient();
+    const app = ProductBoundary();
 
-    const root = await seedServerHtml(app);
+    const root = await seedServerHtml(app, layer);
     const serverDiv = root.querySelector("div.product");
     assert.ok(serverDiv, "server should have rendered the product div");
     (serverDiv as unknown as { __sentinel?: boolean }).__sentinel = true;
@@ -117,42 +129,28 @@ describe("Boundary.server hydrate — replay, not retry", () => {
     assert.equal(serverDiv?.textContent, "Widget");
   });
 
-  it("never calls `load` on the client (replays the serialized result)", async () => {
+  it("never calls the rpc on the client (replays the serialized result)", async () => {
     createTestDOM();
-    const { Database, layer, state } = makeDatabase();
-    const app = Boundary.server(
-      {
-        id: "replay-no-load",
-        load: () => Effect.flatMap(Database, (db) => db.getProduct()),
-        provide: layer,
-        schema: Product,
-      },
-      fromValue((data) => h.div({ class: "product" }, data.name)),
-    );
+    const { layer, state } = makeClient();
+    const app = ProductBoundary();
 
-    const root = await seedServerHtml(app);
-    // The server walk ran `load` once; reset and prove hydrate adds nothing.
+    const root = await seedServerHtml(app, layer);
+    // The server walk resolved the rpc once; reset and prove hydrate adds nothing.
     assert.equal(state.calls, 1);
     state.calls = 0;
 
-    await Effect.runPromise(hydrate(app, root));
+    // Provide the same client to hydrate; replay must not invoke it.
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
 
     assert.equal(state.calls, 0);
   });
 
   it("removes the inline payload script after hydration", async () => {
     createTestDOM();
-    const app = Boundary.server(
-      {
-        id: "replay-remove-script",
-        load: () => Effect.succeed({ name: "Widget", price: 9 }),
-        provide: Layer.empty,
-        schema: Product,
-      },
-      fromValue((data) => h.div({ class: "product" }, data.name)),
-    );
+    const { layer } = makeClient();
+    const app = ProductBoundary();
 
-    const root = await seedServerHtml(app);
+    const root = await seedServerHtml(app, layer);
     assert.ok(root.querySelector('script[type="application/json"]'), "payload present pre-hydrate");
 
     await Effect.runPromise(hydrate(app, root));
@@ -165,17 +163,14 @@ describe("Boundary.server hydrate — replay, not retry", () => {
 // AC-H-S3: post-hydrate interactivity wired against adopted DOM
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server hydrate — interactivity", () => {
+describe("Boundary.rpc hydrate — interactivity", () => {
   it("attaches a handler inside render(data) that fires post-hydrate", async () => {
     const dom = createTestDOM();
+    const { layer } = makeClient();
     let fired = 0;
-    const app = Boundary.server(
-      {
-        id: "interactivity",
-        load: () => Effect.succeed({ name: "Widget", price: 9 }),
-        provide: Layer.empty,
-        schema: Product,
-      },
+    const app = Boundary.rpc(
+      GetProduct,
+      () => ({ id: 1 }),
       fromValue((data) =>
         h.div({ class: "product" }, [
           h.span({}, data.name),
@@ -184,7 +179,7 @@ describe("Boundary.server hydrate — interactivity", () => {
       ),
     );
 
-    const root = await seedServerHtml(app);
+    const root = await seedServerHtml(app, layer);
     await Effect.runPromise(hydrate(app, root));
 
     const button = root.querySelector("button");
@@ -200,23 +195,20 @@ describe("Boundary.server hydrate — interactivity", () => {
 // AC-H-S4: cursor stays aligned — siblings after the boundary still hydrate
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server hydrate — cursor alignment", () => {
+describe("Boundary.rpc hydrate — cursor alignment", () => {
   it("steps the cursor past render(data) so a following sibling hydrates", async () => {
     createTestDOM();
+    const { layer } = makeClient();
     const app = h.div({}, [
-      Boundary.server(
-        {
-          id: "cursor-align",
-          load: () => Effect.succeed({ name: "Widget", price: 9 }),
-          provide: Layer.empty,
-          schema: Product,
-        },
+      Boundary.rpc(
+        GetProduct,
+        () => ({ id: 1 }),
         fromValue((data) => h.span({ class: "product" }, data.name)),
       ),
       h.p({ class: "after" }, "after"),
     ]);
 
-    const root = await seedServerHtml(app);
+    const root = await seedServerHtml(app, layer);
     const serverAfter = root.querySelector("p.after");
     assert.ok(serverAfter);
     (serverAfter as unknown as { __sentinel?: boolean }).__sentinel = true;
@@ -231,30 +223,30 @@ describe("Boundary.server hydrate — cursor alignment", () => {
 
   it("hydrates nested server boundaries positionally", async () => {
     createTestDOM();
-    const app = Boundary.server(
-      {
-        id: "nested-outer",
-        load: () => Effect.succeed({ name: "Outer", price: 1 }),
-        provide: Layer.empty,
-        schema: Product,
-      },
+    const handlers = Layer.succeed(AppRpcClientTag, {
+      call: (tag) =>
+        tag === "Outer"
+          ? Effect.succeed<ProductShape>({ name: "Outer", price: 1 })
+          : Effect.succeed<ProductShape>({ name: "Inner", price: 2 }),
+    } satisfies AppRpcClient);
+    const OuterRpc = Rpc.make("Outer", { payload: StockKey, success: Product });
+    const InnerRpc = Rpc.make("Inner", { payload: StockKey, success: Product });
+    const app = Boundary.rpc(
+      OuterRpc,
+      () => ({ id: 1 }),
       fromValue((outer) =>
         h.div({ class: "outer" }, [
           outer.name,
-          Boundary.server(
-            {
-              id: "nested-inner",
-              load: () => Effect.succeed({ name: "Inner", price: 2 }),
-              provide: Layer.empty,
-              schema: Product,
-            },
+          Boundary.rpc(
+            InnerRpc,
+            () => ({ id: 2 }),
             fromValue((inner) => h.span({ class: "inner" }, inner.name)),
           ),
         ]),
       ),
     );
 
-    const root = await seedServerHtml(app);
+    const root = await seedServerHtml(app, handlers);
     await Effect.runPromise(hydrate(app, root));
 
     assert.equal(root.querySelector("span.inner")?.textContent, "Inner");
@@ -268,17 +260,8 @@ describe("Boundary.server hydrate — cursor alignment", () => {
 // AC-H-S5: payload absence / decode failure → recoverable mismatch
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server hydrate — payload divergence", () => {
-  const boundaryApp = () =>
-    Boundary.server(
-      {
-        id: "divergence",
-        load: () => Effect.succeed({ name: "Widget", price: 9 }),
-        provide: Layer.empty,
-        schema: Product,
-      },
-      fromValue((data) => h.div({ class: "product" }, data.name)),
-    );
+describe("Boundary.rpc hydrate — payload divergence", () => {
+  const boundaryApp = () => ProductBoundary();
 
   it("fails with HydrationMismatchError when the payload script is missing", async () => {
     createTestDOM();
@@ -319,49 +302,37 @@ describe("Boundary.server hydrate — payload divergence", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Typed-failure replay (core AC-16): decode the encoded `load` failure and
-// reproduce the SAME enclosing-failure-boundary fallback without running `load`.
+// Typed-failure replay (core AC-15): decode the encoded rpc error and reproduce
+// the SAME enclosing-failure-boundary fallback without re-calling the rpc.
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server hydrate — typed-failure replay", () => {
-  class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
-    reason: Schema.String,
-  }) {}
-
-  /** A failing-`load` server boundary under a `catchAll` that renders the error. */
-  const makeFailingApp = (calls: { n: number }) =>
+describe("Boundary.rpc hydrate — typed-failure replay", () => {
+  /** A failing-rpc server boundary under a `catchAll` that renders the error. */
+  const makeFailingApp = () =>
     Boundary.catchAll({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
-      Boundary.server(
-        {
-          id: "failure-replay",
-          load: () =>
-            Effect.sync(() => {
-              calls.n++;
-            }).pipe(Effect.flatMap(() => Effect.fail(new LoadError({ reason: "db down" })))),
-          provide: Layer.empty,
-          schema: Product,
-          failure: LoadError,
-        },
+      Boundary.rpc(
+        Failing,
+        () => ({ id: 1 }),
         fromValue((data) => h.div({ class: "product" }, data.name)),
       ),
     ]);
 
-  it("replays the encoded failure into the same fallback without running load (AC-16)", async () => {
+  it("replays the encoded failure into the same fallback without re-calling the rpc (AC-15)", async () => {
     createTestDOM();
-    const calls = { n: 0 };
-    const app = makeFailingApp(calls);
+    const { layer, state } = makeClient(() => Effect.fail(new LoadError({ reason: "db down" })));
+    const app = makeFailingApp();
 
-    const root = await seedServerHtml(app);
-    assert.equal(calls.n, 1, "server ran load once");
+    const root = await seedServerHtml(app, layer);
+    assert.equal(state.calls, 1, "server called the rpc once");
     const serverFallback = root.querySelector("div.fallback");
     assert.ok(serverFallback, "server rendered the enclosing fallback");
     (serverFallback as unknown as { __sentinel?: boolean }).__sentinel = true;
-    calls.n = 0;
+    state.calls = 0;
 
-    await Effect.runPromise(hydrate(app, root));
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
 
-    // `load` is NOT re-run; the same fallback node is adopted in place.
-    assert.equal(calls.n, 0, "client never runs load (replay, not retry)");
+    // The rpc is NOT re-called; the same fallback node is adopted in place.
+    assert.equal(state.calls, 0, "client never calls the rpc (replay, not retry)");
     assert.equal(root.querySelector("div.fallback"), serverFallback);
     assert.equal((serverFallback as unknown as { __sentinel?: boolean }).__sentinel, true);
     assert.equal(serverFallback?.textContent, "db down");
@@ -377,7 +348,7 @@ describe("Boundary.server hydrate — typed-failure replay", () => {
     root.innerHTML =
       '<script type="application/json" data-eui-boundary-failure>not json</script><div class="fallback">db down</div>';
 
-    const exit = await Effect.runPromiseExit(hydrate(makeFailingApp({ n: 0 }), root));
+    const exit = await Effect.runPromiseExit(hydrate(makeFailingApp(), root));
 
     assert.ok(Exit.isFailure(exit));
     assert.ok(Cause.squash(exit.cause) instanceof HydrationMismatchError);

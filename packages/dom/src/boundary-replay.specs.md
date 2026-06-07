@@ -3,7 +3,7 @@
 ## Overview
 
 `boundary-replay.ts` is the single module shared by the **server SSR** and the
-**client `hydrate`** so that a failing `Boundary.server`'s position is computed
+**client `hydrate`** so that a failing `Boundary.rpc`'s position is computed
 identically on both sides. It owns:
 
 - `BOUNDARY_FAILURE_ATTR` — the marker attribute (`data-eui-boundary-failure`) on
@@ -29,14 +29,14 @@ positional determinism hydration already relies on for suspense / `List.each`.
 
 ### AC-BR1: Pre-order, document order
 
-- **Given** a `children` tree containing multiple `Boundary.server` descriptors
+- **Given** a `children` tree containing multiple `Boundary.rpc` descriptors
 - **When** `collectServerBoundaries(children)` runs
 - **Then** it returns their `props` in pre-order (depth-first, document order),
-  so `[0]` is the first `Boundary.server` encountered, `[1]` the next, etc.
+  so `[0]` is the first `Boundary.rpc` encountered, `[1]` the next, etc.
 
 ### AC-BR2: Reference identity
 
-- **Given** a `Boundary.server` descriptor reachable in `children`
+- **Given** a `Boundary.rpc` descriptor reachable in `children`
 - **When** collected
 - **Then** the returned element is the **same object** as the descriptor's live
   `props` (so the server can `indexOf(owner)` by reference identity).
@@ -50,9 +50,9 @@ positional determinism hydration already relies on for suspense / `List.each`.
 
 ### AC-BR4: Does not descend data-dependent regions
 
-- **Then** the traversal does **not** descend into another `Boundary.server`'s
+- **Then** the traversal does **not** descend into another `Boundary.rpc`'s
   `render(data)` output, a `List.each` projection, or a genuinely reactive
-  `Effect`/`Stream` child with no static descriptor. A `Boundary.server`
+  `Effect`/`Stream` child with no static descriptor. A `Boundary.rpc`
   reachable only through one of these is **not** indexed (its failure degrades to
   a recoverable hydration mismatch, like a missing payload).
 
@@ -66,7 +66,7 @@ positional determinism hydration already relies on for suspense / `List.each`.
 
 ## Constraint
 
-A `Boundary.server` whose typed `load` failure should be replayed on the client
+A `Boundary.rpc` whose typed rpc failure should be replayed on the client
 **must be statically reachable** within the enclosing failure boundary's
 `children` per AC-BR3/AC-BR4. This mirrors the determinism every other positional
 adopt-walk already requires.

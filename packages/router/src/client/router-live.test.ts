@@ -1,10 +1,14 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@effect-ui/core";
+import { Rpc, RpcGroup } from "@effect/rpc";
 import { Effect, Option, Schema } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test } from "vite-plus/test";
 import { Router } from "~/index";
 import { RouterLive } from "~/client/router-live";
+
+/** Minimal rpc group: the fixture has no `Boundary.rpc`, but `rpc` is required. */
+const NoopRpcs = RpcGroup.make(Rpc.make("Noop", { payload: Schema.Void, success: Schema.Void }));
 
 const Page = (label: string) => () => h.div({}, label);
 
@@ -42,14 +46,14 @@ afterEach(() => {
 });
 
 /** Reads the `Router` service exposed by `RouterLive(def, options)`. */
-function readService(options?: Parameters<typeof RouterLive>[1]): Promise<Router["Type"]> {
+function readService(options?: Partial<Parameters<typeof RouterLive>[1]>): Promise<Router["Type"]> {
   return Effect.runPromise(
     Effect.scoped(
       Effect.provide(
         Effect.gen(function* () {
           return yield* Router;
         }),
-        RouterLive(fixture(), options),
+        RouterLive(fixture(), { rpc: { group: NoopRpcs }, ...options }),
       ),
     ),
   );

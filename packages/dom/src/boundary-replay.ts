@@ -21,8 +21,8 @@ import { Effect, type Schema } from "effect";
 export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
 
 /**
- * The fields of a `Boundary.server` descriptor's `props` that the typed-failure
- * replay path needs: `failure` (to decode the encoded `load` error on the
+ * The fields of a `Boundary.rpc` descriptor's `props` that the typed-failure
+ * replay path needs: `errorSchema` (to decode the encoded rpc error on the
  * client) plus the success-replay fields. Both the server SSR props and the
  * client hydrate props are structurally assignable to this, and the server
  * matches an entry by **reference identity** against the failing boundary's
@@ -30,9 +30,9 @@ export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
  * objects (not copies).
  */
 export interface ServerBoundaryReplayProps {
-  readonly schema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Schema<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
-  readonly failure?: Schema.Schema<unknown, unknown>;
+  readonly errorSchema: Schema.Schema<unknown, unknown>;
 }
 
 /**

@@ -22,7 +22,8 @@
   "dependencies": {
     "@effect-ui/core": "workspace:*",
     "@effect-ui/dom": "workspace:*",
-    "@effect/platform": "catalog:"
+    "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",

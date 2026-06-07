@@ -12,6 +12,7 @@ import { hydrate } from "@effect-ui/dom/client";
 import { RouterApp, RouterLive } from "@effect-ui/router/client";
 import { ManagedRuntime } from "effect";
 import { App } from "./app";
+import { StockRpcs } from "./data/inventory";
 
 const root = document.getElementById("root");
 if (root === null) {
@@ -21,5 +22,5 @@ if (root === null) {
 // `RouterLive` is a scoped layer (it owns the popstate listener + link click
 // interceptor), so it must outlive `hydrate`. A `ManagedRuntime` keeps it alive
 // for the page's lifetime; `hydrate` captures the `Router` service from it.
-const runtime = ManagedRuntime.make(RouterLive(App));
+const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } }));
 void runtime.runPromise(hydrate(RouterApp(App), root));

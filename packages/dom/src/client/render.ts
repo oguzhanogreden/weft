@@ -19,7 +19,7 @@ import {
   pipe,
 } from "effect";
 import {
-  BoundaryDataClientTag,
+  AppRpcClientTag,
   FAILURE_BOUNDARY,
   FRAGMENT,
   getElementDescriptor,
@@ -31,6 +31,7 @@ import {
   toStream,
 } from "@effect-ui/core";
 import type {
+  AppRpcClient,
   AssertNoServerOnly,
   Boundary,
   ElementDescriptor,
@@ -652,6 +653,94 @@ function renderSuspenseBoundary(
   });
 }
 
+/**
+ * Implements the **client-first mount** of a {@link Boundary.rpc} region (C1) —
+ * the SPA-navigation path with no SSR payload to replay. Models
+ * {@link renderSuspenseBoundary}: shows `props.fallback` bracketed by comment
+ * markers, then forks a fiber that resolves the rpc through the ambient
+ * {@link AppRpcClientTag} (`call(tag, payload())`), seeds a live
+ * {@link Boundary.Resource} from the decoded success, renders `render(resource)`,
+ * and atomically swaps it in for the fallback.
+ *
+ * With no {@link AppRpcClientTag} in context (a router-less mount) the boundary
+ * cannot be resolved — a descriptive, typed {@link RenderError} is raised (not a
+ * defect), mirroring how the hydrate path degrades. A failed rpc call after mount
+ * is logged and leaves the fallback in place (there is no prior value to keep —
+ * stale-on-error applies only to a subsequent {@link Boundary.Resource.refetch}).
+ */
+function renderServerBoundary(
+  props: ServerBoundaryProps,
+): Effect.Effect<
+  readonly Node[],
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    const context = yield* RenderContext;
+    const client = yield* Effect.serviceOption(AppRpcClientTag);
+
+    // No router/rpc present: a client-first mount cannot resolve the boundary.
+    if (Option.isNone(client)) {
+      return yield* Effect.fail(
+        new RenderError({
+          cause: undefined,
+          message:
+            `Boundary.rpc "${props.tag}" was mounted client-first without an AppRpcClient ` +
+            "in context. Mount the app under @effect-ui/router (RouterLive), which provides " +
+            "the rpc client, so the boundary can resolve its data.",
+        }),
+      );
+    }
+
+    const rpcClient = client.value;
+    const id = nextBoundaryId();
+    const startMarker = document.createComment(boundaryStartText(id));
+    const endMarker = document.createComment(boundaryEndText(id));
+
+    // Render the fallback inline between the markers while the rpc resolves.
+    const fallbackResult = yield* renderNode((props.fallback ?? null) as Renderable);
+    const fallbackNodes: Node[] = [];
+    if (fallbackResult !== null) {
+      if (Array.isArray(fallbackResult)) {
+        fallbackNodes.push(...(fallbackResult as Node[]));
+      } else {
+        fallbackNodes.push(fallbackResult as Node);
+      }
+    }
+
+    // Forked resolution: call the rpc, seed a Resource from the decoded success,
+    // render render(resource), and swap it in for the fallback between markers.
+    const swapEffect = Effect.gen(function* () {
+      const data = yield* rpcClient.call(props.tag, props.payload());
+      const resource = yield* makeClientResource(props.tag, props.payload, data, client);
+      const rendered = yield* renderNode(props.render(resource));
+
+      removeNodesBetweenMarkers(startMarker, endMarker);
+      const parent = endMarker.parentNode;
+      if (parent !== null && rendered !== null) {
+        if (Array.isArray(rendered)) {
+          for (const node of rendered as Node[]) {
+            parent.insertBefore(node, endMarker);
+          }
+        } else {
+          parent.insertBefore(rendered as Node, endMarker);
+        }
+      }
+    }).pipe(
+      Effect.catchAllCause((cause) =>
+        Effect.logError(
+          `[effect-ui] Boundary.rpc "${props.tag}" mount failed to resolve; fallback left in place.`,
+          cause,
+        ),
+      ),
+    );
+
+    yield* Effect.forkIn(swapEffect, context.scope);
+
+    return [startMarker, ...fallbackNodes, endMarker] as readonly Node[];
+  });
+}
+
 // ============================================================================
 // Core Renderer
 // ============================================================================
@@ -721,6 +810,12 @@ export function renderNode(
       // Suspense boundary
       if (type === SUSPENSE_BOUNDARY) {
         return yield* renderSuspenseBoundary(props as Boundary.SuspenseProps);
+      }
+
+      // Server (rpc) boundary — client-first mount (C1). Hydrate has its own
+      // branch (`hydrateServerBoundary`); this is the SPA-navigation path.
+      if (type === SERVER_BOUNDARY) {
+        return yield* renderServerBoundary(props as ServerBoundaryProps);
       }
 
       // Error boundary
@@ -2242,10 +2337,10 @@ function hydrateFailureBoundary(
       });
       const owner = collectServerBoundaries(props.children)[payload.index];
       // Boundary not statically locatable: degrade to a recoverable mismatch.
-      if (owner?.failure === undefined) {
+      if (owner === undefined) {
         return null;
       }
-      const decoded = yield* Schema.decodeUnknown(owner.failure)(payload.error);
+      const decoded = yield* Schema.decodeUnknown(owner.errorSchema)(payload.error);
       return props.match(Cause.fail(decoded));
     }).pipe(
       Effect.catchAll((cause) => {
@@ -2272,38 +2367,42 @@ function hydrateFailureBoundary(
 }
 
 /**
- * Client-side props read from a {@link Boundary.server} descriptor during
- * hydration. `load` and `provide` are intentionally absent from the type: the
- * client **never** runs `load` — it replays the server result from the inline
- * payload, then serves later refetches through the injected
- * {@link BoundaryDataClientTag} transport (never `load`). The fields the client
- * keeps are `id` (the registry/endpoint key passed to a refetch), `schema` (to
- * decode the inline payload **and** the refetch envelope) and `render` (to build
- * the subtree from the live {@link Boundary.Resource}).
+ * Client-side props read from a {@link Boundary.rpc} descriptor. There is no
+ * co-located `load`: the client resolves the boundary's data through the ambient
+ * {@link AppRpcClientTag} by calling `call(tag, payload())`. On hydrate it
+ * **replays** the inline SSR payload (decoded via `successSchema`) rather than
+ * re-calling; later refetches and a client-first mount call the rpc. The fields
+ * the client keeps are `tag` (the rpc identity), `payload` (a thunk producing a
+ * fresh payload per call), `successSchema` (to decode the inline SSR payload),
+ * `render` (to build the subtree from the live {@link Boundary.Resource}) and
+ * `fallback` (shown during a client-first mount).
  */
 interface ServerBoundaryProps {
-  readonly id: string;
-  readonly schema: Schema.Schema<unknown, unknown>;
+  readonly tag: string;
+  readonly payload: () => unknown;
+  readonly successSchema: Schema.Schema<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
+  readonly fallback?: Renderable;
 }
 
 /**
- * Builds the live, client-side {@link Boundary.Resource} a hydrated
- * {@link Boundary.server} region hands to `render`. `value` is seeded from the
- * replayed SSR `data` so its first emission matches the adopted DOM (no flash);
- * `refetch` re-reads the data through the injected {@link BoundaryDataClientTag}
- * transport (never `load`), decoding the envelope via the **same** `schema` as the
- * inline payload, then `SubscriptionRef.set`s `value` so the subtree patches in
- * place. A refetch is **stale-on-error**: a transport/decode failure leaves the
- * previous `value` intact, sets `error` to `Some`, and never raises into an
- * enclosing failure `Boundary`. When no transport is present (`Option.none` —
- * server, or a router-less mount) `refetch` is a no-op.
+ * Builds the live, client-side {@link Boundary.Resource} a {@link Boundary.rpc}
+ * region hands to `render`. `value` is seeded from `data` (the replayed SSR
+ * payload on hydrate, or the freshly-resolved value on a client-first mount) so
+ * its first emission matches the rendered DOM; `refetch` re-reads the data through
+ * the injected {@link AppRpcClientTag} by calling `call(tag, payload())` — the
+ * rpc client returns an already-decoded success — then `SubscriptionRef.set`s
+ * `value` so the subtree patches in place. A refetch is **stale-on-error**: a
+ * transport/rpc failure leaves the previous `value` intact, sets `error` to
+ * `Some`, and never raises into an enclosing failure `Boundary`. When no client
+ * is present (`Option.none` — server, or a router-less mount) `refetch` is a
+ * no-op.
  */
 function makeClientResource(
-  id: string,
-  schema: Schema.Schema<unknown, unknown>,
+  tag: string,
+  payload: () => unknown,
   data: unknown,
-  client: Option.Option<BoundaryDataClientTag["Type"]>,
+  client: Option.Option<AppRpcClient>,
 ): Effect.Effect<Boundary.Resource<unknown>> {
   return Effect.gen(function* () {
     const valueRef = yield* SubscriptionRef.make(data);
@@ -2311,21 +2410,16 @@ function makeClientResource(
     const errorRef = yield* SubscriptionRef.make<Option.Option<unknown>>(Option.none());
 
     const refetch: Effect.Effect<void> = Option.match(client, {
-      // No transport (server / router-less mount): refetch cannot reach the
-      // endpoint, so it is a no-op — the region stays at its seeded value.
+      // No client (server / router-less mount): refetch cannot reach the rpc, so
+      // it is a no-op — the region stays at its seeded value.
       onNone: () => Effect.void,
-      onSome: (dataClient) =>
+      onSome: (rpcClient) =>
         Effect.gen(function* () {
           yield* SubscriptionRef.set(pendingRef, true);
-          // Decode the envelope through the SAME schema the inline payload used
-          // (`server.specs.md` AC-D6), so refetch and hydrate share one decode path.
-          const next = yield* dataClient.fetch({ id }).pipe(
-            Effect.flatMap((envelope) =>
-              Effect.try({ try: () => JSON.parse(envelope) as unknown, catch: (cause) => cause }),
-            ),
-            Effect.flatMap((encoded) => Schema.decodeUnknown(schema)(encoded)),
-            Effect.either,
-          );
+          // The rpc client returns an already-decoded success value, so no schema
+          // decode is needed here (unlike the inline SSR payload, which is the
+          // encoded form). A fresh `payload()` is produced per call.
+          const next = yield* rpcClient.call(tag, payload()).pipe(Effect.either);
           if (next._tag === "Right") {
             // Success: push the new value (subtree patches in place) and clear error.
             yield* SubscriptionRef.set(valueRef, next.right);
@@ -2406,7 +2500,7 @@ function hydrateServerBoundary(
       try: () => JSON.parse(raw) as unknown,
       catch: (cause) => cause,
     }).pipe(
-      Effect.flatMap((encoded) => Schema.decodeUnknown(props.schema)(encoded)),
+      Effect.flatMap((encoded) => Schema.decodeUnknown(props.successSchema)(encoded)),
       Effect.catchAll((cause) => {
         console.error(
           `[effect-ui] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
@@ -2417,13 +2511,13 @@ function hydrateServerBoundary(
     );
 
     // Seed a live Resource from the replayed data and (optionally) the injected
-    // refetch transport, then hydrate render(resource) against the adopted DOM
-    // following the payload script. `value`'s first emission is the seeded data,
-    // so the adopt-walk matches the server DOM (no fallback flash). The script is
-    // then dropped — it is consumed only by hydration; the region stays live for
+    // rpc client, then hydrate render(resource) against the adopted DOM following
+    // the payload script. `value`'s first emission is the seeded data, so the
+    // adopt-walk matches the server DOM (no fallback flash). The script is then
+    // dropped — it is consumed only by hydration; the region stays live for
     // subsequent refetches.
-    const client = yield* Effect.serviceOption(BoundaryDataClientTag);
-    const resource = yield* makeClientResource(props.id, props.schema, data, client);
+    const client = yield* Effect.serviceOption(AppRpcClientTag);
+    const resource = yield* makeClientResource(props.tag, props.payload, data, client);
     const next = yield* hydrateNode(props.render(resource), script.nextSibling, path);
     script.remove();
     return next;

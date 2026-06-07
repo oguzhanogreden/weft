@@ -1,7 +1,7 @@
 import type { Node } from "@effect-ui/core";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema } from "effect";
-import { BoundaryDataNotFound, RouterNotFound } from "./errors";
+import { RouterNotFound } from "./errors";
 import type { ComponentSlot, LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
 
 /**
@@ -257,13 +257,9 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
  * Each leaf's `pathSchema`/`querySchema` are typed string-encodeable (see
  * {@link CompiledLeaf}), so `setPath`/`setUrlParams` need no `as any` casts.
  *
- * Alongside `"pages"`, a static `"_eui_data"` group carries the single
- * `boundaryData` endpoint (`GET /_eui/data`) that backs `Boundary.server` client
- * refetch — keyed by boundary `id`, returning a `schema`-encoded JSON envelope
- * (success `Schema.String`), `BoundaryDataNotFound → 404`. It lives on the same
- * spine the client `HttpApiClient` is derived from, so server dispatch and client
- * call agree by construction (see `data-endpoint.specs.md`). The matcher reads
- * only `"pages"`, so the extra group does not affect URL→leaf resolution.
+ * `Boundary.rpc` data no longer rides this spine: it resolves through the app's
+ * merged `RpcGroup` over the ambient `AppRpcClient` (`POST /_eui/rpc`), wired
+ * explicitly into `RouterServer`/`RouterLive`. The matcher reads only `"pages"`.
  */
 export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.HttpApi.Any {
   // The group/endpoint types accumulate per-endpoint; a precise static type is not
@@ -280,13 +276,7 @@ export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.HttpApi.A
       ),
     HttpApiGroup.make("pages"),
   );
-  const dataGroup = HttpApiGroup.make("_eui_data").add(
-    HttpApiEndpoint.get("boundaryData", "/_eui/data")
-      .setUrlParams(Schema.Struct({ id: Schema.String, params: Schema.optional(Schema.String) }))
-      .addSuccess(Schema.String)
-      .addError(BoundaryDataNotFound, { status: 404 }),
-  );
-  return HttpApi.make("router").add(group).add(dataGroup);
+  return HttpApi.make("router").add(group);
 }
 
 /**

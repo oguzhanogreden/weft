@@ -1,5 +1,6 @@
-import { BoundaryDataClientTag } from "@effect-ui/core";
+import { AppRpcClientTag } from "@effect-ui/core";
 import { FetchHttpClient, HttpApiClient } from "@effect/platform";
+import { type RpcGroup, RpcClient, RpcSerialization } from "@effect/rpc";
 import {
   Context,
   Effect,
@@ -15,13 +16,28 @@ import { match, type RouteMatch } from "../matcher";
 import { type NavigateOptions, Router, type RouterHttpApiClient } from "../router-service";
 import { installLinkInterceptor } from "./link";
 
+/** Path the client rpc protocol posts to; mirrors `RouterServer`'s server route. */
+const RPC_PATH = "/_eui/rpc";
+
 /** Options for {@link RouterLive}. */
 export interface RouterLiveOptions {
   /**
-   * Base URL for the derived `HttpApiClient`'s network requests (route prefetch /
-   * future data). Defaults to the document's same origin (`window.location.origin`).
+   * Base URL for the derived `HttpApiClient` (route prefetch) and the rpc client's
+   * `POST /_eui/rpc` endpoint. Defaults to the document's same origin
+   * (`window.location.origin`).
    */
   readonly baseUrl?: string | URL;
+  /**
+   * The app's `Boundary.rpc` foundation: the merged `RpcGroup` contract (shared
+   * with the server handler Layer). Backs the {@link AppRpcClientTag} seam so a
+   * hydrated boundary refetch — and a client-first SPA mount — resolve over the
+   * network rpc client.
+   */
+  readonly rpc: {
+    /** The app's merged `RpcGroup` (pure Schema contract). */
+    // oxlint-disable-next-line typescript/no-explicit-any
+    readonly group: RpcGroup.RpcGroup<any>;
+  };
 }
 
 /** Reads the current location as a normalized `path + search` string. */
@@ -47,15 +63,16 @@ function normalizeTo(to: string): string {
  * `Router` service for network work. SPA URL→leaf resolution stays local via the
  * shared {@link match}er — both sides read the one `def.httpApi` definition.
  *
- * The same derived client also backs the core {@link BoundaryDataClientTag}
- * transport, provided alongside `Router` so a hydrated `Boundary.server` can
- * `refetch` through `GET /_eui/data` without `@effect-ui/dom` depending on this
- * package.
+ * Alongside `Router` it provides the core {@link AppRpcClientTag} seam — a
+ * **network** flat rpc client (`RpcClient.make` over `layerProtocolHttp` →
+ * `POST /_eui/rpc`) — so `@effect-ui/dom` can resolve a `Boundary.rpc` (hydrated
+ * refetch and client-first mount) without depending on this package or
+ * `@effect/rpc`.
  */
 export function RouterLive(
   def: RouterDef,
-  options?: RouterLiveOptions,
-): Layer.Layer<Router | BoundaryDataClientTag> {
+  options: RouterLiveOptions,
+): Layer.Layer<Router | AppRpcClientTag> {
   return Layer.scopedContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
@@ -68,7 +85,7 @@ export function RouterLive(
       const makeClient = HttpApiClient.make(
         // oxlint-disable-next-line typescript/no-explicit-any
         def.httpApi as any,
-        { baseUrl: options?.baseUrl ?? window.location.origin },
+        { baseUrl: options.baseUrl ?? window.location.origin },
       ).pipe(
         Effect.provide(FetchHttpClient.layer),
       ) as unknown as Effect.Effect<RouterHttpApiClient>;
@@ -106,18 +123,23 @@ export function RouterLive(
         changes: Stream.map(urlRef.changes, (url): RouteMatch => match(def, url)),
       });
 
-      // The core boundary-refetch transport: a thin wrapper over the derived
-      // client's `_eui_data.boundaryData` endpoint, returning the raw JSON
-      // envelope. `@effect-ui/dom` reads this tag to refetch a hydrated
-      // `Boundary.server` without importing this package. The endpoint shape is
-      // runtime-assembled (`HttpApi.Any`), so the call is reached through the
-      // opaque client cast.
-      const dataClient = BoundaryDataClientTag.of({
-        fetch: (request) =>
-          // oxlint-disable-next-line typescript/no-explicit-any
-          (httpApiClient as any)._eui_data.boundaryData({
-            urlParams: { id: request.id, params: request.params },
-          }) as Effect.Effect<string, unknown>,
+      // The {@link AppRpcClientTag} seam: a **network** flat rpc client over the
+      // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@effect-ui/dom`
+      // reads this tag to resolve a `Boundary.rpc` — hydrated refetch and
+      // client-first mount — without importing this package or `@effect/rpc`.
+      const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
+      const flatClient = yield* RpcClient.make(options.rpc.group, { flatten: true }).pipe(
+        Effect.provide(
+          RpcClient.layerProtocolHttp({ url: `${baseUrl}${RPC_PATH}` }).pipe(
+            Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerJson)),
+          ),
+        ),
+        // The group is runtime-assembled (`RpcGroup<any>`); the flat caller is
+        // reached through the same loosening the core seam documents.
+        // oxlint-disable-next-line typescript/no-explicit-any
+      ) as Effect.Effect<any, never, never>;
+      const appRpcClient = AppRpcClientTag.of({
+        call: (tag, payload) => flatClient(tag, payload),
       });
 
       const router = Router.of({
@@ -126,7 +148,7 @@ export function RouterLive(
         httpApiClient: Option.some(httpApiClient),
       });
 
-      return Context.make(Router, router).pipe(Context.add(BoundaryDataClientTag, dataClient));
+      return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));
     }),
   );
 }

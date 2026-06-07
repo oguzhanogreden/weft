@@ -18,8 +18,8 @@ entry, and a `./server` entry.
 
 A route's **component is its handler**. The endpoint carries only the routing
 contract (path-param schema + query schema). There is no per-route success-data
-schema / loader in v1 — server-only data stays with `Boundary.server`, and
-client-side async with `Boundary.suspend`.
+schema / loader — server-only data stays with `Boundary.rpc` (backed by the app's
+merged `RpcGroup`), and client-side async with `Boundary.suspend`.
 
 ### Authoring surface — explicit nested route tree
 
@@ -358,11 +358,33 @@ Programmatic, type-safe navigation built on the `Router` service and the type-sa
   by `AssertNoServerOnly` at the `hydrate` call site (inherited from
   `@effect-ui/dom/client`).
 
-## `Boundary.server` interplay (documented limitation)
+## `Boundary.rpc` interplay (rpc data foundation)
 
-Initial SSR navigation works end to end (server renders + inline payload, client
-replays during `hydrate`). **Client-side** navigation to a page containing
-`Boundary.server` has no server payload — it surfaces via the existing
-recoverable hydration path. The recommended pattern for post-navigation data is
-`Boundary.suspend`. Server-data-on-client-navigation is explicitly **out of v1
-scope**, consistent with `Boundary.server` being replay-only.
+`Boundary.rpc` resolves through the ambient `AppRpcClientTag` seam (defined in
+`@effect-ui/core`), which the router provides on **both** sides over the app's
+merged `RpcGroup` (passed as `RouterServer`/`RouterLive`'s `rpc: { group, handlers }`
+option):
+
+- **Server** (`RouterServer`): provides an **in-process** flat client
+  (`RpcTest.makeClient(group, { flatten: true })` over the handler Layer, no
+  protocol/serialization) into the SSR render layer, so SSR `Boundary.rpc` regions
+  resolve in-process and inline their payload. The combined web handler delegates
+  `POST /_eui/rpc` to an `RpcServer.toWebHandler(group, { layer: handlers + JSON })`,
+  and every other path to the page `HttpApi` handler.
+- **Client** (`RouterLive`): provides a **network** flat client
+  (`RpcClient.make(group, { flatten: true })` over `RpcClient.layerProtocolHttp`)
+  posting to `<origin>/_eui/rpc`.
+
+This makes all three `Boundary.rpc` paths work end to end:
+
+- **Initial SSR navigation** — server resolves in-process + inlines the payload;
+  the client replays during `hydrate` (no rpc call).
+- **Refetch** — the hydrated region's `Resource.refetch` calls the network client
+  (`POST /_eui/rpc`) and patches in place.
+- **Client-first navigation** — SPA-navigating into a page with a `Boundary.rpc`
+  (no SSR payload) renders the boundary's `fallback`, forks a network rpc call, and
+  swaps in the live subtree. This was a documented `Boundary.server` limitation; the
+  rpc seam dissolves it (the same client serves SSR-replay, refetch, and mount).
+
+A router-less mount (no `RouterLive`/`RouterServer`) has no `AppRpcClientTag`, so a
+`Boundary.rpc` mount fails with a descriptive error (see `@effect-ui/dom/client`).

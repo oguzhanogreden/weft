@@ -4,8 +4,14 @@ import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { h, List } from "@effect-ui/core";
 import { hydrate } from "./render";
-import { renderToStringHydratable } from "~/server";
+import { renderToStringHydratable as _renderToStringHydratable } from "~/server";
 import type { Renderable } from "@effect-ui/core/types";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// These trees contain no `Boundary.rpc`; shadow the SSR fn with the no-op `NoRpc`
+// layer pre-provided (it requires an AppRpcClientTag unconditionally).
+const renderToStringHydratable = (n: Renderable) =>
+  Effect.provide(_renderToStringHydratable(n), NoRpc);
 
 // ============================================================================
 // hydrate-ready: interactivity barrier (hydrate-ready.specs.md, AC-R1..R9)

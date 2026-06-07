@@ -1,13 +1,14 @@
 // oxlint-disable no-unused-vars
 // Pins the brand-aware `hydrate` signature: a server-only `ServerTag` left in the
-// app node's requirement channel `R` (e.g. a `Boundary.server` tag accidentally
+// app node's requirement channel `R` (e.g. a `Boundary.rpc` tag accidentally
 // referenced in client `render` code) must be a compile error, while clean nodes
 // and back-compat `Renderable` inputs continue to hydrate. Checked by `vp run
 // check` (the package tsconfig includes `src`). See
-// `core/.../__type-tests__/server.test-d.ts` for the underlying
+// `core/.../__type-tests__/rpc.test-d.ts` for the underlying
 // `AssertNoServerOnly` behaviour this relies on.
 import { Boundary, ServerTag, h, type Node } from "@effect-ui/core";
-import { Effect, Layer, Schema } from "effect";
+import { Rpc } from "@effect/rpc";
+import { Effect, Schema } from "effect";
 import { hydrate } from "../render";
 
 // ── Type helpers ──────────────────────────────────────────────────────────────
@@ -19,10 +20,11 @@ type CtxOf<T> = [T] extends [Effect.Effect<any, any, infer R>] ? R : never;
 interface ProductShape {
   readonly name: string;
 }
+const StockKey = Schema.Struct({ id: Schema.Number });
 const Product = Schema.Struct({ name: Schema.String });
+const GetProduct = Rpc.make("GetProduct", { payload: StockKey, success: Product });
 
 class Database extends ServerTag("Database")<Database, { readonly q: () => ProductShape }>() {}
-declare const DatabaseLive: Layer.Layer<Database>;
 
 // A plain (non-server) service that may legitimately appear in the client R.
 interface ClientService {
@@ -39,9 +41,11 @@ const dbLoad = Database.pipe(Effect.map((db) => db.q()));
 // Static node — R = never.
 void Effect.runPromise(hydrate(h.div({}, "ok"), root));
 
-// A discharged server boundary leaves R = never.
-const discharged = Boundary.server(
-  { id: "discharged", load: () => dbLoad, provide: DatabaseLive, schema: Product },
+// A server boundary with a clean (server-tag-free) render leaves R = never — the
+// rpc handler lives server-side, never in the client requirement channel.
+const discharged = Boundary.rpc(
+  GetProduct,
+  () => ({ id: 1 }),
   () => h.div({}, "ok"),
 );
 void Effect.runPromise(hydrate(discharged, root));
@@ -63,10 +67,11 @@ void Effect.runPromise(hydrate("text", root));
 // @ts-expect-error — server-only Tag leaked into the client requirement channel R
 void Effect.runPromise(hydrate(dbNode, root));
 
-// Same leak surfaced through a `Boundary.server` whose `render` references the tag.
-const leaky = Boundary.server(
-  { id: "leaky", load: () => Effect.succeed({ name: "x" }), provide: Layer.empty, schema: Product },
-  (_p) => dbNode,
+// Same leak surfaced through a `Boundary.rpc` whose `render` references the tag.
+const leaky = Boundary.rpc(
+  GetProduct,
+  () => ({ id: 1 }),
+  (_r) => dbNode,
 );
 // @ts-expect-error — server-only Tag leaked into the client requirement channel R
 void Effect.runPromise(hydrate(leaky, root));

@@ -136,9 +136,10 @@ describe("httpApi spine", () => {
   const endpoints = Object.values(api.groups.pages!.endpoints);
 
   test("S4: a 'pages' group with one GET endpoint per leaf, at each full path", () => {
-    // The `pages` group carries the route leaves; a sibling `_eui_data` group
-    // carries the `Boundary.server` refetch endpoint (it leaves `pages` untouched).
-    assert.deepEqual(Object.keys(api.groups).sort(), ["_eui_data", "pages"]);
+    // The `pages` group carries the route leaves. There is no data group on the
+    // HttpApi spine: `Boundary.rpc` data is served by a separate rpc web handler
+    // mounted at `POST /_eui/rpc`, not an HttpApi endpoint.
+    assert.deepEqual(Object.keys(api.groups).sort(), ["pages"]);
     assert.equal(api.groups.pages!.identifier, "pages");
     assert.equal(endpoints.length, def.compiled.leaves.length);
     for (const endpoint of endpoints) assert.equal(endpoint.method, "GET");

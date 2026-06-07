@@ -7,7 +7,7 @@
 > prototyped on the same latch and **rejected as unsound** — see the `mount` symmetry
 > section. Captures the fix for the forked-fiber hydration-timing gap discovered while
 > writing `examples/router-ssr/src/refetch.browser.test.ts` (Stage 7 of the
-> `Boundary.server` refetch feature).
+> `Boundary.rpc` refetch feature).
 
 ## Overview
 

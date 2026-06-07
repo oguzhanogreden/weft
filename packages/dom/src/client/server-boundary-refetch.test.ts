@@ -1,7 +1,8 @@
 import * as assert from "node:assert/strict";
-import { Boundary, BoundaryDataClientTag, h } from "@effect-ui/core";
-import type { Node } from "@effect-ui/core";
-import { Effect, Option, Schema, Stream } from "effect";
+import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
+import type { AppRpcClient, Node } from "@effect-ui/core";
+import { Rpc } from "@effect/rpc";
+import { Effect, Layer, Option, Schema, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { renderToStringHydratable } from "~/server";
@@ -26,9 +27,22 @@ function createRoot(): HTMLElement {
   return root;
 }
 
+interface ProductShape {
+  readonly name: string;
+  readonly price: number;
+}
+const StockKey = Schema.Struct({ id: Schema.Number });
+const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
+const GetProduct = Rpc.make("GetProduct", { payload: StockKey, success: Product });
+
+/** SSR seam: an in-process client that resolves the initial value (`Widget`). */
+const seedLayer = Layer.succeed(AppRpcClientTag, {
+  call: () => Effect.succeed<ProductShape>({ name: "Widget", price: 9 }),
+} satisfies AppRpcClient);
+
 async function seedServerHtml(app: Node<any, any>): Promise<HTMLElement> {
   const root = createRoot();
-  const html = await Effect.runPromise(renderToStringHydratable(app));
+  const html = await Effect.runPromise(Effect.provide(renderToStringHydratable(app), seedLayer));
   root.innerHTML = html;
   return root;
 }
@@ -37,25 +51,17 @@ function waitFor(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-interface ProductShape {
-  readonly name: string;
-  readonly price: number;
-}
-const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
-
-/** JSON envelope the data endpoint would return for `data` (Schema.encode → JSON.stringify). */
-const envelope = (data: ProductShape): Promise<string> =>
-  Effect.runPromise(Schema.encode(Product)(data).pipe(Effect.map((e) => JSON.stringify(e))));
-
 /**
- * Builds a `Boundary.server` that renders `resource.value` through the reactive
- * child path (so a refetch patches the region in place) and captures the live
- * `Resource` so the test can drive `refetch` and observe `pending`/`error`.
+ * Builds a `Boundary.rpc` that renders `resource.value` through the reactive child
+ * path (so a refetch patches the region in place) and captures the live `Resource`
+ * so the test can drive `refetch` and observe `pending`/`error`. The refetch client
+ * is injected at hydrate time, not here.
  */
-const captureResource = (id: string) => {
+const captureResource = () => {
   const captured: { current?: Boundary.Resource<ProductShape> } = {};
-  const app = Boundary.server(
-    { id, load: () => Effect.succeed({ name: "Widget", price: 9 }), schema: Product },
+  const app = Boundary.rpc(
+    GetProduct,
+    () => ({ id: 1 }),
     (resource) => {
       captured.current = resource as Boundary.Resource<ProductShape>;
       return h.div({ class: "product" }, [Stream.map(resource.value.changes, (p) => p.name)]);
@@ -64,31 +70,38 @@ const captureResource = (id: string) => {
   return { app, captured } as const;
 };
 
+/** A client whose `call` resolves with `resolve()`; `calls` counts invocations. */
+const refetchClient = (resolve: () => Effect.Effect<unknown, unknown>) => {
+  const state = { calls: 0 };
+  const layer = Layer.succeed(AppRpcClientTag, {
+    call: () =>
+      Effect.flatMap(
+        Effect.sync(() => {
+          state.calls++;
+        }),
+        resolve,
+      ),
+  } satisfies AppRpcClient);
+  return { layer, state } as const;
+};
+
 // ---------------------------------------------------------------------------
 // AC-H-S8: refetch patches the region in place
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server refetch — AC-H-S8: patches in place", () => {
-  it("re-fetches via the data client, decodes the envelope, and updates value (no remount)", async () => {
+describe("Boundary.rpc refetch — AC-H-S8: patches in place", () => {
+  it("re-calls the rpc, takes the decoded success, and updates value (no remount)", async () => {
     createTestDOM();
-    const { app, captured } = captureResource("refetch-patch");
-
-    let fetches = 0;
-    const dataClient: BoundaryDataClientTag["Type"] = {
-      fetch: () =>
-        Effect.gen(function* () {
-          fetches++;
-          return yield* Effect.promise(() => envelope({ name: "Gadget", price: 12 }));
-        }),
-    };
+    const { app, captured } = captureResource();
+    const { layer, state } = refetchClient(() =>
+      Effect.succeed<ProductShape>({ name: "Gadget", price: 12 }),
+    );
 
     const root = await seedServerHtml(app);
     const productBefore = root.querySelector("div.product");
     assert.ok(productBefore, "server rendered the product div");
 
-    await Effect.runPromise(
-      hydrate(app, root).pipe(Effect.provideService(BoundaryDataClientTag, dataClient)),
-    );
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
 
     // Seeded value rendered first (no flash) — same node adopted in place.
     assert.equal(root.querySelector("div.product"), productBefore);
@@ -100,28 +113,24 @@ describe("Boundary.server refetch — AC-H-S8: patches in place", () => {
     await Effect.runPromise(resource!.refetch);
     await waitFor(20);
 
-    // The data client was hit and the new value is live on the resource…
-    assert.equal(fetches, 1);
+    // The rpc client was hit and the new value is live on the resource…
+    assert.equal(state.calls, 1);
     const value = await Effect.runPromise(resource!.value.get);
     assert.equal(value.name, "Gadget");
     // …and the region patched in place (same node, new text — no remount).
     assert.equal(root.querySelector("div.product"), productBefore);
     assert.ok(productBefore?.textContent?.includes("Gadget"));
-    // `load` is never run on the client; refetch goes through the endpoint client.
   });
 
   it("toggles pending true during the call and false after, error stays None on success", async () => {
     createTestDOM();
-    const { app, captured } = captureResource("refetch-pending");
-
-    const dataClient: BoundaryDataClientTag["Type"] = {
-      fetch: () => Effect.promise(() => envelope({ name: "Gadget", price: 12 })),
-    };
+    const { app, captured } = captureResource();
+    const { layer } = refetchClient(() =>
+      Effect.succeed<ProductShape>({ name: "Gadget", price: 12 }),
+    );
 
     const root = await seedServerHtml(app);
-    await Effect.runPromise(
-      hydrate(app, root).pipe(Effect.provideService(BoundaryDataClientTag, dataClient)),
-    );
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
 
     const resource = captured.current!;
     assert.equal(await Effect.runPromise(resource.pending.get), false);
@@ -137,24 +146,22 @@ describe("Boundary.server refetch — AC-H-S8: patches in place", () => {
 // AC-H-S9: refetch failure is stale-on-error
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server refetch — AC-H-S9: stale-on-error", () => {
+describe("Boundary.rpc refetch — AC-H-S9: stale-on-error", () => {
   it("keeps the previous value, sets error to Some, pending back to false, no fallback flash", async () => {
     createTestDOM();
-    const { app, captured } = captureResource("refetch-error");
+    const { app, captured } = captureResource();
 
     let mode: "fail" | "ok" = "fail";
-    const dataClient: BoundaryDataClientTag["Type"] = {
-      fetch: () =>
+    const layer = Layer.succeed(AppRpcClientTag, {
+      call: () =>
         mode === "fail"
           ? Effect.fail(new Error("network down"))
-          : Effect.promise(() => envelope({ name: "Gadget", price: 12 })),
-    };
+          : Effect.succeed<ProductShape>({ name: "Gadget", price: 12 }),
+    } satisfies AppRpcClient);
 
     const root = await seedServerHtml(app);
     const productBefore = root.querySelector("div.product");
-    await Effect.runPromise(
-      hydrate(app, root).pipe(Effect.provideService(BoundaryDataClientTag, dataClient)),
-    );
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
 
     const resource = captured.current!;
 
@@ -177,39 +184,19 @@ describe("Boundary.server refetch — AC-H-S9: stale-on-error", () => {
     assert.equal(Option.isNone(await Effect.runPromise(resource.error.get)), true);
     assert.equal((await Effect.runPromise(resource.value.get)).name, "Gadget");
   });
-
-  it("treats a malformed JSON envelope as a stale-on-error refetch", async () => {
-    createTestDOM();
-    const { app, captured } = captureResource("refetch-malformed");
-
-    const dataClient: BoundaryDataClientTag["Type"] = {
-      fetch: () => Effect.succeed("not json"),
-    };
-
-    const root = await seedServerHtml(app);
-    await Effect.runPromise(
-      hydrate(app, root).pipe(Effect.provideService(BoundaryDataClientTag, dataClient)),
-    );
-
-    const resource = captured.current!;
-    await Effect.runPromise(resource.refetch);
-
-    assert.equal((await Effect.runPromise(resource.value.get)).name, "Widget");
-    assert.equal(Option.isSome(await Effect.runPromise(resource.error.get)), true);
-  });
 });
 
 // ---------------------------------------------------------------------------
 // No transport: refetch is a no-op (router-less mount)
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server refetch — no transport", () => {
-  it("is a no-op when no BoundaryDataClient is provided", async () => {
+describe("Boundary.rpc refetch — no transport", () => {
+  it("is a no-op when no AppRpcClient is provided", async () => {
     createTestDOM();
-    const { app, captured } = captureResource("refetch-no-transport");
+    const { app, captured } = captureResource();
 
     const root = await seedServerHtml(app);
-    // Hydrate without providing BoundaryDataClientTag.
+    // Hydrate without providing AppRpcClientTag.
     await Effect.runPromise(hydrate(app, root));
 
     const resource = captured.current!;

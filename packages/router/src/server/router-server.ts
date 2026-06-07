@@ -1,4 +1,4 @@
-import type { Node } from "@effect-ui/core";
+import { AppRpcClientTag, type Node } from "@effect-ui/core";
 import { renderToStringHydratable } from "@effect-ui/dom/server";
 import {
   HttpApiBuilder,
@@ -8,9 +8,9 @@ import {
   HttpServerRequest,
   HttpServerResponse,
 } from "@effect/platform";
+import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "@effect/rpc";
 import { Effect, Layer, Option, Schema, Stream, Subscribable } from "effect";
 import type { RouterDef } from "../compile";
-import { serveBoundaryData } from "../data-endpoint";
 import { isRouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";
 import { outletNode } from "../outlet";
@@ -27,6 +27,24 @@ import { Router } from "../router-service";
  * `notFound` page at HTTP 404 — so there is no render-time status side-channel.
  */
 export namespace RouterServer {
+  /** Path the in-process rpc web handler claims; mirrors `RouterLive`'s client URL. */
+  const RPC_PATH = "/_eui/rpc";
+
+  /**
+   * The app's `Boundary.rpc` data foundation: the merged `RpcGroup` contract plus
+   * its server-only handler `Layer`. Wired explicitly (no co-located `load`, no
+   * registry) — `toWebHandler` serves it at `POST /_eui/rpc`, and an in-process
+   * client over the same handlers resolves SSR boundaries in-process.
+   */
+  export interface RpcOptions {
+    /** The app's merged `RpcGroup` (pure Schema contract; shared with the client). */
+    // oxlint-disable-next-line typescript/no-explicit-any
+    readonly group: RpcGroup.RpcGroup<any>;
+    /** The server-only handler Layer (`group.toLayer(...)` ⊕ its dependencies). */
+    // oxlint-disable-next-line typescript/no-explicit-any
+    readonly handlers: Layer.Layer<any, never, never>;
+  }
+
   /**
    * Shared server options. The document shell is a {@link ComponentSlot} that splices
    * the app via `yield* Router.Outlet` (the router provides it per request) —
@@ -39,6 +57,8 @@ export namespace RouterServer {
   export interface Options {
     /** The document shell slot; reads the app to splice via `yield* Router.Outlet`. */
     readonly document: ComponentSlot;
+    /** The app's `Boundary.rpc` foundation (contract + server handlers). */
+    readonly rpc: RpcOptions;
   }
 
   /** The result of {@link render}. */
@@ -68,6 +88,26 @@ export namespace RouterServer {
     });
   }
 
+  /**
+   * In-process {@link AppRpcClientTag} Layer over the app's handler Layer
+   * ({@link RpcTest.makeClient}, flat, no protocol/serialization). SSR
+   * `Boundary.rpc` resolution calls `call(tag, payload())` against this — the rpc
+   * runs in-process, never over the network.
+   */
+  function appRpcClientLayer(rpc: RpcOptions): Layer.Layer<AppRpcClientTag> {
+    return Layer.scoped(
+      AppRpcClientTag,
+      Effect.map(
+        // The group is `RpcGroup<any>` (runtime-assembled by the app); the flat
+        // client is reached through the same loosening the seam documents.
+        // oxlint-disable-next-line typescript/no-explicit-any
+        RpcTest.makeClient(rpc.group, { flatten: true }) as Effect.Effect<any, never, any>,
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (flat: any) => AppRpcClientTag.of({ call: (tag, payload) => flat(tag, payload) }),
+      ),
+    ).pipe(Layer.provide(rpc.handlers)) as Layer.Layer<AppRpcClientTag>;
+  }
+
   /** Renders the document shell — with `app` spliced via `Router.Outlet` — to a hydratable HTML string. */
   function renderDocument(
     options: Options,
@@ -75,7 +115,10 @@ export namespace RouterServer {
     router: Router["Type"],
   ): Effect.Effect<string, Error> {
     const document = Effect.provideService(options.document({}), Router.Outlet, app);
-    return renderToStringHydratable(document).pipe(Effect.provideService(Router, router));
+    return renderToStringHydratable(document).pipe(
+      Effect.provideService(Router, router),
+      Effect.provide(appRpcClientLayer(options.rpc)),
+    );
   }
 
   /**
@@ -201,32 +244,24 @@ export namespace RouterServer {
           renderNoMatch(def, options, (request.request as HttpServerRequest.HttpServerRequest).url),
         ),
     );
-    // The static `"_eui_data"` group (added to `def.httpApi` by `buildHttpApi`)
-    // backs `Boundary.server` refetch: `serveBoundaryData` looks the boundary up in
-    // the core registry by `id`, re-runs its `load` on the server, and returns the
-    // encoded JSON envelope (`Schema.String` success). An unknown `id` fails with
-    // `BoundaryDataNotFound`, mapped to HTTP 404 by the endpoint's declared error.
-    const dataLayer = builder.group(
-      api,
-      "_eui_data",
-      // oxlint-disable-next-line typescript/no-explicit-any
-      (handlers: any) =>
-        // oxlint-disable-next-line typescript/no-explicit-any
-        handlers.handle("boundaryData", (request: any) =>
-          serveBoundaryData({
-            id: request.urlParams.id as string,
-            params: request.urlParams.params as string | undefined,
-          }),
-        ),
-    );
-
     // oxlint-disable-next-line typescript/no-explicit-any
     const apiLayer: Layer.Layer<any, never, never> = builder
       .api(api)
-      .pipe(Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer, dataLayer)));
-    const { handler } = HttpApiBuilder.toWebHandler(
+      .pipe(Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)));
+    const { handler: pageHandler } = HttpApiBuilder.toWebHandler(
       Layer.mergeAll(apiLayer, HttpServer.layerContext),
     );
+
+    // `Boundary.rpc` data is served out-of-band from the page routes: an rpc web
+    // handler over the app's merged `RpcGroup` + JSON serialization, claiming
+    // `POST /_eui/rpc`. The combined handler delegates that path to rpc and every
+    // other URL to the HttpApi page dispatch above.
+    const { handler: rpcHandler } = RpcServer.toWebHandler(options.rpc.group, {
+      // oxlint-disable-next-line typescript/no-explicit-any
+      layer: Layer.mergeAll(options.rpc.handlers, RpcSerialization.layerJson) as any,
+    });
+    const handler = (request: Request): Promise<Response> =>
+      new URL(request.url).pathname === RPC_PATH ? rpcHandler(request) : pageHandler(request);
 
     perDef.set(options.document, handler);
     return handler;

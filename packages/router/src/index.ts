@@ -20,12 +20,4 @@ export type { HrefArgs } from "./href";
 export { Router } from "./router-service";
 export type { NavigateOptions, RouterHttpApiClient } from "./router-service";
 export { RouterApp, outletNode } from "./outlet";
-export {
-  BoundaryDataNotFound,
-  RouterNotFound,
-  RouterParamsError,
-  notFound,
-  isRouterNotFound,
-} from "./errors";
-export { serveBoundaryData } from "./data-endpoint";
-export type { BoundaryDataRequest } from "./data-endpoint";
+export { RouterNotFound, RouterParamsError, notFound, isRouterNotFound } from "./errors";

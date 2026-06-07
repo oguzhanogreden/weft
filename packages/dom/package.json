@@ -23,6 +23,7 @@
     "@effect-ui/core": "workspace:*"
   },
   "devDependencies": {
+    "@effect/rpc": "catalog:",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^25.9.1",
     "effect": "catalog:",

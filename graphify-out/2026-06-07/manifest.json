@@ -325,13 +325,13 @@
     "semantic_hash": "494ccc1b42e2f089d052d9a1fe990fd0"
   },
   "examples/router-ssr/src/app.browser.test.ts": {
-    "mtime": 1780725753.510371,
-    "ast_hash": "b8fc6e78373a1d6766ad359df5db211d",
-    "semantic_hash": "b8fc6e78373a1d6766ad359df5db211d"
+    "mtime": 1780833105.5263417,
+    "ast_hash": "f2b3ff99a3fe19e95fe328f106bb86be",
+    "semantic_hash": ""
   },
   "examples/router-ssr/src/app.ts": {
-    "mtime": 1780766686.6618516,
-    "ast_hash": "ba1df4e577bda8b6f54d983b15dfdc93",
+    "mtime": 1780817256.169905,
+    "ast_hash": "d0c94045670c0536741ef9b87afe5010",
     "semantic_hash": ""
   },
   "examples/router-ssr/src/entry-client.ts": {
@@ -340,9 +340,9 @@
     "semantic_hash": "01ee70135323309b56041f6759d50e18"
   },
   "examples/router-ssr/src/entry-server.ts": {
-    "mtime": 1780725753.510582,
-    "ast_hash": "0ce1d9063591c49b32bf993efa6ed43b",
-    "semantic_hash": "0ce1d9063591c49b32bf993efa6ed43b"
+    "mtime": 1780817265.8832061,
+    "ast_hash": "4b4041a65de7734a5fc290ea317f032e",
+    "semantic_hash": ""
   },
   "examples/router-ssr/tsconfig.json": {
     "mtime": 1780725753.510643,
@@ -1195,8 +1195,8 @@
     "semantic_hash": "0a1bb29616d51d183e5c9d1920fa882d"
   },
   "examples/router-ssr/readme.md": {
-    "mtime": 1780811081.9044914,
-    "ast_hash": "0bedc3337c05ef507e35b561f21584b1",
+    "mtime": 1780833430.6213102,
+    "ast_hash": "8bd4e4739e32686b9c05fce7f94bb5fd",
     "semantic_hash": ""
   },
   "examples/server-boundary/index.html": {
@@ -1425,8 +1425,8 @@
     "semantic_hash": ""
   },
   "examples/router-ssr/src/refetch.browser.test.ts": {
-    "mtime": 1780812127.256982,
-    "ast_hash": "e4d0731571b6cc07080945fffb88fc40",
+    "mtime": 1780817345.1500826,
+    "ast_hash": "6d42f10525de96e9453b6801220bf1ea",
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-ready.specs.md": {
@@ -1437,6 +1437,46 @@
   "packages/dom/src/client/hydrate-ready.test.ts": {
     "mtime": 1780812059.33823,
     "ast_hash": "d88590a06132cfe2e8bc68609b7bce71",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/components/product-card.ts": {
+    "mtime": 1780833078.6199474,
+    "ast_hash": "cbd95d8f6fddc40533a7f2ee2260bf61",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/components/shell.ts": {
+    "mtime": 1780817398.1949773,
+    "ast_hash": "c68c2aa99c1350c90a992ddb4ed9cad9",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/data/inventory.ts": {
+    "mtime": 1780817177.3209631,
+    "ast_hash": "1a92115c281391ec669ae5e9f32b9b1b",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/data/products.ts": {
+    "mtime": 1780817398.1943388,
+    "ast_hash": "3bc0de4887cf020688025f50eabe36b5",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/listing.browser.test.ts": {
+    "mtime": 1780833402.6378775,
+    "ast_hash": "422e0dd4f14c80846d6eb51e6329b92e",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/pages/landing.ts": {
+    "mtime": 1780817398.193922,
+    "ast_hash": "0613ecde4c3a4bdccb6ddc7721896eea",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/pages/listing.ts": {
+    "mtime": 1780833430.6085086,
+    "ast_hash": "8c877a739ff5a58eaa16f872eceb8216",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/pages/product-detail.ts": {
+    "mtime": 1780817481.4431,
+    "ast_hash": "44f9d52d39c612ab61059c3fb70b3c16",
     "semantic_hash": ""
   }
 }

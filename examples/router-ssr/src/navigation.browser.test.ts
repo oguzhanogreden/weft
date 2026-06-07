@@ -26,8 +26,12 @@ import {
   RouterApp,
   RouterLive,
 } from "@effect-ui/router/client";
+import { Rpc, RpcGroup } from "@effect/rpc";
 import { Effect, ManagedRuntime, Schema, Stream } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+
+/** Minimal rpc group: this local tree has no `Boundary.rpc`, but `rpc` is required. */
+const NoopRpcs = RpcGroup.make(Rpc.make("Noop", { payload: Schema.Void, success: Schema.Void }));
 
 const tabQuery = { tab: Schema.optional(Schema.String) };
 
@@ -77,7 +81,7 @@ afterEach(async () => {
 
 const mountAt = async (path: string): Promise<void> => {
   window.history.replaceState(null, "", path);
-  runtime = ManagedRuntime.make(RouterLive(def));
+  runtime = ManagedRuntime.make(RouterLive(def, { rpc: { group: NoopRpcs } }));
   handle = await runtime.runPromise(mount(RouterApp(def), container));
 };
 

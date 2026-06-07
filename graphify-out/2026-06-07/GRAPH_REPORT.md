@@ -1,16 +1,16 @@
 # Graph Report - effect-ui  (2026-06-07)
 
 ## Corpus Check
-- 270 files · ~211,621 words
+- 278 files · ~213,311 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2566 nodes · 3769 edges · 232 communities (185 shown, 47 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 92 edges (avg confidence: 0.8)
+- 2588 nodes · 3820 edges · 232 communities (187 shown, 45 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 93 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cbd404ea`
+- Built from commit: `e4a8d4f0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -76,7 +76,7 @@
 - [[_COMMUNITY_List Client Tests|List Client Tests]]
 - [[_COMMUNITY_Render Context + Suspense|Render Context + Suspense]]
 - [[_COMMUNITY_examplesserver-boundarysrc|examples/server-boundary/src]]
-- [[_COMMUNITY_packagesroutersrcserver|packages/router/src/server]]
+- [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_packagesroutersrcserver|packages/router/src/server]]
 - [[_COMMUNITY_examplesasync-data-loading|examples/async-data-loading]]
 - [[_COMMUNITY_examplessuspensesrc|examples/suspense/src]]
@@ -126,7 +126,7 @@
 - [[_COMMUNITY_examplesreactive-styles|examples/reactive-styles]]
 - [[_COMMUNITY_examplesrouter-ssrsrc|examples/router-ssr/src]]
 - [[_COMMUNITY_packagesdomsrc|packages/dom/src]]
-- [[_COMMUNITY_packagesdomsrc|packages/dom/src]]
+- [[_COMMUNITY_Community 111|Community 111]]
 - [[_COMMUNITY_docsapi|docs/api]]
 - [[_COMMUNITY_examplesserver-boundarysrc|examples/server-boundary/src]]
 - [[_COMMUNITY_examplesssr-hydrationsrc|examples/ssr-hydration/src]]
@@ -134,12 +134,12 @@
 - [[_COMMUNITY_packagesdomsrc|packages/dom/src]]
 - [[_COMMUNITY_packagescoresrccombinator|packages/core/src/combinator]]
 - [[_COMMUNITY_packagescoresrc|packages/core/src]]
-- [[_COMMUNITY_packagesdomsrc|packages/dom/src]]
-- [[_COMMUNITY_packagesdomsrc|packages/dom/src]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_docsapi|docs/api]]
 - [[_COMMUNITY_docsapi|docs/api]]
 - [[_COMMUNITY_docsapi|docs/api]]
-- [[_COMMUNITY_docsapi|docs/api]]
+- [[_COMMUNITY_Community 129|Community 129]]
 - [[_COMMUNITY_docsapi|docs/api]]
 - [[_COMMUNITY_docsapi|docs/api]]
 - [[_COMMUNITY_docsapi|docs/api]]
@@ -288,15 +288,15 @@
 - **Server-boundary prune pipeline: find bindings, find .server calls, compute removal ranges** — vite_prune_prune_server_boundaries, vite_prune_find_boundary_bindings, vite_prune_find_server_calls, vite_prune_removal_ranges [EXTRACTED 0.90]
 - **Boundary feature lifecycle docs: plan, tests/impl plan, delivery report** — plan_boundary_component, plan_boundary_tests_impl, plan_boundary_delivery_report [INFERRED 0.85]
 
-## Communities (232 total, 47 thin omitted)
+## Communities (232 total, 45 thin omitted)
 
 ### Community 0 - "HTML Attribute Types"
 Cohesion: 0.07
-Nodes (88): AriaAttributes, HTMLAttributeSource, EventHandler, EventHandlerFn, HTMLAutocapitalize, HTMLAutocomplete, HTMLCrossorigin, HTMLDir (+80 more)
+Nodes (89): AriaAttributes, HTMLAttributeSource, DOMAttributes, EventHandler, EventHandlerFn, HTMLAutocapitalize, HTMLAutocomplete, HTMLCrossorigin (+81 more)
 
 ### Community 1 - "SVG Attribute Types"
-Cohesion: 0.23
-Nodes (32): CircleSVGAttributes, ClipPathSVGAttributes, ConditionalProcessingSVGAttributes, ContainerElementSVGAttributes, DefsSVGAttributes, EllipseSVGAttributes, ExternalResourceSVGAttributes, FitToViewBoxSVGAttributes (+24 more)
+Cohesion: 0.31
+Nodes (14): describeNode(), findMatchingEnd(), hydrateChildren(), hydrateElement(), hydrateFailureBoundary(), hydrateList(), hydrateNode(), hydrateReactive() (+6 more)
 
 ### Community 2 - "Combinator Type Tests"
 Cohesion: 0.05
@@ -312,19 +312,19 @@ Nodes (11): FooError, run(), runHydratable(), runString(), renderToStream(), ren
 
 ### Community 6 - "Combinator Core (h/Component)"
 Cohesion: 0.12
-Nodes (25): SuspenseProps, h, Children, Component, Context, Error, createElementFn(), CustomElements (+17 more)
+Nodes (27): SuspenseProps, h, Children, Component, Context, Error, ELEMENT_DESCRIPTOR, CustomElements (+19 more)
 
 ### Community 7 - "Vite Plugin + Bundle Pruning"
 Cohesion: 0.10
 Nodes (29): bundle(), effectUiPrune(), PruneOptions, CLIENT_MODULE, RunOptions, runTransform(), AstNode, collectBlockScope() (+21 more)
 
 ### Community 8 - "Streaming SSR Render"
-Cohesion: 0.11
-Nodes (36): createStreamMarkers(), renderSuspenseBoundary(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR(), fragmentToSSR(), ListSSRProps (+28 more)
+Cohesion: 0.12
+Nodes (30): createStreamMarkers(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR(), fragmentToSSR(), ListSSRProps, listToHydratableSSR() (+22 more)
 
 ### Community 9 - "Router Service + Compile"
 Cohesion: 0.17
-Nodes (29): Options, buildHttpApi(), compile(), CompiledLayout, CompiledLeaf, extractParams(), leafRegistry, LeafWork (+21 more)
+Nodes (29): buildHttpApi(), compile(), Compiled, CompiledLayout, CompiledLeaf, extractParams(), leafRegistry, LeafWork (+21 more)
 
 ### Community 10 - "Declarative Event Handlers Examples"
 Cohesion: 0.19
@@ -335,8 +335,8 @@ Cohesion: 0.32
 Nodes (8): renderToString, escapeHtml, isEventHandler, resolveValue, serializeAttribute, serializeProps, serializeStyle, renderToString serialization spec
 
 ### Community 12 - "DOM Render + Hydrate Internals"
-Cohesion: 0.10
-Nodes (42): AdoptedItem, camelToKebab(), collectAdoptedItems(), collectItemRange(), describeKey(), describeNode(), findMatchingEnd(), flattenChildren() (+34 more)
+Cohesion: 0.09
+Nodes (38): AdoptedItem, camelToKebab(), collectAdoptedItems(), collectItemRange(), describeKey(), hydrate(), HydrateError, hydrateFirstEmission() (+30 more)
 
 ### Community 13 - "Source Primitive"
 Cohesion: 0.09
@@ -360,15 +360,15 @@ Nodes (27): author, import, types, dependencies, @effect-ui/core, description, d
 
 ### Community 18 - "List Combinator"
 Cohesion: 0.12
-Nodes (18): H, _, Equal, Expect, LoadError, Person, PersonService, RowError (+10 more)
+Nodes (17): _, Equal, Expect, LoadError, Person, PersonService, RowError, RowService (+9 more)
 
 ### Community 19 - "Server Boundary Type Tests"
 Cohesion: 0.08
 Nodes (25): _clientR, ClientService, CtxOf, Database, DatabaseReq, dbLoad, _discharged, Equal (+17 more)
 
 ### Community 20 - "Stream Rendering Helpers"
-Cohesion: 0.16
-Nodes (13): renderBoundary(), renderItem(), renderList(), RenderContext, boundaryEndText(), boundaryStartText(), listItemEndText(), ListItemMarker (+5 more)
+Cohesion: 0.31
+Nodes (9): ELEMENT_DESCRIPTOR symbol, elementNode, getElementDescriptor, createElementFn, ElementFn interface, makeH, FRAGMENT symbol, each() (+1 more)
 
 ### Community 21 - "Error Boundary Example"
 Cohesion: 0.09
@@ -379,8 +379,8 @@ Cohesion: 0.12
 Nodes (16): aboutRoute, _app, idFields, _nav, orderRoute, _params, _push, _queryEff (+8 more)
 
 ### Community 23 - "Boundary Catch Combinators"
-Cohesion: 0.10
-Nodes (25): BarError, fallbackNode, FooError, LoadError, BoundaryDataClient, BoundaryDataClientTag, catchAll(), catchAllCause() (+17 more)
+Cohesion: 0.09
+Nodes (28): BarError, fallbackNode, FooError, LoadError, BoundaryDataClient, BoundaryDataClientTag, catchAll(), catchAllCause() (+20 more)
 
 ### Community 24 - "Core package.json"
 Cohesion: 0.09
@@ -439,16 +439,16 @@ Cohesion: 0.05
 Nodes (40): AC10: Style Attribute - String Form, AC11: Style Attribute - Object Form, AC12: Style with Stream Properties, AC13: Style as Stream, AC14: Effect/Stream Normalization, AC15: Reactive Attribute/Property Updates, AC16: Stream Completion, AC17: Stream Errors (+32 more)
 
 ### Community 38 - "Boundary Client Tests"
-Cohesion: 0.15
-Nodes (7): BarError, FooError, runMount(), runMountCapturingErrors(), mount(), runMount(), mountAt()
+Cohesion: 0.18
+Nodes (6): BarError, FooError, runMount(), runMountCapturingErrors(), mount(), runMount()
 
 ### Community 39 - "List Rendering Example"
 Cohesion: 0.24
 Nodes (10): h.fragment multi-element rendering without wrapper, App(), BadgeDemo(), GrowingList(), LiveCounterList(), NestedList(), StaticList(), TagList() (+2 more)
 
 ### Community 40 - "Router SSR Example"
-Cohesion: 0.18
-Nodes (10): `Boundary.server` client refetch, `@effect/platform` is the spine, How It Works, Overview, Problem, Programmatic navigation, router-ssr, Running (+2 more)
+Cohesion: 0.17
+Nodes (11): `Boundary.server` client refetch, `Boundary.server` live stock + refetch, `@effect/platform` is the spine, How It Works, Overview, Problem, Programmatic navigation, router-ssr (+3 more)
 
 ### Community 41 - "router-ssr package.json"
 Cohesion: 0.13
@@ -459,8 +459,8 @@ Cohesion: 0.20
 Nodes (11): App(), CoordinatedRefs(), Counter(), DerivedState(), Email, FormState, Name, ObjectState() (+3 more)
 
 ### Community 43 - "Link Interceptor"
-Cohesion: 0.14
-Nodes (15): installLinkInterceptor(), fixture(), install(), Page(), passthrough, locationUrl(), RouterLive(), RouterLiveOptions (+7 more)
+Cohesion: 0.16
+Nodes (9): locationUrl(), RouterLive(), fixture(), Page(), passthrough, readService(), mountAt(), mountAt() (+1 more)
 
 ### Community 44 - "server-boundary package.json"
 Cohesion: 0.14
@@ -515,8 +515,8 @@ Cohesion: 0.15
 Nodes (12): dependencies, effect, @effect-ui/core, @effect-ui/dom, devDependencies, tsx, @types/node, vite-plus (+4 more)
 
 ### Community 57 - "Router Type Tests"
-Cohesion: 0.27
-Nodes (17): appendRenderedChildren(), handleStreamChild(), handleStyle(), renderChildren(), renderComponent(), renderElement(), renderFragment(), renderNode() (+9 more)
+Cohesion: 0.21
+Nodes (20): appendRenderedChildren(), flattenChildren(), handleStreamChild(), handleStyle(), isEventHandler(), isProperty(), renderChildren(), renderComponent() (+12 more)
 
 ### Community 58 - "List Client Tests"
 Cohesion: 0.20
@@ -526,13 +526,13 @@ Nodes (6): Person, PersonData, runMount(), waitFor(), waitForStream(), waitForSt
 Cohesion: 0.18
 Nodes (8): Database, DatabaseLive, FailingApp(), getDatabaseReads(), getFailingLoadAttempts(), PRODUCT, ProductLoadError, ProductShape
 
-### Community 61 - "packages/router/src/server"
-Cohesion: 0.26
-Nodes (9): render(), renderDocument(), Rendered, renderLeaf(), renderNoMatch(), renderNotFoundDirect(), serverRouter(), toWebHandler() (+1 more)
+### Community 61 - "Community 61"
+Cohesion: 0.23
+Nodes (20): DoubleInputFilterSVGAttributes, FeBlendSVGAttributes, FeColorMatrixSVGAttributes, FeComponentTransferSVGAttributes, FeCompositeSVGAttributes, FeConvolveMatrixSVGAttributes, FeDiffuseLightingSVGAttributes, FeDisplacementMapSVGAttributes (+12 more)
 
 ### Community 62 - "packages/router/src/server"
 Cohesion: 0.12
-Nodes (16): A readiness latch threaded through `RenderContext`, Acceptance criteria, Async first emission is awaited (and that is correct), Bounded: first emission only, never the stream lifetime, Design, Edge cases & open questions, Empty-stream guard, Goal / contract (+8 more)
+Nodes (15): A readiness latch threaded through `RenderContext`, Acceptance criteria, Async first emission is awaited (and that is correct), Bounded: first emission only, never the stream lifetime, Design, Edge cases & open questions, Empty-stream guard, Goal / contract (+7 more)
 
 ### Community 63 - "examples/async-data-loading"
 Cohesion: 0.33
@@ -559,8 +559,8 @@ Cohesion: 0.06
 Nodes (30): Architecture, Architecture & Patterns, Building, Checking (format + lint + typecheck), Code Reuse, Code Style, Coding Standards, Development Commands (+22 more)
 
 ### Community 69 - "packages/core/src/combinator"
-Cohesion: 0.13
-Nodes (19): suspend(), ELEMENT_DESCRIPTOR, ELEMENT_DESCRIPTOR symbol, elementNode, elementNode(), getElementDescriptor, createElementFn, ElementFn interface (+11 more)
+Cohesion: 0.25
+Nodes (7): Context, Error, ItemOf, LIST, Options, people, Person
 
 ### Community 72 - "examples/suspense/src"
 Cohesion: 0.39
@@ -579,16 +579,16 @@ Cohesion: 0.25
 Nodes (7): compilerOptions, paths, types, exclude, extends, include, ~/*
 
 ### Community 76 - "examples/router-ssr/src"
-Cohesion: 0.17
-Nodes (10): App, dashboardRoute, homeRoute, idParam, Metric, Metrics, MetricsLive, postsRoute (+2 more)
+Cohesion: 0.09
+Nodes (28): ProductCard, Shell, Inventory, InventoryLive, restocks, Stock, formatPrice(), getProduct() (+20 more)
 
 ### Community 77 - "packages/dom/src"
 Cohesion: 0.39
 Nodes (7): getElementDescriptor(), collectServerBoundaries(), S, serverBoundary(), walk(), walkChildren(), walkDescriptor()
 
 ### Community 78 - "Community 78"
-Cohesion: 0.08
-Nodes (26): RouterParamsError, aboutRoute, def, passthrough, searchRoute, userRoute, compileMatchers(), emptySchema (+18 more)
+Cohesion: 0.11
+Nodes (21): compileMatchers(), emptySchema, EndpointShape, HttpApiShape, match(), MatcherEntry, matchersCache, paramNamesOf() (+13 more)
 
 ### Community 79 - "packages/vite"
 Cohesion: 0.25
@@ -607,8 +607,8 @@ Cohesion: 0.29
 Nodes (6): compilerOptions, paths, types, extends, include, ~/*
 
 ### Community 83 - "packages/router/src/server"
-Cohesion: 0.16
-Nodes (8): RouteMatch, makeLayout(), makeRoute(), Outlet, OutletTag, pick(), readParams(), readQuery()
+Cohesion: 0.13
+Nodes (10): RouterLiveOptions, RouteMatch, makeLayout(), makeRoute(), Outlet, OutletTag, pick(), readParams() (+2 more)
 
 ### Community 84 - "packages/router"
 Cohesion: 0.29
@@ -706,13 +706,25 @@ Nodes (21): AC10: Sentinel prevents premature settlement, AC1: Synchronous child
 Cohesion: 0.13
 Nodes (14): reactive styles via streams, style object stream (spread reactive), Benefits, Combined Static and Reactive, How It Works, Individual Property Stream, Opacity Pulse, Overview (+6 more)
 
+### Community 111 - "Community 111"
+Cohesion: 0.21
+Nodes (7): Context, Error, NoPropValue, Source, Success, Boom, toSubscribable()
+
 ### Community 119 - "packages/dom/src"
 Cohesion: 0.18
 Nodes (10): derived state via Stream.map on changes, SubscriptionRef as reactive signal, Benefits, Comparison with SolidJS Signals, How It Works, Overview, Problem, Solution (+2 more)
 
-### Community 129 - "docs/api"
-Cohesion: 0.21
-Nodes (7): Context, Error, NoPropValue, Source, Success, Boom, toSubscribable()
+### Community 123 - "Community 123"
+Cohesion: 0.24
+Nodes (9): Options, renderDocument(), Rendered, renderLeaf(), renderNoMatch(), renderNotFoundDirect(), serverRouter(), toWebHandler() (+1 more)
+
+### Community 124 - "Community 124"
+Cohesion: 0.20
+Nodes (5): createRoot(), seedServerHtml(), render(), render(), renderToStringHydratable()
+
+### Community 129 - "Community 129"
+Cohesion: 0.33
+Nodes (10): camelToKebab(), ESCAPE_MAP, escapeHtml(), isEventHandler(), resolveValue(), SCRIPT_JSON_UNSAFE_CODES, serializeAttribute(), serializeProps() (+2 more)
 
 ### Community 130 - "docs/api"
 Cohesion: 0.25
@@ -727,8 +739,8 @@ Cohesion: 0.33
 Nodes (6): Array State, Basic Counter, Combining Multiple Refs, Derived State, Object State with Schema Validation, Usage Patterns
 
 ### Community 144 - "packages/router/src"
-Cohesion: 0.50
-Nodes (5): Boundary six catch variants (catchAll/catchAllCause/catchTag/catchTags/catchSome/catchIf), BoundaryContext, Boundary Component Implementation Plan, Boundary Delivery Report, Boundary Tests & Implementation Plan
+Cohesion: 0.67
+Nodes (4): Boundary six catch variants (catchAll/catchAllCause/catchTag/catchTags/catchSome/catchIf), Boundary Component Implementation Plan, Boundary Delivery Report, Boundary Tests & Implementation Plan
 
 ### Community 145 - "packages/router/src"
 Cohesion: 0.40
@@ -755,8 +767,8 @@ Cohesion: 0.10
 Nodes (19): Acceptance criteria, API surface, Children: array or function, Combinator API, Compatibility, `Component.gen` and `Component.make`, Components, Core type accumulation (+11 more)
 
 ### Community 164 - "Community 164"
-Cohesion: 0.10
-Nodes (40): DOMAttributes, DescSVGAttributes, DoubleInputFilterSVGAttributes, FeBlendSVGAttributes, FeColorMatrixSVGAttributes, FeComponentTransferSVGAttributes, FeCompositeSVGAttributes, FeConvolveMatrixSVGAttributes (+32 more)
+Cohesion: 0.13
+Nodes (51): CircleSVGAttributes, ClipPathSVGAttributes, ConditionalProcessingSVGAttributes, ContainerElementSVGAttributes, DefsSVGAttributes, DescSVGAttributes, EllipseSVGAttributes, ExternalResourceSVGAttributes (+43 more)
 
 ### Community 165 - "Community 165"
 Cohesion: 0.09
@@ -795,8 +807,8 @@ Cohesion: 0.14
 Nodes (13): Acceptance criteria, Background — how a `List` region differs from a generic stream child, Client List Reconciliation — `renderList` / `reconcileList`, Data model, Errors (ER), Hydration contract (HY) — Part B3, Identity (ID), Keyed reconciliation (KR) (+5 more)
 
 ### Community 174 - "Community 174"
-Cohesion: 0.19
-Nodes (19): applyQuery(), back(), encodeSearch(), forward(), navigate(), patchQuery(), pathOf(), push() (+11 more)
+Cohesion: 0.18
+Nodes (20): applyQuery(), back(), encodeSearch(), forward(), navigate(), patchQuery(), pathOf(), push() (+12 more)
 
 ### Community 175 - "Community 175"
 Cohesion: 0.14
@@ -914,56 +926,52 @@ Nodes (4): Additional Context, Checklist, Description, Type of Change
 Cohesion: 0.40
 Nodes (5): How it works, How to run, Overview, ssr-hydration, What to observe
 
-### Community 208 - "Community 208"
-Cohesion: 0.40
-Nodes (3): StyleAttributeValue, StyleProperties, ElementType
-
 ### Community 209 - "Community 209"
 Cohesion: 0.13
-Nodes (13): def, document, Gone(), User, BoundaryDataRequest, serveBoundaryData(), Inventory, Product (+5 more)
+Nodes (13): def, document, Gone(), User, serveBoundaryData(), Inventory, Product, ProductShape (+5 more)
 
 ### Community 210 - "Community 210"
-Cohesion: 0.25
-Nodes (5): def, homeRoute, mountAt(), searchRoute, tabQuery
+Cohesion: 0.29
+Nodes (4): def, homeRoute, searchRoute, tabQuery
 
 ### Community 211 - "Community 211"
-Cohesion: 0.17
-Nodes (11): createRoot(), seedServerHtml(), BoundaryContext, HydrationMismatchError, HydrationReady, ReadyLatch, RenderError, RenderResult (+3 more)
+Cohesion: 0.16
+Nodes (12): createRoot(), seedServerHtml(), BoundaryContext, HydrationMismatchError, HydrationReady, RenderContext, RenderError, RenderResult (+4 more)
 
 ### Community 228 - "Community 228"
-Cohesion: 0.20
-Nodes (5): createRoot(), seedServerHtml(), render(), render(), renderToStringHydratable()
-
-### Community 229 - "Community 229"
 Cohesion: 0.22
 Nodes (6): createRoot(), LoadError, makeDatabase(), Product, ProductShape, seedServerHtml()
 
-### Community 230 - "Community 230"
+### Community 229 - "Community 229"
 Cohesion: 0.25
 Nodes (7): Database, DatabaseLive, fromValue(), LoadError, Product, ProductBoundary(), ProductShape
 
+### Community 230 - "Community 230"
+Cohesion: 0.39
+Nodes (5): installLinkInterceptor(), fixture(), install(), Page(), passthrough
+
 ### Community 231 - "Community 231"
-Cohesion: 0.47
-Nodes (6): hydrateFirstEmission(), isTextValue(), patchChildrenInPlace(), patchElementInPlace(), staticElementDescriptor(), updateStreamChild()
+Cohesion: 0.25
+Nodes (5): aboutRoute, def, passthrough, searchRoute, userRoute
 
 ## Knowledge Gaps
-- **1353 isolated node(s):** `PreToolUse`, `branches`, `plugins`, `tagFormat`, `initialVersion` (+1348 more)
+- **1352 isolated node(s):** `PreToolUse`, `branches`, `plugins`, `tagFormat`, `initialVersion` (+1347 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **47 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **45 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Renderable` connect `Combinator Core (h/Component)` to `HTML Attribute Types`, `Combinator Type Tests`, `Community 164`, `Community 208`, `Boundary Catch Combinators`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **Why does `isStream()` connect `Router Type Tests` to `docs/api`, `Community 231`, `Streaming SSR Render`, `DOM Render + Hydrate Internals`, `packages/dom/src`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Why does `walk()` connect `packages/dom/src` to `Router Type Tests`, `Router Service + Compile`, `Vite Plugin + Bundle Pruning`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Why does `Renderable` connect `Combinator Core (h/Component)` to `HTML Attribute Types`, `Combinator Type Tests`, `Community 164`, `Boundary Catch Combinators`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `serveBoundaryData()` connect `Community 209` to `Router Service + Compile`, `Community 123`, `Boundary Catch Combinators`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `lookup()` connect `Boundary Catch Combinators` to `Community 209`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **What connects `PreToolUse`, `branches`, `plugins` to the rest of the system?**
-  _1366 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1365 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `HTML Attribute Types` be split into smaller, more focused modules?**
-  _Cohesion score 0.06816479400749063 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06665074056378405 - nodes in this community are weakly interconnected._
 - **Should `Combinator Type Tests` be split into smaller, more focused modules?**
   _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._
 - **Should `Boundary Type Tests` be split into smaller, more focused modules?**

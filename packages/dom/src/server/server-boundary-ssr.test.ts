@@ -1,17 +1,18 @@
 import * as assert from "node:assert/strict";
-import { Boundary, ServerTag, h } from "@effect-ui/core";
-import type { Node } from "@effect-ui/core";
+import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
+import type { AppRpcClient, Node } from "@effect-ui/core";
+import { Rpc } from "@effect/rpc";
 import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
 
 /**
- * Adapts a v1-style `(data) => Node` render to the v3 `(resource) => Node`
- * signature by reading the resource's **seeded** value once. The static resource
- * the SSR renderer builds is await-first, so `value.get` resolves synchronously
- * to the loaded data and the produced HTML is byte-identical to the bare-data
- * render these tests were written against (no reactive-region markers).
+ * Adapts a bare `(data) => Node` render to the `(resource) => Node` signature by
+ * reading the resource's **seeded** value once. The static resource the SSR
+ * renderer builds is await-first, so `value.get` resolves synchronously to the
+ * loaded data and the produced HTML is byte-identical to the bare-data render
+ * these tests assert (no reactive-region markers).
  */
 const fromValue =
   <A, E, R>(f: (a: A) => Node<E, R>) =>
@@ -21,38 +22,59 @@ const fromValue =
       return yield* f(data);
     });
 
+/**
+ * Builds a stub {@link AppRpcClientTag} layer from a `tag → handler` record,
+ * standing in for the in-process client `@effect-ui/router` provides on the
+ * server. The renderer only needs `call(tag, payload)` to resolve a boundary; the
+ * handler returns the already-decoded success (or fails/dies) just like the real
+ * in-process client over the handler Layer.
+ */
+const appRpcLayer = (
+  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown>>,
+) =>
+  Layer.succeed(AppRpcClientTag, {
+    call: (tag, payload) =>
+      (handlers[tag] ?? (() => Effect.die(new Error(`no handler for ${tag}`))))(payload),
+  } satisfies AppRpcClient);
+
+const provideRpc = (
+  effect: Effect.Effect<string, Error, AppRpcClientTag>,
+  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown>>,
+) => Effect.provide(effect, appRpcLayer(handlers));
+
+const provideStream = (
+  stream: Stream.Stream<string, Error, AppRpcClientTag>,
+  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown>>,
+) => Stream.provideLayer(stream, appRpcLayer(handlers));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-interface ProductShape {
-  readonly name: string;
-  readonly price: number;
-}
-
-/** A server-only data source, discharged at the boundary via `provide`. */
-class Database extends ServerTag("Database")<
-  Database,
-  { readonly getProduct: () => Effect.Effect<ProductShape> }
->() {}
-
-const DatabaseLive = Layer.succeed(Database, {
-  getProduct: () => Effect.succeed({ name: "Widget", price: 9 }),
-});
-
+const StockKey = Schema.Struct({ id: Schema.Number });
 const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
+type ProductShape = typeof Product.Type;
 
-/** Reads the product from the server-only `Database`, renders its name. */
+class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+  reason: Schema.String,
+}) {}
+
+/** Success rpc: `GetProduct` (StockKey → Product). */
+const GetProduct = Rpc.make("GetProduct", { payload: StockKey, success: Product });
+/** Failing rpc: declares `error: LoadError` so a resolved error can be encoded. */
+const Failing = Rpc.make("Failing", { payload: StockKey, success: Product, error: LoadError });
+
+/** Resolves the product through the ambient rpc client, renders its name. */
 const ProductBoundary = () =>
-  Boundary.server(
-    {
-      id: "product",
-      load: () => Effect.flatMap(Database, (db) => db.getProduct()),
-      provide: DatabaseLive,
-      schema: Product,
-    },
+  Boundary.rpc(
+    GetProduct,
+    () => ({ id: 1 }),
     fromValue((data) => h.div({ class: "product" }, data.name)),
   );
+
+const productHandlers = {
+  GetProduct: () => Effect.succeed<ProductShape>({ name: "Widget", price: 9 }),
+};
 
 const SCRIPT_RE = /<script type="application\/json">(.*?)<\/script>/;
 const SCRIPT_RE_G = /<script type="application\/json">(.*?)<\/script>/g;
@@ -64,9 +86,11 @@ const decodeScript = (json: string) =>
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("Boundary.server — hydratable SSR (AC-10)", () => {
-  it("emits an inline JSON payload that decodes back to the loaded data", async () => {
-    const html = await Effect.runPromise(renderToStringHydratable(ProductBoundary()));
+describe("Boundary.rpc — hydratable SSR (AC-10)", () => {
+  it("emits an inline JSON payload that decodes back to the resolved data", async () => {
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(ProductBoundary()), productHandlers),
+    );
 
     const match = SCRIPT_RE.exec(html);
     assert.ok(match !== null, "expected an application/json payload script");
@@ -75,85 +99,90 @@ describe("Boundary.server — hydratable SSR (AC-10)", () => {
   });
 
   it("renders render(data) HTML in place", async () => {
-    const html = await Effect.runPromise(renderToStringHydratable(ProductBoundary()));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(ProductBoundary()), productHandlers),
+    );
     assert.ok(html.includes('<div class="product">Widget</div>'));
   });
 
   it("emits the payload before the render(data) HTML (positional, AC-14)", async () => {
-    const html = await Effect.runPromise(renderToStringHydratable(ProductBoundary()));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(ProductBoundary()), productHandlers),
+    );
     assert.ok(html.indexOf("<script") < html.indexOf("<div"));
   });
 });
 
-describe("Boundary.server — plain SSR (AC-11/AC-12)", () => {
+describe("Boundary.rpc — plain SSR (AC-11/AC-12)", () => {
   it("renderToString renders render(data) HTML with no payload script", async () => {
-    const html = await Effect.runPromise(renderToString(ProductBoundary()));
+    const html = await Effect.runPromise(
+      provideRpc(renderToString(ProductBoundary()), productHandlers),
+    );
     assert.ok(html.includes('<div class="product">Widget</div>'));
     assert.ok(!html.includes("<script"));
   });
 
   it("renderToStream (plain) renders render(data) HTML with no payload script", async () => {
-    const html = await Effect.runPromise(Stream.mkString(renderToStream(ProductBoundary())));
+    const html = await Effect.runPromise(
+      Stream.mkString(provideStream(renderToStream(ProductBoundary()), productHandlers)),
+    );
     assert.ok(html.includes('<div class="product">Widget</div>'));
     assert.ok(!html.includes("<script"));
   });
 });
 
-describe("Boundary.server — omitted provide defaults to Layer.empty", () => {
-  // A dependency-free `load` (RServer = never) may omit `provide`; the
-  // constructor defaults it to `Layer.empty`, so the renderer's
-  // `Effect.provide(load(), provide)` still has a real layer to discharge.
-  const NoProvideBoundary = () =>
-    Boundary.server(
-      {
-        id: "no-provide",
-        load: () => Effect.succeed({ name: "Plain", price: 1 }),
-        schema: Product,
-      },
-      fromValue((data) => h.div({ class: "product" }, data.name)),
-    );
-
-  it("renders the loaded data without an explicit provide", async () => {
-    const html = await Effect.runPromise(renderToString(NoProvideBoundary()));
-    assert.ok(html.includes('<div class="product">Plain</div>'));
-  });
-
-  it("emits a hydratable payload that decodes back to the loaded data", async () => {
-    const html = await Effect.runPromise(renderToStringHydratable(NoProvideBoundary()));
-    const match = SCRIPT_RE.exec(html);
-    assert.ok(match !== null, "expected an application/json payload script");
-    const decoded = await decodeScript(match[1] as string);
-    assert.deepEqual(decoded, { name: "Plain", price: 1 });
+describe("Boundary.rpc — same tag, different payload", () => {
+  // The payload is a typed input, not a per-entity id: two boundaries sharing the
+  // rpc tag with different payloads resolve independently.
+  it("resolves each boundary from its own payload", async () => {
+    const handlers = {
+      GetProduct: (payload: unknown) =>
+        Effect.succeed<ProductShape>({ name: `P${(payload as { id: number }).id}`, price: 1 }),
+    };
+    const node = h.div({}, [
+      Boundary.rpc(
+        GetProduct,
+        () => ({ id: 1 }),
+        fromValue((d) => h.span({ class: "a" }, d.name)),
+      ),
+      Boundary.rpc(
+        GetProduct,
+        () => ({ id: 2 }),
+        fromValue((d) => h.span({ class: "b" }, d.name)),
+      ),
+    ]);
+    const html = await Effect.runPromise(provideRpc(renderToString(node), handlers));
+    assert.ok(html.includes('<span class="a">P1</span>'));
+    assert.ok(html.includes('<span class="b">P2</span>'));
   });
 });
 
-describe("Boundary.server — nesting", () => {
+describe("Boundary.rpc — nesting", () => {
   it("emits nested payloads positionally, each decodable", async () => {
+    const handlers = {
+      Outer: () => Effect.succeed<ProductShape>({ name: "Outer", price: 1 }),
+      Inner: () => Effect.succeed<ProductShape>({ name: "Inner", price: 2 }),
+    };
+    const OuterRpc = Rpc.make("Outer", { payload: StockKey, success: Product });
+    const InnerRpc = Rpc.make("Inner", { payload: StockKey, success: Product });
+
     const Nested = () =>
-      Boundary.server(
-        {
-          id: "nested-outer",
-          load: () => Effect.succeed({ name: "Outer", price: 1 }),
-          provide: Layer.empty,
-          schema: Product,
-        },
+      Boundary.rpc(
+        OuterRpc,
+        () => ({ id: 1 }),
         fromValue((outer) =>
           h.div({}, [
             outer.name,
-            Boundary.server(
-              {
-                id: "nested-inner",
-                load: () => Effect.succeed({ name: "Inner", price: 2 }),
-                provide: Layer.empty,
-                schema: Product,
-              },
+            Boundary.rpc(
+              InnerRpc,
+              () => ({ id: 2 }),
               fromValue((inner) => h.span({}, inner.name)),
             ),
           ]),
         ),
       );
 
-    const html = await Effect.runPromise(renderToStringHydratable(Nested()));
+    const html = await Effect.runPromise(provideRpc(renderToStringHydratable(Nested()), handlers));
     const scripts = [...html.matchAll(SCRIPT_RE_G)];
     assert.equal(scripts.length, 2);
 
@@ -171,28 +200,23 @@ describe("Boundary.server — nesting", () => {
   });
 });
 
-describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", () => {
-  // A typed `load` failure is encoded by the enclosing failure `Boundary` into a
+describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () => {
+  // A resolved rpc error is encoded by the enclosing failure `Boundary` into a
   // `data-eui-boundary-failure` payload (hydratable), or shown as the no-JS
   // fallback only (plain). A defect is never encoded.
-  class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
-    reason: Schema.String,
-  }) {}
-
   const FAILURE_SCRIPT_RE =
     /<script type="application\/json" data-eui-boundary-failure>(.*?)<\/script>/;
 
   const failingBoundary = () =>
-    Boundary.server(
-      {
-        id: "failing",
-        load: () => Effect.fail(new LoadError({ reason: "db down" })),
-        provide: Layer.empty,
-        schema: Product,
-        failure: LoadError,
-      },
+    Boundary.rpc(
+      Failing,
+      () => ({ id: 1 }),
       fromValue((data) => h.div({ class: "product" }, data.name)),
     );
+
+  const failingHandlers = {
+    Failing: () => Effect.fail(new LoadError({ reason: "db down" })),
+  };
 
   it("plain SSR shows the fallback with no failure payload (AC-8)", async () => {
     const node = Boundary.catchAll(
@@ -200,7 +224,7 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
       [failingBoundary()],
     );
 
-    const html = await Effect.runPromise(renderToString(node));
+    const html = await Effect.runPromise(provideRpc(renderToString(node), failingHandlers));
     assert.ok(html.includes('<div class="fallback">db down</div>'));
     assert.ok(!html.includes("data-eui-boundary-failure"));
     assert.ok(!html.includes('class="product"'));
@@ -212,7 +236,9 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
       [failingBoundary()],
     );
 
-    const html = await Effect.runPromise(renderToStringHydratable(node));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(node), failingHandlers),
+    );
 
     const match = FAILURE_SCRIPT_RE.exec(html);
     assert.ok(match !== null, "expected a data-eui-boundary-failure payload");
@@ -234,7 +260,9 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
       [Boundary.catchSome({ fallback: () => Option.none() }, [failingBoundary()])],
     );
 
-    const html = await Effect.runPromise(renderToStringHydratable(node));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(node), failingHandlers),
+    );
     const match = FAILURE_SCRIPT_RE.exec(html);
     assert.ok(match !== null, "expected the relocated failure payload");
     const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
@@ -243,59 +271,60 @@ describe("Boundary.server — typed-failure replay (server emit, AC-7…AC-9)", 
     assert.ok(html.includes('<div class="outer">db down</div>'));
   });
 
-  it("does not emit a failure payload for a load defect (AC-9)", async () => {
+  it("does not emit a failure payload for an rpc defect (AC-9)", async () => {
     const node = Boundary.catchAllCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
-      Boundary.server(
-        {
-          id: "defect",
-          load: () => Effect.die(new Error("kaboom")),
-          provide: Layer.empty,
-          schema: Product,
-        },
+      Boundary.rpc(
+        Failing,
+        () => ({ id: 1 }),
         fromValue((data) => h.div({}, data.name)),
       ),
     ]);
 
-    const html = await Effect.runPromise(renderToStringHydratable(node));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(node), {
+        Failing: () => Effect.die(new Error("kaboom")),
+      }),
+    );
     assert.ok(html.includes('<div class="fallback">boom</div>'));
     assert.ok(!html.includes("data-eui-boundary-failure"));
   });
 });
 
-describe("Boundary.server — encode failure (server-side)", () => {
-  it("fails the hydratable render when loaded data does not satisfy the schema", async () => {
-    // `load` yields a value whose `name` is a number, violating `Product`; the
-    // hydratable pass `Schema.encode`s `data`, so the bad value surfaces as a
-    // stream failure rather than emitting a corrupt payload.
-    const node = Boundary.server(
-      {
-        id: "encode-failure",
-        load: () => Effect.succeed({ name: 123, price: 9 } as unknown as ProductShape),
-        provide: Layer.empty,
-        schema: Product,
-      },
+describe("Boundary.rpc — encode failure (server-side)", () => {
+  it("fails the hydratable render when resolved data does not satisfy the success schema", async () => {
+    // The handler yields a value whose `name` is a number, violating `Product`;
+    // the hydratable pass `Schema.encode`s the success, so the bad value surfaces
+    // as a stream failure rather than emitting a corrupt payload.
+    const node = Boundary.rpc(
+      GetProduct,
+      () => ({ id: 1 }),
       fromValue((data) => h.div({ class: "product" }, String(data.name))),
     );
 
-    const exit = await Effect.runPromiseExit(renderToStringHydratable(node));
+    const exit = await Effect.runPromiseExit(
+      provideRpc(renderToStringHydratable(node), {
+        GetProduct: () => Effect.succeed({ name: 123, price: 9 } as unknown as ProductShape),
+      }),
+    );
     assert.ok(Exit.isFailure(exit));
   });
 });
 
-describe("Boundary.server — payload escaping (XSS-safe)", () => {
+describe("Boundary.rpc — payload escaping (XSS-safe)", () => {
   it("escapes characters unsafe in an inline <script> and still round-trips", async () => {
     const Evil = Schema.Struct({ html: Schema.String });
-    const node = Boundary.server(
-      {
-        id: "xss",
-        load: () => Effect.succeed({ html: "</script><script>alert(1)</script>" }),
-        provide: Layer.empty,
-        schema: Evil,
-      },
+    const EvilRpc = Rpc.make("Evil", { payload: StockKey, success: Evil });
+    const node = Boundary.rpc(
+      EvilRpc,
+      () => ({ id: 1 }),
       () => h.div({}, "ok"),
     );
 
-    const html = await Effect.runPromise(renderToStringHydratable(node));
+    const html = await Effect.runPromise(
+      provideRpc(renderToStringHydratable(node), {
+        Evil: () => Effect.succeed({ html: "</script><script>alert(1)</script>" }),
+      }),
+    );
 
     // The raw closing tag must not appear inside the payload — `<` is escaped.
     assert.ok(!html.includes("</script><script>alert"));
