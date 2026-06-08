@@ -4,6 +4,10 @@
   "description": "Client-side DOM renderer for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stefvw93/weft"
+  },
   "files": [
     "dist"
   ],
