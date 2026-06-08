@@ -11,7 +11,7 @@
       "@semantic-release/exec",
       {
         "prepareCmd": "node scripts/sync-versions.mjs ${nextRelease.version}",
-        "publishCmd": "pnpm -r --filter './packages/*' publish --access public --no-git-checks"
+        "publishCmd": "vp dlx pnpm -r --filter './packages/*' publish --access public --no-git-checks"
       }
     ],
     "@semantic-release/github"
