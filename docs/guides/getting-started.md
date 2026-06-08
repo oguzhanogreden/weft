@@ -9,7 +9,7 @@ This guide walks you through building your first Weft app from scratch.
 
 ## Install
 
-Install from [GitHub releases](https://github.com/stefvw93/Weft/releases) (not yet published to package registries):
+Install from [GitHub releases](https://github.com/stefvw93/weft/releases) (not yet published to package registries):
 
 ```bash
 npm install @weftui/core @weftui/dom effect

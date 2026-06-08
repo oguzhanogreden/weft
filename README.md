@@ -1,6 +1,6 @@
 # Weft
 
-[![CI + Release](https://github.com/stefvw93/effect-ui/actions/workflows/ci-release.yml/badge.svg)](https://github.com/stefvw93/effect-ui/actions/workflows/ci-release.yml)
+[![CI + Release](https://github.com/stefvw93/weft/actions/workflows/ci-release.yml/badge.svg)](https://github.com/stefvw93/weft/actions/workflows/ci-release.yml)
 
 > Reactive UI, woven from [Effect](https://effect.website).
 
@@ -28,7 +28,7 @@ Weft is a monorepo with three packages:
 
 ## Installation
 
-Install from [GitHub releases](https://github.com/stefvw93/effect-ui/releases) (not yet published to package registries).
+Install from [GitHub releases](https://github.com/stefvw93/weft/releases) (not yet published to package registries).
 
 ```bash
 npm install @weftui/core @weftui/dom effect
