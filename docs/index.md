@@ -34,17 +34,17 @@ effect-ui is an Effect-native reactive DOM library. `Node<E, R>` is `Effect.Effe
 
 The [`examples/`](../examples/) directory contains standalone runnable apps. Each covers a specific pattern and ships with a browser test:
 
-| Example | What it shows |
-| --- | --- |
-| `async-data-loading` | Loading states, retry, error boundaries with Stream and Effect |
-| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive handlers |
-| `element-ref` | DOM refs with `SubscriptionRef<Option<HTMLElement>>` |
-| `error-boundary` | All six `Boundary.*` variants |
-| `form-handling` | Reactive inputs, Schema validation, Effect submit handlers |
-| `keyed-list` | Keyed list rendering |
-| `list-rendering` | Static and stream-based lists, fragments, nested iterables |
-| `reactive-styles` | Per-property and whole-object stream styles, CSS transitions |
-| `router-ssr` | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc` |
-| `ssr-hydration` | SSR + hydration without server data loading |
-| `subscription-ref` | Local state, derived streams, coordinating multiple refs |
-| `suspense` | Suspense boundaries for streaming SSR and client coordination |
+| Example                      | What it shows                                                         |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `async-data-loading`         | Loading states, retry, error boundaries with Stream and Effect        |
+| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive handlers         |
+| `element-ref`                | DOM refs with `SubscriptionRef<Option<HTMLElement>>`                  |
+| `error-boundary`             | All six `Boundary.*` variants                                         |
+| `form-handling`              | Reactive inputs, Schema validation, Effect submit handlers            |
+| `keyed-list`                 | Keyed list rendering                                                  |
+| `list-rendering`             | Static and stream-based lists, fragments, nested iterables            |
+| `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions          |
+| `router-ssr`                 | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc` |
+| `ssr-hydration`              | SSR + hydration without server data loading                           |
+| `subscription-ref`           | Local state, derived streams, coordinating multiple refs              |
+| `suspense`                   | Suspense boundaries for streaming SSR and client coordination         |

@@ -44,15 +44,15 @@ import { mount } from "@effect-ui/dom/client";
 import { Effect, SubscriptionRef } from "effect";
 
 const Counter = () =>
-	Effect.gen(function* () {
-		const count = yield* SubscriptionRef.make(0);
+  Effect.gen(function* () {
+    const count = yield* SubscriptionRef.make(0);
 
-		return yield* h.div([
-			h.span([count.changes]),
-			h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
-			h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
-		]);
-	});
+    return yield* h.div([
+      h.span([count.changes]),
+      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
+      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
+    ]);
+  });
 
 void Effect.runPromise(mount(Counter(), document.getElementById("root")!));
 ```
@@ -74,20 +74,20 @@ Full documentation lives in [`docs/`](./docs/index.md):
 
 The [examples/](./examples) directory contains standalone applications you can run with `vp run -F <name> dev`:
 
-| Example | What it shows |
-| --- | --- |
-| `async-data-loading` | Loading states, retry, and error boundaries with Stream and Effect |
-| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive event handlers |
-| `element-ref` | DOM refs with `SubscriptionRef<Option<HTMLElement>>` for post-mount access |
-| `error-boundary` | All six `Boundary.*` variants: catchAll, catchTag, catchTags, and more |
-| `form-handling` | Reactive inputs, Schema-based validation, and Effect submit handlers |
-| `keyed-list` | Keyed list rendering |
-| `list-rendering` | Static and stream-based lists, Fragments, and nested iterables |
-| `reactive-styles` | Per-property and whole-object stream styles, CSS transitions |
-| `router-ssr` | Universal nested routing with `@effect-ui/router`: SSR, hydration, layouts |
-| `ssr-hydration` | Server rendering with `renderToStringHydratable` and client `hydrate` |
-| `subscription-ref` | Local state, derived streams, and coordinating multiple refs |
-| `suspense` | Suspense boundaries for streaming SSR and client-side coordination |
+| Example                      | What it shows                                                              |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `async-data-loading`         | Loading states, retry, and error boundaries with Stream and Effect         |
+| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive event handlers        |
+| `element-ref`                | DOM refs with `SubscriptionRef<Option<HTMLElement>>` for post-mount access |
+| `error-boundary`             | All six `Boundary.*` variants: catchAll, catchTag, catchTags, and more     |
+| `form-handling`              | Reactive inputs, Schema-based validation, and Effect submit handlers       |
+| `keyed-list`                 | Keyed list rendering                                                       |
+| `list-rendering`             | Static and stream-based lists, Fragments, and nested iterables             |
+| `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions               |
+| `router-ssr`                 | Universal nested routing with `@effect-ui/router`: SSR, hydration, layouts |
+| `ssr-hydration`              | Server rendering with `renderToStringHydratable` and client `hydrate`      |
+| `subscription-ref`           | Local state, derived streams, and coordinating multiple refs               |
+| `suspense`                   | Suspense boundaries for streaming SSR and client-side coordination         |
 
 ## Development
 

@@ -73,10 +73,10 @@ const formatted = Stream.map(count.changes, (n) => `Count: ${n}`);
 const isHigh = Stream.map(count.changes, (n) => n > 10);
 
 h.div([
-	h.p([count.changes]),
-	h.p([doubled]),
-	h.p([formatted]),
-	h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
+  h.p([count.changes]),
+  h.p([doubled]),
+  h.p([formatted]),
+  h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
 ]);
 ```
 
@@ -87,7 +87,7 @@ const firstName = yield * SubscriptionRef.make("");
 const lastName = yield * SubscriptionRef.make("");
 
 const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) =>
-	`${first} ${last}`.trim(),
+  `${first} ${last}`.trim(),
 );
 ```
 
@@ -98,11 +98,11 @@ The `style` prop accepts the same `Source` vocabulary at any level:
 ```typescript
 // Individual property as a stream
 h.div({
-	style: {
-		color: colorStream, // Stream<string>
-		opacity: opacityStream, // Stream<number>
-		fontWeight: "bold", // static
-	},
+  style: {
+    color: colorStream, // Stream<string>
+    opacity: opacityStream, // Stream<number>
+    fontWeight: "bold", // static
+  },
 });
 
 // Entire style object as a stream
@@ -110,10 +110,10 @@ h.div({ style: styleObjectStream });
 
 // Spread a stream into a style object (static props win over emitted props)
 h.div({
-	style: {
-		...styleObjectStream, // reactive
-		transition: "all 0.3s", // static, always applied
-	},
+  style: {
+    ...styleObjectStream, // reactive
+    transition: "all 0.3s", // static, always applied
+  },
 });
 ```
 
@@ -126,10 +126,10 @@ import { NoPropValue } from "@effect-ui/core";
 
 // Handle at the mount boundary if needed
 pipe(
-	mount(App(), root),
-	Effect.catchTag("NoPropValue", (e) =>
-		Effect.logWarning(`Prop stream ended before emitting: ${e.key}`),
-	),
+  mount(App(), root),
+  Effect.catchTag("NoPropValue", (e) =>
+    Effect.logWarning(`Prop stream ended before emitting: ${e.key}`),
+  ),
 );
 ```
 

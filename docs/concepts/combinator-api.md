@@ -24,8 +24,8 @@ const provided = pipe(h.div(userStream), Effect.provide(UserServiceLive));
 
 // Effect.flatMap — sequence node creation with async logic
 const card = pipe(
-	fetchCard(id),
-	Effect.flatMap((data) => h.div({ class: "card" }, data.title)),
+  fetchCard(id),
+  Effect.flatMap((data) => h.div({ class: "card" }, data.title)),
 );
 ```
 
@@ -96,7 +96,7 @@ import { h } from "@effect-ui/core";
 
 // Renders as three adjacent <td> elements with no wrapping element
 const TableRow = ({ user }: { user: User }) =>
-	h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
+  h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
 ```
 
 ## Custom components with `Component.gen` / `Component.make`
@@ -108,12 +108,12 @@ import { Component, h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 interface ButtonProps {
-	label: string | Stream.Stream<string>;
-	onclick?: () => void;
+  label: string | Stream.Stream<string>;
+  onclick?: () => void;
 }
 
 const Button = Component.make((props: ButtonProps) =>
-	h.button({ onclick: props.onclick }, [props.label]),
+  h.button({ onclick: props.onclick }, [props.label]),
 );
 
 // When called with a stream prop, the stream's R flows into the node type:
@@ -137,8 +137,8 @@ See [component-authoring.md](../guides/component-authoring.md) for a full walkth
 import { h, Suspense } from "@effect-ui/core";
 
 Suspense({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
-	AsyncCard({ id: 1 }),
-	AsyncCard({ id: 2 }),
+  AsyncCard({ id: 1 }),
+  AsyncCard({ id: 2 }),
 ]);
 ```
 
