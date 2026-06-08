@@ -29,7 +29,7 @@ Router.route<Path, Query, S>(
 ): RouteNode<Path, Query, E, R>;
 ```
 
-Declares a leaf page. `segment` is relative to the parent and may contain `:name` placeholders. `component` is a [`ComponentSlot`](#componentslot) — its `E`/`R` channels are recovered and propagate up the tree. The returned `RouteNode` is also the reference passed to [`href`](#href).
+Declares a leaf page. `segment` is relative to the parent and may contain `:name` placeholders. `component` is a [`ComponentSlot`](#types) — its `E`/`R` channels are recovered and propagate up the tree. The returned `RouteNode` is also the reference passed to [`href`](#href).
 
 A leaf `component` reads the live match in **either** of two forms:
 
@@ -68,7 +68,7 @@ Declares a layout — purely UI nesting, owning **no path or segment**. `compone
 Router.router<T, NF>(root: T, options: { notFound: () => NF }): RouterDef<E, R>;
 ```
 
-Seals a route tree into a [`RouterDef`](#routerdef), compiling it eagerly (so leaf references are stamped for `href`) and capturing the app-level not-found page. The tree's aggregate channels (plus the not-found page's) ride on the returned `RouterDef`'s phantom `E`/`R`.
+Seals a route tree into a [`RouterDef`](#types), compiling it eagerly (so leaf references are stamped for `href`) and capturing the app-level not-found page. The tree's aggregate channels (plus the not-found page's) ride on the returned `RouterDef`'s phantom `E`/`R`.
 
 ### `Router.Outlet`
 
@@ -116,7 +116,7 @@ href(postsRoute, { path: { id: 1 }, query: { sort: "new" } }); // "/users/1/post
 RouterApp<E, R>(def: RouterDef<E, R>): Node<Exclude<E, RouterNotFound>, R | Router>;
 ```
 
-The universal router root node — render this on both server and client. Wraps the nested outlet in the router's internal not-found boundary, so a `RouterNotFound` raised by a page renders the configured `notFound` page in place. The server no longer needs a status side-channel: it dispatches through `HttpApiBuilder`, so a page-raised `RouterNotFound` (and a no-match) surface their 404 through the platform request pipeline.
+The universal router root node — render this on both server and client. Wraps the nested outlet in the router's internal not-found boundary, so a `RouterNotFound` raised by a page renders the configured `notFound` page in place. Server dispatch runs through `HttpApiBuilder`: a page-raised `RouterNotFound` and a no-match surface their 404 through the platform request pipeline.
 
 `RouterApp` requires `Router` in its environment — provide it via `RouterLive` (client) or `RouterServer` (server), not `Effect.provide` at the node level (that would release the scoped layer immediately).
 
@@ -196,7 +196,7 @@ Dispatch runs through the `def.httpApi` spine via `HttpApiBuilder`: platform own
 
 - **`toWebHandler`** returns a Web `fetch`-style handler `(Request) => Promise<Response>` that dispatches through `HttpApiBuilder.toWebHandler` and replies `text/html`. Suitable for bridging into a dev server (Vite) or any Web-platform server.
 - **`render`** drives that handler for a single `url`, returning `{ html, status }` with `<!DOCTYPE html>` prepended. `status` is sourced from the platform pipeline — `200`, or `404` for a no-match / a page-raised `RouterNotFound`.
-- **`document`** is a [`ComponentSlot`](#componentslot) that splices the app via `yield* Router.Outlet`; the router provides both `Router.Outlet` (the app, per request) and `Router`.
+- **`document`** is a [`ComponentSlot`](#types) that splices the app via `yield* Router.Outlet`; the router provides both `Router.Outlet` (the app, per request) and `Router`.
 - **`rpc`** is the app's [`Boundary.rpc`](../api/core.md#boundaryrpc) data foundation: `{ group: RpcGroup<any>; handlers: Layer<any, never, never> }` — the merged `RpcGroup` (shared with the client) plus its server-only handler Layer (`group.toLayer(...)` ⊕ its dependencies). `toWebHandler` serves the handlers at `POST /_eui/rpc` (so a client refetch / client-first mount re-runs them on the server), and an in-process client over the same handlers (backing the [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam) resolves SSR boundaries in-process — never over the network.
 
 > The `HttpApi` is not generated on the server — it is built once when the tree is sealed (`buildHttpApi` during `Router.router`) and lives on `def.httpApi` as the single source of truth both the server dispatch and the client matcher / derived `HttpApiClient` read from.

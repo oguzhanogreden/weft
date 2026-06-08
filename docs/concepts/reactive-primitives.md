@@ -1,6 +1,8 @@
 # Reactive Primitives
 
-effect-ui accepts a unified `Source` vocabulary for prop values and children. Any of these is valid wherever reactivity is supported:
+The unified `Source` vocabulary is what lets static values, Effects, Streams, and Subscribables be used interchangeably wherever reactivity is supported — props, children, and style values all accept the same type.
+
+effect-ui accepts a `Source` for prop values and children. Any of these is valid wherever reactivity is supported:
 
 - A plain static value (`string`, `number`, `boolean`, ...)
 - An `Effect.Effect<A, E, R>` — runs once and resolves to a value
@@ -123,7 +125,8 @@ When a `Stream` prop ends before emitting, the renderer raises a `NoPropValue` t
 import { NoPropValue } from "@effect-ui/core";
 
 // Handle at the mount boundary if needed
-mount(App(), root).pipe(
+pipe(
+  mount(App(), root),
   Effect.catchTag("NoPropValue", (e) =>
     Effect.logWarning(`Prop stream ended before emitting: ${e.key}`),
   ),
