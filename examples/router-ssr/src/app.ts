@@ -23,8 +23,8 @@
  * `StockLive`) the client never imports — the rpc contract is the only shared part.
  */
 
-import { h } from "@effect-ui/core";
-import { Router } from "@effect-ui/router";
+import { h } from "@weftui/core";
+import { Router } from "@weftui/router";
 import { Shell } from "./components/shell";
 import { homeRoute } from "./pages/landing";
 import { productsRoute } from "./pages/listing";

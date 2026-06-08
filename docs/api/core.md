@@ -1,4 +1,4 @@
-# @effect-ui/core API Reference
+# @weftui/core API Reference
 
 ## Element builders
 
@@ -7,7 +7,7 @@
 Proxy-based namespace for building HTML and SVG elements. Every property is an element builder for that tag name:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 h.div(props, children)
 h.span(props, child: string | number)
@@ -36,7 +36,7 @@ Reactive prop values (Stream, Effect, Subscribable) contribute their `E`/`R` to 
 Groups children into a fragment that renders without a wrapper element:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 h.fragment(children: Node[]): Node<ChildrenE, ChildrenR>
 ```
@@ -48,7 +48,7 @@ Use when a component needs to return multiple sibling elements.
 Namespace exposing two factories for reusable components with caller-propagating reactive prop types: `Component.gen` (generator body) and `Component.make` (plain-function body). Both return a callable that is generic over the caller's specific `props`/`children`, so reactive prop values and reactive children contribute their `E`/`R` at the call site.
 
 ```typescript
-import { Component } from "@effect-ui/core";
+import { Component } from "@weftui/core";
 
 Component.gen<BaseProps, C>(
   body: (props: BaseProps, children: C) => Generator<YieldedEffect, ElementDescriptor, never>
@@ -116,7 +116,7 @@ Variants for intercepting rendering-path errors in a subtree, plus `Boundary.sus
 **What is NOT caught:** event handler errors (they run in detached fibers outside the render path).
 
 ```typescript
-import { Boundary } from "@effect-ui/core";
+import { Boundary } from "@weftui/core";
 ```
 
 #### `Boundary.suspend`
@@ -148,7 +148,7 @@ Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(
 ): Node<Node.Error<C> | Rpc.Error<R>, Node.Context<C>>
 ```
 
-The boundary resolves the rpc through the ambient [`AppRpcClientTag`](#apprpcclienttag) seam, provided by `@effect-ui/router` (`RouterServer` on the server, `RouterLive` on the client). It has four lifecycles:
+The boundary resolves the rpc through the ambient [`AppRpcClientTag`](#apprpcclienttag) seam, provided by `@weftui/router` (`RouterServer` on the server, `RouterLive` on the client). It has four lifecycles:
 
 - **SSR:** the server resolves the rpc in-process (over the handler Layer), `successSchema`-encodes the result inline as `<script type="application/json">` at the region cursor, then renders `render(seededResource)` to HTML in place.
 - **Hydrate:** `hydrate` reads the inline payload positionally, `successSchema`-decodes it, seeds the `Resource`, and adopts the DOM — it **never re-calls the rpc** (replay, not refetch).
@@ -194,13 +194,13 @@ The descriptor `type` every `Boundary.rpc` carries (`{ type: SERVER_BOUNDARY, pr
 interface AppRpcClient {
   readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
 }
-class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<
+class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
   AppRpcClientTag,
   AppRpcClient
 >() {}
 ```
 
-The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@effect-ui/dom` resolve a boundary without importing `@effect/rpc` or `@effect-ui/router`. `@effect-ui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@effect-ui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
+The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@weftui/dom` resolve a boundary without importing `@effect/rpc` or `@weftui/router`. `@weftui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@weftui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
 
 See the [rpc data boundaries guide](../guides/rpc-data-boundaries.md) and [examples/router-ssr](../../examples/router-ssr).
 
@@ -308,7 +308,7 @@ Boundary.catchAll({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
 A `Context.Tag` whose identifier is branded server-only. Use it exactly like `Context.Tag` for services that must only ever be provided on the server — e.g. a database handle read inside an rpc handler Layer. The brand also guards [`Boundary.rpc`](#boundaryrpc): a server-only tag accidentally referenced in `render` stays in the requirement channel, where `hydrate`'s `AssertNoServerOnly` rejects it at compile time.
 
 ```typescript
-import { ServerTag } from "@effect-ui/core";
+import { ServerTag } from "@weftui/core";
 import { Effect } from "effect";
 
 class Database extends ServerTag("Database")<
@@ -336,7 +336,7 @@ The keyed-list combinator. It is the opt-in alternative to wholesale child rebui
 > elements.
 
 ```typescript
-import { h, List } from "@effect-ui/core";
+import { h, List } from "@weftui/core";
 
 h.ul([List.each({ of: rows.changes, by: (row) => row.id }, (row) => h.li(row.name))]);
 ```
@@ -391,7 +391,7 @@ The core tree type. Every element builder and component returns a `Node`. Becaus
 The `Source` namespace contains the reactive prop vocabulary type and its normalization utility:
 
 ```typescript
-import { Source } from "@effect-ui/core";
+import { Source } from "@weftui/core";
 
 // The type union
 type Source.Source<A, E, R> = A | Effect.Effect<A, E, R> | Stream.Stream<A, E, R> | Subscribable<A, E, R>

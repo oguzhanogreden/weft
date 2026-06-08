@@ -3,7 +3,7 @@
 ## Overview
 
 `Boundary.rpc` is constructed with `Boundary.rpc(rpc, payload, render, options?)`
-(in `@effect-ui/core`) and recognised by the DOM client renderer via its
+(in `@weftui/core`) and recognised by the DOM client renderer via its
 `SERVER_BOUNDARY` symbol type tag. This spec covers the **client `hydrate`
 replay** half of the renderer contract stated in
 `packages/core/src/boundary/boundary-rpc.specs.md` (core AC-12). The server emit
@@ -48,14 +48,14 @@ On a resolved rpc failure the server renders the failure boundary's _fallback_ (
 tree independent of this boundary's `render(data)`), so a children-vs-fallback walk
 diverges structurally _before_ reaching this server boundary — its hydrate is
 unreachable on a failure. The failure boundary therefore detects the
-`data-eui-boundary-failure` payload, decodes via this boundary's `errorSchema`
+`data-weft-boundary-failure` payload, decodes via this boundary's `errorSchema`
 (located by pre-order index), rebuilds the cause, and hydrates the fallback. See
 `client/boundary.specs.md`. The only obligation here is **defensive** (AC-H-S7):
 the success path must reject a failure-marked payload rather than mis-decode it.
 
 ### AC-H-S7: Success path rejects a failure payload (defensive)
 
-- **Given** the cursor at a `<script type="application/json" data-eui-boundary-failure>`
+- **Given** the cursor at a `<script type="application/json" data-weft-boundary-failure>`
   (a failure payload that somehow reached the server-boundary success descent)
 - **When** `hydrateServerBoundary` runs
 - **Then** it fails with a `HydrationMismatchError` rather than decoding the
@@ -79,7 +79,7 @@ the success path must reject a failure-marked payload rather than mis-decode it.
 ### AC-H-S8: Refetch patches the region in place (core AC-8, AC-14)
 
 - **Given** a hydrated `Boundary.rpc` region and an `AppRpcClientTag` in context
-  (the network client `@effect-ui/router` provides)
+  (the network client `@weftui/router` provides)
 - **When** `resource.refetch` runs
 - **Then** it calls `AppRpcClient.call(tag, payload())` (POST `/_eui/rpc`), takes
   the already-decoded success, and `SubscriptionRef.set`s `value` — so `render`'s

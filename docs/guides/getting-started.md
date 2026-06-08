@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through building your first effect-ui app from scratch.
+This guide walks you through building your first Weft app from scratch.
 
 ## Prerequisites
 
@@ -9,10 +9,10 @@ This guide walks you through building your first effect-ui app from scratch.
 
 ## Install
 
-Install from [GitHub releases](https://github.com/stefvw93/effect-ui/releases) (not yet published to package registries):
+Install from [GitHub releases](https://github.com/stefvw93/weft/releases) (not yet published to package registries):
 
 ```bash
-npm install @effect-ui/core @effect-ui/dom effect
+npm install @weftui/core @weftui/dom effect
 ```
 
 ## Your first component
@@ -20,12 +20,12 @@ npm install @effect-ui/core @effect-ui/dom effect
 The `h` namespace is the entry point for building elements. Each property is a builder for that HTML tag:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
 import { Effect } from "effect";
 
 function App() {
-  return h.div({ class: "app" }, [h.h1("Hello, effect-ui"), h.p("A minimal app.")]);
+  return h.div({ class: "app" }, [h.h1("Hello, Weft"), h.p("A minimal app.")]);
 }
 
 void Effect.runPromise(mount(App(), document.getElementById("root")!));
@@ -38,8 +38,8 @@ void Effect.runPromise(mount(App(), document.getElementById("root")!));
 Use `SubscriptionRef` for component-local state. Its `.changes` property is a `Stream<A>` that emits on every update — pass it as a child or prop to get live updates:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
 import { Effect, SubscriptionRef } from "effect";
 
 const Counter = () =>
@@ -63,8 +63,8 @@ void Effect.runPromise(mount(Counter(), document.getElementById("root")!));
 Event handlers can return Effects, which means they have access to any service in the component's environment. Provide services at the `mount` call site:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
 import { Context, Effect, Layer } from "effect";
 
 class Logger extends Context.Tag("Logger")<
@@ -99,8 +99,8 @@ void Effect.runPromise(
 Components can return a `Stream<Node>` to show different content over time. Use `Stream.concat` to sequence a loading state with the resolved content:
 
 ```typescript
-import { h } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
 import { Effect, Stream } from "effect";
 
 const AsyncGreeting = ({ name }: { name: string }) =>
@@ -122,7 +122,7 @@ void Effect.runPromise(mount(AsyncGreeting({ name: "World" }), document.getEleme
 Wrap any subtree in a `Boundary.*` variant to intercept rendering-path errors and show a fallback. Six variants are available — `catchAll`, `catchAllCause`, `catchTag`, `catchTags`, `catchSome`, and `catchIf`:
 
 ```typescript
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Data, Effect } from "effect";
 
 class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
@@ -139,10 +139,10 @@ See [examples/error-boundary](../../examples/error-boundary) for a runnable demo
 
 ## Server-side rendering
 
-Render on the server and hydrate on the client with `@effect-ui/dom/server` + `hydrate`. `Boundary.rpc` resolves an rpc on the server, serializes its result into the HTML, replays it on the client without a second request, then keeps the region live for refetch:
+Render on the server and hydrate on the client with `@weftui/dom/server` + `hydrate`. `Boundary.rpc` resolves an rpc on the server, serializes its result into the HTML, replays it on the client without a second request, then keeps the region live for refetch:
 
 ```typescript
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Stream } from "effect";
 import { GetStock } from "./data/inventory";
 
@@ -162,6 +162,6 @@ See the [rpc data boundaries guide](./rpc-data-boundaries.md) for the full model
 - [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
 - [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
 - [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
-- [Routing](./routing.md) — universal nested routing with `@effect-ui/router`
-- [`@effect-ui/core` API Reference](../api/core.md) and [`@effect-ui/router` API Reference](../api/router.md)
+- [Routing](./routing.md) — universal nested routing with `@weftui/router`
+- [`@weftui/core` API Reference](../api/core.md) and [`@weftui/router` API Reference](../api/router.md)
 - [examples/](../../examples/) — runnable examples covering common patterns

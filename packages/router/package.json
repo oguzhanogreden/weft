@@ -1,7 +1,7 @@
 {
-  "name": "@effect-ui/router",
+  "name": "@weftui/router",
   "version": "0.0.0",
-  "description": "Universal nested router for effect-ui",
+  "description": "Universal nested router for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
   "type": "module",
@@ -20,10 +20,10 @@
     }
   },
   "dependencies": {
-    "@effect-ui/core": "workspace:*",
-    "@effect-ui/dom": "workspace:*",
     "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:"
+    "@effect/rpc": "catalog:",
+    "@weftui/core": "workspace:*",
+    "@weftui/dom": "workspace:*"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",

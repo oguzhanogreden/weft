@@ -16,7 +16,7 @@ export default defineConfig({
     platform: "neutral",
     minify: true,
     deps: {
-      neverBundle: ["effect", /^@effect-ui\//, "vite", "vite-plus"],
+      neverBundle: ["effect", /^@weftui\//, "vite", "vite-plus"],
     },
   },
   resolve: {

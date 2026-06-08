@@ -16,11 +16,11 @@ describe("browser e2e smoke", () => {
 
   it("can mutate the real DOM", () => {
     const element = document.createElement("div");
-    element.textContent = "effect-ui";
+    element.textContent = "weft";
     document.body.append(element);
 
     expect(document.body.contains(element)).toBe(true);
-    expect(element.textContent).toBe("effect-ui");
+    expect(element.textContent).toBe("weft");
 
     element.remove();
     expect(document.body.contains(element)).toBe(false);

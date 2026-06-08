@@ -23,9 +23,9 @@
  *       boundary id.
  */
 
-import { hydrate, type MountHandle } from "@effect-ui/dom/client";
-import { Router, RouterApp, RouterLive } from "@effect-ui/router/client";
-import { RouterServer } from "@effect-ui/router/server";
+import { hydrate, type MountHandle } from "@weftui/dom/client";
+import { Router, RouterApp, RouterLive } from "@weftui/router/client";
+import { RouterServer } from "@weftui/router/server";
 import { Effect, ManagedRuntime } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";

@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
-import type { AppRpcClient, Node } from "@effect-ui/core";
+import { AppRpcClientTag, Boundary, h } from "@weftui/core";
+import type { AppRpcClient, Node } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { Cause, Effect, Exit, Layer, Schema } from "effect";
 import { JSDOM } from "jsdom";
@@ -8,7 +8,7 @@ import { describe, it } from "vite-plus/test";
 import { HydrationMismatchError } from "~/data";
 import { renderToStringHydratable } from "~/server";
 import { hydrate } from "./render";
-import type { Renderable } from "@effect-ui/core/types";
+import type { Renderable } from "@weftui/core/types";
 
 /**
  * Adapts a bare `(data) => Node` render to the `(resource) => Node` signature by
@@ -337,7 +337,7 @@ describe("Boundary.rpc hydrate — typed-failure replay", () => {
     assert.equal((serverFallback as unknown as { __sentinel?: boolean }).__sentinel, true);
     assert.equal(serverFallback?.textContent, "db down");
     // The failure payload script is consumed.
-    assert.equal(root.querySelector("script[data-eui-boundary-failure]"), null);
+    assert.equal(root.querySelector("script[data-weft-boundary-failure]"), null);
     // The success subtree was never reproduced.
     assert.equal(root.querySelector("div.product"), null);
   });
@@ -346,7 +346,7 @@ describe("Boundary.rpc hydrate — typed-failure replay", () => {
     createTestDOM();
     const root = createRoot();
     root.innerHTML =
-      '<script type="application/json" data-eui-boundary-failure>not json</script><div class="fallback">db down</div>';
+      '<script type="application/json" data-weft-boundary-failure>not json</script><div class="fallback">db down</div>';
 
     const exit = await Effect.runPromiseExit(hydrate(makeFailingApp(), root));
 

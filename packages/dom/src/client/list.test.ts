@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Data, Effect, Stream, SubscriptionRef } from "effect";
-import { Boundary, h, List } from "@effect-ui/core";
+import { Boundary, h, List } from "@weftui/core";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
 

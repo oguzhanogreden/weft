@@ -15,8 +15,8 @@
  * that swap in the resolved content — visible with `curl -N`.
  */
 
-import { AppRpcClientTag } from "@effect-ui/core";
-import { renderToStreamHydratable } from "@effect-ui/dom/server";
+import { AppRpcClientTag } from "@weftui/core";
+import { renderToStreamHydratable } from "@weftui/dom/server";
 import { Effect, Layer, Stream } from "effect";
 import { App } from "./app";
 

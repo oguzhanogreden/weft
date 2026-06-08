@@ -1,5 +1,5 @@
-import { AppRpcClientTag, type Node } from "@effect-ui/core";
-import { renderToStringHydratable } from "@effect-ui/dom/server";
+import { AppRpcClientTag, type Node } from "@weftui/core";
+import { renderToStringHydratable } from "@weftui/dom/server";
 import {
   HttpApiBuilder,
   HttpApiEndpoint,

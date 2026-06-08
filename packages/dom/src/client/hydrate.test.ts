@@ -2,14 +2,14 @@ import * as assert from "node:assert/strict";
 import { Cause, Effect, Exit, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { HydrationMismatchError } from "~/data";
 import { hydrate } from "./render";
 import {
   renderToString as _renderToString,
   renderToStringHydratable as _renderToStringHydratable,
 } from "~/server";
-import type { Renderable } from "@effect-ui/core/types";
+import type { Renderable } from "@weftui/core/types";
 import { NoRpc } from "../__tests__/rpc-stub";
 
 // These trees contain no `Boundary.rpc`; shadow the SSR fns with the no-op `NoRpc`

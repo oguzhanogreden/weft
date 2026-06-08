@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Data, Effect, Stream, SubscriptionRef } from "effect";
-import { h, List } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core/types";
+import { h, List } from "@weftui/core";
+import type { Renderable } from "@weftui/core/types";
 import { JSDOM } from "jsdom";
 import { hydrate } from "./render";
 import {

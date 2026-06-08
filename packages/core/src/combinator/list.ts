@@ -7,7 +7,7 @@ import type { Source } from "~/source/source";
  * renderer special-cases descriptors carrying this `type`, mirroring how
  * `FRAGMENT` and the `Boundary` symbols are detected.
  */
-export const LIST = Symbol("@effect-ui/core/list");
+export const LIST = Symbol("@weftui/core/list");
 
 /** Element type carried by a list source — the element type of the emitted `Iterable`. */
 type ItemOf<S> = Source.Success<S> extends Iterable<infer T> ? T : never;

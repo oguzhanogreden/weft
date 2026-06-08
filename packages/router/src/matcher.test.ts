@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { Component, h } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
 import { Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { match } from "~/matcher";

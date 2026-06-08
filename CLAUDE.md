@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`effect-ui` is a pnpm monorepo (`effect-ui-workspace`) implementing an Effect-based UI library with strict TypeScript configuration and modern tooling.
+`Weft` is a pnpm monorepo (`weft-workspace`) implementing an Effect-based UI library with strict TypeScript configuration and modern tooling.
 
 Workspace layout (see `pnpm-workspace.yaml`):
 
 - `packages/*` — published library packages:
-  - `@effect-ui/base` (`packages/base`) — shared primitives
-  - `@effect-ui/core` (`packages/core`) — core combinators, sources, streams, boundaries
-  - `@effect-ui/dom` (`packages/dom`) — DOM renderer with `./client` and `./server` entry points
+  - `@weftui/base` (`packages/base`) — shared primitives
+  - `@weftui/core` (`packages/core`) — core combinators, sources, streams, boundaries
+  - `@weftui/dom` (`packages/dom`) — DOM renderer with `./client` and `./server` entry points
 - `examples/*` — standalone runnable example apps, each its own workspace package
 
 ## Requirements
@@ -26,12 +26,12 @@ All commands use the `vp` CLI (Vite+). Run `vp help` for a full list.
 
 ### The `pack` step (read this first)
 
-This is a monorepo: `@effect-ui/dom` and the `examples/*` consume `@effect-ui/core`/`@effect-ui/base` as workspace packages, resolved through their **built `dist/`**. Cross-package type-checking is therefore only correct once those packages have been packed.
+This is a monorepo: `@weftui/dom` and the `examples/*` consume `@weftui/core`/`@weftui/base` as workspace packages, resolved through their **built `dist/`**. Cross-package type-checking is therefore only correct once those packages have been packed.
 
 **Rule: run validation through the `vp run <task>` tasks, never the bare `vp <command>`.** The tasks are declared in the root `vite.config.ts` under `run.tasks` and each one declares `dependsOn: ["pack"]`, so `vp run` always rebuilds the packages first:
 
 - ✅ `vp run check`, `vp run test`, `vp run test:browser` — pack first, then run. Always correct.
-- ❌ `vp check`, `vp test` directly — skip `pack`, so against stale/missing `dist/` they report **false** cross-package errors (e.g. spurious `implicit any` from unresolved `@effect-ui/*` types). Only safe right after a pack.
+- ❌ `vp check`, `vp test` directly — skip `pack`, so against stale/missing `dist/` they report **false** cross-package errors (e.g. spurious `implicit any` from unresolved `@weftui/*` types). Only safe right after a pack.
 
 Treat the task list in `vite.config.ts` (`run.tasks`) as the source of truth for how to validate — if a task exists there, invoke it via `vp run <task>`. Current tasks: `dev`, `pack`, `check`, `test`, `test:browser`.
 
@@ -109,7 +109,7 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 **Rules for examples:**
 
 - Every example must have a co-located README named `readme.md`
-- Each example is a self-contained, runnable workspace package (depends on `@effect-ui/*` via `workspace:*`)
+- Each example is a self-contained, runnable workspace package (depends on `@weftui/*` via `workspace:*`)
 - Include a JSDoc header comment in `app.ts` explaining the example's purpose
 - READMEs should include: Overview, Problem, Solution, How It Works, and When to Use sections
 - Each example is split into a **side-effect-free `app.ts`** (or `src/app.ts`) that
@@ -131,7 +131,7 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 - Prefer Effect's error handling over try/catch (except when it significantly hurts ergonomics)
 - Use Services and Layers for dependency injection
 - Prefer `pipe(effect, ...)` over `effect.pipe(...)`
-- **No JSX.** effect-ui does **not** use JSX, even though its node descriptors
+- **No JSX.** Weft does **not** use JSX, even though its node descriptors
   (`{ type, props }`) resemble React elements. There is no JSX runtime (no `jsx`
   in any tsconfig) and no `h(Component)` overload — `h.*` only builds string-tag
   and `FRAGMENT` nodes, and components are plain functions that are **called**
@@ -255,10 +255,10 @@ const _invalid: SomeType = invalidValue;
 ### Module Organization
 
 - Organize code by domain, within the relevant workspace package
-- Barrel exports (`index.ts`) only for grouping application domains, e.g. in `@effect-ui/dom`:
+- Barrel exports (`index.ts`) only for grouping application domains, e.g. in `@weftui/dom`:
   - `src/index.ts` - package root export
-  - `src/client/index.ts` - client-side DOM renderer (`@effect-ui/dom/client`)
-  - `src/server/index.ts` - server-side rendering (`@effect-ui/dom/server`)
+  - `src/client/index.ts` - client-side DOM renderer (`@weftui/dom/client`)
+  - `src/server/index.ts` - server-side rendering (`@weftui/dom/server`)
 - Avoid circular dependencies
 - Use `/utils` only for common code that doesn't fit a specific domain
 

@@ -1,5 +1,5 @@
-import { AppRpcClientTag } from "@effect-ui/core";
-import type { AppRpcClient } from "@effect-ui/core";
+import { AppRpcClientTag } from "@weftui/core";
+import type { AppRpcClient } from "@weftui/core";
 import { Effect, Layer } from "effect";
 
 /**

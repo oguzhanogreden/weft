@@ -1,12 +1,12 @@
 /**
  * Recipe: Declarative DOM Event Handlers
  *
- * This recipe demonstrates how to use event handlers in effect-ui.
+ * This recipe demonstrates how to use event handlers in Weft.
  * Handlers can be plain callbacks OR return Effects, with service access
  * through the existing Effect.provide() pattern.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Context, Effect, Layer, Stream } from "effect";
 
 // ============================================================================

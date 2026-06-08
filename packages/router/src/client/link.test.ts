@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { Component, h } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
 import { Effect, Exit, Schema, Scope } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, test } from "vite-plus/test";

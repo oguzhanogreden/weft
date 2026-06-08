@@ -8,7 +8,7 @@
 
 ## What was delivered
 
-### Core package (`@effect-ui/core`)
+### Core package (`@weftui/core`)
 
 **`packages/core/src/boundary/index.ts`** — The `Boundary` namespace with all six variants as real functions (replacing `declare` stubs). Each variant builds a `match` closure encoding its logic and returns a `{ type: BOUNDARY, props: { match, children } }` descriptor cast as `Node<E, R>`.
 
@@ -23,7 +23,7 @@
 
 **`packages/core/src/boundary/__type-tests__/boundary.test-d.ts`** — Compile-time type tests: verifies `catchAll` consumes children's `E`, `catchTag` removes the matched tag from the output union, `catchSome`/`catchIf` preserve it, and that a plain `{ type, props }` object is not assignable to `Node`.
 
-### DOM package (`@effect-ui/dom`)
+### DOM package (`@weftui/dom`)
 
 **`packages/dom/src/data.ts`** — `BoundaryContext` service (previously `declare`-only, now the real `Context.Tag` with `reportError` method).
 
@@ -61,7 +61,7 @@
 
 ### 1. Stale dist — `Boundary` was undefined at runtime
 
-After implementing the core package, the DOM package's tests imported `@effect-ui/core` from `packages/core/dist/index.js`, which was the old pre-implementation build. `Boundary` was `undefined` at runtime despite clean type-checks.
+After implementing the core package, the DOM package's tests imported `@weftui/core` from `packages/core/dist/index.js`, which was the old pre-implementation build. `Boundary` was `undefined` at runtime despite clean type-checks.
 
 **Fix:** ran `vp pack` from `packages/core` to rebuild the dist, after which the runtime resolved the correct exports.
 

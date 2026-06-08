@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement declarative event handlers for effect-ui that follow the same `AttributeValue<T>` pattern as other props. Handlers can be plain callbacks OR return Effects, with service access through the existing `Effect.provide()` pattern.
+Implement declarative event handlers for Weft that follow the same `AttributeValue<T>` pattern as other props. Handlers can be plain callbacks OR return Effects, with service access through the existing `Effect.provide()` pattern.
 
 ## Purpose
 

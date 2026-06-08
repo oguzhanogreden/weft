@@ -20,8 +20,8 @@
  * id — no per-product boundary id, no co-located server `load`.
  */
 
-import { Boundary, h } from "@effect-ui/core";
-import { notFound, Router } from "@effect-ui/router";
+import { Boundary, h } from "@weftui/core";
+import { notFound, Router } from "@weftui/router";
 import { Schema, Stream } from "effect";
 import { GetStock } from "../data/inventory";
 import { formatPrice, getProduct } from "../data/products";

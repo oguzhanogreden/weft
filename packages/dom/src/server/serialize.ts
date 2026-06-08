@@ -1,4 +1,4 @@
-import { isStream, toStream } from "@effect-ui/core";
+import { isStream, toStream } from "@weftui/core";
 import { Effect, Option, Stream } from "effect";
 
 /**

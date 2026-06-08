@@ -16,8 +16,8 @@
  * rebuilds every row on each emission (resetting counters, focus, and inputs).
  */
 
-import { h, List } from "@effect-ui/core";
-import { mount } from "@effect-ui/dom/client";
+import { h, List } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
 import { Effect, Schedule, Stream, SubscriptionRef } from "effect";
 
 interface Row {

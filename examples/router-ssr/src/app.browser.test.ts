@@ -19,10 +19,10 @@
  * `refetch.browser.test.ts`.
  */
 
-import { mount, type MountHandle } from "@effect-ui/dom/client";
-import type { RouterDef } from "@effect-ui/router";
-import { Router, RouterApp, RouterLive } from "@effect-ui/router/client";
-import { RouterServer } from "@effect-ui/router/server";
+import { mount, type MountHandle } from "@weftui/dom/client";
+import type { RouterDef } from "@weftui/router";
+import { Router, RouterApp, RouterLive } from "@weftui/router/client";
+import { RouterServer } from "@weftui/router/server";
 import { Effect, ManagedRuntime } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";

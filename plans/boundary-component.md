@@ -2,7 +2,7 @@
 
 ## What we did
 
-Designed and specced a `Boundary` namespace for error boundaries in effect-ui. Two spec files were written:
+Designed and specced a `Boundary` namespace for error boundaries in Weft. Two spec files were written:
 
 - `packages/core/src/boundary/boundary.specs.md`
 - `packages/dom/src/client/boundary.specs.md`
@@ -28,7 +28,7 @@ Boundary.catchIf({ predicate: (e: E) => boolean, fallback: (e: E) => Node }, chi
 - Post-mount stream/prop failures (streams driving children or prop values)
 - Event handler errors are explicitly NOT caught — they run in detached fibers outside the render path
 
-**`BoundaryContext` service** — parallel to `SuspenseContext` in `@effect-ui/dom`. Provided to children during rendering via `Effect.provideService` (inner boundaries shadow outer ones). Has `reportError(cause)` and a `parent` reference for propagating unmatched errors up the boundary stack.
+**`BoundaryContext` service** — parallel to `SuspenseContext` in `@weftui/dom`. Provided to children during rendering via `Effect.provideService` (inner boundaries shadow outer ones). Has `reportError(cause)` and a `parent` reference for propagating unmatched errors up the boundary stack.
 
 **`subscribeToStream` modification** — after forking the subscription fiber, catch all causes and route to `BoundaryContext` if present; swallow otherwise (preserving current behavior outside any boundary).
 

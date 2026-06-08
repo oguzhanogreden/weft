@@ -5,7 +5,7 @@
  * tests can import and mount into their own container (see `app.browser.test.ts`).
  */
 
-import { mount } from "@effect-ui/dom/client";
+import { mount } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 

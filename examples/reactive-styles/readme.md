@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example demonstrates how to use streams for dynamic styling in effect-ui. Styles can be static strings, objects with stream properties, or entire style streams for complete style replacement.
+This example demonstrates how to use streams for dynamic styling in Weft. Styles can be static strings, objects with stream properties, or entire style streams for complete style replacement.
 
 ## Problem
 
@@ -10,10 +10,10 @@ Traditional React-style apps require state management and re-renders for style c
 
 ## Solution
 
-effect-ui supports reactive styles through streams — any CSS property or the entire style object can be a `Stream`:
+Weft supports reactive styles through streams — any CSS property or the entire style object can be a `Stream`:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Stream, Schedule } from "effect";
 
 // Individual property as stream

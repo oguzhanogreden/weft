@@ -1,13 +1,13 @@
 # RPC Data Boundaries
 
-`Boundary.rpc` is effect-ui's primitive for **server-resolved, client-refreshable** data. One [`Rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc) from the app's merged `RpcGroup` backs a single render boundary across four lifecycles: server-side render, hydrate-replay, client refetch, and client-first SPA mount. The rpc's `_tag` is the boundary's stable identity and its payload schema the typed input.
+`Boundary.rpc` is Weft's primitive for **server-resolved, client-refreshable** data. One [`Rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc) from the app's merged `RpcGroup` backs a single render boundary across four lifecycles: server-side render, hydrate-replay, client refetch, and client-first SPA mount. The rpc's `_tag` is the boundary's stable identity and its payload schema the typed input.
 
 ## Overview
 
-A `Boundary.rpc` is a **thin consumer**. It carries an rpc, a payload thunk, and a `render` that receives a reactive [`Resource`](../api/core.md#resourcea); the renderer resolves the rpc through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam (provided by `@effect-ui/router`). The same rpc serves every lifecycle, so SSR-replay, refetch, and client-first mount are one mechanism, not three.
+A `Boundary.rpc` is a **thin consumer**. It carries an rpc, a payload thunk, and a `render` that receives a reactive [`Resource`](../api/core.md#resourcea); the renderer resolves the rpc through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam (provided by `@weftui/router`). The same rpc serves every lifecycle, so SSR-replay, refetch, and client-first mount are one mechanism, not three.
 
 ```typescript
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Stream } from "effect";
 import { GetStock } from "./data/inventory";
 
@@ -65,11 +65,11 @@ Declare server-only services with [`ServerTag`](../api/core.md#servertag) (not `
 
 ## Wiring the router
 
-`Boundary.rpc` resolves through the ambient `AppRpcClientTag` seam, which `@effect-ui/router` provides on both sides. Pass the **merged group** to both, plus the **handler Layer** on the server.
+`Boundary.rpc` resolves through the ambient `AppRpcClientTag` seam, which `@weftui/router` provides on both sides. Pass the **merged group** to both, plus the **handler Layer** on the server.
 
 ```typescript
 // entry-server.ts — in-process client over the handlers + POST /_eui/rpc endpoint
-import { RouterServer } from "@effect-ui/router/server";
+import { RouterServer } from "@weftui/router/server";
 import { StockLive, StockRpcs } from "./data/inventory";
 
 const rpc = { group: StockRpcs, handlers: StockLive } as const;
@@ -81,7 +81,7 @@ export const render = (url: string) =>
 
 ```typescript
 // entry-client.ts — network client posting to /_eui/rpc
-import { RouterApp, RouterLive } from "@effect-ui/router/client";
+import { RouterApp, RouterLive } from "@weftui/router/client";
 import { StockRpcs } from "./data/inventory";
 
 const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } }));
@@ -161,5 +161,5 @@ A transport **defect** (no `Cause.failureOption`), or an rpc with no `error` sch
 
 - [`Boundary.rpc` API reference](../api/core.md#boundaryrpc) — signature, `Resource`, `RpcOptions`, `AppRpcClientTag`
 - [Server-Side Rendering](./server-side-rendering.md) — the SSR + hydration model this builds on
-- [Routing](./routing.md) — `@effect-ui/router`, which provides the `AppRpcClientTag` seam
+- [Routing](./routing.md) — `@weftui/router`, which provides the `AppRpcClientTag` seam
 - [examples/router-ssr](../../examples/router-ssr) — a runnable shop with an SSR-replayed, refetchable live-stock `Boundary.rpc`

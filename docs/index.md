@@ -1,6 +1,6 @@
-# effect-ui Documentation
+# Weft Documentation
 
-effect-ui is an Effect-native reactive DOM library. `Node<E, R>` is `Effect.Effect<DOMNode, E, R>` — every element in the tree is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply directly to nodes, and services flow from mount through handlers. Streams drive all updates; there is no virtual DOM. The same component tree renders to an HTML string or streaming response on the server, and `hydrate()` resumes reactivity in place on the client without re-rendering.
+Weft is an Effect-native reactive DOM library — reactive UI, woven from Effect. `Node<E, R>` is `Effect.Effect<DOMNode, E, R>` — every element in the tree is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply directly to nodes, and services flow from mount through handlers. Your component tree is the **warp** (structure); streams are the **weft** (the live thread drawn across it). Streams drive all updates; there is no virtual DOM. The same component tree renders to an HTML string or streaming response on the server, and `hydrate()` resumes reactivity in place on the client without re-rendering.
 
 ---
 
@@ -24,9 +24,9 @@ effect-ui is an Effect-native reactive DOM library. `Node<E, R>` is `Effect.Effe
 
 6. **[RPC Data Boundaries](guides/rpc-data-boundaries.md)** — `Boundary.rpc`: server-resolved, client-refreshable data; the contract/handler split; the `Resource` handle and its four lifecycles.
 
-7. **[Routing](guides/routing.md)** — `@effect-ui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
+7. **[Routing](guides/routing.md)** — `@weftui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
 
-8. **[`@effect-ui/core` API Reference](api/core.md)** and **[`@effect-ui/router` API Reference](api/router.md)** — full API surface for both packages.
+8. **[`@weftui/core` API Reference](api/core.md)** and **[`@weftui/router` API Reference](api/router.md)** — full API surface for both packages.
 
 ---
 

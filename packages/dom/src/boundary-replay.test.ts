@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { Boundary, List, getElementDescriptor, h } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core";
+import { Boundary, List, getElementDescriptor, h } from "@weftui/core";
+import type { Renderable } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { Effect, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
@@ -205,6 +205,6 @@ describe("collectServerBoundaries — AC-BR5: symmetry", () => {
 
 describe("BOUNDARY_FAILURE_ATTR", () => {
   it("is the documented marker attribute", () => {
-    assert.equal(BOUNDARY_FAILURE_ATTR, "data-eui-boundary-failure");
+    assert.equal(BOUNDARY_FAILURE_ATTR, "data-weft-boundary-failure");
   });
 });

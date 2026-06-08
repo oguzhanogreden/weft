@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example demonstrates `List.each`, effect-ui's **keyed list combinator**. Each
+This example demonstrates `List.each`, Weft's **keyed list combinator**. Each
 row has a stable identity (`by`), so reordering, inserting, or removing items
 reuses and moves the existing DOM nodes — preserving focus, uncontrolled input
 values, and per-row subscriptions — instead of rebuilding the whole list.
@@ -20,7 +20,7 @@ node and tears down every nested subscription, so on each update:
 ## Solution
 
 ```typescript
-import { h, List } from "@effect-ui/core";
+import { h, List } from "@weftui/core";
 
 h.ul([
   List.each({ of: rows.changes, by: (row) => row.id }, (row) =>

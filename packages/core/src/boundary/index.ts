@@ -10,19 +10,19 @@ export type { AppRpcClient } from "./rpc-client";
  * Unique type tag used by renderers to identify a failure `Boundary` descriptor.
  * All variants embed this symbol as `type` in the returned descriptor.
  */
-export const FAILURE_BOUNDARY: unique symbol = Symbol.for("effect-ui/FAILURE_BOUNDARY");
+export const FAILURE_BOUNDARY: unique symbol = Symbol.for("weft/FAILURE_BOUNDARY");
 
 /**
  * Unique type tag used by renderers to identify a suspense `Boundary` descriptor.
  * All `Boundary.suspend` embeds this symbol as `type` in the returned descriptor.
  */
-export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("effect-ui/SUSPENSE_BOUNDARY");
+export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("weft/SUSPENSE_BOUNDARY");
 
 /**
  * Unique type tag used by renderers to identify a server `Boundary` descriptor.
  * Every `Boundary.rpc` embeds this symbol as `type` in the returned descriptor.
  */
-export const SERVER_BOUNDARY: unique symbol = Symbol.for("effect-ui/SERVER_BOUNDARY");
+export const SERVER_BOUNDARY: unique symbol = Symbol.for("weft/SERVER_BOUNDARY");
 
 /** Remove a single tagged error from the children's error union. */
 export type CatchTagE<C extends readonly Renderable[], Tag extends string> = Exclude<
@@ -63,7 +63,7 @@ function makeFailureBoundaryNode<E, R>(
  *
  * @example
  * ```ts
- * import { Boundary, h } from "@effect-ui/core";
+ * import { Boundary, h } from "@weftui/core";
  *
  * // Failure boundary wrapping a suspense boundary — the common pairing:
  * Boundary.catchAll({ fallback: (e) => h.div({}, e.message) }, [
@@ -237,12 +237,12 @@ export namespace Boundary {
    * their first value), then atomically swaps to the resolved children once
    * **all** pending children have settled.
    *
-   * The renderer (`@effect-ui/dom`) identifies the boundary via its
+   * The renderer (`@weftui/dom`) identifies the boundary via its
    * {@link SUSPENSE_BOUNDARY} type tag.
    *
    * @example
    * ```ts
-   * import { Boundary, h } from "@effect-ui/core";
+   * import { Boundary, h } from "@weftui/core";
    *
    * Boundary.suspend({ fallback: h.div({}, "Loading…") }, [AsyncCard(), AsyncSidebar()])
    * ```
@@ -336,7 +336,7 @@ export namespace Boundary {
    *
    * @example
    * ```ts
-   * import { Boundary, h } from "@effect-ui/core";
+   * import { Boundary, h } from "@weftui/core";
    * import { Rpc, RpcGroup } from "@effect/rpc";
    * import { Schema } from "effect";
    *

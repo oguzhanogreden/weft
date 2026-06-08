@@ -1,5 +1,5 @@
 // oxlint-disable no-unused-vars
-import { Boundary, type Node } from "@effect-ui/core";
+import { Boundary, type Node } from "@weftui/core";
 import { Data, Option } from "effect";
 
 // ── Type equality helpers ─────────────────────────────────────────────────────

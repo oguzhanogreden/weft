@@ -13,7 +13,7 @@ Reactive state management typically requires external libraries (Redux, MobX, Zu
 `SubscriptionRef` provides a mutable reference with a `.changes` stream you pass directly as a child or prop:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, SubscriptionRef } from "effect";
 
 const Counter = () =>

@@ -16,7 +16,7 @@ export default defineConfig({
     platform: "neutral",
     minify: true,
     deps: {
-      neverBundle: ["effect", /^@effect-ui\//],
+      neverBundle: ["effect", /^@weftui\//],
     },
   },
   resolve: {

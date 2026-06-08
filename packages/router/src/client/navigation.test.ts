@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Option, Schema, Stream, Subscribable } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test, vi } from "vite-plus/test";

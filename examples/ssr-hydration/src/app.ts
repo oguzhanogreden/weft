@@ -8,7 +8,7 @@
  * without re-rendering — node identity is preserved, no flicker.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, SubscriptionRef } from "effect";
 
 /**

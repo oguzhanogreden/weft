@@ -1,6 +1,6 @@
 # ssr-hydration
 
-A minimal, live server-side-rendering + client-hydration demo for `@effect-ui/dom`.
+A minimal, live server-side-rendering + client-hydration demo for `@weftui/dom`.
 
 ## Overview
 

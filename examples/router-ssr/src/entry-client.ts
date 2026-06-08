@@ -8,8 +8,8 @@
  * navigate without a full page load.
  */
 
-import { hydrate } from "@effect-ui/dom/client";
-import { RouterApp, RouterLive } from "@effect-ui/router/client";
+import { hydrate } from "@weftui/dom/client";
+import { RouterApp, RouterLive } from "@weftui/router/client";
 import { ManagedRuntime } from "effect";
 import { App } from "./app";
 import { StockRpcs } from "./data/inventory";

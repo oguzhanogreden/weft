@@ -1,13 +1,13 @@
 # Component Authoring
 
-effect-ui components are plain TypeScript functions that return a `Node<E, R>`. This guide covers the two ways to define them and when to choose each.
+Weft components are plain TypeScript functions that return a `Node<E, R>`. This guide covers the two ways to define them and when to choose each.
 
 ## Plain functions
 
 The simplest component is just a function:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 function Greeting({ name }: { name: string }) {
   return h.p(`Hello, ${name}!`);
@@ -28,7 +28,7 @@ Use a plain function when:
 When a component needs reactive state, use `Effect.gen` to set it up before building the tree. The component function still runs once — the setup happens at mount time:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, SubscriptionRef } from "effect";
 
 const Counter = () =>
@@ -67,7 +67,7 @@ forked work is cancelled almost immediately.
 Concretely, an observer that runs an effect when a `ref`'s element mounts:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
 const AutoFocusInput = () =>
@@ -103,7 +103,7 @@ When you want the caller's reactive prop types to flow into the returned node's 
 - **`Component.gen`** — body is a generator. Use when you need `yield*` to set up local state or pull from services.
 
 ```typescript
-import { Component, h } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
 import { Stream } from "effect";
 
 interface CardProps {
@@ -180,7 +180,7 @@ When a caller passes a plain string, the component's node type has `never` for t
 Call component functions directly inside a children array:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 function App() {
   return h.div({ class: "app" }, [
@@ -198,7 +198,7 @@ Children arrays accumulate `E`/`R` from all their members. The parent node's typ
 If a component's render function uses a service via `yield*`, that service appears in the component's `CompR` parameter:
 
 ```typescript
-import { Component, h } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
 
 const UserAvatar = Component.gen(function* (props: { userId: string }) {
   const userService = yield* UserService;
@@ -223,7 +223,7 @@ void Effect.runPromise(
 When a component needs to return multiple sibling elements without a wrapper, use `h.fragment`:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 const TableCells = ({ row }: { row: Row }) =>
   h.fragment([h.td(row.name), h.td(row.value), h.td(row.status)]);

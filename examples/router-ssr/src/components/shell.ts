@@ -8,8 +8,8 @@
  * `href(productsRoute)` (no args — its query is optional) for a type-safe link.
  */
 
-import { Component, h } from "@effect-ui/core";
-import { href, Router } from "@effect-ui/router";
+import { Component, h } from "@weftui/core";
+import { href, Router } from "@weftui/router";
 import { productsRoute } from "../pages/listing";
 
 /** The persistent header/nav/footer chrome around the routed outlet. */
@@ -17,10 +17,10 @@ export const Shell = Component.gen(function* () {
   const outlet = yield* Router.Outlet;
   return yield* h.div({ id: "app" }, [
     h.header({ id: "shell-header" }, [
-      h.strong("effect-ui shop"),
+      h.strong("Weft shop"),
       h.nav([h.a({ href: "/" }, "Home"), " · ", h.a({ href: href(productsRoute) }, "Products")]),
     ]),
     h.main([outlet]),
-    h.footer("built with @effect-ui/router — SSR + hydration"),
+    h.footer("built with @weftui/router — SSR + hydration"),
   ]);
 });

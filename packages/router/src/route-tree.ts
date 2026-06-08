@@ -1,4 +1,4 @@
-import type { Component, Node } from "@effect-ui/core";
+import type { Component, Node } from "@weftui/core";
 import type { Schema } from "effect";
 import type { Router } from "./router-service";
 

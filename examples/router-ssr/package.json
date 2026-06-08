@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@effect-ui/core": "workspace:*",
-    "@effect-ui/dom": "workspace:*",
-    "@effect-ui/router": "workspace:*",
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
+    "@weftui/core": "workspace:*",
+    "@weftui/dom": "workspace:*",
+    "@weftui/router": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

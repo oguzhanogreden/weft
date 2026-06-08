@@ -1,6 +1,6 @@
 # suspense
 
-A live demo of `Suspense` boundaries in `@effect-ui/dom` — both streaming SSR and client-side boundary coordination.
+A live demo of `Suspense` boundaries in `@weftui/dom` — both streaming SSR and client-side boundary coordination.
 
 ## Overview
 
@@ -53,7 +53,7 @@ After the SSR patch scripts execute (before `hydrate()` loads), the DOM is fully
 ## Usage
 
 ```typescript
-import { h, Suspense } from "@effect-ui/core";
+import { h, Suspense } from "@weftui/core";
 import { Effect, pipe } from "effect";
 
 function AsyncCard({ id }: { id: number }) {

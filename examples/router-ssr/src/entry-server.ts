@@ -13,9 +13,9 @@
  * the dev server uses `handler` and post-processes the HTML for Vite HMR.
  */
 
-import { Component, h } from "@effect-ui/core";
-import { Router } from "@effect-ui/router";
-import { RouterServer } from "@effect-ui/router/server";
+import { Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
+import { RouterServer } from "@weftui/router/server";
 import { Effect } from "effect";
 import { App } from "./app";
 import { StockLive, StockRpcs } from "./data/inventory";
@@ -34,7 +34,7 @@ export const documentShell = Component.gen(function* () {
     h.head([
       h.meta({ charset: "utf-8" }),
       h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
-      h.title("effect-ui shop — router SSR"),
+      h.title("Weft shop — router SSR"),
     ]),
     h.body([
       h.div({ id: "root" }, [app]),

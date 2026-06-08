@@ -10,7 +10,7 @@ boundary performs a single atomic DOM swap: the fallback is removed and all reso
 children are inserted in its place.
 
 The boundary is constructed with `Boundary.suspend(props, children)`, exported from
-`@effect-ui/core`. The rendering implementation lives in `@effect-ui/dom`. The
+`@weftui/core`. The rendering implementation lives in `@weftui/dom`. The
 boundary is recognised by the renderer via its `SUSPENSE_BOUNDARY` symbol type tag
 (`type === SUSPENSE_BOUNDARY`).
 

@@ -6,7 +6,7 @@
  * typed failures, catching by tag, conditional catches, and nested re-raise.
  */
 
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Data, Effect, Option, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -351,7 +351,7 @@ function ToggleSection() {
 export function App() {
   return h.div({ class: "app" }, [
     h.header([
-      h.h1("effect-ui — Error Boundaries"),
+      h.h1("Weft — Error Boundaries"),
       h.p(
         { class: "subtitle" },
         "Six variants for intercepting rendering-path errors and recovering with fallback UI.",

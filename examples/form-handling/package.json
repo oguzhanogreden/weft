@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@effect-ui/core": "workspace:*",
-    "@effect-ui/dom": "workspace:*",
     "@types/node": "^25.9.1",
+    "@weftui/core": "workspace:*",
+    "@weftui/dom": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

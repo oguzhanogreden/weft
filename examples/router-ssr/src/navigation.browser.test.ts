@@ -1,6 +1,6 @@
 /**
  * End-to-end browser test for the router's programmatic client-navigation surface
- * (`@effect-ui/router/client`): `navigate(ref, args)`, `push` / `replace`,
+ * (`@weftui/router/client`): `navigate(ref, args)`, `push` / `replace`,
  * `back` / `forward`, and the reactive `Router.queryStream` accessor driven by
  * `patchQuery` / `setQuery`.
  *
@@ -12,9 +12,9 @@
  * not update.
  */
 
-import { Component, h } from "@effect-ui/core";
-import { mount, type MountHandle } from "@effect-ui/dom/client";
-import type { RouterDef } from "@effect-ui/router";
+import { Component, h } from "@weftui/core";
+import { mount, type MountHandle } from "@weftui/dom/client";
+import type { RouterDef } from "@weftui/router";
 import {
   back,
   forward,
@@ -25,7 +25,7 @@ import {
   Router,
   RouterApp,
   RouterLive,
-} from "@effect-ui/router/client";
+} from "@weftui/router/client";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Effect, ManagedRuntime, Schema, Stream } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

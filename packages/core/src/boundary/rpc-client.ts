@@ -3,10 +3,10 @@ import { Context, type Effect } from "effect";
 /**
  * Ambient, package-neutral seam for resolving a {@link Boundary.rpc} boundary's
  * data through the application's merged `RpcGroup`. The DOM renderer
- * (`@effect-ui/dom`) must resolve a boundary — on the server (SSR), during a
+ * (`@weftui/dom`) must resolve a boundary — on the server (SSR), during a
  * client refetch, and on a client-first SPA mount — **without** importing
- * `@effect/rpc` or `@effect-ui/router`. So the rpc caller is injected as a
- * service: `@effect-ui/router` provides it (a network `RpcClient` on the browser,
+ * `@effect/rpc` or `@weftui/router`. So the rpc caller is injected as a
+ * service: `@weftui/router` provides it (a network `RpcClient` on the browser,
  * an in-process client over the handler layer on the server), and the renderer
  * reads it from ambient context, treating `Option.none` (no router/rpc present)
  * as a typed, descriptive error.
@@ -29,13 +29,13 @@ export interface AppRpcClient {
 }
 
 /**
- * Context tag for the {@link AppRpcClient} seam. Provided by `@effect-ui/router`
+ * Context tag for the {@link AppRpcClient} seam. Provided by `@weftui/router`
  * — a network client (`RouterLive`, POST `/_eui/rpc`) on the client, an
  * in-process client over the handler layer (`RouterServer`) on the server. Absent
  * in a router-less mount, where a {@link Boundary.rpc} resolves to a descriptive
  * "needs router/rpc" error.
  */
-export class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<
+export class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
   AppRpcClientTag,
   AppRpcClient
 >() {}
