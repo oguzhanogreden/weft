@@ -10,9 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
+  id-token: write
 
 jobs:
   check:
