@@ -505,8 +505,8 @@
     "semantic_hash": ""
   },
   "packages/core/src/boundary/index.ts": {
-    "mtime": 1780840181.5691085,
-    "ast_hash": "d0ccbc3a4870605963e06ff0845af9c0",
+    "mtime": 1780904311.6578932,
+    "ast_hash": "f615578679c667933a01e477ae6004e8",
     "semantic_hash": ""
   },
   "packages/core/src/combinator/__type-tests__/channels.test-d.ts": {
@@ -670,8 +670,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/boundary-replay.ts": {
-    "mtime": 1780840648.5286298,
-    "ast_hash": "f8c8da388ffd0a4592d2377a41b17d96",
+    "mtime": 1780904172.5199518,
+    "ast_hash": "424b485b20817b05f0e4cd463f3497c4",
     "semantic_hash": ""
   },
   "packages/dom/src/client/__type-tests__/hydrate.test-d.ts": {
@@ -715,8 +715,8 @@
     "semantic_hash": "324deadca64fc919cf7aa37763f00bbf"
   },
   "packages/dom/src/client/render.ts": {
-    "mtime": 1780840786.921096,
-    "ast_hash": "6cca2d37b0e183aee678372e4894e643",
+    "mtime": 1780904151.7103627,
+    "ast_hash": "3050e3a6cfcfa12d85c690f480f51e3c",
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
@@ -755,8 +755,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/server/render-to-stream.ts": {
-    "mtime": 1780840893.8484514,
-    "ast_hash": "609bc3f22b88705ae2c0e575f335c928",
+    "mtime": 1780904182.637182,
+    "ast_hash": "f31bf7620f5a9d83c4f024af15dd8e88",
     "semantic_hash": ""
   },
   "packages/dom/src/server/render-to-string.test.ts": {
@@ -995,7 +995,7 @@
     "semantic_hash": "be3d8b515d0163c67ea62f91c34fdfe6"
   },
   "docs/api/core.md": {
-    "mtime": 1780903199.0960033,
+    "mtime": 1780904364.5327837,
     "ast_hash": "027b5e81c3e83b2301ea92dd5d28164e",
     "semantic_hash": ""
   },
@@ -1305,8 +1305,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-refetch.test.ts": {
-    "mtime": 1780851609.3544178,
-    "ast_hash": "5f4a14d737cfef7e61ef6181b952d9d1",
+    "mtime": 1780904251.6053255,
+    "ast_hash": "a902b05ef84ff21e74381e0fb44ea7b6",
     "semantic_hash": ""
   },
   "examples/router-ssr/src/refetch.browser.test.ts": {
@@ -1395,7 +1395,7 @@
     "semantic_hash": ""
   },
   "docs/guides/rpc-data-boundaries.md": {
-    "mtime": 1780903337.4276052,
+    "mtime": 1780904364.5344512,
     "ast_hash": "39c691a44d2d52599f8501ac965c2940",
     "semantic_hash": ""
   }
