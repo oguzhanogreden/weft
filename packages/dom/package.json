@@ -4,11 +4,10 @@
   "description": "Client-side DOM renderer for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "files": ["dist"],
-  "publishConfig": {
-    "access": "public"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -22,6 +21,9 @@
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@weftui/core": "workspace:*"
