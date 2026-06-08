@@ -161,7 +161,7 @@ Each patch consists of a `<template>` + inline `<script>` pair:
 - The script removes the fallback content between the markers, inserts the template's
   document fragment, then removes the markers, the template element, and itself.
 - The script is self-contained: no globals, no dependencies on any client-side
-  effect-ui runtime.
+  Weft runtime.
 
 ## Internal Architecture
 

@@ -1,14 +1,14 @@
 # Routing
 
-`@effect-ui/router` is a universal (server + client) nested router for effect-ui. It maps a URL to a rendered `Node` tree on both sides:
+`@weftui/router` is a universal (server + client) nested router for Weft. It maps a URL to a rendered `Node` tree on both sides:
 
 - **Server** — matches an incoming request path, renders the matched nested page to hydratable HTML, and responds with `text/html` (HTTP 404 for not-found).
 - **Client** — matches `window.location`, swaps pages reactively via the History API, and keeps unchanged ancestor layouts mounted across navigations.
 
-The package mirrors `@effect-ui/dom`: a shared (universal) root, a `./client` entry, and a `./server` entry.
+The package mirrors `@weftui/dom`: a shared (universal) root, a `./client` entry, and a `./server` entry.
 
 ```bash
-npm install @effect-ui/router
+npm install @weftui/router
 ```
 
 ## The mental model
@@ -30,8 +30,8 @@ The tree is the source of truth. The same sealed `RouterDef` drives both server 
 Every `component` slot is a **`ComponentSlot`** — a callable producing a `Node`, passed **uncalled**. Use [`Component.make` / `Component.gen`](./component-authoring.md) (or a plain `() => Node` thunk). The router invokes it at render time, which is what lets `href(…)` resolve after the tree is compiled.
 
 ```typescript
-import { Component, h } from "@effect-ui/core";
-import { Router } from "@effect-ui/router";
+import { Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
 import { Schema } from "effect";
 
 const About = Router.route("about", {
@@ -135,7 +135,7 @@ export const App = Router.router(
 `href(leafRef, args)` builds a URL from a leaf route reference (the value returned by `Router.route`). Path params are **required** in the argument type and query is optional when every query field is optional:
 
 ```typescript
-import { href } from "@effect-ui/router";
+import { href } from "@weftui/router";
 
 const Home = Component.make(() =>
   h.nav([
@@ -152,7 +152,7 @@ Path params encode into the pattern (`/users/:id` + `{ id: 42 }` ⇒ `/users/42`
 `notFound(path?)` short-circuits the current render with a `RouterNotFound` failure. Callable from any page or layout; the nearest enclosing not-found boundary renders the configured `notFound` page in its place, and the server responds with HTTP 404:
 
 ```typescript
-import { notFound, Router } from "@effect-ui/router";
+import { notFound, Router } from "@weftui/router";
 
 Router.route("users/:id", {
   path: idParam,
@@ -172,8 +172,8 @@ On the client, provide the `Router` via `RouterLive(def)` and render `RouterApp(
 
 ```typescript
 // entry-client.ts
-import { hydrate } from "@effect-ui/dom/client";
-import { RouterApp, RouterLive } from "@effect-ui/router/client";
+import { hydrate } from "@weftui/dom/client";
+import { RouterApp, RouterLive } from "@weftui/router/client";
 import { ManagedRuntime } from "effect";
 import { App } from "./app";
 
@@ -190,7 +190,7 @@ A plain `h.a({ href })` to a same-origin, route-matching URL performs SPA naviga
 
 ## Programmatic navigation
 
-For navigation that isn't a link click, `@effect-ui/router/client` exposes typed helpers. They run as `Effect`s within the `RouterLive` layer (except `back` / `forward`, which only touch `window.history`):
+For navigation that isn't a link click, `@weftui/router/client` exposes typed helpers. They run as `Effect`s within the `RouterLive` layer (except `back` / `forward`, which only touch `window.history`):
 
 ```typescript
 import {
@@ -201,7 +201,7 @@ import {
   push,
   replace,
   setQuery,
-} from "@effect-ui/router/client";
+} from "@weftui/router/client";
 
 // Typed: build the URL from a leaf ref + decoded args (same rules as `href`).
 yield * navigate(postsRoute, { path: { id: 42 }, query: { sort: "new" } });
@@ -232,9 +232,9 @@ The document shell is itself a `ComponentSlot` that splices the app via `yield* 
 
 ```typescript
 // entry-server.ts
-import { Component, h } from "@effect-ui/core";
-import { Router } from "@effect-ui/router";
-import { RouterServer } from "@effect-ui/router/server";
+import { Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
+import { RouterServer } from "@weftui/router/server";
 import { Effect } from "effect";
 import { App } from "./app";
 
@@ -277,11 +277,11 @@ Both are modeled as `Schema.TaggedError`, so they encode/decode across the wire 
 
 ## `Boundary.rpc` interplay
 
-Initial SSR navigation works end to end: the server resolves the rpc and inlines its payload, and the client replays it during `hydrate`. **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount** — it renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result. `@effect-ui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server), so the same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./rpc-data-boundaries.md).
+Initial SSR navigation works end to end: the server resolves the rpc and inlines its payload, and the client replays it during `hydrate`. **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount** — it renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result. `@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server), so the same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./rpc-data-boundaries.md).
 
 ## See also
 
-- [`@effect-ui/router` API reference](../api/router.md)
+- [`@weftui/router` API reference](../api/router.md)
 - [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `@effect/platform` spine
 - [Component Authoring](./component-authoring.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
 - [Server-Side Rendering](./server-side-rendering.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`

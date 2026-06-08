@@ -2,7 +2,7 @@
 
 ## Overview
 
-This package's tests run against `@effect-ui/*` inside a **real browser** (Chromium)
+This package's tests run against `@weftui/*` inside a **real browser** (Chromium)
 instead of jsdom, using [Vitest browser mode](https://vitest.dev/guide/browser/)
 with the [Playwright provider](https://vitest.dev/config/browser/playwright).
 

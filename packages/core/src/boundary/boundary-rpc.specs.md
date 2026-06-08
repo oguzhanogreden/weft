@@ -46,7 +46,7 @@ prior model and spec'd in `packages/core/src/server`.
   refetch, and mount.)
 - **Typed-failure replay.** A resolved rpc **error** (encoded via the rpc's
   `errorSchema`) on the hydratable SSR pass is relocated to the nearest enclosing
-  failure `Boundary` and replayed on the client — the same `data-eui-boundary-failure`
+  failure `Boundary` and replayed on the client — the same `data-weft-boundary-failure`
   mechanism as before. A transport **defect** (no `Cause.failureOption`, or an rpc
   with no `error` schema) is not replayed; it propagates (server fallback, client
   mismatch).
@@ -79,7 +79,7 @@ prior model and spec'd in `packages/core/src/server`.
      reactive `Resource<Success>` (see AC-8), **not** a bare value.
    - `fallback: Renderable | undefined` — `options.fallback`, shown only during a
      client-first mount.
-3. The `SERVER_BOUNDARY` symbol is exported from `@effect-ui/core` for renderers.
+3. The `SERVER_BOUNDARY` symbol is exported from `@weftui/core` for renderers.
 
 ### Signature / channel algebra
 
@@ -118,13 +118,13 @@ prior model and spec'd in `packages/core/src/server`.
 
 9. {@link AppRpcClientTag} is a `Context.Tag` holding a **flat, untyped** caller
    `{ call: (tag: string, payload: unknown) => Effect<unknown, unknown> }`. It lets
-   `@effect-ui/dom` resolve a boundary without importing `@effect/rpc` or
-   `@effect-ui/router`. `@effect-ui/router` provides it: a network `RpcClient`
+   `@weftui/dom` resolve a boundary without importing `@effect/rpc` or
+   `@weftui/router`. `@weftui/router` provides it: a network `RpcClient`
    (POST `/_eui/rpc`) on the browser, an in-process client over the handler Layer
    on the server. `call` returns the **already-decoded** success; the renderer owns
    `successSchema`/`errorSchema` decoding of the inline SSR payload only.
 
-### Renderer contract (honoured by `@effect-ui/dom` / `@effect-ui/router`; spec'd there)
+### Renderer contract (honoured by `@weftui/dom` / `@weftui/router`; spec'd there)
 
 10. **SSR (hydratable):** resolve the rpc via the in-process `AppRpcClient`, encode
     the success via `successSchema`, emit `<script type="application/json">…</script>`
@@ -141,7 +141,7 @@ prior model and spec'd in `packages/core/src/server`.
     the network client and patches the subtree in place (stale-on-error).
 15. **Typed-failure replay:** a resolved rpc error on the hydratable pass is encoded
     via `errorSchema` and relocated to the enclosing failure `Boundary`, emitted as
-    `<script type="application/json" data-eui-boundary-failure>{"index":N,"error":…}</script>`
+    `<script type="application/json" data-weft-boundary-failure>{"index":N,"error":…}</script>`
     before the fallback HTML; the client decodes it and replays the same fallback.
     Unchanged in mechanism from the prior model.
 
@@ -179,7 +179,7 @@ interface RpcOptions {
 interface AppRpcClient {
   readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
 }
-class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<
+class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
   AppRpcClientTag,
   AppRpcClient
 >() {}

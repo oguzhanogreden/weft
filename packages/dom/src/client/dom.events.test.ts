@@ -2,8 +2,8 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Context, Effect, Layer, Stream } from "effect";
 import { JSDOM } from "jsdom";
-import { h } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core/types";
+import { h } from "@weftui/core";
+import type { Renderable } from "@weftui/core/types";
 import { mount } from "./render";
 
 // ============================================================================

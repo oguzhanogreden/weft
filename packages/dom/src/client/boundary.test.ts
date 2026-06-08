@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Data, Deferred, Effect, Logger, LogLevel, Option, Stream } from "effect";
-import { Boundary, h } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
+import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";
 

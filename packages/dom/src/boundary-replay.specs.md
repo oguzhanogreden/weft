@@ -6,7 +6,7 @@
 **client `hydrate`** so that a failing `Boundary.rpc`'s position is computed
 identically on both sides. It owns:
 
-- `BOUNDARY_FAILURE_ATTR` — the marker attribute (`data-eui-boundary-failure`) on
+- `BOUNDARY_FAILURE_ATTR` — the marker attribute (`data-weft-boundary-failure`) on
   the inline failure-payload `<script type="application/json">`, distinguishing it
   from a success payload (the same `<script>` with no attribute).
 - `collectServerBoundaries(children)` — the one pre-order traversal over the

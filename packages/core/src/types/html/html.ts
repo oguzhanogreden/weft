@@ -111,7 +111,7 @@ export type HTMLRole =
   | "widget"
   | "window";
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-  // effect-ui internals ========================================================
+  // weft internals ========================================================
   children?: HTMLAttributeSource<Renderable>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================

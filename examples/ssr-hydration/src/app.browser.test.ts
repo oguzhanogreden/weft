@@ -7,9 +7,9 @@
  * `hydrate` over it and verify the counter becomes interactive in place.
  */
 
-import { AppRpcClientTag } from "@effect-ui/core";
-import { hydrate, type MountHandle } from "@effect-ui/dom/client";
-import { renderToStringHydratable } from "@effect-ui/dom/server";
+import { AppRpcClientTag } from "@weftui/core";
+import { hydrate, type MountHandle } from "@weftui/dom/client";
+import { renderToStringHydratable } from "@weftui/dom/server";
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";

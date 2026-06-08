@@ -10,7 +10,7 @@
  * - Integration with Effect's ecosystem
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
@@ -161,7 +161,7 @@ const TodoList = () =>
   Effect.gen(function* () {
     const todos = yield* SubscriptionRef.make<Todo[]>([
       { id: 1, text: "Learn Effect", done: true },
-      { id: 2, text: "Build with effect-ui", done: false },
+      { id: 2, text: "Build with Weft", done: false },
       { id: 3, text: "Ship to production", done: false },
     ]);
 

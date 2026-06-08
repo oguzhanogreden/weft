@@ -5,7 +5,7 @@
 
 ## Context
 
-effect-ui has no diffing today. Every reactive **child region** is destroyed and
+Weft has no diffing today. Every reactive **child region** is destroyed and
 rebuilt on each stream emission: `handleStreamChild` → on each value closes the
 entire content scope (killing all nested subscription fibers) → `updateStreamChild`
 → `removeNodesBetweenMarkers` + `renderNode` + re-insert (`packages/dom/src/client/render.ts:938`,
@@ -94,7 +94,7 @@ New file `packages/core/src/combinator/list.ts`, mirroring `fragment.ts` + `elem
 (uses `elementNode`; detected via `getElementDescriptor` like `h.fragment`):
 
 ```ts
-export const LIST = Symbol("@effect-ui/core/list");
+export const LIST = Symbol("@weftui/core/list");
 
 export namespace List {
   export function each<T, E, R, CE, CR, K = T>(

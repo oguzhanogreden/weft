@@ -5,7 +5,7 @@
  * validation, and Effect-powered submit handlers.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================

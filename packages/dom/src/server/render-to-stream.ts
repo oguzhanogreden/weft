@@ -9,8 +9,8 @@ import {
   Source,
   SUSPENSE_BOUNDARY,
   type Renderable,
-} from "@effect-ui/core";
-import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
+} from "@weftui/core";
+import { getElementDescriptor, isStream, toStream } from "@weftui/core";
 import {
   Cause,
   Effect,
@@ -75,7 +75,7 @@ interface ServerSuspenseCtx {
    * failing server boundary `Schema.encode`s its error and stashes
    * `{ owner, encoded }` here, then re-fails the original cause; the enclosing
    * failure boundary drains it (after its `match` handles the cause) to emit the
-   * `data-eui-boundary-failure` payload before its fallback. `null` on the plain
+   * `data-weft-boundary-failure` payload before its fallback. `null` on the plain
    * SSR passes — failure payloads are emitted only on the hydratable pass.
    */
   readonly failureCollector: FailureCollector | null;
@@ -216,7 +216,7 @@ function renderSuspenseSSRInline(
  * nested `Boundary.server`'s `load`, the failing boundary has stashed its encoded
  * error in `failureCollector`. After rendering the fallback, this handler drains
  * the collector and emits a single
- * `<script type="application/json" data-eui-boundary-failure>{"index":N,"error":…}</script>`
+ * `<script type="application/json" data-weft-boundary-failure>{"index":N,"error":…}</script>`
  * **before** the fallback HTML, where `N` is the failing boundary's pre-order
  * index among the `SERVER_BOUNDARY` descriptors statically reachable in
  * `props.children`. When `match` returns `null` the cause re-fails **without**
@@ -629,7 +629,7 @@ function renderHydratableSSRNode(
 
     if (type === FAILURE_BOUNDARY) {
       // Hydratable SSR: thread the collector so a handled server-boundary load
-      // failure emits its `data-eui-boundary-failure` payload before the fallback.
+      // failure emits its `data-weft-boundary-failure` payload before the fallback.
       return renderBoundarySSR(
         props as unknown as Boundary.FailureProps & { children: Renderable[] },
         ctx?.failureCollector ?? null,

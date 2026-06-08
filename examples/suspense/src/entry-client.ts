@@ -7,7 +7,7 @@
  * and leaves node identity unchanged (no flash).
  */
 
-import { hydrate } from "@effect-ui/dom/client";
+import { hydrate } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 

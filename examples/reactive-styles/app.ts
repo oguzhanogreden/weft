@@ -1,12 +1,12 @@
 /**
  * Recipe: Reactive Styles
  *
- * This recipe demonstrates how to use streams for dynamic styling in effect-ui.
+ * This recipe demonstrates how to use streams for dynamic styling in Weft.
  * Styles can be static strings, objects with stream properties, or entire
  * style streams for complete style replacement.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Schedule, Stream } from "effect";
 
 // ============================================================================

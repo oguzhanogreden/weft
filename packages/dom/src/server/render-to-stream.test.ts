@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { Boundary, h } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core/types";
+import { Boundary, h } from "@weftui/core";
+import type { Renderable } from "@weftui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
 import {

@@ -1,4 +1,4 @@
-import type { Node } from "@effect-ui/core";
+import type { Node } from "@weftui/core";
 import type { HttpApiClient } from "@effect/platform";
 import { Context, Effect, type Option, Stream, Subscribable } from "effect";
 import { makeRouter } from "./compile";
@@ -38,7 +38,7 @@ export interface NavigateOptions {
   readonly replace?: boolean;
 }
 
-export class Router extends Context.Tag("@effect-ui/router/Router")<
+export class Router extends Context.Tag("@weftui/router/Router")<
   Router,
   {
     /** The current match as a hot `Subscribable`; drives the outlet. */
@@ -70,7 +70,7 @@ export class Router extends Context.Tag("@effect-ui/router/Router")<
  * structurally by {@link makeLayout} / {@link makeRouter}, never inferred across
  * this DI boundary. Re-exported on the namespace as `Router.Outlet`.
  */
-class OutletTag extends Context.Tag("@effect-ui/router/Outlet")<OutletTag, Node<never, never>>() {}
+class OutletTag extends Context.Tag("@weftui/router/Outlet")<OutletTag, Node<never, never>>() {}
 
 /** Picks the requested `fields` keys out of a decoded match record. */
 function pick<F extends Fields>(

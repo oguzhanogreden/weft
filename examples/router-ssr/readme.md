@@ -1,7 +1,7 @@
 # router-ssr
 
 A small **e-commerce shop**, server-rendered and client-hydrated, built on
-`@effect-ui/router`. It is a multi-file example: routes, components, and data are
+`@weftui/router`. It is a multi-file example: routes, components, and data are
 split across `src/pages`, `src/components`, and `src/data`, then assembled in a thin
 `src/app.ts`.
 
@@ -110,7 +110,7 @@ the in-process (SSR) / network (client) rpc client wired into `RouterServer` /
 
 ### Programmatic navigation
 
-Beyond plain `h.a({ href })` links, `@effect-ui/router/client` exposes typed
+Beyond plain `h.a({ href })` links, `@weftui/router/client` exposes typed
 programmatic navigation — `navigate(ref, args)`, `push` / `replace`, `back` /
 `forward`, and `setQuery` / `patchQuery` — plus reactive `Router.paramsStream` /
 `Router.queryStream` accessors that update in place across query-only changes. The
@@ -125,7 +125,7 @@ vp run test:browser # app + navigation + listing + refetch browser tests
 
 ## When to Use
 
-Reach for `@effect-ui/router` when you need universal nested routing with SSR +
+Reach for `@weftui/router` when you need universal nested routing with SSR +
 hydration: deep route trees, persistent layouts, type-safe params/queries, and
 `location`-driven page swaps. For server-loaded data the client can refresh after
 hydration (live stock, prices), define an rpc in the app's `RpcGroup` and wrap it in

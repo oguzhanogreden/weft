@@ -64,7 +64,7 @@ type ImagePreserveAspectRatio =
   | "defer xMaxYMax slice";
 type SVGUnits = "userSpaceOnUse" | "objectBoundingBox";
 export interface SVGAttributes<T> extends DOMAttributes<T> {
-  // effect-ui internals ========================================================
+  // weft internals ========================================================
   children?: HTMLAttributeSource<Renderable>;
   ref?: Ref.Ref<Option.Option<T>>;
   // ============================================================================

@@ -7,7 +7,7 @@ import type { Node } from "./types";
  * its resolved {@link ElementDescriptor}. Lets renderers read the descriptor
  * without executing the Effect. See {@link elementNode} / {@link getElementDescriptor}.
  */
-const ELEMENT_DESCRIPTOR = Symbol.for("@effect-ui/core/ElementDescriptor");
+const ELEMENT_DESCRIPTOR = Symbol.for("@weftui/core/ElementDescriptor");
 
 /**
  * Builds a static-markup {@link Node} for a known {@link ElementDescriptor}.

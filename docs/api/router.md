@@ -1,14 +1,14 @@
-# @effect-ui/router API Reference
+# @weftui/router API Reference
 
-Universal nested router for effect-ui. See the [Routing guide](../guides/routing.md) for a narrative walkthrough.
+Universal nested router for Weft. See the [Routing guide](../guides/routing.md) for a narrative walkthrough.
 
-Three entry points mirror `@effect-ui/dom`:
+Three entry points mirror `@weftui/dom`:
 
-| Import                     | Use                                                                                 |
-| -------------------------- | ----------------------------------------------------------------------------------- |
-| `@effect-ui/router`        | Shared authoring + universal nodes (`Router`, `href`, `RouterApp`, errors).         |
-| `@effect-ui/router/client` | Client runtime (`RouterLive`, programmatic `navigate`/`push`/…, re-exported nodes). |
-| `@effect-ui/router/server` | Server rendering (`RouterServer`).                                                  |
+| Import                  | Use                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `@weftui/router`        | Shared authoring + universal nodes (`Router`, `href`, `RouterApp`, errors).         |
+| `@weftui/router/client` | Client runtime (`RouterLive`, programmatic `navigate`/`push`/…, re-exported nodes). |
+| `@weftui/router/server` | Server rendering (`RouterServer`).                                                  |
 
 ## `Router`
 
@@ -126,9 +126,9 @@ The universal router root node — render this on both server and client. Wraps 
 outletNode<E, R>(def: RouterDef<E, R>): Node<E | RouterNotFound, R | Router>;
 ```
 
-The bare nested-outlet node without the internal not-found boundary — for callers placing their own not-found handling. Re-exported from `@effect-ui/router/client` as `RouterOutlet`.
+The bare nested-outlet node without the internal not-found boundary — for callers placing their own not-found handling. Re-exported from `@weftui/router/client` as `RouterOutlet`.
 
-## Client — `@effect-ui/router/client`
+## Client — `@weftui/router/client`
 
 ### `RouterLive`
 
@@ -139,7 +139,7 @@ RouterLive(
 ): Layer.Layer<Router | AppRpcClientTag>;
 ```
 
-The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@effect-ui/dom` can resolve a [`Boundary.rpc`](../api/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `@effect/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
+The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@weftui/dom` can resolve a [`Boundary.rpc`](../api/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `@effect/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
 
 ```typescript
 const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } }));
@@ -166,7 +166,7 @@ Typed programmatic navigation, all run within the `RouterLive` layer (except `ba
 - **`setQuery` / `patchQuery`** — change the current route's query in place, re-encoding through the matched leaf's `querySchema` (the path is kept, so the leaf stays mounted and reactive `queryStream` readers update). `setQuery` replaces the query; `patchQuery` merges. No-op when no route is matched.
 
 ```typescript
-import { navigate, patchQuery, push } from "@effect-ui/router/client";
+import { navigate, patchQuery, push } from "@weftui/router/client";
 
 yield * navigate(userRoute, { path: { id: 42 }, query: { tab: "posts" } });
 yield * push("/users/1/posts?sort=new");
@@ -181,7 +181,7 @@ installLinkInterceptor(def: RouterDef, navigate: (to: string) => Effect<void>): 
 
 The delegated click interceptor `RouterLive` installs for you. Exposed for advanced/manual wiring. Intercepts plain same-origin clicks whose href resolves to a route (resolved against `def`); leaves modified clicks, `target=_blank`, `download`, external origins, same-document navigations, and non-matching hrefs to the browser.
 
-## Server — `@effect-ui/router/server`
+## Server — `@weftui/router/server`
 
 ### `RouterServer`
 

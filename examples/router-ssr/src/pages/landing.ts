@@ -7,8 +7,8 @@
  * `Router.router(...)` has compiled the tree and stamped the leaf registry.
  */
 
-import { Component, h } from "@effect-ui/core";
-import { href, Router } from "@effect-ui/router";
+import { Component, h } from "@weftui/core";
+import { href, Router } from "@weftui/router";
 import { ProductCard } from "../components/product-card";
 import { PRODUCTS } from "../data/products";
 import { productsRoute } from "./listing";
@@ -21,7 +21,7 @@ export const homeRoute = Router.route("", {
   component: Component.make(() =>
     h.section({ id: "page", class: "landing" }, [
       h.h2("Brew better coffee"),
-      h.p("A tiny shop demonstrating SSR routing with @effect-ui/router."),
+      h.p("A tiny shop demonstrating SSR routing with @weftui/router."),
       h.p([h.a({ href: href(productsRoute), class: "cta" }, "Shop all products →")]),
       h.h3("Featured"),
       h.div(

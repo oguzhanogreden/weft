@@ -6,7 +6,7 @@
  * indicator from `[SSR]` to `[hydrated]` so the transition is visible.
  */
 
-import { hydrate } from "@effect-ui/dom/client";
+import { hydrate } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 

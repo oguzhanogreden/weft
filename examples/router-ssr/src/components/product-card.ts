@@ -12,8 +12,8 @@
  * This exercises the client-first mount path the rpc model unlocked.
  */
 
-import { Component, h } from "@effect-ui/core";
-import { href } from "@effect-ui/router";
+import { Component, h } from "@weftui/core";
+import { href } from "@weftui/router";
 import { formatPrice, type Product } from "../data/products";
 import { productRoute } from "../pages/product-detail";
 

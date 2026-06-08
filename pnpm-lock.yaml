@@ -54,15 +54,15 @@ importers:
 
   examples/async-data-loading:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -76,15 +76,15 @@ importers:
 
   examples/declarative-event-handlers:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -98,15 +98,15 @@ importers:
 
   examples/element-ref:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -120,15 +120,15 @@ importers:
 
   examples/error-boundary:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -142,15 +142,15 @@ importers:
 
   examples/form-handling:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -164,15 +164,15 @@ importers:
 
   examples/keyed-list:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -186,15 +186,15 @@ importers:
 
   examples/list-rendering:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -208,15 +208,15 @@ importers:
 
   examples/reactive-styles:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -230,21 +230,21 @@ importers:
 
   examples/router-ssr:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
-      '@effect-ui/router':
-        specifier: workspace:*
-        version: link:../../packages/router
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.2)
       '@effect/rpc':
         specifier: 'catalog:'
         version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
+      '@weftui/router':
+        specifier: workspace:*
+        version: link:../../packages/router
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -261,10 +261,10 @@ importers:
 
   examples/ssr-hydration:
     dependencies:
-      '@effect-ui/core':
+      '@weftui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@effect-ui/dom':
+      '@weftui/dom':
         specifier: workspace:*
         version: link:../../packages/dom
       effect:
@@ -283,15 +283,15 @@ importers:
 
   examples/subscription-ref:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
         version: 3.21.2
@@ -305,10 +305,10 @@ importers:
 
   examples/suspense:
     dependencies:
-      '@effect-ui/core':
+      '@weftui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@effect-ui/dom':
+      '@weftui/dom':
         specifier: workspace:*
         version: link:../../packages/dom
       effect:
@@ -327,7 +327,7 @@ importers:
 
   packages/base:
     dependencies:
-      '@effect-ui/core':
+      '@weftui/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -370,7 +370,7 @@ importers:
 
   packages/dom:
     dependencies:
-      '@effect-ui/core':
+      '@weftui/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -401,18 +401,18 @@ importers:
 
   packages/router:
     dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../dom
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.2)
       '@effect/rpc':
         specifier: 'catalog:'
         version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../core
+      '@weftui/dom':
+        specifier: workspace:*
+        version: link:../dom
     devDependencies:
       '@types/jsdom':
         specifier: ^28.0.3
@@ -442,12 +442,12 @@ importers:
         specifier: npm:@voidzero-dev/vite-plus-core@latest
         version: '@voidzero-dev/vite-plus-core@0.1.24(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.3)(typescript@6.0.3)'
     devDependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../core
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@weftui/core':
+        specifier: workspace:*
+        version: link:../core
       effect:
         specifier: 'catalog:'
         version: 3.21.2

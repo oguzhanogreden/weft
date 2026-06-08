@@ -1,15 +1,15 @@
 # Server-Side Rendering
 
-effect-ui renders on the server and **hydrates** on the client: the server produces HTML (plus inline data), and the browser adopts that existing DOM in place rather than re-creating it. [`Boundary.rpc`](../api/core.md#boundaryrpc) extends this to **rpc-backed server data** — resolve an rpc on the server, serialize its result into the HTML, replay it on the client without a second request, and then keep the region live for refetch.
+Weft renders on the server and **hydrates** on the client: the server produces HTML (plus inline data), and the browser adopts that existing DOM in place rather than re-creating it. [`Boundary.rpc`](../api/core.md#boundaryrpc) extends this to **rpc-backed server data** — resolve an rpc on the server, serialize its result into the HTML, replay it on the client without a second request, and then keep the region live for refetch.
 
 ## The two halves
 
-- **Server** — `@effect-ui/dom/server` renders an app node to an HTML string (or stream). The _hydratable_ variants additionally emit the inline data each reactive region and `Boundary.rpc` needs to resume on the client.
-- **Client** — `@effect-ui/dom/client`'s `hydrate` walks the server DOM, adopts it, wires up reactivity and event handlers, and resumes from the inline data. It does **not** re-render from scratch.
+- **Server** — `@weftui/dom/server` renders an app node to an HTML string (or stream). The _hydratable_ variants additionally emit the inline data each reactive region and `Boundary.rpc` needs to resume on the client.
+- **Client** — `@weftui/dom/client`'s `hydrate` walks the server DOM, adopts it, wires up reactivity and event handlers, and resumes from the inline data. It does **not** re-render from scratch.
 
 ```typescript
 // server entry
-import { renderToStringHydratable } from "@effect-ui/dom/server";
+import { renderToStringHydratable } from "@weftui/dom/server";
 import { Effect } from "effect";
 import { App } from "./app";
 
@@ -18,7 +18,7 @@ export const render = (): Promise<string> => Effect.runPromise(renderToStringHyd
 
 ```typescript
 // client entry
-import { hydrate } from "@effect-ui/dom/client";
+import { hydrate } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
@@ -28,7 +28,7 @@ void Effect.runPromise(hydrate(App(), root));
 
 The same side-effect-free `App` is imported by both entries — splice the server HTML into your template's outlet, ship it, and let the client entry hydrate it.
 
-`@effect-ui/dom/server` exports four renderers:
+`@weftui/dom/server` exports four renderers:
 
 |                                        | String                     | Stream                     |
 | -------------------------------------- | -------------------------- | -------------------------- |
@@ -68,7 +68,7 @@ export const StockLive = StockRpcs.toLayer({
 The boundary itself is a **thin consumer** — it passes the rpc, a payload thunk, and a `render` that receives a reactive [`Resource`](../api/core.md#resourcea):
 
 ```typescript
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Stream } from "effect";
 import { GetStock } from "./data/inventory";
 
@@ -102,7 +102,7 @@ The arguments:
 
 ### Wiring the router
 
-The boundary resolves through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam, which `@effect-ui/router` provides on both sides — pass the merged group (and, on the server, the handler Layer):
+The boundary resolves through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam, which `@weftui/router` provides on both sides — pass the merged group (and, on the server, the handler Layer):
 
 ```typescript
 // server entry — RouterServer provides an in-process client over the handlers
@@ -130,7 +130,7 @@ If the rpc declares an `error` schema, a resolved rpc **error** on the SSR pass 
 ## See also
 
 - [rpc data boundaries guide](./rpc-data-boundaries.md) — the full `Boundary.rpc` walkthrough: contract/handler split, router wiring, the four lifecycles, and typed-failure replay
-- [Routing](./routing.md) — `@effect-ui/router` builds on this SSR + hydration model for full-page nested routing
+- [Routing](./routing.md) — `@weftui/router` builds on this SSR + hydration model for full-page nested routing
 - [`Boundary.rpc` API reference](../api/core.md#boundaryrpc)
 - [`ServerTag` API reference](../api/core.md#servertag)
 - [examples/router-ssr](../../examples/router-ssr) — a runnable shop with an SSR-replayed, refetchable live-stock `Boundary.rpc`

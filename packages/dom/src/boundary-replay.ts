@@ -6,8 +6,8 @@ import {
   LIST,
   SERVER_BOUNDARY,
   SUSPENSE_BOUNDARY,
-} from "@effect-ui/core";
-import type { Boundary, ElementDescriptor, Renderable } from "@effect-ui/core";
+} from "@weftui/core";
+import type { Boundary, ElementDescriptor, Renderable } from "@weftui/core";
 import { Effect, type Schema } from "effect";
 
 /**
@@ -18,7 +18,7 @@ import { Effect, type Schema } from "effect";
  * `hydrate` recognises it to replay the typed failure. Shared so server and
  * client agree on the exact wire marker.
  */
-export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
+export const BOUNDARY_FAILURE_ATTR = "data-weft-boundary-failure";
 
 /**
  * The fields of a `Boundary.rpc` descriptor's `props` that the typed-failure

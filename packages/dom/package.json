@@ -1,7 +1,7 @@
 {
-  "name": "@effect-ui/dom",
+  "name": "@weftui/dom",
   "version": "0.0.0",
-  "description": "Client-side DOM renderer for effect-ui",
+  "description": "Client-side DOM renderer for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
   "type": "module",
@@ -20,7 +20,7 @@
     }
   },
   "dependencies": {
-    "@effect-ui/core": "workspace:*"
+    "@weftui/core": "workspace:*"
   },
   "devDependencies": {
     "@effect/rpc": "catalog:",

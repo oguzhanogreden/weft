@@ -16,7 +16,7 @@
  * transient component-body fiber and be interrupted the instant the gen returns.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================

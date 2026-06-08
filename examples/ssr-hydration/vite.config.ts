@@ -5,7 +5,7 @@ export default defineConfig({
     tasks: {
       dev: {
         command: "tsx server.ts",
-        dependsOn: ["@effect-ui/core#pack", "@effect-ui/dom#pack"],
+        dependsOn: ["@weftui/core#pack", "@weftui/dom#pack"],
       },
     },
   },

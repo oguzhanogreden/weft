@@ -1,11 +1,11 @@
 {
-  "name": "@effect-ui/vite",
+  "name": "@weftui/vite",
   "version": "0.0.0",
-  "description": "Vite plugins for effect-ui (shell — prune plugin retired with Boundary.server)",
+  "description": "Vite plugins for Weft (shell — prune plugin retired with Boundary.server)",
   "keywords": [
-    "effect-ui",
     "ssr",
-    "vite-plugin"
+    "vite-plugin",
+    "weft"
   ],
   "license": "MIT",
   "author": "Stef van Wijchen",
@@ -17,8 +17,8 @@
     }
   },
   "devDependencies": {
-    "@effect-ui/core": "workspace:*",
     "@types/node": "^25.9.1",
+    "@weftui/core": "workspace:*",
     "effect": "catalog:",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"

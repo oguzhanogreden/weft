@@ -6,7 +6,7 @@
  * The `Analytics` service the tracked-button handler depends on is provided here.
  */
 
-import { mount } from "@effect-ui/dom/client";
+import { mount } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { AnalyticsLive, App } from "./app";
 

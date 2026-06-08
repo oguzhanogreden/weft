@@ -29,7 +29,7 @@ import {
   Source,
   SUSPENSE_BOUNDARY,
   toStream,
-} from "@effect-ui/core";
+} from "@weftui/core";
 import type {
   AppRpcClient,
   AssertNoServerOnly,
@@ -38,7 +38,7 @@ import type {
   Node as CoreNode,
   Renderable,
   ServerOnlyLeak,
-} from "@effect-ui/core";
+} from "@weftui/core";
 import {
   BoundaryContext,
   HydrationMismatchError,
@@ -686,7 +686,7 @@ function renderServerBoundary(
           cause: undefined,
           message:
             `Boundary.rpc "${props.tag}" was mounted client-first without an AppRpcClient ` +
-            "in context. Mount the app under @effect-ui/router (RouterLive), which provides " +
+            "in context. Mount the app under @weftui/router (RouterLive), which provides " +
             "the rpc client, so the boundary can resolve its data.",
         }),
       );
@@ -729,7 +729,7 @@ function renderServerBoundary(
     }).pipe(
       Effect.catchAllCause((cause) =>
         Effect.logError(
-          `[effect-ui] Boundary.rpc "${props.tag}" mount failed to resolve; fallback left in place.`,
+          `[weft] Boundary.rpc "${props.tag}" mount failed to resolve; fallback left in place.`,
           cause,
         ),
       ),
@@ -2281,7 +2281,7 @@ function hydrateFirstEmission(
 
     // Diverged from the server output: patch to the correct first value.
     console.error(
-      `[effect-ui] hydrate: reactive region at ${path} diverged from server output (${divergence}); patching.`,
+      `[weft] hydrate: reactive region at ${path} diverged from server output (${divergence}); patching.`,
     );
     yield* updateStreamChild(startMarker, endMarker, value);
   });
@@ -2294,7 +2294,7 @@ function hydrateFirstEmission(
  *   inline. The boundary is transparent to the DOM walk — hydrate the children
  *   directly from the cursor (unchanged v1 behaviour).
  * - **Typed-failure replay:** the cursor is the
- *   `<script type="application/json" data-eui-boundary-failure>` the server
+ *   `<script type="application/json" data-weft-boundary-failure>` the server
  *   emitted (carrying `{ index, error }`). The client does **not** run `load`: it
  *   locates the `index`-th statically-reachable {@link Boundary.server} in
  *   `props.children`, `Schema.decode`s `error` via **that** boundary's `failure`
@@ -2345,7 +2345,7 @@ function hydrateFailureBoundary(
     }).pipe(
       Effect.catchAll((cause) => {
         console.error(
-          `[effect-ui] hydrate: boundary failure payload at ${path} failed to decode; cannot replay.`,
+          `[weft] hydrate: boundary failure payload at ${path} failed to decode; cannot replay.`,
           cause,
         );
         return Effect.succeed<ReturnType<typeof props.match>>(null);
@@ -2516,7 +2516,7 @@ function hydrateServerBoundary(
       Effect.flatMap((encoded) => Schema.decodeUnknown(props.successSchema)(encoded)),
       Effect.catchAll((cause) => {
         console.error(
-          `[effect-ui] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
+          `[weft] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
           cause,
         );
         return mismatch("decodable server boundary payload", "undecodable payload", path);
@@ -2795,7 +2795,7 @@ function hydrateFirstListEmission(
     // Region-level divergence: server item count != first emission count.
     if (keys.length !== adopted.length) {
       console.error(
-        `[effect-ui] hydrate: list region at ${path} had ${adopted.length} server item(s) but the first emission has ${keys.length}; rebuilding.`,
+        `[weft] hydrate: list region at ${path} had ${adopted.length} server item(s) but the first emission has ${keys.length}; rebuilding.`,
       );
       removeNodesBetweenMarkers(regionStart, regionEnd);
       return yield* reconcileList(
@@ -2890,7 +2890,7 @@ function hydrateItem(
     // Diverged: discard the failed hydration's partial scope and re-render fresh
     // into the preserved marker range.
     console.error(
-      `[effect-ui] hydrate: list item at ${path} diverged from server output (${divergence}); patching.`,
+      `[weft] hydrate: list item at ${path} diverged from server output (${divergence}); patching.`,
     );
     yield* Scope.close(itemScope, Exit.void);
     const freshScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);

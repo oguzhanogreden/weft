@@ -10,10 +10,10 @@ Async data loading typically requires managing loading states, error states, and
 
 ## Solution
 
-effect-ui components can return `Effect` or `Stream` directly, making async patterns first-class:
+Weft components can return `Effect` or `Stream` directly, making async patterns first-class:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Stream } from "effect";
 
 // Loading → Data pattern with Stream.concat

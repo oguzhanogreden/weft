@@ -1,6 +1,6 @@
 # error-boundary
 
-A live demo of all six `Boundary.*` variants in `@effect-ui/dom` — catching, routing, and re-raising rendering-path errors.
+A live demo of all six `Boundary.*` variants in `@weftui/dom` — catching, routing, and re-raising rendering-path errors.
 
 ## Overview
 
@@ -38,7 +38,7 @@ Then open <http://localhost:5173> (or the port shown in the terminal).
 ### catchAll — simplest form
 
 ```typescript
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Data, Effect } from "effect";
 
 class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
@@ -120,7 +120,7 @@ Boundary.catchAll({ fallback: (e) => h.div({ class: "outer-error" }, `Outer: ${e
 
 ## How it works
 
-Every `Boundary.*` variant returns a plain descriptor `{ type: BOUNDARY, props: { match, children } }`. The renderer (`@effect-ui/dom`) detects it and:
+Every `Boundary.*` variant returns a plain descriptor `{ type: BOUNDARY, props: { match, children } }`. The renderer (`@weftui/dom`) detects it and:
 
 1. **At construction time** — renders children in a forked subtree scope. If the render fails, `match(cause)` is called immediately. If it returns a node, the fallback is rendered instead; if it returns `null`, the cause propagates up.
 

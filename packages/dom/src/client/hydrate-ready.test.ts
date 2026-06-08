@@ -2,10 +2,10 @@ import * as assert from "node:assert/strict";
 import { Effect, Exit, Stream, SubscriptionRef } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
-import { h, List } from "@effect-ui/core";
+import { h, List } from "@weftui/core";
 import { hydrate } from "./render";
 import { renderToStringHydratable as _renderToStringHydratable } from "~/server";
-import type { Renderable } from "@effect-ui/core/types";
+import type { Renderable } from "@weftui/core/types";
 import { NoRpc } from "../__tests__/rpc-stub";
 
 // These trees contain no `Boundary.rpc`; shadow the SSR fn with the no-op `NoRpc`

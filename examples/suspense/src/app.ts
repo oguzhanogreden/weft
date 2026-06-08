@@ -16,7 +16,7 @@
  *   - Single atomic DOM swap once every child has emitted its first value
  */
 
-import { Boundary, h } from "@effect-ui/core";
+import { Boundary, h } from "@weftui/core";
 import { Effect, pipe } from "effect";
 
 // ============================================================================
@@ -148,7 +148,7 @@ function NestedExample() {
 export function App() {
   return h.div({ class: "app" }, [
     h.header({ class: "header" }, [
-      h.h1("effect-ui — Suspense"),
+      h.h1("Weft — Suspense"),
       h.p(
         { class: "subtitle" },
         "Streaming SSR with fallback → patch swap, and client-side boundary coordination.",

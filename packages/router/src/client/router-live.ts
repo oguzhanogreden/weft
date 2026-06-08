@@ -1,4 +1,4 @@
-import { AppRpcClientTag } from "@effect-ui/core";
+import { AppRpcClientTag } from "@weftui/core";
 import { FetchHttpClient, HttpApiClient } from "@effect/platform";
 import { type RpcGroup, RpcClient, RpcSerialization } from "@effect/rpc";
 import {
@@ -65,7 +65,7 @@ function normalizeTo(to: string): string {
  *
  * Alongside `Router` it provides the core {@link AppRpcClientTag} seam — a
  * **network** flat rpc client (`RpcClient.make` over `layerProtocolHttp` →
- * `POST /_eui/rpc`) — so `@effect-ui/dom` can resolve a `Boundary.rpc` (hydrated
+ * `POST /_eui/rpc`) — so `@weftui/dom` can resolve a `Boundary.rpc` (hydrated
  * refetch and client-first mount) without depending on this package or
  * `@effect/rpc`.
  */
@@ -124,7 +124,7 @@ export function RouterLive(
       });
 
       // The {@link AppRpcClientTag} seam: a **network** flat rpc client over the
-      // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@effect-ui/dom`
+      // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@weftui/dom`
       // reads this tag to resolve a `Boundary.rpc` — hydrated refetch and
       // client-first mount — without importing this package or `@effect/rpc`.
       const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");

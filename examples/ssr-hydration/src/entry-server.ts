@@ -6,8 +6,8 @@
  * client `hydrate` needs to resume it flash-free.
  */
 
-import { AppRpcClientTag } from "@effect-ui/core";
-import { renderToStringHydratable } from "@effect-ui/dom/server";
+import { AppRpcClientTag } from "@weftui/core";
+import { renderToStringHydratable } from "@weftui/dom/server";
 import { Effect, Layer } from "effect";
 import { App } from "./app";
 

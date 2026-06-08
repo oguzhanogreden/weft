@@ -1,7 +1,7 @@
 {
-  "name": "@effect-ui/core",
+  "name": "@weftui/core",
   "version": "0.0.0",
-  "description": "Shared rendering infrastructure for effect-ui",
+  "description": "Shared rendering infrastructure for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
   "type": "module",

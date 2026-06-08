@@ -21,7 +21,7 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 2. For the failure variants, `props` contains:
    - `match: (cause: Cause.Cause<unknown>) => Node<unknown, unknown> | null` — returns a fallback `Node` if the cause is handled by this variant, `null` if the error should re-raise to a parent boundary or mount
    - `children: readonly Renderable[]`
-3. The `FAILURE_BOUNDARY` and `SUSPENSE_BOUNDARY` symbols are exported from `@effect-ui/core` for use by renderers.
+3. The `FAILURE_BOUNDARY` and `SUSPENSE_BOUNDARY` symbols are exported from `@weftui/core` for use by renderers.
 
 ### `Boundary.catchAll`
 
@@ -70,7 +70,7 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 ## API Surface
 
 ```typescript
-import { Boundary } from "@effect-ui/core";
+import { Boundary } from "@weftui/core";
 
 // Catch all typed failures
 Boundary.catchAll(

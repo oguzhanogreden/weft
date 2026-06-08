@@ -3,14 +3,14 @@
 ## Overview
 
 `Boundary.rpc` is constructed with `Boundary.rpc(rpc, payload, render, options?)`
-(in `@effect-ui/core`) and recognised by the server renderer via its
+(in `@weftui/core`) and recognised by the server renderer via its
 `SERVER_BOUNDARY` symbol type tag. This spec covers the **server emit** half of the
 renderer contract stated in `packages/core/src/boundary/boundary-rpc.specs.md`
 (AC-10 … AC-12, AC-15). The client `hydrate` replay and client-first mount halves
 are spec'd alongside the DOM client package.
 
 The boundary's data source is the ambient `AppRpcClientTag` seam, not a co-located
-`load`. On the server `@effect-ui/router` provides an **in-process** client over
+`load`. On the server `@weftui/router` provides an **in-process** client over
 the rpc handler Layer; SSR therefore requires an `AppRpcClientTag` in context (the
 `renderTo*` signatures carry it as a requirement). When `renderToStream` /
 `renderToString` (plain passes) or `renderToStreamHydratable` /
@@ -117,7 +117,7 @@ collector and emits the payload before the fallback HTML.
   handles the cause
 - **When** rendered via a hydratable pass
 - **Then** the enclosing failure boundary emits, **before** its fallback HTML, a
-  single `<script type="application/json" data-eui-boundary-failure>` whose JSON is
+  single `<script type="application/json" data-weft-boundary-failure>` whose JSON is
   `{ index, error }`: `index` is the failing boundary's pre-order position among the
   `SERVER_BOUNDARY` descriptors statically reachable in the failure boundary's
   `children`, and `error` is the `Schema.encode`d (via the rpc's `errorSchema`),
@@ -126,7 +126,7 @@ collector and emits the payload before the fallback HTML.
 ### AC-8: Plain passes emit no failure payload
 
 - **Given** the node above rendered via `renderToString` / `renderToStream`
-- **Then** the fallback HTML is emitted with **no** `data-eui-boundary-failure`
+- **Then** the fallback HTML is emitted with **no** `data-weft-boundary-failure`
   script (unchanged no-JS behaviour).
 
 ### AC-9: Relocation and non-replayed cases

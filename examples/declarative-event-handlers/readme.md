@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example demonstrates how to use event handlers in effect-ui. Handlers follow the same reactive pattern as other props — they can be static callbacks, Effect-returning, or Stream-based.
+This example demonstrates how to use event handlers in Weft. Handlers follow the same reactive pattern as other props — they can be static callbacks, Effect-returning, or Stream-based.
 
 ## Problem
 
@@ -14,10 +14,10 @@ Traditional event handlers are limited to plain callbacks. When building Effect-
 
 ## Solution
 
-effect-ui event handlers support three patterns:
+Weft event handlers support three patterns:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Stream } from "effect";
 
 // 1. Plain callback (sync)

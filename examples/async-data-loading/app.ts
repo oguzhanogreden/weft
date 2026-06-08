@@ -5,7 +5,7 @@
  * using Effect, with built-in loading states and error handling.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Stream } from "effect";
 
 // ============================================================================

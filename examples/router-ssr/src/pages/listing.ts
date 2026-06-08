@@ -10,8 +10,8 @@
  * `navigation.browser.test.ts`'s use of `Router.queryStream`.)
  */
 
-import { h } from "@effect-ui/core";
-import { href, Router, type RouteNode } from "@effect-ui/router";
+import { h } from "@weftui/core";
+import { href, Router, type RouteNode } from "@weftui/router";
 import { ProductCard } from "../components/product-card";
 import { PRODUCTS, sortProducts, SortOrder } from "../data/products";
 

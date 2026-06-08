@@ -2,18 +2,18 @@
 
 ## Overview
 
-This example demonstrates patterns for rendering lists in effect-ui, including static arrays, stream-based lists, and `h.fragment` usage.
+This example demonstrates patterns for rendering lists in Weft, including static arrays, stream-based lists, and `h.fragment` usage.
 
 ## Problem
 
-Lists are fundamental to web UIs. Understanding how effect-ui handles arrays, iterables, and dynamic updates is essential.
+Lists are fundamental to web UIs. Understanding how Weft handles arrays, iterables, and dynamic updates is essential.
 
 ## Solution
 
-effect-ui supports multiple list rendering patterns:
+Weft supports multiple list rendering patterns:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Stream } from "effect";
 
 // Static array mapping

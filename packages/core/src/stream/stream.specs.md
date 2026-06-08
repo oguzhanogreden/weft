@@ -1,11 +1,11 @@
-# `@effect-ui/core` — Stream Normalization (`toStream`)
+# `@weftui/core` — Stream Normalization (`toStream`)
 
 ## Overview
 
 A single normalization helper, `toStream`, plus its supporting type guard
 `isStream`. Together they collapse the three caller-facing prop shapes
 (static value, `Effect`, `Stream`) into one uniform `Stream`, so renderer and
-component code can subscribe without branching. `toStream` is the effect-ui
+component code can subscribe without branching. `toStream` is the Weft
 equivalent of Vue's `unref`.
 
 ## Purpose
@@ -56,7 +56,7 @@ default. The framework enforces nothing.
 4. **AC-4 isStream** — `isStream` returns `true` for streams and `false` for
    plain values, Effects, `null`, and non-objects.
 5. **AC-5 single source of truth** — `isStream`/`toStream` are defined only in
-   `@effect-ui/core`; no duplicate definitions remain in `@effect-ui/dom`.
+   `@weftui/core`; no duplicate definitions remain in `@weftui/dom`.
 6. **AC-6 Source** — `Source<T>` (renamed from `Prop<T>`) accepts
    static `T`, `Stream<T>`, and `Effect<T>` and is the documented caller-facing
    prop vocabulary.

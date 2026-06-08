@@ -107,7 +107,7 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
 30. **No failure payload at the cursor** — the failure boundary is transparent: its
     children are hydrated directly from the cursor (the server-success path,
     unchanged).
-31. **`<script type="application/json" data-eui-boundary-failure>` at the cursor** —
+31. **`<script type="application/json" data-weft-boundary-failure>` at the cursor** —
     the boundary replays the typed failure instead of hydrating its children:
     a. Parse `{ index, error }` from the script.
     b. Locate the `index`-th statically-reachable `Boundary.rpc` in

@@ -2,7 +2,7 @@
 
 The unified `Source` vocabulary is what lets static values, Effects, Streams, and Subscribables be used interchangeably wherever reactivity is supported — props, children, and style values all accept the same type.
 
-effect-ui accepts a `Source` for prop values and children. Any of these is valid wherever reactivity is supported:
+Weft accepts a `Source` for prop values and children. Any of these is valid wherever reactivity is supported:
 
 - A plain static value (`string`, `number`, `boolean`, ...)
 - An `Effect.Effect<A, E, R>` — runs once and resolves to a value
@@ -122,7 +122,7 @@ h.div({
 When a `Stream` prop ends before emitting, the renderer raises a `NoPropValue` tagged error. This carries an optional `key` field identifying which prop triggered it:
 
 ```typescript
-import { NoPropValue } from "@effect-ui/core";
+import { NoPropValue } from "@weftui/core";
 
 // Handle at the mount boundary if needed
 pipe(

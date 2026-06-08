@@ -6,7 +6,7 @@
 // check` (the package tsconfig includes `src`). See
 // `core/.../__type-tests__/rpc.test-d.ts` for the underlying
 // `AssertNoServerOnly` behaviour this relies on.
-import { Boundary, ServerTag, h, type Node } from "@effect-ui/core";
+import { Boundary, ServerTag, h, type Node } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { Effect, Schema } from "effect";
 import { hydrate } from "../render";

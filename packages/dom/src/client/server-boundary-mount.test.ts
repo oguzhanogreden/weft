@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
-import type { AppRpcClient } from "@effect-ui/core";
+import { AppRpcClientTag, Boundary, h } from "@weftui/core";
+import type { AppRpcClient } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { Cause, Effect, Exit, Layer, Schema } from "effect";
 import { JSDOM } from "jsdom";

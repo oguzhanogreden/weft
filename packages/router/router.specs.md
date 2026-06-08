@@ -1,8 +1,8 @@
-# `@effect-ui/router` — Specifications
+# `@weftui/router` — Specifications
 
 ## Overview
 
-`@effect-ui/router` is a universal (server + client) nested router for effect-ui.
+`@weftui/router` is a universal (server + client) nested router for Weft.
 It maps a URL to a rendered `Node` tree on both sides:
 
 - **Server** matches an incoming request path, builds a fixed `Router` for that
@@ -356,12 +356,12 @@ Programmatic, type-safe navigation built on the `Router` service and the type-sa
   and re-renders the affected outlet level(s) only.
 - **P3** A server-only dependency referenced in client (`render`) code is rejected
   by `AssertNoServerOnly` at the `hydrate` call site (inherited from
-  `@effect-ui/dom/client`).
+  `@weftui/dom/client`).
 
 ## `Boundary.rpc` interplay (rpc data foundation)
 
 `Boundary.rpc` resolves through the ambient `AppRpcClientTag` seam (defined in
-`@effect-ui/core`), which the router provides on **both** sides over the app's
+`@weftui/core`), which the router provides on **both** sides over the app's
 merged `RpcGroup` (passed as `RouterServer`/`RouterLive`'s `rpc: { group, handlers }`
 option):
 
@@ -387,4 +387,4 @@ This makes all three `Boundary.rpc` paths work end to end:
   rpc seam dissolves it (the same client serves SSR-replay, refetch, and mount).
 
 A router-less mount (no `RouterLive`/`RouterServer`) has no `AppRpcClientTag`, so a
-`Boundary.rpc` mount fails with a descriptive error (see `@effect-ui/dom/client`).
+`Boundary.rpc` mount fails with a descriptive error (see `@weftui/dom/client`).

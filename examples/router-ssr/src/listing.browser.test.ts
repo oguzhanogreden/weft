@@ -7,8 +7,8 @@
  * resulting card order for two different `?sort=` values.
  */
 
-import { mount, type MountHandle } from "@effect-ui/dom/client";
-import { patchQuery, Router, RouterApp, RouterLive } from "@effect-ui/router/client";
+import { mount, type MountHandle } from "@weftui/dom/client";
+import { patchQuery, Router, RouterApp, RouterLive } from "@weftui/router/client";
 import { Effect, ManagedRuntime } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";

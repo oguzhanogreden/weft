@@ -1,4 +1,4 @@
-import type { Node } from "@effect-ui/core";
+import type { Node } from "@weftui/core";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema } from "effect";
 import { RouterNotFound } from "./errors";

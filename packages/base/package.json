@@ -1,5 +1,5 @@
 {
-  "name": "@effect-ui/base",
+  "name": "@weftui/base",
   "version": "0.0.0",
   "description": "Headless components and utilities",
   "license": "MIT",
@@ -12,7 +12,7 @@
     }
   },
   "dependencies": {
-    "@effect-ui/core": "workspace:*"
+    "@weftui/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

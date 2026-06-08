@@ -1,5 +1,5 @@
-import { Component, h } from "@effect-ui/core";
-import type { Node } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
+import type { Node } from "@weftui/core";
 import { Context, Effect, Schema } from "effect";
 import { navigate, push, replace } from "~/client/navigation";
 import { href, Router, RouterApp, RouterParamsError } from "~/index";

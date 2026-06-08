@@ -1,11 +1,11 @@
 /**
  * Recipe: List Rendering
  *
- * This recipe demonstrates patterns for rendering lists in effect-ui,
+ * This recipe demonstrates patterns for rendering lists in Weft,
  * including static arrays, stream-based lists, and Fragment usage.
  */
 
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Schedule, Stream } from "effect";
 
 // ============================================================================

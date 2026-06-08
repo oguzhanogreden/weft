@@ -5,7 +5,7 @@
  * static array renders one `<li>` per item, in order.
  */
 
-import { mount, type MountHandle } from "@effect-ui/dom/client";
+import { mount, type MountHandle } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";

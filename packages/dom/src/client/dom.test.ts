@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
-import { Component, h, Source } from "@effect-ui/core";
-import type { Renderable } from "@effect-ui/core/types";
+import { Component, h, Source } from "@weftui/core";
+import type { Renderable } from "@weftui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
 import { mount } from "./render";

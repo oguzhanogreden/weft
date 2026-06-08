@@ -19,7 +19,7 @@ Sometimes you need direct access to a DOM element to perform operations that can
 Use `SubscriptionRef<Option<HTMLElement>>` to hold an optional reference to the DOM element:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, Option, pipe, Stream, SubscriptionRef } from "effect";
 
 const AutoFocusInput = () =>
@@ -157,7 +157,7 @@ const CanvasExample = () =>
 
 ## Comparison with React Refs
 
-| React                                       | Effect UI                                                         |
+| React                                       | Weft                                                              |
 | ------------------------------------------- | ----------------------------------------------------------------- |
 | `useRef<HTMLElement>(null)`                 | `SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none())` |
 | `ref.current` (nullable)                    | `Ref.get(ref)` returns `Option`                                   |

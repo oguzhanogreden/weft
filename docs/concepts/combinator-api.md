@@ -1,6 +1,6 @@
 # The Combinator API
 
-effect-ui builds UI trees by calling builder functions. Because component return types stay as generic `Effect.Effect<ElementDescriptor, E, R>`, the error channel (`E`) and requirements channel (`R`) propagate through the entire tree — visible to the type checker, satisfiable at the mount boundary. JSX collapses every component's return type to an opaque `JSX.Element`, erasing both channels; the combinator API exists specifically to keep them intact.
+Weft builds UI trees by calling builder functions. Because component return types stay as generic `Effect.Effect<ElementDescriptor, E, R>`, the error channel (`E`) and requirements channel (`R`) propagate through the entire tree — visible to the type checker, satisfiable at the mount boundary. JSX collapses every component's return type to an opaque `JSX.Element`, erasing both channels; the combinator API exists specifically to keep them intact.
 
 ## Nodes are Effects
 
@@ -13,7 +13,7 @@ type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
 Nodes are first-class Effects. Everything in the Effect ecosystem works on them directly:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect } from "effect";
 
 // yield* in Effect.gen — R propagates into the generator's context
@@ -34,7 +34,7 @@ const card = pipe(
 `h` is a proxy object where every property is an element builder. Access any HTML or SVG tag name as `h.tagName`:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 h.div({ class: "container" }, [h.span("Hello"), h.p("World")]);
 h.input({ type: "text", placeholder: "Search..." });
@@ -92,7 +92,7 @@ Static values (strings, numbers, plain functions) contribute `never` to both cha
 `h.fragment` groups children without emitting a wrapper element. Use it when a component needs to return multiple sibling nodes:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 
 // Renders as three adjacent <td> elements with no wrapping element
 const TableRow = ({ user }: { user: User }) =>
@@ -104,7 +104,7 @@ const TableRow = ({ user }: { user: User }) =>
 Plain functions work fine for simple components, but the `Component` factories provide type-level wiring so the caller's reactive prop types contribute their `E`/`R` to the returned node. Pick `Component.make` for a plain-function body and `Component.gen` for a generator body (when you need `yield*` to set up local state or pull from services).
 
 ```typescript
-import { Component, h } from "@effect-ui/core";
+import { Component, h } from "@weftui/core";
 import { Stream } from "effect";
 
 interface ButtonProps {
@@ -134,7 +134,7 @@ See [component-authoring.md](../guides/component-authoring.md) for a full walkth
 `Suspense` wraps async children and shows a fallback until all of them have emitted their first value:
 
 ```typescript
-import { h, Suspense } from "@effect-ui/core";
+import { h, Suspense } from "@weftui/core";
 
 Suspense({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
   AsyncCard({ id: 1 }),

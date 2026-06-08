@@ -10,10 +10,10 @@ Form handling in web apps requires managing input state, validation, and async s
 
 ## Solution
 
-effect-ui enables reactive form patterns using `SubscriptionRef` and streams:
+Weft enables reactive form patterns using `SubscriptionRef` and streams:
 
 ```typescript
-import { h } from "@effect-ui/core";
+import { h } from "@weftui/core";
 import { Effect, SubscriptionRef, Stream } from "effect";
 
 const ReactiveInput = () =>

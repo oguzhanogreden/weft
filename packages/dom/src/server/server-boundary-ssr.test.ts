@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { AppRpcClientTag, Boundary, h } from "@effect-ui/core";
-import type { AppRpcClient, Node } from "@effect-ui/core";
+import { AppRpcClientTag, Boundary, h } from "@weftui/core";
+import type { AppRpcClient, Node } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
@@ -24,7 +24,7 @@ const fromValue =
 
 /**
  * Builds a stub {@link AppRpcClientTag} layer from a `tag → handler` record,
- * standing in for the in-process client `@effect-ui/router` provides on the
+ * standing in for the in-process client `@weftui/router` provides on the
  * server. The renderer only needs `call(tag, payload)` to resolve a boundary; the
  * handler returns the already-decoded success (or fails/dies) just like the real
  * in-process client over the handler Layer.
@@ -202,10 +202,10 @@ describe("Boundary.rpc — nesting", () => {
 
 describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () => {
   // A resolved rpc error is encoded by the enclosing failure `Boundary` into a
-  // `data-eui-boundary-failure` payload (hydratable), or shown as the no-JS
+  // `data-weft-boundary-failure` payload (hydratable), or shown as the no-JS
   // fallback only (plain). A defect is never encoded.
   const FAILURE_SCRIPT_RE =
-    /<script type="application\/json" data-eui-boundary-failure>(.*?)<\/script>/;
+    /<script type="application\/json" data-weft-boundary-failure>(.*?)<\/script>/;
 
   const failingBoundary = () =>
     Boundary.rpc(
@@ -226,7 +226,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
 
     const html = await Effect.runPromise(provideRpc(renderToString(node), failingHandlers));
     assert.ok(html.includes('<div class="fallback">db down</div>'));
-    assert.ok(!html.includes("data-eui-boundary-failure"));
+    assert.ok(!html.includes("data-weft-boundary-failure"));
     assert.ok(!html.includes('class="product"'));
   });
 
@@ -241,7 +241,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
     );
 
     const match = FAILURE_SCRIPT_RE.exec(html);
-    assert.ok(match !== null, "expected a data-eui-boundary-failure payload");
+    assert.ok(match !== null, "expected a data-weft-boundary-failure payload");
     const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
     assert.equal(payload.index, 0);
     const decoded = await Effect.runPromise(Schema.decodeUnknown(LoadError)(payload.error));
@@ -286,7 +286,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
       }),
     );
     assert.ok(html.includes('<div class="fallback">boom</div>'));
-    assert.ok(!html.includes("data-eui-boundary-failure"));
+    assert.ok(!html.includes("data-weft-boundary-failure"));
   });
 });
 

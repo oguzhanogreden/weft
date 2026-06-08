@@ -1,5 +1,5 @@
-import type { Renderable } from "@effect-ui/core/types";
-import type { AppRpcClientTag } from "@effect-ui/core";
+import type { Renderable } from "@weftui/core/types";
+import type { AppRpcClientTag } from "@weftui/core";
 import { type Effect, Stream } from "effect";
 import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-to-stream";
 
@@ -13,7 +13,7 @@ import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-t
  * {@link renderToStreamHydratable} / {@link renderToStream} instead.
  *
  * Requires an {@link AppRpcClientTag} in context when the tree contains a
- * `Boundary.rpc` (provided by `@effect-ui/router`'s `RouterServer`).
+ * `Boundary.rpc` (provided by `@weftui/router`'s `RouterServer`).
  */
 export const renderToString = (node: Renderable): Effect.Effect<string, Error, AppRpcClientTag> =>
   renderToStreamFallbackOnly(node).pipe(Stream.mkString);
