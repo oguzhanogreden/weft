@@ -995,8 +995,8 @@
     "semantic_hash": "be3d8b515d0163c67ea62f91c34fdfe6"
   },
   "docs/api/core.md": {
-    "mtime": 1780904364.5327837,
-    "ast_hash": "027b5e81c3e83b2301ea92dd5d28164e",
+    "mtime": 1780904603.6561902,
+    "ast_hash": "a457c22af8ec57e0943fccb6b2a01ef7",
     "semantic_hash": ""
   },
   "docs/api/router.md": {
@@ -1395,8 +1395,8 @@
     "semantic_hash": ""
   },
   "docs/guides/rpc-data-boundaries.md": {
-    "mtime": 1780904364.5344512,
-    "ast_hash": "39c691a44d2d52599f8501ac965c2940",
+    "mtime": 1780904603.7001958,
+    "ast_hash": "29a84f241fc683eb7241359d0d56b149",
     "semantic_hash": ""
   }
 }

@@ -1,7 +1,7 @@
 # Graph Report - effect-ui  (2026-06-08)
 
 ## Corpus Check
-- 263 files · ~206,535 words
+- 263 files · ~207,000 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `83ffd906`
+- Built from commit: `b12af8e0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -863,7 +863,7 @@ Cohesion: 0.18
 Nodes (12): appRpcLayer(), Failing, fromValue(), GetProduct, LoadError, Product, ProductBoundary(), productHandlers (+4 more)
 
 ## Knowledge Gaps
-- **1316 isolated node(s):** `__dirname`, `server`, ``h``, ``h.fragment``, ``Component`` (+1311 more)
+- **1316 isolated node(s):** `SUSPENSE_BOUNDARY`, `CatchTagE`, `CatchTagsE`, `Resource`, `ListProps` (+1311 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **33 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -873,10 +873,10 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Renderable` connect `Combinator Core (h/Component)` to `HTML Attribute Types`, `Combinator Type Tests`, `Community 164`, `Boundary Catch Combinators`, `packages/dom/src/client`?**
   _High betweenness centrality (0.025) - this node is a cross-community bridge._
 - **Why does `isStream()` connect `Router Type Tests` to `Streaming SSR Render`, `packages/dom/src`, `DOM Render + Hydrate Internals`, `Source Primitive`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Why does `getElementDescriptor()` connect `Combinator Core (h/Component)` to `Streaming SSR Render`, `DOM Render + Hydrate Internals`, `packages/dom/src`, `List Combinator`, `packages/dom/src/client`, `Router Type Tests`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **What connects `__dirname`, `server`, ``h`` to the rest of the system?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **What connects `SUSPENSE_BOUNDARY`, `CatchTagE`, `CatchTagsE` to the rest of the system?**
   _1326 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `HTML Attribute Types` be split into smaller, more focused modules?**
   _Cohesion score 0.06665074056378405 - nodes in this community are weakly interconnected._
