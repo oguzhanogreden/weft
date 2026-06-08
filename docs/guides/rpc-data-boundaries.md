@@ -14,9 +14,11 @@ import { Stream } from "effect";
 import { GetStock } from "./data/inventory";
 
 Boundary.rpc(
-  GetStock,                  // the rpc — its _tag + schemas drive the boundary
+  GetStock, // the rpc — its _tag + schemas drive the boundary
   () => ({ id: product.id }), // payload thunk — a fresh typed input per call
-  (resource) =>              // render — receives a reactive Resource, not a bare value
+  (
+    resource, // render — receives a reactive Resource, not a bare value
+  ) =>
     h.p([
       "in stock: ",
       h.span([Stream.map(resource.value.changes, (s) => String(s.units))]),
@@ -97,12 +99,12 @@ In a **router-less mount** there is no `AppRpcClientTag`, so a `Boundary.rpc` re
 
 `render` receives a [`Resource<A>`](../api/core.md#resourcea) (`A` = the rpc's decoded success), not a bare value. After hydrate the region is live:
 
-| Field     | What it gives you                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------- |
+| Field     | What it gives you                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------- |
 | `value`   | A `Subscribable` of the current data — seeded with the SSR payload, updated on a successful refetch. |
-| `refetch` | An `Effect<void>` that re-resolves the rpc with a fresh `payload()` and pushes the new `value`.    |
-| `pending` | A `Subscribable<boolean>` — `true` while a refetch is in flight.                                   |
-| `error`   | A `Subscribable<Option<unknown>>` — `Some` with the last refetch error (stale-on-error).           |
+| `refetch` | An `Effect<void>` that re-resolves the rpc with a fresh `payload()` and pushes the new `value`.      |
+| `pending` | A `Subscribable<boolean>` — `true` while a refetch is in flight.                                     |
+| `error`   | A `Subscribable<Option<unknown>>` — `Some` with the last refetch error (stale-on-error).             |
 
 ```typescript
 (resource) =>
@@ -117,12 +119,12 @@ Wire `refetch` to an event with `onclick: () => resource.refetch` — the handle
 
 ## The four lifecycles
 
-| Lifecycle              | Trigger                                  | What happens                                                                                                                  |
-| ---------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **SSR**                | server render                            | Resolve the rpc in-process, `successSchema`-encode the result inline as `<script type="application/json">`, render `render(seededResource)` to HTML. |
-| **Hydrate**            | `hydrate` on the client                  | Read the inline payload at the cursor, `successSchema`-decode it, seed the `Resource`, adopt the DOM. **Never re-calls the rpc** (replay). |
-| **Refetch**            | `resource.refetch`                       | Call the rpc again over `POST /_eui/rpc` (re-runs the handler on the server), patch the subtree in place (stale-on-error).    |
-| **Client-first mount** | SPA nav into a boundary with no payload  | Render `options.fallback`, fork the rpc call, swap in `render(resource)` once it resolves.                                    |
+| Lifecycle              | Trigger                                 | What happens                                                                                                                                         |
+| ---------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SSR**                | server render                           | Resolve the rpc in-process, `successSchema`-encode the result inline as `<script type="application/json">`, render `render(seededResource)` to HTML. |
+| **Hydrate**            | `hydrate` on the client                 | Read the inline payload at the cursor, `successSchema`-decode it, seed the `Resource`, adopt the DOM. **Never re-calls the rpc** (replay).           |
+| **Refetch**            | `resource.refetch`                      | Call the rpc again over `POST /_eui/rpc` (re-runs the handler on the server), patch the subtree in place (stale-on-error).                           |
+| **Client-first mount** | SPA nav into a boundary with no payload | Render `options.fallback`, fork the rpc call, swap in `render(resource)` once it resolves.                                                           |
 
 Because the SSR path seeds `value` await-first (it emits the seed immediately), the SSR HTML and the adopted DOM are byte-identical — there is **no fallback flash** on the SSR/hydrate path. `fallback` shows only on a client-first mount.
 

@@ -167,12 +167,12 @@ The boundary resolves the rpc through the ambient [`AppRpcClientTag`](#apprpccli
 
 The reactive handle `render` receives (`A = Rpc.Success<R>`). After hydrate the region is live: `value` is seeded with the SSR payload and the client can `refetch` the same data on demand, patching the rendered subtree in place.
 
-| Field     | Type                                        | Meaning                                                                                                                       |
-| --------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `value`   | `Subscribable.Subscribable<A>`              | Current data. Seeded with the SSR `data` (await-first, emits immediately, so SSR HTML and adopted DOM are byte-identical — no fallback flash). A successful refetch pushes the new value. |
-| `refetch` | `Effect.Effect<void>`                       | Re-resolves the rpc over the network with a fresh `payload()` and sets `value`. Client only — a no-op on the server.         |
-| `pending` | `Subscribable.Subscribable<boolean>`        | `true` while a refetch is in flight (`false` on the server / before any refetch).                                            |
-| `error`   | `Subscribable.Subscribable<Option<unknown>>`| `Some` with the last refetch error, else `None`. A failed refetch is stale-on-error — it does **not** unmount or raise into a failure `Boundary`. |
+| Field     | Type                                         | Meaning                                                                                                                                                                                   |
+| --------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`   | `Subscribable.Subscribable<A>`               | Current data. Seeded with the SSR `data` (await-first, emits immediately, so SSR HTML and adopted DOM are byte-identical — no fallback flash). A successful refetch pushes the new value. |
+| `refetch` | `Effect.Effect<void>`                        | Re-resolves the rpc over the network with a fresh `payload()` and sets `value`. Client only — a no-op on the server.                                                                      |
+| `pending` | `Subscribable.Subscribable<boolean>`         | `true` while a refetch is in flight (`false` on the server / before any refetch).                                                                                                         |
+| `error`   | `Subscribable.Subscribable<Option<unknown>>` | `Some` with the last refetch error, else `None`. A failed refetch is stale-on-error — it does **not** unmount or raise into a failure `Boundary`.                                         |
 
 ##### `RpcOptions`
 
@@ -196,7 +196,10 @@ The descriptor `type` every `Boundary.rpc` carries (`{ type: SERVER_BOUNDARY, pr
 interface AppRpcClient {
   readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
 }
-class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<AppRpcClientTag, AppRpcClient>() {}
+class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<
+  AppRpcClientTag,
+  AppRpcClient
+>() {}
 ```
 
 The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@effect-ui/dom` resolve a boundary without importing `@effect/rpc` or `@effect-ui/router`. `@effect-ui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@effect-ui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
