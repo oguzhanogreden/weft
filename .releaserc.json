@@ -1,12 +1,19 @@
 {
   "branches": ["main"],
-  "plugins": [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/github"
-  ],
   "tagFormat": "v${version}",
   "release": {
     "initialVersion": "0.1.0"
-  }
+  },
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "node scripts/sync-versions.mjs ${nextRelease.version}",
+        "publishCmd": "pnpm -r --filter './packages/*' publish --access public --no-git-checks"
+      }
+    ],
+    "@semantic-release/github"
+  ]
 }

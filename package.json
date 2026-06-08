@@ -8,6 +8,7 @@
   "devDependencies": {
     "@effect/language-service": "^0.86.2",
     "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.0.0",
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/release-notes-generator": "^14.1.1",
     "playwright": "^1.60.0",

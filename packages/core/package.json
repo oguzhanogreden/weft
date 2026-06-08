@@ -4,6 +4,9 @@
   "description": "Shared rendering infrastructure for Weft",
   "license": "MIT",
   "author": "Stef van Wijchen",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -14,6 +17,9 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@effect/rpc": "catalog:",
