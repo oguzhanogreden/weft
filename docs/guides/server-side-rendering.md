@@ -39,7 +39,7 @@ Use a hydratable renderer whenever the client will call `hydrate`. The plain ren
 
 ## Loading server data with `Boundary.rpc`
 
-`Boundary.rpc` resolves an rpc on the server, serializes its result into the page, and replays it on the client — then keeps the region live so the client can `refetch`. The data source is one `Rpc` from the app's merged `RpcGroup`: its **contract** (pure Schema) is shared with the client, while its **handler** lives in a server-only Layer the client never imports. The client/server split is structural — tree-shaking, no prune plugin.
+`Boundary.rpc` resolves an rpc on the server, serializes its result into the page, and replays it on the client — then keeps the region live so the client can `refetch`. The data source is one `Rpc` from the app's merged `RpcGroup`: its **contract** (pure Schema) is shared with the client, while its **handler** lives in a server-only Layer the client never imports. The client/server split is structural — tree-shaking keeps the handler out of the browser bundle.
 
 ```typescript
 // data/inventory.ts — the contract (shareable) + the handler (server-only)
@@ -96,7 +96,7 @@ What happens at each stage:
 The arguments:
 
 - **`rpc`** — an `Rpc` from the merged group. Its `_tag` is the stable boundary identity (replacing a hand-rolled `id`) and its `payload`/`success`/`error` schemas are the wire contract.
-- **`payload`** — a **thunk** producing a fresh, typed `Rpc.Payload` per call. The payload is a real input (here, the product id), so the same rpc serves per-entity data with no per-boundary id.
+- **`payload`** — a **thunk** producing a fresh, typed `Rpc.Payload` per call. The payload is a real input (here, the product id), so one rpc serves per-entity data across many boundaries.
 - **`render`** — builds the subtree from a reactive [`Resource`](../api/core.md#resourcea) (the **second positional argument**, not a children array). Its requirement channel `R` passes through to the output untouched.
 - **`options.fallback`** — shown only during a client-first mount; the SSR/hydrate path renders the seeded payload with no fallback flash.
 
@@ -127,11 +127,9 @@ If the rpc declares an `error` schema, a resolved rpc **error** on the SSR pass 
 - **`Boundary.rpc`** — data that must be resolved on the server (behind a server-only service, credential, or private network) and rendered into the initial HTML, then **refreshable** on the client (refetch / client-first SPA mount) over the same rpc.
 - **`Boundary.suspend`** — async data that loads on the client (or streams the shell then fills); see the [Boundary API](../api/core.md#boundarysuspend).
 
-Unlike the former `Boundary.server`, `Boundary.rpc` is **not replay-only**: after hydrate the region is a live `Resource` and the same rpc backs refetch and client-first mounts.
-
 ## See also
 
-- [rpc data boundaries guide](./rpc-data-boundaries.md) — the full `Boundary.rpc` walkthrough, the four lifecycles, and migration from `Boundary.server`
+- [rpc data boundaries guide](./rpc-data-boundaries.md) — the full `Boundary.rpc` walkthrough: contract/handler split, router wiring, the four lifecycles, and typed-failure replay
 - [Routing](./routing.md) — `@effect-ui/router` builds on this SSR + hydration model for full-page nested routing
 - [`Boundary.rpc` API reference](../api/core.md#boundaryrpc)
 - [`ServerTag` API reference](../api/core.md#servertag)

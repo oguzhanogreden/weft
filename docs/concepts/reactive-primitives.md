@@ -1,6 +1,8 @@
 # Reactive Primitives
 
-effect-ui accepts a unified `Source` vocabulary for prop values and children. Any of these is valid wherever reactivity is supported:
+The unified `Source` vocabulary is what lets static values, Effects, Streams, and Subscribables be used interchangeably wherever reactivity is supported — props, children, and style values all accept the same type.
+
+effect-ui accepts a `Source` for prop values and children. Any of these is valid wherever reactivity is supported:
 
 - A plain static value (`string`, `number`, `boolean`, ...)
 - An `Effect.Effect<A, E, R>` — runs once and resolves to a value
@@ -71,10 +73,10 @@ const formatted = Stream.map(count.changes, (n) => `Count: ${n}`);
 const isHigh = Stream.map(count.changes, (n) => n > 10);
 
 h.div([
-  h.p([count.changes]),
-  h.p([doubled]),
-  h.p([formatted]),
-  h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
+	h.p([count.changes]),
+	h.p([doubled]),
+	h.p([formatted]),
+	h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
 ]);
 ```
 
@@ -85,7 +87,7 @@ const firstName = yield * SubscriptionRef.make("");
 const lastName = yield * SubscriptionRef.make("");
 
 const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) =>
-  `${first} ${last}`.trim(),
+	`${first} ${last}`.trim(),
 );
 ```
 
@@ -96,11 +98,11 @@ The `style` prop accepts the same `Source` vocabulary at any level:
 ```typescript
 // Individual property as a stream
 h.div({
-  style: {
-    color: colorStream, // Stream<string>
-    opacity: opacityStream, // Stream<number>
-    fontWeight: "bold", // static
-  },
+	style: {
+		color: colorStream, // Stream<string>
+		opacity: opacityStream, // Stream<number>
+		fontWeight: "bold", // static
+	},
 });
 
 // Entire style object as a stream
@@ -108,10 +110,10 @@ h.div({ style: styleObjectStream });
 
 // Spread a stream into a style object (static props win over emitted props)
 h.div({
-  style: {
-    ...styleObjectStream, // reactive
-    transition: "all 0.3s", // static, always applied
-  },
+	style: {
+		...styleObjectStream, // reactive
+		transition: "all 0.3s", // static, always applied
+	},
 });
 ```
 
@@ -123,10 +125,11 @@ When a `Stream` prop ends before emitting, the renderer raises a `NoPropValue` t
 import { NoPropValue } from "@effect-ui/core";
 
 // Handle at the mount boundary if needed
-mount(App(), root).pipe(
-  Effect.catchTag("NoPropValue", (e) =>
-    Effect.logWarning(`Prop stream ended before emitting: ${e.key}`),
-  ),
+pipe(
+	mount(App(), root),
+	Effect.catchTag("NoPropValue", (e) =>
+		Effect.logWarning(`Prop stream ended before emitting: ${e.key}`),
+	),
 );
 ```
 

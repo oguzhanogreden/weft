@@ -137,9 +137,7 @@ Boundary.suspend(
 
 #### `Boundary.rpc`
 
-A universal server/client render boundary backed by one `Rpc` from the app's merged `RpcGroup` ([`@effect/rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc)). The rpc **tag** is the boundary's stable identity and its **payload schema** the typed input — so there is no hand-rolled `id`, no `provide`, no per-boundary registry, and no bundler prune. The handler lives in the server-only rpc Layer (`group.toLayer(...)`), which the client never imports; tree-shaking does the client/server split structurally. Unlike the catch variants it takes a `render` function — not a children array — and that `render` receives a reactive [`Resource`](#resourcea), not a bare value.
-
-This replaces the former `Boundary.server` (co-located `load`/`provide`/`id` + build-time prune plugin + `GET /_eui/data` registry). See the [rpc data boundaries guide](../guides/rpc-data-boundaries.md) for the full walkthrough and [migration table](../guides/rpc-data-boundaries.md#migration-from-boundaryserver).
+A universal server/client render boundary backed by one `Rpc` from the app's merged `RpcGroup` ([`@effect/rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc)). The rpc **`_tag`** is the boundary's stable identity and its **payload schema** the typed input; the handler lives in the server-only rpc Layer (`group.toLayer(...)`), which the client never imports — tree-shaking does the client/server split structurally. Unlike the catch variants it takes a `render` function — not a children array — and that `render` receives a reactive [`Resource`](#resourcea), not a bare value.
 
 ```typescript
 Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(

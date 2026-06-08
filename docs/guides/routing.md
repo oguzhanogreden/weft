@@ -13,7 +13,7 @@ npm install @effect-ui/router
 
 ## The mental model
 
-A route's **component is its handler**. There is no separate loader or per-route data schema — a page is just a component that renders. Server-resolved data stays with [`Boundary.rpc`](./rpc-data-boundaries.md); client-side async stays with `Boundary.suspend`.
+A route's **component is its handler** — a page is a component that renders, and its `component` slot is invoked at render time on whichever side the request arrives. Server-resolved data stays with [`Boundary.rpc`](./rpc-data-boundaries.md); client-side async stays with `Boundary.suspend`.
 
 You author an **explicit nested route tree** with three namespaced combinators — mirroring the `h.div` / `Component.gen` / `Boundary.catchTag` surface — and seal it once:
 
@@ -149,7 +149,7 @@ Path params encode into the pattern (`/users/:id` + `{ id: 42 }` ⇒ `/users/42`
 
 ## Not-found
 
-`notFound(path?)` short-circuits the current render with a `RouterNotFound` failure (Next.js-style). Callable from any page or layout; the nearest enclosing not-found boundary renders the configured `notFound` page in its place, and the server responds with HTTP 404:
+`notFound(path?)` short-circuits the current render with a `RouterNotFound` failure. Callable from any page or layout; the nearest enclosing not-found boundary renders the configured `notFound` page in its place, and the server responds with HTTP 404:
 
 ```typescript
 import { notFound, Router } from "@effect-ui/router";

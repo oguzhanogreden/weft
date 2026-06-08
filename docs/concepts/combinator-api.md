@@ -1,16 +1,8 @@
 # The Combinator API
 
-effect-ui builds UI trees with a combinator API rather than JSX. This document explains why, how it works, and what you gain.
+effect-ui builds UI trees by calling builder functions. Because component return types stay as generic `Effect.Effect<ElementDescriptor, E, R>`, the error channel (`E`) and requirements channel (`R`) propagate through the entire tree — visible to the type checker, satisfiable at the mount boundary. JSX collapses every component's return type to an opaque `JSX.Element`, erasing both channels; the combinator API exists specifically to keep them intact.
 
-## Why not JSX?
-
-JSX is a syntax transform that turns `<div class="foo">Hello</div>` into a function call. Every component's return type collapses to `JSX.Element` — a sealed opaque type. The TypeScript docs are explicit: _"It is not possible to retrieve type information about the element, attributes or children of the JSX from this interface."_
-
-This matters for Effect because Effects carry two channels beyond their value: **`E`** (the error channel) and **`R`** (the requirements / dependency-injection channel). If you build a tree with JSX, both channels are erased at every component boundary. You lose the ability to see at the type level which services the tree requires, and which errors it can raise.
-
-The combinator API sidesteps the JSX transform entirely. Component return types remain generic `Effect.Effect<ElementDescriptor, E, R>`, so channels propagate through the full tree.
-
-## Node IS an Effect
+## Nodes are Effects
 
 `Node<E, R>` is defined as:
 
@@ -18,7 +10,7 @@ The combinator API sidesteps the JSX transform entirely. Component return types 
 type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
 ```
 
-This has a direct consequence: nodes are first-class Effects. Everything the Effect ecosystem provides works on nodes:
+Nodes are first-class Effects. Everything in the Effect ecosystem works on them directly:
 
 ```typescript
 import { h } from "@effect-ui/core";
@@ -28,10 +20,13 @@ import { Effect } from "effect";
 const node = yield * h.div({ class: "container" }, "Hello");
 
 // pipe — chain Effect operators directly
-const provided = Effect.provide(h.div(userStream), UserServiceLive);
+const provided = pipe(h.div(userStream), Effect.provide(UserServiceLive));
 
 // Effect.flatMap — sequence node creation with async logic
-const card = fetchCard(id).pipe(Effect.flatMap((data) => h.div({ class: "card" }, data.title)));
+const card = pipe(
+	fetchCard(id),
+	Effect.flatMap((data) => h.div({ class: "card" }, data.title)),
+);
 ```
 
 ## The `h` namespace
@@ -46,7 +41,7 @@ h.input({ type: "text", placeholder: "Search..." });
 h.button({ type: "button", onclick: () => handleClick() }, "Submit");
 ```
 
-Each builder has these call signatures:
+Each builder accepts these call signatures:
 
 ```typescript
 // props + children array
@@ -101,7 +96,7 @@ import { h } from "@effect-ui/core";
 
 // Renders as three adjacent <td> elements with no wrapping element
 const TableRow = ({ user }: { user: User }) =>
-  h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
+	h.fragment([h.td(user.name), h.td(user.role), h.td(user.status)]);
 ```
 
 ## Custom components with `Component.gen` / `Component.make`
@@ -113,12 +108,12 @@ import { Component, h } from "@effect-ui/core";
 import { Stream } from "effect";
 
 interface ButtonProps {
-  label: string | Stream.Stream<string>;
-  onclick?: () => void;
+	label: string | Stream.Stream<string>;
+	onclick?: () => void;
 }
 
 const Button = Component.make((props: ButtonProps) =>
-  h.button({ onclick: props.onclick }, [props.label]),
+	h.button({ onclick: props.onclick }, [props.label]),
 );
 
 // When called with a stream prop, the stream's R flows into the node type:
@@ -130,7 +125,7 @@ const btn = Button({ label: labelStream });
 
 Components also accept an optional `children` argument, either as `readonly Renderable[]` or as a `(input) => readonly Renderable[]` function (render-prop pattern). `E`/`R` from children — including the array returned by a function-children call — accumulate on the resulting node.
 
-Without `Component`, a plain function's return type is fixed at definition time and doesn't reflect the caller's reactive prop types.
+Without `Component`, a plain function's return type is fixed at definition time and does not reflect the caller's reactive prop types.
 
 See [component-authoring.md](../guides/component-authoring.md) for a full walkthrough.
 
@@ -142,8 +137,8 @@ See [component-authoring.md](../guides/component-authoring.md) for a full walkth
 import { h, Suspense } from "@effect-ui/core";
 
 Suspense({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
-  AsyncCard({ id: 1 }),
-  AsyncCard({ id: 2 }),
+	AsyncCard({ id: 1 }),
+	AsyncCard({ id: 2 }),
 ]);
 ```
 

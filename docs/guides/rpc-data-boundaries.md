@@ -1,8 +1,6 @@
 # RPC Data Boundaries
 
-`Boundary.rpc` is effect-ui's primitive for **server-resolved, client-refreshable** data. One [`Rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc) from the app's merged `RpcGroup` backs a single render boundary across four lifecycles: server-side render, hydrate-replay, client refetch, and client-first SPA mount. The rpc **tag** is the boundary's stable identity and its **payload schema** the typed input — there is no hand-rolled `id`, no co-located `load`, no per-boundary registry, and no bundler prune.
-
-> This replaces the former `Boundary.server`. See [Migration](#migration-from-boundaryserver) below.
+`Boundary.rpc` is effect-ui's primitive for **server-resolved, client-refreshable** data. One [`Rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc) from the app's merged `RpcGroup` backs a single render boundary across four lifecycles: server-side render, hydrate-replay, client refetch, and client-first SPA mount. The rpc's `_tag` is the boundary's stable identity and its payload schema the typed input.
 
 ## Overview
 
@@ -30,7 +28,7 @@ Boundary.rpc(
 
 ## The contract / handler split
 
-The client/server split is **structural**, not a bundler trick. The rpc **contract** (pure Schema) is safe to share with the client; the rpc **handler** — the only code that touches server-only services — lives in a Layer the client never imports. Tree-shaking keeps the handler (and its transitive imports) out of the browser bundle.
+The rpc **contract** (pure Schema) is shared with the client. The rpc **handler** — the only code that touches server-only services — lives in a Layer the client never imports; tree-shaking keeps it and its transitive imports out of the browser bundle. The split is enforced structurally by which files each entry imports, not by a bundler plugin.
 
 ```typescript
 // data/inventory.ts
@@ -95,7 +93,18 @@ void runtime.runPromise(hydrate(RouterApp(App), root));
 
 In a **router-less mount** there is no `AppRpcClientTag`, so a `Boundary.rpc` resolves to a typed, descriptive "needs router/rpc" error (not a defect).
 
-## Using the boundary: the `Resource` handle
+## The four lifecycles
+
+| Lifecycle              | Trigger                                 | What happens                                                                                                                                         |
+| ---------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SSR**                | server render                           | Resolve the rpc in-process, `successSchema`-encode the result inline as `<script type="application/json">`, render `render(seededResource)` to HTML. |
+| **Hydrate**            | `hydrate` on the client                 | Read the inline payload at the cursor, `successSchema`-decode it, seed the `Resource`, adopt the DOM. **Never re-calls the rpc** (replay).           |
+| **Refetch**            | `resource.refetch`                      | Call the rpc again over `POST /_eui/rpc` (re-runs the handler on the server), patch the subtree in place (stale-on-error).                           |
+| **Client-first mount** | SPA nav into a boundary with no payload | Render `options.fallback`, fork the rpc call, swap in `render(resource)` once it resolves.                                                           |
+
+Because the SSR path seeds `value` await-first (it emits the seed immediately), the SSR HTML and the adopted DOM are byte-identical — there is **no fallback flash** on the SSR/hydrate path. `fallback` shows only on a client-first mount.
+
+## The `Resource` handle
 
 `render` receives a [`Resource<A>`](../api/core.md#resourcea) (`A` = the rpc's decoded success), not a bare value. After hydrate the region is live:
 
@@ -116,17 +125,6 @@ In a **router-less mount** there is no `AppRpcClientTag`, so a `Boundary.rpc` re
 ```
 
 Wire `refetch` to an event with `onclick: () => resource.refetch` — the handler returns the Effect, which the renderer runs in a detached fiber. A failed refetch leaves the previous `value` intact (stale-on-error); it does **not** unmount the subtree or raise into a failure `Boundary`.
-
-## The four lifecycles
-
-| Lifecycle              | Trigger                                 | What happens                                                                                                                                         |
-| ---------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **SSR**                | server render                           | Resolve the rpc in-process, `successSchema`-encode the result inline as `<script type="application/json">`, render `render(seededResource)` to HTML. |
-| **Hydrate**            | `hydrate` on the client                 | Read the inline payload at the cursor, `successSchema`-decode it, seed the `Resource`, adopt the DOM. **Never re-calls the rpc** (replay).           |
-| **Refetch**            | `resource.refetch`                      | Call the rpc again over `POST /_eui/rpc` (re-runs the handler on the server), patch the subtree in place (stale-on-error).                           |
-| **Client-first mount** | SPA nav into a boundary with no payload | Render `options.fallback`, fork the rpc call, swap in `render(resource)` once it resolves.                                                           |
-
-Because the SSR path seeds `value` await-first (it emits the seed immediately), the SSR HTML and the adopted DOM are byte-identical — there is **no fallback flash** on the SSR/hydrate path. `fallback` shows only on a client-first mount.
 
 ### Channel algebra
 
@@ -154,36 +152,14 @@ Boundary.catchTag({ tag: "OutOfStock", fallback: (e) => h.p({ class: "error" }, 
 
 A transport **defect** (no `Cause.failureOption`), or an rpc with no `error` schema, is **not** replayed; it propagates — a server-side fallback and a client mismatch.
 
-## Migration from `Boundary.server`
-
-| `Boundary.server`                    | `Boundary.rpc`                                    |
-| ------------------------------------ | ------------------------------------------------- |
-| author `id: string`                  | rpc `_tag` (stable identity)                      |
-| `load: () => Effect<A, E, RServer>`  | rpc handler in `group.toLayer(...)` (server-only) |
-| `provide: Layer<RServer>`            | handler Layer's own `Layer.provide`               |
-| `schema` / `failure`                 | rpc `success` / `error` schemas                   |
-| nullary `load` (no params)           | typed `payload: () => Rpc.Payload<R>`             |
-| module registry + `GET /_eui/data`   | rpc handler Layer + `POST /_eui/rpc`              |
-| prune plugin strips `load`/`provide` | tree-shaking (handler never imported by client)   |
-| replay-only (no client refresh)      | refetch + client-first mount supported            |
-
 ## When to use
 
 - **`Boundary.rpc`** — data resolved on the server (behind a server-only service, credential, or private network) and rendered into the initial HTML, then **refreshable** on the client over the same rpc.
 - **`Boundary.suspend`** — async data that loads purely on the client; see the [Boundary API](../api/core.md#boundarysuspend).
 
-## Roadmap
-
-Two `@effect/rpc` capabilities are deferred to follow-on work:
-
-- **Streamed success** (`Rpc.make(..., { stream: true })`) — stream-the-shell-then-fill.
-- **Mutations** — non-GET-style rpcs that change server state.
-
-The contract/handler split already accommodates both; only the renderer/boundary surface for them is unspecified for now.
-
 ## See also
 
 - [`Boundary.rpc` API reference](../api/core.md#boundaryrpc) — signature, `Resource`, `RpcOptions`, `AppRpcClientTag`
-- [Server-side rendering](./server-side-rendering.md) — the SSR + hydration model this builds on
+- [Server-Side Rendering](./server-side-rendering.md) — the SSR + hydration model this builds on
 - [Routing](./routing.md) — `@effect-ui/router`, which provides the `AppRpcClientTag` seam
 - [examples/router-ssr](../../examples/router-ssr) — a runnable shop with an SSR-replayed, refetchable live-stock `Boundary.rpc`
