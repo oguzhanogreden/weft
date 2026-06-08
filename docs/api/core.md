@@ -106,7 +106,7 @@ Labeled({ label: "Name" }, (label) => [h.label(label), h.input()]);
 
 ### `Boundary` namespace
 
-Variants for intercepting rendering-path errors in a subtree, plus `Boundary.suspend` for async fallbacks and `Boundary.server` for server-side data loading. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch. The catch variants share the same call shape — props first, children array second.
+Variants for intercepting rendering-path errors in a subtree, plus `Boundary.suspend` for async fallbacks and `Boundary.rpc` for rpc-backed server data. Each returns a descriptor that the renderer processes via the same `{ type, props }` branch. The catch variants share the same call shape — props first, children array second.
 
 **What is caught:**
 
@@ -135,31 +135,73 @@ Boundary.suspend(
 - Works on both the server (streaming patch model) and the client
 - `hydrate()` sees through `Boundary.suspend` boundaries and adopts resolved DOM in place
 
-#### `Boundary.server`
+#### `Boundary.rpc`
 
-A server-side render boundary: loads data on the **server**, serializes it into the HTML, and **replays** it on the client during hydration without re-running the load. Unlike the other variants it takes a `render` function as its second argument (not a children array).
+A universal server/client render boundary backed by one `Rpc` from the app's merged `RpcGroup` ([`@effect/rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc)). The rpc **tag** is the boundary's stable identity and its **payload schema** the typed input — so there is no hand-rolled `id`, no `provide`, no per-boundary registry, and no bundler prune. The handler lives in the server-only rpc Layer (`group.toLayer(...)`), which the client never imports; tree-shaking does the client/server split structurally. Unlike the catch variants it takes a `render` function — not a children array — and that `render` receives a reactive [`Resource`](#resourcea), not a bare value.
+
+This replaces the former `Boundary.server` (co-located `load`/`provide`/`id` + build-time prune plugin + `GET /_eui/data` registry). See the [rpc data boundaries guide](../guides/rpc-data-boundaries.md) for the full walkthrough and [migration table](../guides/rpc-data-boundaries.md#migration-from-boundaryserver).
 
 ```typescript
-Boundary.server<A, ELoad, RServer, C>(
-  props: {
-    load: () => Effect.Effect<A, ELoad, RServer>;  // server-only thunk; never runs on the client
-    provide?: Layer.Layer<RServer>;                // discharges load's RServer; required when RServer ≠ never
-    schema: Schema.Schema<A, any>;                  // wire contract for the loaded data A
-    failure?: Schema.Schema<ELoad, any>;            // wire contract for a typed load failure; required when ELoad ≠ never
-  },
-  render: (data: A) => C,
-): Node<Node.Error<C> | ELoad, Node.Context<C>>
+Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(
+  rpc: R,                                          // an Rpc from the merged RpcGroup; its _tag + schemas drive the boundary
+  payload: () => Rpc.Payload<R>,                   // thunk: a fresh typed payload per call (SSR / refetch / mount)
+  render: (resource: Resource<Rpc.Success<R>>) => C, // builds the subtree from a reactive Resource (not a bare value)
+  options?: { fallback?: Renderable },             // shown only during a client-first SPA mount
+): Node<Node.Error<C> | Rpc.Error<R>, Node.Context<C>>
 ```
 
-- **On the server:** runs `Effect.provide(load(), provide)` to obtain `data`, `schema`-encodes it, emits it inline as `<script type="application/json">` at the region cursor, then renders `render(data)` to HTML in place.
-- **On the client:** `hydrate` reads the inline payload positionally, `schema`-decodes it, and hydrates `render(data)` against the adopted DOM — it **never runs `load`** and never touches the server-only services `load` reads (replay, not refetch).
-- **Channel algebra:** `RServer` is consumed by `provide`, so it is **absent** from the output requirement channel. The output `R` is exactly `render`'s `R`, untouched (no `Exclude`); the output `E` is `render`'s error union plus `ELoad`.
-- **`provide`** is **required when `load` has requirements** (`RServer ≠ never`) and **omittable when it does not** (defaults to `Layer.empty`). This is the structural guarantee that no un-discharged server requirement escapes into `R`.
-- **`failure`** is **required when `load` can fail** (`ELoad ≠ never`) and omittable otherwise. A typed `load` failure is encoded on the server and **replayed** on the client — decoded and re-raised into the nearest enclosing failure `Boundary`, reproducing the same fallback DOM (replay, never retry). A defect is not replayed.
-- Brand server-only services with [`ServerTag`](#servertag) so referencing one in universal `render` code — or leaking it to `hydrate` — is a compile error.
-- `load`/`provide` statically reference server-only code. The [`@effect-ui/vite`](../guides/server-side-rendering.md#bundle-pruning) prune plugin strips them from the client build so that code tree-shakes away.
+The boundary resolves the rpc through the ambient [`AppRpcClientTag`](#apprpcclienttag) seam, provided by `@effect-ui/router` (`RouterServer` on the server, `RouterLive` on the client). It has four lifecycles:
 
-See the [Server-side rendering guide](../guides/server-side-rendering.md) and [examples/server-boundary](../../examples/server-boundary).
+- **SSR:** the server resolves the rpc in-process (over the handler Layer), `successSchema`-encodes the result inline as `<script type="application/json">` at the region cursor, then renders `render(seededResource)` to HTML in place.
+- **Hydrate:** `hydrate` reads the inline payload positionally, `successSchema`-decodes it, seeds the `Resource`, and adopts the DOM — it **never re-calls the rpc** (replay, not refetch).
+- **Refetch:** `resource.refetch` calls the rpc again over the network (`POST /_eui/rpc`) and patches the subtree in place (**stale-on-error** — a failed refetch leaves the previous value intact).
+- **Client-first mount:** SPA-navigating into a boundary with **no** SSR payload renders `options.fallback`, forks the rpc call, and swaps in `render(resource)` once it resolves.
+
+**Channel algebra:** the output `E` is `render`'s error union plus the rpc's typed `Rpc.Error<R>` (`never` for an rpc with no `error` schema). The output `R` is **exactly** `render`'s `R`, untouched — there is no `provide`/`RServer` to discharge (the handler lives in the rpc Layer) and **no `Exclude`** is applied. A server-only tag accidentally referenced in `render` therefore stays in `R`, where `hydrate`'s `AssertNoServerOnly` rejects it. Brand such services with [`ServerTag`](#servertag).
+
+**Typed-failure replay:** a resolved rpc **error** on the SSR pass is `errorSchema`-encoded and relocated to the nearest enclosing failure `Boundary`, then replayed on the client (decoded and re-raised, reproducing the same fallback DOM — never retried). A transport **defect**, or an rpc with no `error` schema, is not replayed; it propagates.
+
+> **Not yet covered:** streamed success (`Rpc.make(..., { stream: true })`) and mutations are on the roadmap, not this pass.
+
+##### `Resource<A>`
+
+The reactive handle `render` receives (`A = Rpc.Success<R>`). After hydrate the region is live: `value` is seeded with the SSR payload and the client can `refetch` the same data on demand, patching the rendered subtree in place.
+
+| Field     | Type                                        | Meaning                                                                                                                       |
+| --------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `value`   | `Subscribable.Subscribable<A>`              | Current data. Seeded with the SSR `data` (await-first, emits immediately, so SSR HTML and adopted DOM are byte-identical — no fallback flash). A successful refetch pushes the new value. |
+| `refetch` | `Effect.Effect<void>`                       | Re-resolves the rpc over the network with a fresh `payload()` and sets `value`. Client only — a no-op on the server.         |
+| `pending` | `Subscribable.Subscribable<boolean>`        | `true` while a refetch is in flight (`false` on the server / before any refetch).                                            |
+| `error`   | `Subscribable.Subscribable<Option<unknown>>`| `Some` with the last refetch error, else `None`. A failed refetch is stale-on-error — it does **not** unmount or raise into a failure `Boundary`. |
+
+##### `RpcOptions`
+
+```typescript
+interface RpcOptions {
+  readonly fallback?: Renderable; // shown only during a client-first mount; omit/null renders nothing while pending
+}
+```
+
+##### `SERVER_BOUNDARY`
+
+```typescript
+export const SERVER_BOUNDARY: unique symbol;
+```
+
+The descriptor `type` every `Boundary.rpc` carries (`{ type: SERVER_BOUNDARY, props }`). Exported for renderers, which detect and handle the boundary synchronously via the `{ type, props }` branch without running the node.
+
+##### `AppRpcClientTag`
+
+```typescript
+interface AppRpcClient {
+  readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
+}
+class AppRpcClientTag extends Context.Tag("@effect-ui/core/AppRpcClient")<AppRpcClientTag, AppRpcClient>() {}
+```
+
+The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@effect-ui/dom` resolve a boundary without importing `@effect/rpc` or `@effect-ui/router`. `@effect-ui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@effect-ui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
+
+See the [rpc data boundaries guide](../guides/rpc-data-boundaries.md) and [examples/router-ssr](../../examples/router-ssr).
 
 #### `Boundary.catchAll`
 
@@ -262,7 +304,7 @@ Boundary.catchAll({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
 
 ## ServerTag
 
-A `Context.Tag` whose identifier is branded server-only. Use it exactly like `Context.Tag` for services that must only ever be provided on the server — e.g. a database handle read inside a [`Boundary.server`](#boundaryserver) `load`.
+A `Context.Tag` whose identifier is branded server-only. Use it exactly like `Context.Tag` for services that must only ever be provided on the server — e.g. a database handle read inside an rpc handler Layer. The brand also guards [`Boundary.rpc`](#boundaryrpc): a server-only tag accidentally referenced in `render` stays in the requirement channel, where `hydrate`'s `AssertNoServerOnly` rejects it at compile time.
 
 ```typescript
 import { ServerTag } from "@effect-ui/core";
@@ -275,7 +317,7 @@ class Database extends ServerTag("Database")<
 ```
 
 - The server-only brand rides along in the requirement channel `R` of any effect that uses the tag.
-- `Boundary.server`'s `provide` discharges it on the server, so it never enters the boundary's output `R`.
+- An rpc handler Layer (`group.toLayer(...)`) discharges it on the server, where it is provided; it never enters a [`Boundary.rpc`](#boundaryrpc)'s output `R`, since `render` only reads the decoded result.
 - If a branded tag ever reaches client code — referenced in `render` and surviving into `hydrate`'s requirement channel — `AssertNoServerOnly` resolves `R` to a compile-error sentinel (`ServerOnlyLeak`) at the `hydrate` call site, rather than failing silently at runtime.
 
 `ServerOnly`, `ServerOnlyLeak`, and `AssertNoServerOnly<R>` are exported alongside `ServerTag` for advanced typing; most code only needs `ServerTag` itself.

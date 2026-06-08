@@ -139,27 +139,29 @@ See [examples/error-boundary](../../examples/error-boundary) for a runnable demo
 
 ## Server-side rendering
 
-Render on the server and hydrate on the client with `@effect-ui/dom/server` + `hydrate`. `Boundary.server` loads data on the server, serializes it into the HTML, and replays it on the client without re-running the load:
+Render on the server and hydrate on the client with `@effect-ui/dom/server` + `hydrate`. `Boundary.rpc` resolves an rpc on the server, serializes its result into the HTML, replays it on the client without a second request, then keeps the region live for refetch:
 
 ```typescript
 import { Boundary, h } from "@effect-ui/core";
-import { Layer, Schema } from "effect";
+import { Stream } from "effect";
+import { GetStock } from "./data/inventory";
 
-const ProductPage = () =>
-  Boundary.server(
-    { load: () => fetchProduct(), provide: Layer.empty, schema: ProductSchema },
-    (product) => h.div(product.name),
+const StockPanel = (id: number) =>
+  Boundary.rpc(
+    GetStock,
+    () => ({ id }),
+    (resource) => h.span([Stream.map(resource.value.changes, (s) => String(s.units))]),
   );
 ```
 
-See the [Server-side rendering guide](./server-side-rendering.md) for the full model, typed-failure replay, `ServerTag`, and bundle pruning.
+See the [rpc data boundaries guide](./rpc-data-boundaries.md) for the full model — the contract/handler split, router wiring, the four lifecycles, and typed-failure replay.
 
 ## Next steps
 
 - [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
 - [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
 - [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
-- [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, `Boundary.server`, and the `@effect-ui/vite` prune plugin
+- [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
 - [Routing](./routing.md) — universal nested routing with `@effect-ui/router`
 - [`@effect-ui/core` API Reference](../api/core.md) and [`@effect-ui/router` API Reference](../api/router.md)
 - [examples/](../../examples/) — runnable examples covering common patterns

@@ -13,7 +13,7 @@ npm install @effect-ui/router
 
 ## The mental model
 
-A route's **component is its handler**. There is no separate loader or per-route data schema — a page is just a component that renders. Server-only data stays with [`Boundary.server`](./server-side-rendering.md); client-side async stays with `Boundary.suspend`.
+A route's **component is its handler**. There is no separate loader or per-route data schema — a page is just a component that renders. Server-resolved data stays with [`Boundary.rpc`](./rpc-data-boundaries.md); client-side async stays with `Boundary.suspend`.
 
 You author an **explicit nested route tree** with three namespaced combinators — mirroring the `h.div` / `Component.gen` / `Boundary.catchTag` surface — and seal it once:
 
@@ -273,16 +273,17 @@ The tree is the authoring surface, but `@effect/platform`'s `HttpApi` is the **s
 | `RouterNotFound`    | `notFound()`, or no route matched                                     | `Boundary.catchTag("RouterNotFound", …)` (or the app-level `notFound` page) |
 | `RouterParamsError` | `Router.params` / `Router.query` on a missing/invalid key or no match | `Boundary.catchTag("RouterParamsError", …)`                                 |
 
-Both are modeled as `Schema.TaggedError`, so they encode/decode across the wire the same way `Boundary.server` replays typed failures.
+Both are modeled as `Schema.TaggedError`, so they encode/decode across the wire the same way `Boundary.rpc` replays typed failures.
 
-## `Boundary.server` interplay
+## `Boundary.rpc` interplay
 
-Initial SSR navigation works end to end: the server renders and inlines the `Boundary.server` payload, and the client replays it during `hydrate`. **Client-side** navigation to a page containing `Boundary.server` has no server payload — it surfaces via the recoverable hydration path. For post-navigation data, prefer `Boundary.suspend`. Server-data-on-client-navigation is out of v1 scope, consistent with `Boundary.server` being replay-only.
+Initial SSR navigation works end to end: the server resolves the rpc and inlines its payload, and the client replays it during `hydrate`. **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount** — it renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result. `@effect-ui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server), so the same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./rpc-data-boundaries.md).
 
 ## See also
 
 - [`@effect-ui/router` API reference](../api/router.md)
 - [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `@effect/platform` spine
 - [Component Authoring](./component-authoring.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
-- [Server-Side Rendering](./server-side-rendering.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.server`
+- [Server-Side Rendering](./server-side-rendering.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
+- [RPC Data Boundaries](./rpc-data-boundaries.md) — `Boundary.rpc`, the `Resource` handle, and the four lifecycles
 - [`packages/router/router.specs.md`](../../packages/router/router.specs.md) — the full specification
