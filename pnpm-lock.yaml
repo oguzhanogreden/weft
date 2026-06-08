@@ -9,6 +9,9 @@ catalogs:
     '@effect/platform':
       specifier: ^0.96.1
       version: 0.96.1
+    '@effect/rpc':
+      specifier: ^0.75.1
+      version: 0.75.1
     effect:
       specifier: ^3.21.2
       version: 3.21.2
@@ -239,35 +242,13 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.2)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
       effect:
         specifier: 'catalog:'
         version: 3.21.2
     devDependencies:
-      '@types/node':
-        specifier: ^25.9.1
-        version: 25.9.1
-      tsx:
-        specifier: ^4.22.3
-        version: 4.22.3
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.1.24(@types/node@25.9.1)(esbuild@0.28.0)(jsdom@29.1.1)(tsx@4.22.3)(typescript@6.0.3)(vite@7.3.3(@types/node@25.9.1)(lightningcss@1.32.0)(tsx@4.22.3))
-
-  examples/server-boundary:
-    dependencies:
-      '@effect-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@effect-ui/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
-      effect:
-        specifier: 'catalog:'
-        version: 3.21.2
-    devDependencies:
-      '@effect-ui/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
@@ -365,6 +346,9 @@ importers:
 
   packages/core:
     devDependencies:
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
@@ -390,6 +374,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
       '@types/jsdom':
         specifier: ^28.0.3
         version: 28.0.3
@@ -423,6 +410,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.2)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
     devDependencies:
       '@types/jsdom':
         specifier: ^28.0.3
@@ -448,9 +438,6 @@ importers:
 
   packages/vite:
     dependencies:
-      magic-string:
-        specifier: ^0.30.17
-        version: 0.30.21
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@latest
         version: '@voidzero-dev/vite-plus-core@0.1.24(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.3)(typescript@6.0.3)'
@@ -559,6 +546,12 @@ packages:
   '@effect/platform@0.96.1':
     resolution: {integrity: sha512-cjB1QZZYEP8JXCFNGvBLVi0T6YUBQTmOVEUA3SDbiQ6RUO+p6CE3eyD2vMWmrz5nE8yY5QSAuOV9v0boEcUv+A==}
     peerDependencies:
+      effect: ^3.21.2
+
+  '@effect/rpc@0.75.1':
+    resolution: {integrity: sha512-8yxF8+mMGGEbF8BUCp34HjdJj7CvTpGeZxBcpsDF6v7zPiGbJL1UDLzA8ZqYjmcngBHhPecbmeONTk/LiLAaEg==}
+    peerDependencies:
+      '@effect/platform': ^0.96.1
       effect: ^3.21.2
 
   '@esbuild/aix-ppc64@0.27.7':
@@ -885,9 +878,6 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
-
-  '@jridgewell/sourcemap-codec@1.5.5':
-    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
@@ -2235,9 +2225,6 @@ packages:
     resolution: {integrity: sha512-NxVFwLAnrd9i7KUBxC4DrUhmgjzOs+1Qm50D3oF1/oL+r1NpZ4gA7xvG0/zJ8evR7zIKn4vLf7qTNduWFtCrRw==}
     engines: {node: 20 || >=22}
 
-  magic-string@0.30.21:
-    resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
-
   make-asynchronous@1.0.1:
     resolution: {integrity: sha512-T9BPOmEOhp6SmV25SwLVcHK4E6JyG/coH3C6F1NjNXSziv/fd4GmsqMk8YR6qpPOswfaOCApSNkZv6fxoaYFcQ==}
     engines: {node: '>=18'}
@@ -3141,6 +3128,12 @@ snapshots:
       msgpackr: 1.11.12
       multipasta: 0.2.7
 
+  '@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)':
+    dependencies:
+      '@effect/platform': 0.96.1(effect@3.21.2)
+      effect: 3.21.2
+      msgpackr: 1.11.12
+
   '@esbuild/aix-ppc64@0.27.7':
     optional: true
 
@@ -3300,8 +3293,6 @@ snapshots:
   '@exodus/bytes@1.15.1': {}
 
   '@fastify/busboy@2.1.1': {}
-
-  '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
@@ -4446,10 +4437,6 @@ snapshots:
   lru-cache@10.4.3: {}
 
   lru-cache@11.3.5: {}
-
-  magic-string@0.30.21:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
 
   make-asynchronous@1.0.1:
     dependencies:

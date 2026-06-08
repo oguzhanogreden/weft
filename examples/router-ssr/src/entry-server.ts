@@ -18,6 +18,10 @@ import { Router } from "@effect-ui/router";
 import { RouterServer } from "@effect-ui/router/server";
 import { Effect } from "effect";
 import { App } from "./app";
+import { StockLive, StockRpcs } from "./data/inventory";
+
+/** The app's `Boundary.rpc` foundation: the shared contract + its server handlers. */
+const rpc = { group: StockRpcs, handlers: StockLive } as const;
 
 /**
  * The document shell `component` thunk. Splices the app via `yield* Router.Outlet`
@@ -30,7 +34,7 @@ export const documentShell = Component.gen(function* () {
     h.head([
       h.meta({ charset: "utf-8" }),
       h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
-      h.title("effect-ui — router SSR"),
+      h.title("effect-ui shop — router SSR"),
     ]),
     h.body([
       h.div({ id: "root" }, [app]),
@@ -41,7 +45,7 @@ export const documentShell = Component.gen(function* () {
 
 /** Renders `url` to `{ html, status }`. */
 export const render = (url: string): Promise<{ html: string; status: number }> =>
-  Effect.runPromise(RouterServer.render(App, { document: documentShell, url }));
+  Effect.runPromise(RouterServer.render(App, { document: documentShell, rpc, url }));
 
 /** A Web `fetch`-style handler rendering the matched route to `text/html`. */
-export const handler = RouterServer.toWebHandler(App, { document: documentShell });
+export const handler = RouterServer.toWebHandler(App, { document: documentShell, rpc });

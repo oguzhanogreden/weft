@@ -1,4 +1,5 @@
 import {
+  AppRpcClientTag,
   Boundary,
   FAILURE_BOUNDARY,
   FRAGMENT,
@@ -10,7 +11,18 @@ import {
   type Renderable,
 } from "@effect-ui/core";
 import { getElementDescriptor, isStream, toStream } from "@effect-ui/core";
-import { Cause, Effect, Exit, type Layer, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
+import {
+  Cause,
+  Effect,
+  Exit,
+  Option,
+  Queue,
+  Ref,
+  Schema,
+  Scope,
+  Stream,
+  Subscribable,
+} from "effect";
 import {
   listItemEndText,
   listItemStartText,
@@ -137,8 +149,8 @@ function buildPatch(id: number, html: string): string {
 function renderSuspenseSSRInline(
   props: Boundary.SuspenseProps & { children?: Renderable },
   ctx: ServerSuspenseCtx,
-  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
-): Stream.Stream<string, Error> {
+  renderFn: (node: Renderable) => Stream.Stream<string, Error, AppRpcClientTag>,
+): Stream.Stream<string, Error, AppRpcClientTag> {
   return Stream.unwrap(
     Effect.gen(function* () {
       const id = ++ctx.idCounter.current;
@@ -213,8 +225,8 @@ function renderSuspenseSSRInline(
 function renderBoundarySSR(
   props: Boundary.FailureProps & { children: Renderable[] },
   failureCollector: FailureCollector | null,
-  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
-): Stream.Stream<string, Error> {
+  renderFn: (node: Renderable) => Stream.Stream<string, Error, AppRpcClientTag>,
+): Stream.Stream<string, Error, AppRpcClientTag> {
   const childrenNode = (
     props.children.length === 0
       ? null
@@ -237,7 +249,7 @@ function renderBoundarySSR(
             if (failureCollector === null) return fallbackHtml;
 
             // Drain the relocation slot: if this cause came from a server
-            // boundary's load, prepend its encoded failure payload.
+            // boundary's rpc call, prepend its encoded failure payload.
             const stashed = yield* Ref.getAndSet(failureCollector, Option.none());
             if (Option.isNone(stashed)) return fallbackHtml;
 
@@ -258,47 +270,45 @@ function renderBoundarySSR(
 // ============================================================================
 
 /**
- * Descriptor props carried by a `Boundary.server` node. The server renderer runs
- * `load` (with its requirements discharged by `provide`) to obtain `data`,
- * encodes it through `schema`, and renders `render(data)` in place. `load`'s
- * error is typed as `Error` here because the renderer's stream error channel is
- * `Error`; a `load` failure propagates as a stream failure (caught by the
- * nearest enclosing failure `Boundary`).
+ * Descriptor props carried by a `Boundary.rpc` node. The server renderer resolves
+ * the rpc through the ambient {@link AppRpcClientTag} (an in-process client over
+ * the handler Layer) by calling `call(tag, payload())`, encodes the success
+ * through `successSchema`, and renders `render(data)` in place. A resolved rpc
+ * **error** is encoded through `errorSchema` for the typed-failure replay and
+ * re-raised as a stream failure (caught by the nearest enclosing failure
+ * `Boundary`).
  */
 interface ServerBoundarySSRProps {
-  readonly load: () => Effect.Effect<unknown, Error, unknown>;
-  readonly provide: Layer.Layer<unknown, never, never>;
-  readonly schema: Schema.Schema<unknown, unknown>;
-  readonly render: (data: unknown) => Renderable;
-  /**
-   * Wire contract for a typed `load` failure (typed-failure replay). Present when
-   * `ELoad ≠ never`; used to `Schema.encode` the error for the failure payload.
-   */
-  readonly failure?: Schema.Schema<unknown, unknown>;
+  readonly tag: string;
+  readonly payload: () => unknown;
+  readonly successSchema: Schema.Schema<unknown, unknown>;
+  readonly errorSchema: Schema.Schema<unknown, unknown>;
+  readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
 }
 
 /**
- * On a `load` **failure** during a hydratable pass, `Schema.encode`s the typed
- * error via `props.failure` and stashes `{ owner, encoded }` in `failureCollector`
- * for the enclosing failure `Boundary` to relocate, then re-fails the **original**
- * cause so `match` still sees it unchanged. No-ops (re-fails unchanged) on the
- * plain passes (`failureCollector === null`), when no `failure` schema is present,
- * on a defect (no `Cause.failureOption`), or if the encode itself fails — all of
- * which fall back to v1 behaviour (server fallback, client mismatch).
+ * On an rpc **failure** during a hydratable pass, `Schema.encode`s the resolved
+ * error via `props.errorSchema` and stashes `{ owner, encoded }` in
+ * `failureCollector` for the enclosing failure `Boundary` to relocate, then
+ * re-fails the **original** cause so `match` still sees it unchanged. No-ops
+ * (re-fails unchanged) on the plain passes (`failureCollector === null`), on a
+ * defect (no `Cause.failureOption`), or if the encode itself fails (e.g. a
+ * transport defect against an rpc with no `error` schema, where `errorSchema` is
+ * `Never`) — all of which fall back to a server fallback + client mismatch.
  */
 function stashServerBoundaryFailure(
   props: ServerBoundarySSRProps,
   failureCollector: FailureCollector | null,
   cause: Cause.Cause<Error>,
 ): Effect.Effect<never, Error> {
-  if (failureCollector === null || props.failure === undefined) {
+  if (failureCollector === null) {
     return Effect.failCause(cause);
   }
   const error = Cause.failureOption(cause);
   if (Option.isNone(error)) {
     return Effect.failCause(cause);
   }
-  return Schema.encode(props.failure)(error.value).pipe(
+  return Schema.encode(props.errorSchema)(error.value).pipe(
     Effect.flatMap((encoded) => Ref.set(failureCollector, Option.some({ owner: props, encoded }))),
     // Whether the encode succeeds or fails, re-raise the original cause so the
     // enclosing boundary's `match` sees the unchanged failure.
@@ -310,9 +320,31 @@ function stashServerBoundaryFailure(
 }
 
 /**
- * Renders a `Boundary.server` descriptor for SSR (success path). Runs
- * `Effect.provide(load(), provide)` to obtain `data` — the region **blocks** on
- * it, like `firstListEmission` — then renders `render(data)` HTML in place.
+ * Builds the **static-seeded** {@link Boundary.Resource} handed to `render` on the
+ * server. `value` is a static `Subscribable` around the loaded `data` (await-first
+ * `get` and a single-emission `changes`), so the reactive-child render seam takes
+ * `data` as its first emission and the SSR HTML is byte-identical to the hydrated
+ * DOM. `refetch` is a no-op (the server is the data origin, not a client), `pending`
+ * is constant `false`, and `error` is constant `None`.
+ */
+function staticResource(data: unknown): Boundary.Resource<unknown> {
+  return {
+    value: Subscribable.make({ get: Effect.succeed(data), changes: Stream.make(data) }),
+    refetch: Effect.void,
+    pending: Subscribable.make({ get: Effect.succeed(false), changes: Stream.make(false) }),
+    error: Subscribable.make({
+      get: Effect.succeed(Option.none()),
+      changes: Stream.make(Option.none()),
+    }),
+  };
+}
+
+/**
+ * Renders a `Boundary.rpc` descriptor for SSR (success path). Resolves the rpc
+ * through the ambient {@link AppRpcClientTag} via `call(tag, payload())` — the
+ * region **blocks** on it, like `firstListEmission` — then renders `render(data)`
+ * HTML in place. `call` returns the already-decoded success value (the in-process
+ * client over the handler Layer does the decoding).
  *
  * When `emitPayload` is `true` (the hydratable passes), the encoded `data` is
  * emitted inline as a `<script type="application/json">…</script>` at the region
@@ -328,21 +360,26 @@ function renderServerBoundarySSR(
   props: ServerBoundarySSRProps,
   emitPayload: boolean,
   failureCollector: FailureCollector | null,
-  renderFn: (node: Renderable) => Stream.Stream<string, Error>,
-): Stream.Stream<string, Error> {
+  renderFn: (node: Renderable) => Stream.Stream<string, Error, AppRpcClientTag>,
+): Stream.Stream<string, Error, AppRpcClientTag> {
   return Stream.unwrap(
     Effect.gen(function* () {
-      // A typed `load` failure is stashed for the enclosing failure boundary to
+      const client = yield* AppRpcClientTag;
+      // A resolved rpc failure is stashed for the enclosing failure boundary to
       // replay (hydratable pass only); the original cause is then re-raised so it
-      // still propagates to `match` as before.
-      const data = yield* Effect.provide(props.load(), props.provide).pipe(
+      // still propagates to `match` as before. The rpc seam's error channel is
+      // `unknown`; the renderer's stream channel is `Error`, so the cause is cast
+      // — `match`/encode inspect the failure value untyped, never as an `Error`.
+      const data = yield* (
+        client.call(props.tag, props.payload()) as Effect.Effect<unknown, Error>
+      ).pipe(
         Effect.catchAllCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
       );
-      const childrenHtml = renderFn(props.render(data));
+      const childrenHtml = renderFn(props.render(staticResource(data)));
       if (!emitPayload) {
         return childrenHtml;
       }
-      const encoded = yield* Schema.encode(props.schema)(data);
+      const encoded = yield* Schema.encode(props.successSchema)(data);
       const payload = `<script type="application/json">${serializeJsonForScript(encoded)}</script>`;
       return Stream.make(payload).pipe(Stream.concat(childrenHtml));
     }),
@@ -385,7 +422,7 @@ function firstListEmission(
 function renderSSRNode(
   node: Renderable,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   if (node == null || typeof node === "boolean") return Stream.empty;
 
   if (typeof node === "string" || typeof node === "number" || typeof node === "bigint") {
@@ -496,11 +533,11 @@ function renderSSRNode(
 function listToSSR(
   props: ListSSRProps,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   return Stream.unwrap(
     Effect.gen(function* () {
       const items = yield* firstListEmission(props.of);
-      let inner: Stream.Stream<string, Error> = Stream.empty;
+      let inner: Stream.Stream<string, Error, AppRpcClientTag> = Stream.empty;
       items.forEach((item, index) => {
         inner = inner.pipe(Stream.concat(renderSSRNode(props.render(item, index), ctx)));
       });
@@ -512,7 +549,7 @@ function listToSSR(
 function fragmentToSSR(
   props: Record<string, unknown>,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   const children = "children" in props ? props.children : undefined;
   if (children == null) return Stream.empty;
   const arr = Array.isArray(children) ? children : [children];
@@ -529,7 +566,7 @@ function renderHydratableSSRNode(
   node: Renderable,
   counter: RegionCounter,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   if (node == null || typeof node === "boolean") return Stream.empty;
 
   if (typeof node === "string" || typeof node === "number" || typeof node === "bigint") {
@@ -657,12 +694,12 @@ function listToHydratableSSR(
   props: ListSSRProps,
   counter: RegionCounter,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   return Stream.unwrap(
     Effect.gen(function* () {
       const regionId = ++counter.current;
       const items = yield* firstListEmission(props.of);
-      let inner: Stream.Stream<string, Error> = Stream.empty;
+      let inner: Stream.Stream<string, Error, AppRpcClientTag> = Stream.empty;
       items.forEach((item, index) => {
         const itemId = ++counter.current;
         inner = inner.pipe(
@@ -683,7 +720,7 @@ function fragmentToHydratableSSR(
   props: Record<string, unknown>,
   counter: RegionCounter,
   ctx: ServerSuspenseCtx | null,
-): Stream.Stream<string, Error> {
+): Stream.Stream<string, Error, AppRpcClientTag> {
   const children = "children" in props ? props.children : undefined;
   if (children == null) return Stream.empty;
   const arr = Array.isArray(children) ? children : [children];
@@ -703,8 +740,9 @@ function fragmentToHydratableSSR(
  *
  * @internal
  */
-export const renderToStreamFallbackOnly = (node: Renderable): Stream.Stream<string, Error> =>
-  renderSSRNode(node, null);
+export const renderToStreamFallbackOnly = (
+  node: Renderable,
+): Stream.Stream<string, Error, AppRpcClientTag> => renderSSRNode(node, null);
 
 /**
  * Progressively serializes an Effect-infused JSX tree (`Renderable`) into a stream
@@ -716,7 +754,7 @@ export const renderToStreamFallbackOnly = (node: Renderable): Stream.Stream<stri
  * document structure as each boundary resolves. The stream terminates only
  * after all pending boundaries have emitted their patch.
  */
-export const renderToStream = (node: Renderable): Stream.Stream<string, Error> =>
+export const renderToStream = (node: Renderable): Stream.Stream<string, Error, AppRpcClientTag> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<string>();
@@ -753,7 +791,9 @@ export const renderToStream = (node: Renderable): Stream.Stream<string, Error> =
  * so the client `hydrate` can locate reactive regions. Suspense streaming
  * patches include these markers in the resolved children HTML (AC-SS3).
  */
-export const renderToStreamHydratable = (node: Renderable): Stream.Stream<string, Error> =>
+export const renderToStreamHydratable = (
+  node: Renderable,
+): Stream.Stream<string, Error, AppRpcClientTag> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<string>();

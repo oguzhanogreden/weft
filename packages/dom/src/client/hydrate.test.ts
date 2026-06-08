@@ -5,8 +5,18 @@ import { describe, it } from "vite-plus/test";
 import { h } from "@effect-ui/core";
 import { HydrationMismatchError } from "~/data";
 import { hydrate } from "./render";
-import { renderToString, renderToStringHydratable } from "~/server";
+import {
+  renderToString as _renderToString,
+  renderToStringHydratable as _renderToStringHydratable,
+} from "~/server";
 import type { Renderable } from "@effect-ui/core/types";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// These trees contain no `Boundary.rpc`; shadow the SSR fns with the no-op `NoRpc`
+// layer pre-provided (they require an AppRpcClientTag unconditionally).
+const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
+const renderToStringHydratable = (n: Renderable) =>
+  Effect.provide(_renderToStringHydratable(n), NoRpc);
 
 // ============================================================================
 // Test setup

@@ -1,5 +1,5 @@
 import { Effect, Runtime, type Scope } from "effect";
-import type { Compiled } from "../compile";
+import type { RouterDef } from "../compile";
 import { match } from "../matcher";
 
 /**
@@ -11,11 +11,11 @@ import { match } from "../matcher";
  * browser's native handling — the interceptor leaves `preventDefault` untouched
  * in those cases (L2). The listener is removed on scope teardown (L3).
  *
- * @param compiled - The compiled tree, used to decide whether an href matches a route.
+ * @param def - The router definition, used to decide whether an href matches a route.
  * @param navigate - The router's `navigate`, run via the captured runtime on a match.
  */
 export function installLinkInterceptor(
-  compiled: Compiled,
+  def: RouterDef,
   navigate: (to: string) => Effect.Effect<void>,
 ): Effect.Effect<void, never, Scope.Scope> {
   return Effect.gen(function* () {
@@ -70,7 +70,7 @@ export function installLinkInterceptor(
       if (to === current) return;
 
       // L2: only intercept hrefs that resolve to a route; let others load fully.
-      if (match(compiled, to)._tag !== "Matched") return;
+      if (match(def, to)._tag !== "Matched") return;
 
       event.preventDefault();
       Runtime.runFork(runtime)(navigate(to));

@@ -7,12 +7,12 @@ import {
   SERVER_BOUNDARY,
   SUSPENSE_BOUNDARY,
 } from "@effect-ui/core";
-import type { ElementDescriptor, Renderable } from "@effect-ui/core";
+import type { Boundary, ElementDescriptor, Renderable } from "@effect-ui/core";
 import { Effect, type Schema } from "effect";
 
 /**
  * Marker attribute on the inline `<script type="application/json">` that carries
- * an encoded `Boundary.server` **load failure** (as opposed to a success
+ * an encoded `Boundary.rpc` **rpc failure** (as opposed to a success
  * payload, which is the same `<script>` with no attribute). The server emits it
  * on the enclosing failure `Boundary`, before the fallback HTML; the client
  * `hydrate` recognises it to replay the typed failure. Shared so server and
@@ -21,8 +21,8 @@ import { Effect, type Schema } from "effect";
 export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
 
 /**
- * The fields of a `Boundary.server` descriptor's `props` that the typed-failure
- * replay path needs: `failure` (to decode the encoded `load` error on the
+ * The fields of a `Boundary.rpc` descriptor's `props` that the typed-failure
+ * replay path needs: `errorSchema` (to decode the encoded rpc error on the
  * client) plus the success-replay fields. Both the server SSR props and the
  * client hydrate props are structurally assignable to this, and the server
  * matches an entry by **reference identity** against the failing boundary's
@@ -30,16 +30,16 @@ export const BOUNDARY_FAILURE_ATTR = "data-eui-boundary-failure";
  * objects (not copies).
  */
 export interface ServerBoundaryReplayProps {
-  readonly schema: Schema.Schema<unknown, unknown>;
-  readonly render: (data: unknown) => Renderable;
-  readonly failure?: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Schema<unknown, unknown>;
+  readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
+  readonly errorSchema: Schema.Schema<unknown, unknown>;
 }
 
 /**
  * Single pre-order traversal collecting every **statically reachable**
- * `Boundary.server` descriptor's `props` within `children`, in document order.
+ * `Boundary.rpc` descriptor's `props` within `children`, in document order.
  * Imported by **both** the server SSR (to compute a failing boundary's index)
- * and the client `hydrate` (to locate the index-th boundary's `failure` schema),
+ * and the client `hydrate` (to locate the index-th boundary's `errorSchema`),
  * so the index is computed identically on both sides — the same positional
  * determinism the renderers already rely on.
  *
@@ -48,10 +48,10 @@ export interface ServerBoundaryReplayProps {
  *   boundaries, string-element children, and **function components** (called with
  *   their props, like the renderers do), and static-markup nodes carrying an
  *   {@link ElementDescriptor}.
- * - **Does not descend** into another `Boundary.server`'s `render` output (it is
- *   data-dependent — only produced once `load` resolves) or a `List.each`
+ * - **Does not descend** into another `Boundary.rpc`'s `render` output (it is
+ *   data-dependent — only produced once the rpc resolves) or a `List.each`
  *   projection (also data-dependent), and stops at a genuinely reactive
- *   `Effect`/`Stream` child with no static descriptor. A `Boundary.server` that
+ *   `Effect`/`Stream` child with no static descriptor. A `Boundary.rpc` that
  *   is only reachable through one of those is therefore **not** indexed; a
  *   failure under it degrades to a recoverable hydration mismatch.
  */

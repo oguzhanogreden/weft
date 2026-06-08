@@ -3,8 +3,19 @@ import { Boundary, h } from "@effect-ui/core";
 import type { Renderable } from "@effect-ui/core/types";
 import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
-import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
-import { renderToString } from "./render-to-string";
+import {
+  renderToStream as _renderToStream,
+  renderToStreamHydratable as _renderToStreamHydratable,
+} from "./render-to-stream";
+import { renderToString as _renderToString } from "./render-to-string";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// These tests render boundary-free trees; the render fns require an AppRpcClientTag
+// unconditionally, so shadow them with the no-op `NoRpc` layer pre-provided.
+const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStreamHydratable = (n: Renderable) =>
+  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 const run = (node: Renderable) => Effect.runPromise(Stream.mkString(renderToStream(node)));
 

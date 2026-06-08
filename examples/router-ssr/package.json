@@ -8,6 +8,7 @@
     "@effect-ui/dom": "workspace:*",
     "@effect-ui/router": "workspace:*",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

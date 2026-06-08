@@ -1,6 +1,10 @@
-import { Cause, type Effect, Layer, Option, type Schema } from "effect";
+import { Cause, type Effect, Option, type Subscribable } from "effect";
+import type { Rpc } from "@effect/rpc";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
+
+export { AppRpcClientTag } from "./rpc-client";
+export type { AppRpcClient } from "./rpc-client";
 
 /**
  * Unique type tag used by renderers to identify a failure `Boundary` descriptor.
@@ -16,7 +20,7 @@ export const SUSPENSE_BOUNDARY: unique symbol = Symbol.for("effect-ui/SUSPENSE_B
 
 /**
  * Unique type tag used by renderers to identify a server `Boundary` descriptor.
- * Every `Boundary.server` embeds this symbol as `type` in the returned descriptor.
+ * Every `Boundary.rpc` embeds this symbol as `type` in the returned descriptor.
  */
 export const SERVER_BOUNDARY: unique symbol = Symbol.for("effect-ui/SERVER_BOUNDARY");
 
@@ -256,100 +260,124 @@ export namespace Boundary {
   }
 
   /**
-   * Props for the {@link server} boundary — read by the server renderer to run
-   * `load`, by both renderers to encode/decode through `schema`, and (via
-   * `render`) to build the subtree from the loaded data.
+   * Reactive handle handed to a {@link rpc} boundary's `render`. After
+   * hydrate the region is no longer inert: `value` is seeded with the SSR
+   * payload and the client can {@link Resource.refetch} the same data on demand,
+   * patching the rendered subtree in place via the renderer's existing
+   * reactive-child machinery.
    *
-   * @typeParam A - The loaded data shape, shared by `load`, `schema`, and `render`.
-   * @typeParam ELoad - Typed failures `load` may produce (server-side only in v1).
-   * @typeParam RServer - Server-only requirements of `load`, discharged by `provide`.
+   * On the **server** and on the **first client paint after hydrate** `value`
+   * emits the SSR `data` first (await-first), so SSR HTML and the adopted DOM are
+   * byte-identical — no fallback flash.
+   *
+   * @typeParam A - The loaded data shape.
    */
-  export interface ServerProps<A, ELoad, RServer> {
+  export interface Resource<A> {
     /**
-     * Thunk producing the server `load` effect. Deferred so it is constructed and
-     * run **only on the server** — never during client `hydrate`.
+     * The current data. Seeded with the SSR `data`; a successful refetch pushes
+     * the new value here so the subtree patches in place.
      */
-    readonly load: () => Effect.Effect<A, ELoad, RServer>;
+    readonly value: Subscribable.Subscribable<A>;
     /**
-     * Discharges `load`'s server-only requirements `RServer` at construction: the
-     * structural guarantee that no un-discharged server dependency escapes into
-     * the boundary's requirement channel `R`. **Required whenever `load` has
-     * requirements (`RServer ≠ never`)** — enforced on the {@link server}
-     * signature — and **omittable when `RServer` is `never`** (it defaults to
-     * `Layer.empty`, so a dependency-free `load` need not pass `provide`).
+     * Triggers an rpc-backed reload (client only; a no-op on the server). Calls
+     * {@link AppRpcClient.call} with the boundary's rpc `tag` and a fresh
+     * `payload()`, then sets {@link Resource.value} with the decoded success.
      */
-    readonly provide?: Layer.Layer<RServer>;
+    readonly refetch: Effect.Effect<void>;
+    /** `true` while a refetch is in flight (`false` on the server / before any refetch). */
+    readonly pending: Subscribable.Subscribable<boolean>;
     /**
-     * Wire contract for `A`: `Schema.encode`d to JSON on the server (emitted
-     * inline) and `Schema.decode`d from that JSON on the client during `hydrate`.
+     * `Some` with the last refetch error, else `None`. A failed refetch leaves
+     * the previous `value` intact (stale-on-error) — it does **not** unmount the
+     * subtree or raise into an enclosing failure `Boundary`.
      */
-    readonly schema: Schema.Schema<A, any>;
-    /**
-     * Wire contract for a `load` **failure**: a typed `ELoad` error is
-     * `Schema.encode`d on the server (into the inline failure payload) and
-     * `Schema.decode`d + re-raised on the client during `hydrate`, so the same
-     * enclosing failure `Boundary` reproduces the same fallback. **Required when
-     * `ELoad ≠ never`** (enforced on the {@link server} signature); omittable when
-     * `load` cannot fail. Replays the failure, never retries `load`.
-     */
-    readonly failure?: Schema.Schema<ELoad, any>;
+    readonly error: Subscribable.Subscribable<Option.Option<unknown>>;
   }
 
   /**
-   * Creates a server render boundary.
+   * Options for the {@link rpc} boundary.
+   */
+  export interface RpcOptions {
+    /**
+     * Shown between the boundary's comment markers while a **client-first** mount
+     * (no SSR payload present) resolves the rpc. Unused on the SSR/hydrate path,
+     * where the seeded payload renders directly with no fallback flash. Pass
+     * `null` or omit to render nothing while pending.
+     */
+    readonly fallback?: Renderable;
+  }
+
+  /**
+   * Creates an rpc-backed server render boundary.
    *
-   * On the server, the renderer runs `Effect.provide(load(), provide)` to obtain
-   * `data: A` (blocking on it), encodes it through `schema` and emits the result
-   * inline as a `<script type="application/json">` payload (hydratable pass only),
-   * then renders `render(data)` to HTML in place. On the client, `hydrate` **does
-   * not run `load`**: it reads the inline payload at the cursor, decodes it through
-   * `schema`, and hydrates `render(data)` against the adopted DOM — replaying the
-   * server result, never retrying.
+   * The boundary is a thin consumer of one `Rpc` from the application's merged
+   * `RpcGroup`. Its data source is the ambient {@link AppRpcClient}: there is no
+   * co-located `load`, no `provide`, no per-boundary `id`/registry — the rpc
+   * **tag** is the stable identity and the rpc **payload schema** is the typed
+   * input. The handler lives in the server-only rpc Layer, so nothing here needs a
+   * bundler prune.
    *
-   * `provide` discharges `load`'s server-only requirements `RServer`, so they
-   * never enter the output requirement channel `R` (which is exactly `render`'s
-   * `R`, untouched — no `Exclude`). `ELoad` remains in the output error channel.
-   * A typed `load` failure is **replayed on the client**: the server encodes it
-   * via `failure` into the inline payload and the client `hydrate` decodes it and
-   * re-raises it into the nearest enclosing failure `Boundary`, reproducing the
-   * same fallback DOM (replay, never retry). `failure` is therefore **required
-   * when `ELoad ≠ never`** and omittable when `load` cannot fail. A `load`
-   * **defect** (not an expected `ELoad`) is not replayed: it propagates as today
-   * (server fallback, client hydration mismatch).
+   * - **SSR**: the server renderer calls `AppRpcClient.call(tag, payload())`
+   *   (an in-process client over the handler Layer), encodes the success through
+   *   the rpc's `successSchema` inline as a `<script type="application/json">`
+   *   payload, and renders `render(seededResource)` to HTML in place.
+   * - **Hydrate**: reads the inline payload at the cursor, decodes via
+   *   `successSchema`, seeds the {@link Resource}, and adopts the DOM — replaying
+   *   the server result, never re-calling the rpc.
+   * - **Refetch**: `Resource.refetch` calls `AppRpcClient.call(tag, payload())`
+   *   over the network and patches the subtree in place (stale-on-error).
+   * - **Client-first mount** (SPA navigation, no SSR payload): renders `fallback`,
+   *   forks an `AppRpcClient.call(tag, payload())`, then swaps in
+   *   `render(resource)` once it resolves.
    *
-   * The renderer identifies the boundary via its {@link SERVER_BOUNDARY} type tag.
+   * `payload` is a thunk so a fresh payload is produced per call (SSR, refetch,
+   * mount) — its return type is the rpc's decoded payload. The renderer identifies
+   * the boundary via its {@link SERVER_BOUNDARY} type tag.
    *
    * @example
    * ```ts
    * import { Boundary, h } from "@effect-ui/core";
-   * import { Layer, Schema } from "effect";
+   * import { Rpc, RpcGroup } from "@effect/rpc";
+   * import { Schema } from "effect";
    *
-   * Boundary.server(
-   *   {
-   *     load: () => Database.query(),
-   *     provide: DatabaseLive,
-   *     schema: Product,
-   *   },
-   *   (product) => h.div({}, product.name),
+   * const StockRpcs = RpcGroup.make(
+   *   Rpc.make("GetStock", { payload: { id: Schema.String }, success: Stock }),
+   * );
+   *
+   * Boundary.rpc(
+   *   StockRpcs.requests.GetStock,
+   *   () => ({ id: product.id }),
+   *   (resource) => h.div({}, resource.value),
+   *   { fallback: h.div({}, "Loading stock…") },
    * )
    * ```
    */
-  export function server<A, ELoad, RServer, C extends Node<any, any>>(
-    props: ServerProps<A, ELoad, RServer> &
-      ([ELoad] extends [never] ? unknown : { readonly failure: Schema.Schema<ELoad, any> }) &
-      ([RServer] extends [never] ? unknown : { readonly provide: Layer.Layer<RServer> }),
-    render: (data: A) => C,
-  ): Node<Node.Error<C> | ELoad, Node.Context<C>> {
+  export function rpc<R extends Rpc.Any, C extends Node<any, any>>(
+    rpc: R,
+    payload: () => Rpc.Payload<R>,
+    render: (resource: Resource<Rpc.Success<R>>) => C,
+    options?: RpcOptions,
+  ): Node<Node.Error<C> | Rpc.Error<R>, Node.Context<C>> {
+    // The rpc instance carries its tag + schemas; the renderer reads `tag` to call
+    // the ambient AppRpcClient and `successSchema`/`errorSchema` to decode the
+    // inline SSR payload / refetch result. `payload` stays a thunk so each call
+    // (SSR, refetch, mount) gets a fresh value. `Rpc.AnyWithProps` is the public
+    // accessor view of an `Rpc` instance — these fields are part of `@effect/rpc`'s
+    // surface, so no `unknown` round-trip is needed.
+    const instance = rpc as unknown as Rpc.AnyWithProps;
     // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it
-    // synchronously via the {type, props} branch. RServer is consumed by
-    // `provide`, so it is absent from the returned R; no Exclude is applied to
-    // render's R, leaving any accidental server-tag leak visible for hydrate.
-    // `provide` is omittable only when `RServer = never` (the signature requires
-    // it otherwise), so default it to `Layer.empty` to keep the descriptor's
-    // runtime contract — the renderer always `Effect.provide`s a real layer.
+    // synchronously via the {type, props} branch.
     return elementNode({
       type: SERVER_BOUNDARY,
-      props: { ...props, provide: props.provide ?? Layer.empty, render } as Record<string, unknown>,
+      props: {
+        tag: instance._tag,
+        payloadSchema: instance.payloadSchema,
+        successSchema: instance.successSchema,
+        errorSchema: instance.errorSchema,
+        payload,
+        render,
+        fallback: options?.fallback,
+      } as Record<string, unknown>,
     });
   }
 }

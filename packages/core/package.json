@@ -16,6 +16,7 @@
     }
   },
   "devDependencies": {
+    "@effect/rpc": "catalog:",
     "@types/node": "^25.9.1",
     "csstype": "^3.2.3",
     "effect": "catalog:",
@@ -24,6 +25,7 @@
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
+    "@effect/rpc": "^0.75",
     "effect": "^3.21"
   }
 }

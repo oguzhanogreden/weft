@@ -1,6 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Effect, Layer, Option, pipe, Schema } from "effect";
+import { Cause, Data, Effect, Option, pipe, Schema, Stream, Subscribable } from "effect";
+import { Rpc } from "@effect/rpc";
 import { FAILURE_BOUNDARY, SERVER_BOUNDARY, Boundary } from "./index";
 import type { Renderable, Node } from "~/combinator/types";
 import { getElementDescriptor, h } from "~/combinator";
@@ -303,50 +304,116 @@ describe("AC23/24: call shape", () => {
   });
 });
 
-// ── Boundary.server: descriptor shape ─────────────────────────────────────────
+// ── Boundary.rpc: descriptor shape ────────────────────────────────────────────
 
-describe("Boundary.server: descriptor shape", () => {
-  const Product = Schema.Struct({ name: Schema.String });
+const StockKey = Schema.Struct({ id: Schema.Number });
+const Stock = Schema.Struct({ units: Schema.Number });
+const GetStock = Rpc.make("GetStock", { payload: StockKey, success: Stock });
 
-  it("returns { type: SERVER_BOUNDARY, props: { load, provide, schema, render } }", () => {
-    const node = Boundary.server(
-      {
-        load: () => Effect.succeed({ name: "Widget" }),
-        provide: Layer.empty,
-        schema: Product,
-      },
-      (data) => h.div(data.name),
+describe("Boundary.rpc: descriptor shape", () => {
+  it("returns { type: SERVER_BOUNDARY, props: { tag, payloadSchema, successSchema, errorSchema, payload, render, fallback } }", () => {
+    const node = Boundary.rpc(
+      GetStock,
+      () => ({ id: 1 }),
+      () => h.div("Widget"),
     );
     const descriptor = getElementDescriptor(node);
     assert.ok(descriptor, "descriptor should be readable without running the node");
     assert.equal(descriptor.type, SERVER_BOUNDARY);
     const props = descriptor.props as {
-      load: unknown;
-      provide: unknown;
-      schema: unknown;
+      tag: unknown;
+      payloadSchema: unknown;
+      successSchema: unknown;
+      errorSchema: unknown;
+      payload: unknown;
       render: unknown;
+      fallback: unknown;
     };
-    assert.equal(typeof props.load, "function");
-    assert.ok(props.provide);
-    assert.ok(props.schema);
+    // The rpc tag is the stable boundary id — there is no hand-rolled `id`.
+    assert.equal(props.tag, "GetStock");
+    assert.ok(props.payloadSchema, "payload schema carried for SSR/refetch encode");
+    assert.ok(props.successSchema, "success schema carried to decode the inline payload");
+    assert.ok(props.errorSchema, "error schema carried for typed-failure replay");
+    assert.equal(typeof props.payload, "function");
     assert.equal(typeof props.render, "function");
   });
 
-  it("does not run `load` when the descriptor is read", () => {
-    let loaded = false;
-    const node = Boundary.server(
-      {
-        load: () =>
-          Effect.sync(() => {
-            loaded = true;
-            return { name: "Widget" };
-          }),
-        provide: Layer.empty,
-        schema: Product,
+  it("does not run `payload` or `render` when the descriptor is read", () => {
+    let payloadCalls = 0;
+    let renderCalls = 0;
+    const node = Boundary.rpc(
+      GetStock,
+      () => {
+        payloadCalls++;
+        return { id: 1 };
       },
-      (data) => h.div(data.name),
+      () => {
+        renderCalls++;
+        return h.div("Widget");
+      },
     );
     getElementDescriptor(node);
-    assert.equal(loaded, false);
+    assert.equal(payloadCalls, 0);
+    assert.equal(renderCalls, 0);
+  });
+
+  it("carries the optional `fallback` from options", () => {
+    const fallback = h.div("Loading…");
+    const node = Boundary.rpc(
+      GetStock,
+      () => ({ id: 1 }),
+      () => h.div("x"),
+      { fallback },
+    );
+    const props = getElementDescriptor(node)?.props as { fallback: unknown };
+    assert.equal(props.fallback, fallback);
+  });
+
+  it("`payload` thunk is invoked fresh each call (not memoized at construction)", () => {
+    let n = 0;
+    const node = Boundary.rpc(
+      GetStock,
+      () => ({ id: ++n }),
+      () => h.div("x"),
+    );
+    const payload = getElementDescriptor(node)?.props.payload as () => { id: number };
+    assert.deepEqual(payload(), { id: 1 });
+    assert.deepEqual(payload(), { id: 2 });
+  });
+
+  it("hands `render` a resource-shaped argument (value/refetch/pending/error)", () => {
+    let received: Boundary.Resource<typeof Stock.Type> | undefined;
+    const node = Boundary.rpc(
+      GetStock,
+      () => ({ id: 1 }),
+      (resource) => {
+        received = resource;
+        return h.div("x");
+      },
+    );
+    // `rpc()` does not invoke `render`; pull it off the descriptor and call it
+    // with the static resource the SSR renderer would build, proving it carries
+    // the reactive Resource shape (value/refetch/pending/error).
+    const render = getElementDescriptor(node)?.props.render as (
+      r: Boundary.Resource<typeof Stock.Type>,
+    ) => Renderable;
+    const stub: Boundary.Resource<typeof Stock.Type> = {
+      value: Subscribable.make({
+        get: Effect.succeed({ units: 3 }),
+        changes: Stream.make({ units: 3 }),
+      }),
+      refetch: Effect.void,
+      pending: Subscribable.make({ get: Effect.succeed(false), changes: Stream.make(false) }),
+      error: Subscribable.make({
+        get: Effect.succeed(Option.none()),
+        changes: Stream.make(Option.none()),
+      }),
+    };
+    render(stub);
+    assert.ok(received, "render should have been invoked with a resource");
+    assert.ok(received?.value);
+    assert.ok(received?.refetch);
+    assert.ok(received?.pending);
+    assert.ok(received?.error);
   });
 });

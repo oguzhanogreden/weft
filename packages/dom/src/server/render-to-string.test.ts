@@ -3,7 +3,12 @@ import { describe, it } from "vite-plus/test";
 import { Effect, Stream, SubscriptionRef } from "effect";
 import type { Renderable } from "@effect-ui/core/types";
 import { h } from "@effect-ui/core";
-import { renderToString } from "./render-to-string";
+import { renderToString as _renderToString } from "./render-to-string";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// Boundary-free trees: shadow `renderToString` with the no-op `NoRpc` layer
+// pre-provided (the render fn requires an AppRpcClientTag unconditionally).
+const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 const run = (node: Renderable) => Effect.runPromise(renderToString(node));
 

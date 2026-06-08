@@ -2,8 +2,21 @@ import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Data, Effect, Stream } from "effect";
 import { Boundary, h } from "@effect-ui/core";
-import { renderToStream, renderToStreamHydratable } from "./render-to-stream";
-import { renderToString } from "./render-to-string";
+import {
+  renderToStream as _renderToStream,
+  renderToStreamHydratable as _renderToStreamHydratable,
+} from "./render-to-stream";
+import { renderToString as _renderToString } from "./render-to-string";
+import type { Renderable } from "@effect-ui/core/types";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// These failure/suspense boundary trees contain no `Boundary.rpc`; shadow the
+// render fns with the no-op `NoRpc` layer pre-provided (the render fns require an
+// AppRpcClientTag unconditionally).
+const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStreamHydratable = (n: Renderable) =>
+  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

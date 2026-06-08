@@ -1,7 +1,7 @@
 {
   "name": "@effect-ui/vite",
   "version": "0.0.0",
-  "description": "Vite plugins for effect-ui — the Boundary.server prune plugin",
+  "description": "Vite plugins for effect-ui (shell — prune plugin retired with Boundary.server)",
   "keywords": [
     "effect-ui",
     "ssr",
@@ -15,9 +15,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
-  },
-  "dependencies": {
-    "magic-string": "^0.30.17"
   },
   "devDependencies": {
     "@effect-ui/core": "workspace:*",

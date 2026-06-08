@@ -7,7 +7,7 @@ import { Effect, Schema } from "effect";
  * (the router's internal boundary is outermost, so a nearer user boundary wins).
  *
  * Modeled as a `Schema.TaggedError` so it can be encoded/decoded across the wire
- * the same way `Boundary.server` replays typed failures.
+ * the same way `Boundary.rpc` replays typed failures.
  */
 export class RouterNotFound extends Schema.TaggedError<RouterNotFound>()("RouterNotFound", {
   /** The path that could not be resolved, when known. */
@@ -40,7 +40,7 @@ export const isRouterNotFound = (u: unknown): u is RouterNotFound =>
  * place a `Boundary.catchTag("RouterParamsError", …)` to recover within a subtree.
  *
  * Modeled as a `Schema.TaggedError` so it can be encoded/decoded across the wire
- * the same way `RouterNotFound` and `Boundary.server` replay typed failures.
+ * the same way `RouterNotFound` and `Boundary.rpc` replay typed failures.
  */
 export class RouterParamsError extends Schema.TaggedError<RouterParamsError>()(
   "RouterParamsError",

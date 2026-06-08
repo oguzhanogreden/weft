@@ -1,7 +1,8 @@
 import * as assert from "node:assert/strict";
 import { Boundary, List, getElementDescriptor, h } from "@effect-ui/core";
 import type { Renderable } from "@effect-ui/core";
-import { Effect, Layer, Schema, Stream } from "effect";
+import { Rpc } from "@effect/rpc";
+import { Effect, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { BOUNDARY_FAILURE_ATTR, collectServerBoundaries } from "./boundary-replay";
 
@@ -9,18 +10,21 @@ import { BOUNDARY_FAILURE_ATTR, collectServerBoundaries } from "./boundary-repla
 // Fixtures
 // ---------------------------------------------------------------------------
 
+const StockKey = Schema.Struct({ id: Schema.Number });
 const S = Schema.Struct({ name: Schema.String });
+const GetThing = Rpc.make("GetThing", { payload: StockKey, success: S });
 
 /**
- * Builds a `Boundary.server` node and returns it alongside its **live** descriptor
+ * Builds a `Boundary.rpc` node and returns it alongside its **live** descriptor
  * `props` object — the exact object `collectServerBoundaries` is expected to
  * return by reference (AC-BR2). `render` is a no-op subtree; it is never walked
  * (AC-BR4), so its content is irrelevant.
  */
 const serverBoundary = (name: string) => {
-  const node = Boundary.server(
-    { load: () => Effect.succeed({ name }), provide: Layer.empty, schema: S },
-    (d) => h.div({}, d.name),
+  const node = Boundary.rpc(
+    GetThing,
+    () => ({ id: 1 }),
+    () => h.div({}, name),
   );
   const props = getElementDescriptor(node)?.props;
   assert.ok(props, "expected a server-boundary descriptor");
@@ -133,11 +137,12 @@ describe("collectServerBoundaries — AC-BR3: descends static containers", () =>
 // ---------------------------------------------------------------------------
 
 describe("collectServerBoundaries — AC-BR4: does not descend data-dependent regions", () => {
-  it("does not descend another Boundary.server's render output", () => {
+  it("does not descend another Boundary.rpc's render output", () => {
     const inner = serverBoundary("inner");
-    const outer = Boundary.server(
-      { load: () => Effect.succeed({ name: "outer" }), provide: Layer.empty, schema: S },
-      // The inner boundary is only produced once `load` resolves — not static.
+    const outer = Boundary.rpc(
+      GetThing,
+      () => ({ id: 1 }),
+      // The inner boundary is only produced once the rpc resolves — not static.
       () => inner.node,
     );
     const out = collectServerBoundaries(outer);

@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@effect-ui/core";
-import { Effect, Exit, Schema, Stream, Subscribable } from "effect";
+import { Effect, Exit, Option, Schema, Stream, Subscribable } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, RouterParamsError } from "~/index";
 import { match, type RouteMatch } from "~/matcher";
@@ -33,12 +33,13 @@ const routerFor = (m: RouteMatch): Router["Type"] =>
   Router.of({
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: () => Effect.void,
+    httpApiClient: Option.none(),
   });
 
 /** Runs an accessor against the match for `url`, returning its `Exit`. */
 function runAt<A, E>(eff: Effect.Effect<A, E, Router>, url: string): Promise<Exit.Exit<A, E>> {
   return Effect.runPromise(
-    Effect.exit(Effect.provideService(eff, Router, routerFor(match(def.compiled, url)))),
+    Effect.exit(Effect.provideService(eff, Router, routerFor(match(def, url)))),
   );
 }
 
@@ -60,11 +61,7 @@ describe("Router.params / Router.query", () => {
     assert.ok(Exit.isFailure(exit));
     const error = await Effect.runPromise(
       Effect.flip(
-        Effect.provideService(
-          Router.params(idParam),
-          Router,
-          routerFor(match(def.compiled, "/nope")),
-        ),
+        Effect.provideService(Router.params(idParam), Router, routerFor(match(def, "/nope"))),
       ),
     );
     assert.ok(error instanceof RouterParamsError);
@@ -72,23 +69,47 @@ describe("Router.params / Router.query", () => {
     assert.deepEqual([...error.keys], ["id"]);
   });
 
-  test("Router.params fails with RouterParamsError when the match lacks the requested key", async () => {
-    // `/about` has no `:id`, so requesting it fails Type-side validation.
+  test("Router.params reads the matched leaf's decoded value directly (absent ⇒ undefined)", async () => {
+    // `/about` matches (no `:id`); direct-read returns the decoded value as-is —
+    // an absent param reads `undefined` rather than re-validating into an error.
     const exit = await runAt(Router.params(idParam), "/about");
-    assert.ok(Exit.isFailure(exit));
+    assert.deepEqual(exit, Exit.succeed({ id: undefined }));
   });
 
   test("Router.query fails with RouterParamsError (source: query) when no route matches", async () => {
     const error = await Effect.runPromise(
       Effect.flip(
-        Effect.provideService(
-          Router.query(sortQuery),
-          Router,
-          routerFor(match(def.compiled, "/nope")),
-        ),
+        Effect.provideService(Router.query(sortQuery), Router, routerFor(match(def, "/nope"))),
       ),
     );
     assert.ok(error instanceof RouterParamsError);
     assert.equal(error.source, "query");
+  });
+});
+
+describe("Router.paramsStream / Router.queryStream", () => {
+  /** Resolves a reactive accessor's `Subscribable` against the match for `url`. */
+  function streamAt<A>(
+    eff: Effect.Effect<Subscribable.Subscribable<A>, never, Router>,
+    url: string,
+  ): Promise<Subscribable.Subscribable<A>> {
+    return Effect.runPromise(Effect.provideService(eff, Router, routerFor(match(def, url))));
+  }
+
+  test("paramsStream.get reads the live match's decoded path params", async () => {
+    const sub = await streamAt(Router.paramsStream(idParam), "/users/42");
+    assert.deepEqual(await Effect.runPromise(sub.get), { id: 42 });
+  });
+
+  test("queryStream.get reads the live match's decoded query (present and absent)", async () => {
+    const present = await streamAt(Router.queryStream(sortQuery), "/users/42?sort=asc");
+    assert.deepEqual(await Effect.runPromise(present.get), { sort: "asc" });
+    const absent = await streamAt(Router.queryStream(sortQuery), "/users/42");
+    assert.deepEqual(await Effect.runPromise(absent.get), { sort: undefined });
+  });
+
+  test("paramsStream stays live on NotFound, yielding the empty subset (no failure)", async () => {
+    const sub = await streamAt(Router.paramsStream(idParam), "/nope");
+    assert.deepEqual(await Effect.runPromise(sub.get), { id: undefined });
   });
 });

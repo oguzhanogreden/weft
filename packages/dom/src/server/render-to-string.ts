@@ -1,4 +1,5 @@
 import type { Renderable } from "@effect-ui/core/types";
+import type { AppRpcClientTag } from "@effect-ui/core";
 import { type Effect, Stream } from "effect";
 import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-to-stream";
 
@@ -10,8 +11,11 @@ import { renderToStreamFallbackOnly, renderToStreamHydratable } from "./render-t
  * Suspense boundaries render their fallback directly — no comment markers
  * and no `<template>`/`<script>` patches. For streaming Suspense support use
  * {@link renderToStreamHydratable} / {@link renderToStream} instead.
+ *
+ * Requires an {@link AppRpcClientTag} in context when the tree contains a
+ * `Boundary.rpc` (provided by `@effect-ui/router`'s `RouterServer`).
  */
-export const renderToString = (node: Renderable): Effect.Effect<string, Error> =>
+export const renderToString = (node: Renderable): Effect.Effect<string, Error, AppRpcClientTag> =>
   renderToStreamFallbackOnly(node).pipe(Stream.mkString);
 
 /**
@@ -23,5 +27,7 @@ export const renderToString = (node: Renderable): Effect.Effect<string, Error> =
  *
  * Re-derived from {@link renderToStreamHydratable} via `Stream.mkString`.
  */
-export const renderToStringHydratable = (node: Renderable): Effect.Effect<string, Error> =>
+export const renderToStringHydratable = (
+  node: Renderable,
+): Effect.Effect<string, Error, AppRpcClientTag> =>
   renderToStreamHydratable(node).pipe(Stream.mkString);

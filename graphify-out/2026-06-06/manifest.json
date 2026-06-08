@@ -1,1377 +1,1417 @@
 {
-  "/Users/stef/Documents/projects/effect-ui/.releaserc.json": {
+  ".releaserc.json": {
     "mtime": 1779476188.664876,
     "ast_hash": "752c238aff9a9eb64540bf6267c67eb5",
     "semantic_hash": "752c238aff9a9eb64540bf6267c67eb5"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/applypatch-msg": {
+  ".vite-hooks/_/applypatch-msg": {
     "mtime": 1780293948.2850595,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/commit-msg": {
+  ".vite-hooks/_/commit-msg": {
     "mtime": 1780293948.2849321,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/h": {
+  ".vite-hooks/_/h": {
     "mtime": 1780293948.2846506,
     "ast_hash": "08ea7738f498cfb17cdca1d91afc745d",
     "semantic_hash": "08ea7738f498cfb17cdca1d91afc745d"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/post-applypatch": {
+  ".vite-hooks/_/post-applypatch": {
     "mtime": 1780293948.2851946,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/post-checkout": {
+  ".vite-hooks/_/post-checkout": {
     "mtime": 1780293948.2854033,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/post-commit": {
+  ".vite-hooks/_/post-commit": {
     "mtime": 1780293948.2849984,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/post-merge": {
+  ".vite-hooks/_/post-merge": {
     "mtime": 1780293948.2854645,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/post-rewrite": {
+  ".vite-hooks/_/post-rewrite": {
     "mtime": 1780293948.2853296,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-applypatch": {
+  ".vite-hooks/_/pre-applypatch": {
     "mtime": 1780293948.2851295,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-auto-gc": {
+  ".vite-hooks/_/pre-auto-gc": {
     "mtime": 1780293948.2855957,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-commit": {
+  ".vite-hooks/_/pre-commit": {
     "mtime": 1780293948.2847273,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-merge-commit": {
+  ".vite-hooks/_/pre-merge-commit": {
     "mtime": 1780293948.2848063,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-push": {
+  ".vite-hooks/_/pre-push": {
     "mtime": 1780293948.285523,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/pre-rebase": {
+  ".vite-hooks/_/pre-rebase": {
     "mtime": 1780293948.285267,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/.vite-hooks/_/prepare-commit-msg": {
+  ".vite-hooks/_/prepare-commit-msg": {
     "mtime": 1780293948.2848716,
     "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": "0b71c2e7d39daa010985d529f1320b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/e2e/smoke.browser.test.ts": {
+  "e2e/smoke.browser.test.ts": {
     "mtime": 1780339912.7900715,
     "ast_hash": "f8c365802a6b8717b60feafa23634727",
     "semantic_hash": "f8c365802a6b8717b60feafa23634727"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/app.browser.test.ts": {
+  "examples/async-data-loading/app.browser.test.ts": {
     "mtime": 1780339912.7903633,
     "ast_hash": "1588590a7d6073a40abeba2d951aabda",
     "semantic_hash": "1588590a7d6073a40abeba2d951aabda"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/app.ts": {
+  "examples/async-data-loading/app.ts": {
     "mtime": 1780725753.5068696,
     "ast_hash": "09b56b07797d9d0943c4c7ac8007722d",
     "semantic_hash": "09b56b07797d9d0943c4c7ac8007722d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/main.ts": {
+  "examples/async-data-loading/main.ts": {
     "mtime": 1780339912.7913632,
     "ast_hash": "b407953cb377021b51fef6694fe471b5",
     "semantic_hash": "b407953cb377021b51fef6694fe471b5"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/package.json": {
+  "examples/async-data-loading/package.json": {
     "mtime": 1780725753.50705,
     "ast_hash": "3deece0451209a77393c059c604cf8d1",
     "semantic_hash": "3deece0451209a77393c059c604cf8d1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/tsconfig.json": {
+  "examples/async-data-loading/tsconfig.json": {
     "mtime": 1780249714.3387482,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/vite.config.ts": {
+  "examples/async-data-loading/vite.config.ts": {
     "mtime": 1779609518.2787323,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/app.browser.test.ts": {
+  "examples/declarative-event-handlers/app.browser.test.ts": {
     "mtime": 1780339912.791509,
     "ast_hash": "cabdddd9ddf7d9d3ccaf711d250cdd7d",
     "semantic_hash": "cabdddd9ddf7d9d3ccaf711d250cdd7d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/app.ts": {
+  "examples/declarative-event-handlers/app.ts": {
     "mtime": 1780725753.5073957,
     "ast_hash": "c31898fdc05549e56f6392b8852f3a9a",
     "semantic_hash": "c31898fdc05549e56f6392b8852f3a9a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/main.ts": {
+  "examples/declarative-event-handlers/main.ts": {
     "mtime": 1780339912.7923605,
     "ast_hash": "557a0d6b7dd79b078a31da4018dcfa8c",
     "semantic_hash": "557a0d6b7dd79b078a31da4018dcfa8c"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/package.json": {
+  "examples/declarative-event-handlers/package.json": {
     "mtime": 1780725753.507464,
     "ast_hash": "fcab735147fcc77d952c4847e013fec2",
     "semantic_hash": "fcab735147fcc77d952c4847e013fec2"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/tsconfig.json": {
+  "examples/declarative-event-handlers/tsconfig.json": {
     "mtime": 1780249714.3388598,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/vite.config.ts": {
+  "examples/declarative-event-handlers/vite.config.ts": {
     "mtime": 1779609518.2793903,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/app.browser.test.ts": {
+  "examples/element-ref/app.browser.test.ts": {
     "mtime": 1780339912.7925038,
     "ast_hash": "b6488d438cf788fd8b00221d1f7d1960",
     "semantic_hash": "b6488d438cf788fd8b00221d1f7d1960"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/app.ts": {
+  "examples/element-ref/app.ts": {
     "mtime": 1780725753.5075672,
     "ast_hash": "3ec42727de16ff7817c7bb1585bb1096",
     "semantic_hash": "3ec42727de16ff7817c7bb1585bb1096"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/main.ts": {
+  "examples/element-ref/main.ts": {
     "mtime": 1780339912.793246,
     "ast_hash": "519477a4dc8440ae3f1c8e69fb585645",
     "semantic_hash": "519477a4dc8440ae3f1c8e69fb585645"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/package.json": {
+  "examples/element-ref/package.json": {
     "mtime": 1780725753.507654,
     "ast_hash": "1c20f951f328e5a2fd8452fdfb319358",
     "semantic_hash": "1c20f951f328e5a2fd8452fdfb319358"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/tsconfig.json": {
+  "examples/element-ref/tsconfig.json": {
     "mtime": 1780249714.3389647,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/vite.config.ts": {
+  "examples/element-ref/vite.config.ts": {
     "mtime": 1779609518.280018,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/app.browser.test.ts": {
+  "examples/error-boundary/app.browser.test.ts": {
     "mtime": 1780339912.7933974,
     "ast_hash": "6782d5a84b257d205126140019c6f812",
     "semantic_hash": "6782d5a84b257d205126140019c6f812"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/app.ts": {
+  "examples/error-boundary/app.ts": {
     "mtime": 1780725753.5080445,
     "ast_hash": "206c4d184d52af804916eb29d1f56fda",
     "semantic_hash": "206c4d184d52af804916eb29d1f56fda"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/main.ts": {
+  "examples/error-boundary/main.ts": {
     "mtime": 1780339912.7941213,
     "ast_hash": "b8848abbc39e002a3b989a6aef80cacb",
     "semantic_hash": "b8848abbc39e002a3b989a6aef80cacb"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/package.json": {
+  "examples/error-boundary/package.json": {
     "mtime": 1780725753.508225,
     "ast_hash": "1a6dba89b6ffc4a99a12df139c71e479",
     "semantic_hash": "1a6dba89b6ffc4a99a12df139c71e479"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/tsconfig.json": {
+  "examples/error-boundary/tsconfig.json": {
     "mtime": 1780249714.340138,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/vite.config.ts": {
+  "examples/error-boundary/vite.config.ts": {
     "mtime": 1780249714.340336,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/app.browser.test.ts": {
+  "examples/form-handling/app.browser.test.ts": {
     "mtime": 1780339912.7942913,
     "ast_hash": "c9cae7863d5f54a34b34ced9ca757b4c",
     "semantic_hash": "c9cae7863d5f54a34b34ced9ca757b4c"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/app.ts": {
+  "examples/form-handling/app.ts": {
     "mtime": 1780725753.5086854,
     "ast_hash": "f87b262b0eb3a2b64a65ab70bdf9b83a",
     "semantic_hash": "f87b262b0eb3a2b64a65ab70bdf9b83a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/main.ts": {
+  "examples/form-handling/main.ts": {
     "mtime": 1780339912.7962065,
     "ast_hash": "992484b36bf89c245303712c679e9d24",
     "semantic_hash": "992484b36bf89c245303712c679e9d24"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/package.json": {
+  "examples/form-handling/package.json": {
     "mtime": 1780725753.5087695,
     "ast_hash": "ea7aaaaa678d633652eaf2e72b138298",
     "semantic_hash": "ea7aaaaa678d633652eaf2e72b138298"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/tsconfig.json": {
+  "examples/form-handling/tsconfig.json": {
     "mtime": 1780249714.3404717,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/vite.config.ts": {
+  "examples/form-handling/vite.config.ts": {
     "mtime": 1779609518.280724,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/app.ts": {
+  "examples/keyed-list/app.ts": {
     "mtime": 1780725753.5090504,
     "ast_hash": "db74015d87b935115931c07839daeb62",
     "semantic_hash": "db74015d87b935115931c07839daeb62"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/package.json": {
+  "examples/keyed-list/package.json": {
     "mtime": 1780725753.509177,
     "ast_hash": "ec7aed1258ff72a0a25781a07f9f48f0",
     "semantic_hash": "ec7aed1258ff72a0a25781a07f9f48f0"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/tsconfig.json": {
+  "examples/keyed-list/tsconfig.json": {
     "mtime": 1780338022.5320482,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/vite.config.ts": {
+  "examples/keyed-list/vite.config.ts": {
     "mtime": 1780338022.5321581,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/app.browser.test.ts": {
+  "examples/list-rendering/app.browser.test.ts": {
     "mtime": 1780339912.7963433,
     "ast_hash": "b7f3b67b33a70273aedc2c8965359c66",
     "semantic_hash": "b7f3b67b33a70273aedc2c8965359c66"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/app.ts": {
+  "examples/list-rendering/app.ts": {
     "mtime": 1780725753.5093813,
     "ast_hash": "ef80fcfd9b9b48c7534a98d004531c8d",
     "semantic_hash": "ef80fcfd9b9b48c7534a98d004531c8d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/main.ts": {
+  "examples/list-rendering/main.ts": {
     "mtime": 1780339912.7970304,
     "ast_hash": "3a49195c1b20535db91cba676194e791",
     "semantic_hash": "3a49195c1b20535db91cba676194e791"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/package.json": {
+  "examples/list-rendering/package.json": {
     "mtime": 1780725753.5094848,
     "ast_hash": "5d090d40d51e628d59ab6e308ce006b5",
     "semantic_hash": "5d090d40d51e628d59ab6e308ce006b5"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/tsconfig.json": {
+  "examples/list-rendering/tsconfig.json": {
     "mtime": 1780249714.3406045,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/vite.config.ts": {
+  "examples/list-rendering/vite.config.ts": {
     "mtime": 1779609518.281377,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/app.browser.test.ts": {
+  "examples/reactive-styles/app.browser.test.ts": {
     "mtime": 1780339912.7971702,
     "ast_hash": "cba1d3340b722b2209d8efdf80b983b3",
     "semantic_hash": "cba1d3340b722b2209d8efdf80b983b3"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/app.ts": {
+  "examples/reactive-styles/app.ts": {
     "mtime": 1780725753.5098236,
     "ast_hash": "368667e5c1058db75bcf5dde16aab9a4",
     "semantic_hash": "368667e5c1058db75bcf5dde16aab9a4"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/main.ts": {
+  "examples/reactive-styles/main.ts": {
     "mtime": 1780339912.797735,
     "ast_hash": "06ab3972f3b6b52239ec0ef79dbdd2d9",
     "semantic_hash": "06ab3972f3b6b52239ec0ef79dbdd2d9"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/package.json": {
+  "examples/reactive-styles/package.json": {
     "mtime": 1780725753.5099237,
     "ast_hash": "c6623c90aab422eba1bf5ef077469a59",
     "semantic_hash": "c6623c90aab422eba1bf5ef077469a59"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/tsconfig.json": {
+  "examples/reactive-styles/tsconfig.json": {
     "mtime": 1780249714.3407211,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/vite.config.ts": {
+  "examples/reactive-styles/vite.config.ts": {
     "mtime": 1779609518.2819443,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/package.json": {
+  "examples/router-ssr/package.json": {
     "mtime": 1780725753.5100205,
     "ast_hash": "77ba3bbf0ede0c0474a373e4784b5c23",
     "semantic_hash": "77ba3bbf0ede0c0474a373e4784b5c23"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/server.ts": {
+  "examples/router-ssr/server.ts": {
     "mtime": 1780725753.5101364,
     "ast_hash": "494ccc1b42e2f089d052d9a1fe990fd0",
     "semantic_hash": "494ccc1b42e2f089d052d9a1fe990fd0"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/src/app.browser.test.ts": {
+  "examples/router-ssr/src/app.browser.test.ts": {
     "mtime": 1780725753.510371,
     "ast_hash": "b8fc6e78373a1d6766ad359df5db211d",
     "semantic_hash": "b8fc6e78373a1d6766ad359df5db211d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/src/app.ts": {
-    "mtime": 1780725753.5104585,
-    "ast_hash": "3e8afe2d7b233aabb7474914d678d07b",
-    "semantic_hash": "3e8afe2d7b233aabb7474914d678d07b"
+  "examples/router-ssr/src/app.ts": {
+    "mtime": 1780745124.7477453,
+    "ast_hash": "ec447a165b6c88461403671ce68b1540",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/src/entry-client.ts": {
+  "examples/router-ssr/src/entry-client.ts": {
     "mtime": 1780725753.5105124,
     "ast_hash": "01ee70135323309b56041f6759d50e18",
     "semantic_hash": "01ee70135323309b56041f6759d50e18"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/src/entry-server.ts": {
+  "examples/router-ssr/src/entry-server.ts": {
     "mtime": 1780725753.510582,
     "ast_hash": "0ce1d9063591c49b32bf993efa6ed43b",
     "semantic_hash": "0ce1d9063591c49b32bf993efa6ed43b"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/tsconfig.json": {
+  "examples/router-ssr/tsconfig.json": {
     "mtime": 1780725753.510643,
     "ast_hash": "4fb3cb8d8ece9e65f4dc63e45564cdf1",
     "semantic_hash": "4fb3cb8d8ece9e65f4dc63e45564cdf1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/vite.config.ts": {
+  "examples/router-ssr/vite.config.ts": {
     "mtime": 1780725753.5107005,
     "ast_hash": "47c4c82ddbdbfabaa5fed8d94d11fd9d",
     "semantic_hash": "47c4c82ddbdbfabaa5fed8d94d11fd9d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/package.json": {
+  "examples/server-boundary/package.json": {
     "mtime": 1780725753.5108063,
     "ast_hash": "29424063e6a1453d41efa82530c01982",
     "semantic_hash": "29424063e6a1453d41efa82530c01982"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/server.ts": {
+  "examples/server-boundary/server.ts": {
     "mtime": 1780600167.788153,
     "ast_hash": "57fa4d45695570755f4c69e5a0a82afc",
     "semantic_hash": "57fa4d45695570755f4c69e5a0a82afc"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/src/app.browser.test.ts": {
+  "examples/server-boundary/src/app.browser.test.ts": {
     "mtime": 1780600167.7884748,
     "ast_hash": "1e43b07ce7470dd39a4505825671fa76",
     "semantic_hash": "1e43b07ce7470dd39a4505825671fa76"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/src/app.failure.browser.test.ts": {
+  "examples/server-boundary/src/app.failure.browser.test.ts": {
     "mtime": 1780600167.7887747,
     "ast_hash": "f28e5e0f5519232a78706bc2527153aa",
     "semantic_hash": "f28e5e0f5519232a78706bc2527153aa"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/src/app.ts": {
+  "examples/server-boundary/src/app.ts": {
     "mtime": 1780725753.511111,
     "ast_hash": "86e9e40c28409d9cba69b22e9e11b668",
     "semantic_hash": "86e9e40c28409d9cba69b22e9e11b668"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/src/entry-client.ts": {
+  "examples/server-boundary/src/entry-client.ts": {
     "mtime": 1780600167.7891922,
     "ast_hash": "8072819a60bb4dc566ac88c099e63144",
     "semantic_hash": "8072819a60bb4dc566ac88c099e63144"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/src/entry-server.ts": {
+  "examples/server-boundary/src/entry-server.ts": {
     "mtime": 1780600167.7894573,
     "ast_hash": "d6a2d889bb5c772ca426d4e1769f0cda",
     "semantic_hash": "d6a2d889bb5c772ca426d4e1769f0cda"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/tsconfig.json": {
+  "examples/server-boundary/tsconfig.json": {
     "mtime": 1780600167.7896075,
     "ast_hash": "284d379ea6ce805c736fa5e6127533e8",
     "semantic_hash": "284d379ea6ce805c736fa5e6127533e8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/vite.config.ts": {
+  "examples/server-boundary/vite.config.ts": {
     "mtime": 1780600167.7897341,
     "ast_hash": "6e7d1295176495dfc23a1bca93850f2b",
     "semantic_hash": "6e7d1295176495dfc23a1bca93850f2b"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/package.json": {
+  "examples/ssr-hydration/package.json": {
     "mtime": 1780725753.5112584,
     "ast_hash": "770111b593c7ab2021ac98d551d25682",
     "semantic_hash": "770111b593c7ab2021ac98d551d25682"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/server.ts": {
+  "examples/ssr-hydration/server.ts": {
     "mtime": 1780249714.3410006,
     "ast_hash": "c4c18d81e14ce949cab0b8a7715a0bcd",
     "semantic_hash": "c4c18d81e14ce949cab0b8a7715a0bcd"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/src/app.browser.test.ts": {
+  "examples/ssr-hydration/src/app.browser.test.ts": {
     "mtime": 1780339912.7979126,
     "ast_hash": "fe0359b8cf8b901530b16af925d17b43",
     "semantic_hash": "fe0359b8cf8b901530b16af925d17b43"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/src/app.ts": {
+  "examples/ssr-hydration/src/app.ts": {
     "mtime": 1780725753.5115073,
     "ast_hash": "0214395d78126495df1957c9438e395e",
     "semantic_hash": "0214395d78126495df1957c9438e395e"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/src/entry-client.ts": {
+  "examples/ssr-hydration/src/entry-client.ts": {
     "mtime": 1779994117.2783208,
     "ast_hash": "424e85b9a780351d998e8c2456207c66",
     "semantic_hash": "424e85b9a780351d998e8c2456207c66"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/src/entry-server.ts": {
+  "examples/ssr-hydration/src/entry-server.ts": {
     "mtime": 1779994117.2784271,
     "ast_hash": "c1e9b24e4616a38becd037e2b423904a",
     "semantic_hash": "c1e9b24e4616a38becd037e2b423904a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/tsconfig.json": {
+  "examples/ssr-hydration/tsconfig.json": {
     "mtime": 1780249714.341216,
     "ast_hash": "284d379ea6ce805c736fa5e6127533e8",
     "semantic_hash": "284d379ea6ce805c736fa5e6127533e8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/vite.config.ts": {
+  "examples/ssr-hydration/vite.config.ts": {
     "mtime": 1779609518.283165,
     "ast_hash": "f12aaf98d0c45148b14a983da7020756",
     "semantic_hash": "f12aaf98d0c45148b14a983da7020756"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/app.browser.test.ts": {
+  "examples/subscription-ref/app.browser.test.ts": {
     "mtime": 1780339912.7980723,
     "ast_hash": "4609d20c47ed93d45c3181531c31a983",
     "semantic_hash": "4609d20c47ed93d45c3181531c31a983"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/app.ts": {
+  "examples/subscription-ref/app.ts": {
     "mtime": 1780725753.5117157,
     "ast_hash": "feb7f1a3d6557ef9ff375b9a3638e7f3",
     "semantic_hash": "feb7f1a3d6557ef9ff375b9a3638e7f3"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/main.ts": {
+  "examples/subscription-ref/main.ts": {
     "mtime": 1780339912.798867,
     "ast_hash": "9dca2a414d296f0d9aede3c2b6d8ff0d",
     "semantic_hash": "9dca2a414d296f0d9aede3c2b6d8ff0d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/package.json": {
+  "examples/subscription-ref/package.json": {
     "mtime": 1780725753.5117881,
     "ast_hash": "d5605d9db0472978300db6166682a111",
     "semantic_hash": "d5605d9db0472978300db6166682a111"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/tsconfig.json": {
+  "examples/subscription-ref/tsconfig.json": {
     "mtime": 1780249714.3413274,
     "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
     "semantic_hash": "153034a58320aa67822e5815bf6b6e8a"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/vite.config.ts": {
+  "examples/subscription-ref/vite.config.ts": {
     "mtime": 1779609518.283842,
     "ast_hash": "12f0b2799575dfda976486127c8146a1",
     "semantic_hash": "12f0b2799575dfda976486127c8146a1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/package.json": {
+  "examples/suspense/package.json": {
     "mtime": 1780725753.512152,
     "ast_hash": "473b18ce90a655698ae94d31edb60aa6",
     "semantic_hash": "473b18ce90a655698ae94d31edb60aa6"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/server.ts": {
+  "examples/suspense/server.ts": {
     "mtime": 1780249714.3415327,
     "ast_hash": "f85559ec2bf92d95002a13b108b69859",
     "semantic_hash": "f85559ec2bf92d95002a13b108b69859"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/src/app.browser.test.ts": {
+  "examples/suspense/src/app.browser.test.ts": {
     "mtime": 1780339912.7990355,
     "ast_hash": "403edc52ef6dadb3ce411d1482562148",
     "semantic_hash": "403edc52ef6dadb3ce411d1482562148"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/src/app.ts": {
+  "examples/suspense/src/app.ts": {
     "mtime": 1780725753.5123773,
     "ast_hash": "82d9f1b190e28438a3da9b0c3edf9e25",
     "semantic_hash": "82d9f1b190e28438a3da9b0c3edf9e25"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/src/entry-client.ts": {
+  "examples/suspense/src/entry-client.ts": {
     "mtime": 1779994117.2797651,
     "ast_hash": "eb621045796004fce34c970b187faa3f",
     "semantic_hash": "eb621045796004fce34c970b187faa3f"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/src/entry-server.ts": {
+  "examples/suspense/src/entry-server.ts": {
     "mtime": 1779994117.2798843,
     "ast_hash": "ec18b8c474cfd07113353fefdd41cdef",
     "semantic_hash": "ec18b8c474cfd07113353fefdd41cdef"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/tsconfig.json": {
+  "examples/suspense/tsconfig.json": {
     "mtime": 1780249714.341913,
     "ast_hash": "284d379ea6ce805c736fa5e6127533e8",
     "semantic_hash": "284d379ea6ce805c736fa5e6127533e8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/vite.config.ts": {
+  "examples/suspense/vite.config.ts": {
     "mtime": 1779649657.5864697,
     "ast_hash": "f12aaf98d0c45148b14a983da7020756",
     "semantic_hash": "f12aaf98d0c45148b14a983da7020756"
   },
-  "/Users/stef/Documents/projects/effect-ui/package.json": {
+  "package.json": {
     "mtime": 1780339912.7992196,
     "ast_hash": "77029705cf066b4b22d2db575322828d",
     "semantic_hash": "77029705cf066b4b22d2db575322828d"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/base/package.json": {
+  "packages/base/package.json": {
     "mtime": 1780725753.5124974,
     "ast_hash": "b512e2930568f732f74c84a6a56f81e2",
     "semantic_hash": "b512e2930568f732f74c84a6a56f81e2"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/base/src/index.ts": {
+  "packages/base/src/index.ts": {
     "mtime": 1779994117.2802925,
     "ast_hash": "07885d9808d84c6d295767f19587ca23",
     "semantic_hash": "07885d9808d84c6d295767f19587ca23"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/base/tsconfig.json": {
+  "packages/base/tsconfig.json": {
     "mtime": 1779994117.2803874,
     "ast_hash": "4b4e66184d2ce9caa4f7814cde96c647",
     "semantic_hash": "4b4e66184d2ce9caa4f7814cde96c647"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/base/vite.config.ts": {
+  "packages/base/vite.config.ts": {
     "mtime": 1779994117.2804847,
     "ast_hash": "16138361d7cf7fd3f59be92ae82c9437",
     "semantic_hash": "16138361d7cf7fd3f59be92ae82c9437"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/package.json": {
+  "packages/core/package.json": {
     "mtime": 1780725753.512581,
     "ast_hash": "bf068f2257585836e6d6b0453ff39385",
     "semantic_hash": "bf068f2257585836e6d6b0453ff39385"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/__type-tests__/boundary.test-d.ts": {
+  "packages/core/src/boundary/__type-tests__/boundary.test-d.ts": {
     "mtime": 1780249714.3422477,
     "ast_hash": "b8daf69e3e89f6fa4d442dbf26bc8e2f",
     "semantic_hash": "b8daf69e3e89f6fa4d442dbf26bc8e2f"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/__type-tests__/server.test-d.ts": {
+  "packages/core/src/boundary/__type-tests__/server.test-d.ts": {
     "mtime": 1780600167.789898,
     "ast_hash": "be4677635f11f6d23a007ac9deef02a2",
     "semantic_hash": "be4677635f11f6d23a007ac9deef02a2"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/boundary.test.ts": {
+  "packages/core/src/boundary/boundary.test.ts": {
     "mtime": 1780600167.7901,
     "ast_hash": "365c95cf3a42f2227c63742208a8c5ed",
     "semantic_hash": "365c95cf3a42f2227c63742208a8c5ed"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/index.ts": {
-    "mtime": 1780600167.7903063,
-    "ast_hash": "5035cf9cf4d8f32a3aaa94b5c7342ab6",
-    "semantic_hash": "5035cf9cf4d8f32a3aaa94b5c7342ab6"
+  "packages/core/src/boundary/index.ts": {
+    "mtime": 1780763853.6591556,
+    "ast_hash": "7b5bfd00071c5bab523d4d5e39190bba",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/__type-tests__/channels.test-d.ts": {
+  "packages/core/src/combinator/__type-tests__/channels.test-d.ts": {
     "mtime": 1780338022.5323513,
     "ast_hash": "771d2cd164694095c23628755ebabf96",
     "semantic_hash": "771d2cd164694095c23628755ebabf96"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/__type-tests__/list.test-d.ts": {
+  "packages/core/src/combinator/__type-tests__/list.test-d.ts": {
     "mtime": 1780338022.5324962,
     "ast_hash": "1b9d8089ccca0ad435601afc51ee11ee",
     "semantic_hash": "1b9d8089ccca0ad435601afc51ee11ee"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/combinator.test-d.ts": {
+  "packages/core/src/combinator/combinator.test-d.ts": {
     "mtime": 1780249714.3436546,
     "ast_hash": "92ddd2f92e6bd48669d67ddefed4a39b",
     "semantic_hash": "92ddd2f92e6bd48669d67ddefed4a39b"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/combinator.test.ts": {
+  "packages/core/src/combinator/combinator.test.ts": {
     "mtime": 1780249714.3439808,
     "ast_hash": "54bf5c42d5467c088b53a0f2ab8429af",
     "semantic_hash": "54bf5c42d5467c088b53a0f2ab8429af"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/component.ts": {
+  "packages/core/src/combinator/component.ts": {
     "mtime": 1780338022.5326977,
     "ast_hash": "d3df2c4ccb2c3fde180d658e5a7ae673",
     "semantic_hash": "d3df2c4ccb2c3fde180d658e5a7ae673"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/descriptor.ts": {
+  "packages/core/src/combinator/descriptor.ts": {
     "mtime": 1780249714.3444345,
     "ast_hash": "a345fb1248e6e38a018847eb7671fde5",
     "semantic_hash": "a345fb1248e6e38a018847eb7671fde5"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/element.ts": {
+  "packages/core/src/combinator/element.ts": {
     "mtime": 1780725748.3177903,
     "ast_hash": "727aff366af64fff995278e1c91d861e",
     "semantic_hash": "727aff366af64fff995278e1c91d861e"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/fragment.ts": {
+  "packages/core/src/combinator/fragment.ts": {
     "mtime": 1779994117.2814384,
     "ast_hash": "5afa8cb90e894399dd59e6ed06b55652",
     "semantic_hash": "5afa8cb90e894399dd59e6ed06b55652"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/index.ts": {
+  "packages/core/src/combinator/index.ts": {
     "mtime": 1780725748.3183017,
     "ast_hash": "b455b9fcdf6db83bb2083da8054d5266",
     "semantic_hash": "b455b9fcdf6db83bb2083da8054d5266"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/list.test.ts": {
+  "packages/core/src/combinator/list.test.ts": {
     "mtime": 1780338022.533209,
     "ast_hash": "97e3b5a0bd7c0653db695a1b16df2115",
     "semantic_hash": "97e3b5a0bd7c0653db695a1b16df2115"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/list.ts": {
+  "packages/core/src/combinator/list.ts": {
     "mtime": 1780338022.5333564,
     "ast_hash": "94411ac6cd73e687a15b1c70ceb47703",
     "semantic_hash": "94411ac6cd73e687a15b1c70ceb47703"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/types.ts": {
+  "packages/core/src/combinator/types.ts": {
     "mtime": 1780338022.5377696,
     "ast_hash": "4882d03eab4e363319eaf4a8e803118e",
     "semantic_hash": "4882d03eab4e363319eaf4a8e803118e"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/index.ts": {
+  "packages/core/src/index.ts": {
     "mtime": 1780600167.7907312,
     "ast_hash": "2e7923501e4e9a1397c04557df876617",
     "semantic_hash": "2e7923501e4e9a1397c04557df876617"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/server/brand.ts": {
+  "packages/core/src/server/brand.ts": {
     "mtime": 1780600167.7909262,
     "ast_hash": "5ec9e200f634b0ad6c2b3ea81fd5ef52",
     "semantic_hash": "5ec9e200f634b0ad6c2b3ea81fd5ef52"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/server/index.ts": {
+  "packages/core/src/server/index.ts": {
     "mtime": 1780600167.7910807,
     "ast_hash": "0a91ffc6176416cddf9ff012f7bed107",
     "semantic_hash": "0a91ffc6176416cddf9ff012f7bed107"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/source/__type-tests__/source.test-d.ts": {
+  "packages/core/src/source/__type-tests__/source.test-d.ts": {
     "mtime": 1780338022.5379746,
     "ast_hash": "0f9c8ccab0fb40e21b514338b6dace65",
     "semantic_hash": "0f9c8ccab0fb40e21b514338b6dace65"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/source/index.ts": {
+  "packages/core/src/source/index.ts": {
     "mtime": 1780134455.892961,
     "ast_hash": "3198955200e039dda7f3c2f30de774dd",
     "semantic_hash": "3198955200e039dda7f3c2f30de774dd"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/source/source.test.ts": {
+  "packages/core/src/source/source.test.ts": {
     "mtime": 1780338022.538213,
     "ast_hash": "f5f82e9e575311c9ce6896643d03a524",
     "semantic_hash": "f5f82e9e575311c9ce6896643d03a524"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/source/source.ts": {
+  "packages/core/src/source/source.ts": {
     "mtime": 1780338022.5384066,
     "ast_hash": "8582ea0fc3d71fb8e1afbfe7cd57130a",
     "semantic_hash": "8582ea0fc3d71fb8e1afbfe7cd57130a"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/stream/index.ts": {
+  "packages/core/src/stream/index.ts": {
     "mtime": 1780134455.89334,
     "ast_hash": "2d1d5dae39fbb6af281746b57c7b4d2c",
     "semantic_hash": "2d1d5dae39fbb6af281746b57c7b4d2c"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/stream/stream.test.ts": {
+  "packages/core/src/stream/stream.test.ts": {
     "mtime": 1780134455.8939462,
     "ast_hash": "1ab54401dbf62b5865881d0e97f9c583",
     "semantic_hash": "1ab54401dbf62b5865881d0e97f9c583"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/stream/stream.ts": {
+  "packages/core/src/stream/stream.ts": {
     "mtime": 1780134455.8942223,
     "ast_hash": "1a6937b19bb7bfdcc137d9e7fc0442ab",
     "semantic_hash": "1a6937b19bb7bfdcc137d9e7fc0442ab"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/html/aria.ts": {
+  "packages/core/src/types/html/aria.ts": {
     "mtime": 1779994117.2827494,
     "ast_hash": "64216db6bea40c44045303aaf8ed84d8",
     "semantic_hash": "64216db6bea40c44045303aaf8ed84d8"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/html/attributes.ts": {
+  "packages/core/src/types/html/attributes.ts": {
     "mtime": 1780134455.8943994,
     "ast_hash": "92a8990d91fc1db922d35db544b7a1e5",
     "semantic_hash": "92a8990d91fc1db922d35db544b7a1e5"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/html/dom.ts": {
+  "packages/core/src/types/html/dom.ts": {
     "mtime": 1779609518.2854187,
     "ast_hash": "d46c8367621334493d15ba5284a3196a",
     "semantic_hash": "d46c8367621334493d15ba5284a3196a"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/html/html.ts": {
+  "packages/core/src/types/html/html.ts": {
     "mtime": 1780249714.3463979,
     "ast_hash": "fcb6640016eedbf81813be1b8d988c4e",
     "semantic_hash": "fcb6640016eedbf81813be1b8d988c4e"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/html/svg.ts": {
+  "packages/core/src/types/html/svg.ts": {
     "mtime": 1780249714.3468149,
     "ast_hash": "882828e09d8e2e67303542fdcef3534c",
     "semantic_hash": "882828e09d8e2e67303542fdcef3534c"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/types/index.ts": {
+  "packages/core/src/types/index.ts": {
     "mtime": 1780249714.3481247,
     "ast_hash": "3aecb571b31d1f1270f9857dfae3cf8e",
     "semantic_hash": "3aecb571b31d1f1270f9857dfae3cf8e"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/tsconfig.json": {
+  "packages/core/tsconfig.json": {
     "mtime": 1779994117.283954,
     "ast_hash": "4b4e66184d2ce9caa4f7814cde96c647",
     "semantic_hash": "4b4e66184d2ce9caa4f7814cde96c647"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/vite.config.ts": {
+  "packages/core/vite.config.ts": {
     "mtime": 1780249714.348346,
     "ast_hash": "146de6446ea01eafa7272de68d89dc64",
     "semantic_hash": "146de6446ea01eafa7272de68d89dc64"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/package.json": {
+  "packages/dom/package.json": {
     "mtime": 1780725753.5126605,
     "ast_hash": "34b93aecd81b40214a7556f13c952324",
     "semantic_hash": "34b93aecd81b40214a7556f13c952324"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/boundary-replay.test.ts": {
+  "packages/dom/src/boundary-replay.test.ts": {
     "mtime": 1780600167.7915444,
     "ast_hash": "9d20bb004b7994afc6af2ca51c38458b",
     "semantic_hash": "9d20bb004b7994afc6af2ca51c38458b"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/boundary-replay.ts": {
-    "mtime": 1780600167.7917032,
-    "ast_hash": "d0fd91553e3fff355a82c7406cc710bb",
-    "semantic_hash": "d0fd91553e3fff355a82c7406cc710bb"
+  "packages/dom/src/boundary-replay.ts": {
+    "mtime": 1780763362.8513336,
+    "ast_hash": "2525b594cdf9e3ab300e8e589e94144e",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/__type-tests__/hydrate.test-d.ts": {
+  "packages/dom/src/client/__type-tests__/hydrate.test-d.ts": {
     "mtime": 1780600167.7919106,
     "ast_hash": "fefb071795a55b63bc23bcbeb43b7f18",
     "semantic_hash": "fefb071795a55b63bc23bcbeb43b7f18"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/boundary.test.ts": {
+  "packages/dom/src/client/boundary.test.ts": {
     "mtime": 1780249714.3488274,
     "ast_hash": "50d43a9aabaf9a554348a549e1a56ba5",
     "semantic_hash": "50d43a9aabaf9a554348a549e1a56ba5"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/dom.events.test.ts": {
+  "packages/dom/src/client/dom.events.test.ts": {
     "mtime": 1780249714.3492236,
     "ast_hash": "a609e36958ec3d4529f7afe49847f312",
     "semantic_hash": "a609e36958ec3d4529f7afe49847f312"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/dom.test.ts": {
+  "packages/dom/src/client/dom.test.ts": {
     "mtime": 1780600167.79242,
     "ast_hash": "a37b0db6bc563eb3fd03cbf51541da28",
     "semantic_hash": "a37b0db6bc563eb3fd03cbf51541da28"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/hydrate.test.ts": {
+  "packages/dom/src/client/hydrate.test.ts": {
     "mtime": 1780249714.350122,
     "ast_hash": "d6b13e812e316e4ae5047ccd91ad994a",
     "semantic_hash": "d6b13e812e316e4ae5047ccd91ad994a"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/index.ts": {
+  "packages/dom/src/client/index.ts": {
     "mtime": 1779651086.2234907,
     "ast_hash": "bc6da7e8bdf65bd1861985e04a558454",
     "semantic_hash": "bc6da7e8bdf65bd1861985e04a558454"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/list.hydrate.test.ts": {
+  "packages/dom/src/client/list.hydrate.test.ts": {
     "mtime": 1780338022.5396097,
     "ast_hash": "08598bea548ffb18413df3fb658a27ba",
     "semantic_hash": "08598bea548ffb18413df3fb658a27ba"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/list.test.ts": {
+  "packages/dom/src/client/list.test.ts": {
     "mtime": 1780338022.540024,
     "ast_hash": "324deadca64fc919cf7aa37763f00bbf",
     "semantic_hash": "324deadca64fc919cf7aa37763f00bbf"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/render.ts": {
-    "mtime": 1780725748.3189774,
-    "ast_hash": "3756f145b48c3ab3730c52945425f1c0",
-    "semantic_hash": "3756f145b48c3ab3730c52945425f1c0"
+  "packages/dom/src/client/render.ts": {
+    "mtime": 1780763938.897812,
+    "ast_hash": "100209902a686ca27fde86f7dfe687c8",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/server-boundary-hydrate.test.ts": {
+  "packages/dom/src/client/server-boundary-hydrate.test.ts": {
     "mtime": 1780600167.7945435,
     "ast_hash": "d66e13e9a8f2b3d8caa64e7f248f7388",
     "semantic_hash": "d66e13e9a8f2b3d8caa64e7f248f7388"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/suspense.test.ts": {
+  "packages/dom/src/client/suspense.test.ts": {
     "mtime": 1780249714.351804,
     "ast_hash": "015c7a0d36775e73c7ef33d9f9fe52be",
     "semantic_hash": "015c7a0d36775e73c7ef33d9f9fe52be"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/data.ts": {
+  "packages/dom/src/data.ts": {
     "mtime": 1780249714.352155,
     "ast_hash": "19561d9f33ccd21b3c9da4d67efb1a6d",
     "semantic_hash": "19561d9f33ccd21b3c9da4d67efb1a6d"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/index.ts": {
+  "packages/dom/src/index.ts": {
     "mtime": 1779651070.738932,
     "ast_hash": "6c4ddbf617c823b9398a4e33887b6550",
     "semantic_hash": "6c4ddbf617c823b9398a4e33887b6550"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/boundary-ssr.test.ts": {
+  "packages/dom/src/server/boundary-ssr.test.ts": {
     "mtime": 1780249714.3530064,
     "ast_hash": "ce45a646f6c91dfb221c967ab8419301",
     "semantic_hash": "ce45a646f6c91dfb221c967ab8419301"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/index.ts": {
+  "packages/dom/src/server/index.ts": {
     "mtime": 1779609518.2888346,
     "ast_hash": "9ab353d47488890f65402c5ef54107a2",
     "semantic_hash": "9ab353d47488890f65402c5ef54107a2"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-stream.test.ts": {
+  "packages/dom/src/server/render-to-stream.test.ts": {
     "mtime": 1780249714.3535948,
     "ast_hash": "4e5108417a0ca5c14bb4593264e51c13",
     "semantic_hash": "4e5108417a0ca5c14bb4593264e51c13"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-stream.ts": {
-    "mtime": 1780725748.3193364,
-    "ast_hash": "8db183f30870c6f61727eedc964d2451",
-    "semantic_hash": "8db183f30870c6f61727eedc964d2451"
+  "packages/dom/src/server/render-to-stream.ts": {
+    "mtime": 1780763298.911868,
+    "ast_hash": "769ccd03d3a06d9184bb7784fffae973",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-string.test.ts": {
+  "packages/dom/src/server/render-to-string.test.ts": {
     "mtime": 1780249714.3545194,
     "ast_hash": "a89de5bd1451c63aa13fa70b115c2ef8",
     "semantic_hash": "a89de5bd1451c63aa13fa70b115c2ef8"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-string.ts": {
+  "packages/dom/src/server/render-to-string.ts": {
     "mtime": 1780249714.3547173,
     "ast_hash": "a7cf10eeaad985819a52d473d63ae92c",
     "semantic_hash": "a7cf10eeaad985819a52d473d63ae92c"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/serialize.ts": {
+  "packages/dom/src/server/serialize.ts": {
     "mtime": 1780600167.7950134,
     "ast_hash": "7232bdd92783bfcd0803fc3a6b0c0f9a",
     "semantic_hash": "7232bdd92783bfcd0803fc3a6b0c0f9a"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/server-boundary-ssr.test.ts": {
+  "packages/dom/src/server/server-boundary-ssr.test.ts": {
     "mtime": 1780600167.79534,
     "ast_hash": "f746b6bd663297d098211d3f1dd71fbf",
     "semantic_hash": "f746b6bd663297d098211d3f1dd71fbf"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/shared.ts": {
+  "packages/dom/src/shared.ts": {
     "mtime": 1780338022.5433652,
     "ast_hash": "d3f0b49088e53751af0b20adb9e20b24",
     "semantic_hash": "d3f0b49088e53751af0b20adb9e20b24"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/utilities.ts": {
+  "packages/dom/src/utilities.ts": {
     "mtime": 1780249714.355515,
     "ast_hash": "5cbd24bab77c52643bf178fc9294ab70",
     "semantic_hash": "5cbd24bab77c52643bf178fc9294ab70"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/tsconfig.json": {
+  "packages/dom/tsconfig.json": {
     "mtime": 1780600167.7955024,
     "ast_hash": "180b53e9cad50195b29e80366839c6a8",
     "semantic_hash": "180b53e9cad50195b29e80366839c6a8"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/vite.config.ts": {
+  "packages/dom/vite.config.ts": {
     "mtime": 1780338008.4926188,
     "ast_hash": "72c90ffeea2213175a8a15ca1aa418a5",
     "semantic_hash": "72c90ffeea2213175a8a15ca1aa418a5"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/package.json": {
+  "packages/router/package.json": {
     "mtime": 1780725753.5127447,
     "ast_hash": "5cce90d125ad0db0ea1ea2de5949eb40",
     "semantic_hash": "5cce90d125ad0db0ea1ea2de5949eb40"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/__type-tests__/router.test-d.ts": {
-    "mtime": 1780725753.5129795,
-    "ast_hash": "5adf6b1ae4772086eaca001790cc7d26",
-    "semantic_hash": "5adf6b1ae4772086eaca001790cc7d26"
+  "packages/router/src/__type-tests__/router.test-d.ts": {
+    "mtime": 1780744777.808621,
+    "ast_hash": "83cc26116923bf900376f75b297df1ff",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/client/index.ts": {
-    "mtime": 1780725753.513105,
-    "ast_hash": "13c83666113179315c026baf771f17a1",
-    "semantic_hash": "13c83666113179315c026baf771f17a1"
+  "packages/router/src/client/index.ts": {
+    "mtime": 1780744877.664458,
+    "ast_hash": "2ae69a967ff57af185eeda8cce492549",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/client/link.test.ts": {
-    "mtime": 1780725753.5131965,
-    "ast_hash": "740750f88d0c026a1570912805d392fd",
-    "semantic_hash": "740750f88d0c026a1570912805d392fd"
+  "packages/router/src/client/link.test.ts": {
+    "mtime": 1780742150.0449429,
+    "ast_hash": "05942b7bc552ed47a8310117a8460338",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/client/link.ts": {
-    "mtime": 1780725753.5132833,
-    "ast_hash": "c1c51ca9ea5e9840d9f04887921d879a",
-    "semantic_hash": "c1c51ca9ea5e9840d9f04887921d879a"
+  "packages/router/src/client/link.ts": {
+    "mtime": 1780742081.7460356,
+    "ast_hash": "f1b906c4fdcdc89e1085b13cf3f8edba",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/client/router-live.ts": {
-    "mtime": 1780725753.5133767,
-    "ast_hash": "76f40316e3ae4e165efa9bf6f10bb4a9",
-    "semantic_hash": "76f40316e3ae4e165efa9bf6f10bb4a9"
+  "packages/router/src/client/router-live.ts": {
+    "mtime": 1780763964.5750344,
+    "ast_hash": "7b4fc275d9a6b3ae8c2bdfe14383cdd2",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/compile.test.ts": {
-    "mtime": 1780725753.5134962,
-    "ast_hash": "1acdc58874f43ad59197e50d96856eea",
-    "semantic_hash": "1acdc58874f43ad59197e50d96856eea"
+  "packages/router/src/compile.test.ts": {
+    "mtime": 1780731756.309078,
+    "ast_hash": "3277bd845359fcefc7f5faa479109125",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/compile.ts": {
-    "mtime": 1780725753.5136151,
-    "ast_hash": "e91c03de379860ca1156d9791af19c59",
-    "semantic_hash": "e91c03de379860ca1156d9791af19c59"
+  "packages/router/src/compile.ts": {
+    "mtime": 1780748767.2505224,
+    "ast_hash": "461ef4760b724e3e7593e52a335d01ae",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/errors.test.ts": {
+  "packages/router/src/errors.test.ts": {
     "mtime": 1780725753.5136645,
     "ast_hash": "6fe0200753d30b9f41f105585514b578",
     "semantic_hash": "6fe0200753d30b9f41f105585514b578"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/errors.ts": {
-    "mtime": 1780725753.513728,
-    "ast_hash": "2c7453a5753d86e055ac9af7a5026335",
-    "semantic_hash": "2c7453a5753d86e055ac9af7a5026335"
+  "packages/router/src/errors.ts": {
+    "mtime": 1780748751.2787614,
+    "ast_hash": "fd356c898b7774d94b7dfe4b4710bce7",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/href.test.ts": {
-    "mtime": 1780725753.513796,
-    "ast_hash": "903e3340e4b9e8ce7c810b7b67a173b8",
-    "semantic_hash": "903e3340e4b9e8ce7c810b7b67a173b8"
+  "packages/router/src/href.test.ts": {
+    "mtime": 1780742148.5061426,
+    "ast_hash": "eb43075a75a7664ebed851ffcc10ec04",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/href.ts": {
+  "packages/router/src/href.ts": {
     "mtime": 1780725753.513869,
     "ast_hash": "6bae5deeeef51280938c2bd6e244dcf6",
     "semantic_hash": "6bae5deeeef51280938c2bd6e244dcf6"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/index.ts": {
-    "mtime": 1780725753.5139236,
-    "ast_hash": "c865649f46999d139b7cefe71868c335",
-    "semantic_hash": "c865649f46999d139b7cefe71868c335"
+  "packages/router/src/index.ts": {
+    "mtime": 1780748797.7655833,
+    "ast_hash": "7e74fd1de78c06eda4543441dcae16b0",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/matcher.test.ts": {
-    "mtime": 1780725753.5139835,
-    "ast_hash": "ce3b4c877a2f41b1128fdb9b2581ab22",
-    "semantic_hash": "ce3b4c877a2f41b1128fdb9b2581ab22"
+  "packages/router/src/matcher.test.ts": {
+    "mtime": 1780742250.9214826,
+    "ast_hash": "5e35baa674c823801eabe47afaf6f6ab",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/matcher.ts": {
-    "mtime": 1780725753.5140567,
-    "ast_hash": "86e5b7d87386a0f01bc9b23994fc7608",
-    "semantic_hash": "86e5b7d87386a0f01bc9b23994fc7608"
+  "packages/router/src/matcher.ts": {
+    "mtime": 1780742065.6828551,
+    "ast_hash": "ce2c4016eb8e99edf8241ebde58e2991",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/outlet.ts": {
-    "mtime": 1780725753.5141387,
-    "ast_hash": "229fba3dd85430507676d09343ca4a97",
-    "semantic_hash": "229fba3dd85430507676d09343ca4a97"
+  "packages/router/src/outlet.ts": {
+    "mtime": 1780744001.421185,
+    "ast_hash": "57bd20b7d832248ee830c7f77022de6d",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/route-tree.ts": {
-    "mtime": 1780725753.5142186,
-    "ast_hash": "dfeea7ab03c439203360c85044dd8def",
-    "semantic_hash": "dfeea7ab03c439203360c85044dd8def"
+  "packages/router/src/route-tree.ts": {
+    "mtime": 1780743990.5796049,
+    "ast_hash": "2aeba524bfa5f8a804f5901e986a59a9",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/router-service.test.ts": {
-    "mtime": 1780725753.5142887,
-    "ast_hash": "ec5cb98f4d719ce2ae1418277cea7710",
-    "semantic_hash": "ec5cb98f4d719ce2ae1418277cea7710"
+  "packages/router/src/router-service.test.ts": {
+    "mtime": 1780744760.7304778,
+    "ast_hash": "318af7a723575e75b14eb67f2f52245f",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/router-service.ts": {
-    "mtime": 1780725753.5143695,
-    "ast_hash": "6d612ef26fa08b0f7dcdf075af5e6a7e",
-    "semantic_hash": "6d612ef26fa08b0f7dcdf075af5e6a7e"
+  "packages/router/src/router-service.ts": {
+    "mtime": 1780744669.6698983,
+    "ast_hash": "2e71ca93312ed14b97a7ed61e473bc26",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/server/index.ts": {
-    "mtime": 1780725753.5144598,
-    "ast_hash": "0c6ab0505ca24aa8952b33f02a490769",
-    "semantic_hash": "0c6ab0505ca24aa8952b33f02a490769"
+  "packages/router/src/server/index.ts": {
+    "mtime": 1780731507.6388128,
+    "ast_hash": "06a500acbd3fc785fd018581fb6fe87e",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/server/router-server.test.ts": {
-    "mtime": 1780725753.5145223,
-    "ast_hash": "7b95f6c9f98437c92968d588e42c1af2",
-    "semantic_hash": "7b95f6c9f98437c92968d588e42c1af2"
+  "packages/router/src/server/router-server.test.ts": {
+    "mtime": 1780744044.853236,
+    "ast_hash": "b575f85cdc04232293e8526277c1f747",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/server/router-server.ts": {
-    "mtime": 1780725753.514606,
-    "ast_hash": "164f026e9458ca78a2632da0c70edb54",
-    "semantic_hash": "164f026e9458ca78a2632da0c70edb54"
+  "packages/router/src/server/router-server.ts": {
+    "mtime": 1780763265.3809888,
+    "ast_hash": "ca8fc113c86ebbe31f9de4ce2091e9a6",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/server/to-http-api.test.ts": {
-    "mtime": 1780725753.5146708,
-    "ast_hash": "04e86561edd59015688617f0bec41761",
-    "semantic_hash": "04e86561edd59015688617f0bec41761"
-  },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/src/server/to-http-api.ts": {
-    "mtime": 1780725753.5147293,
-    "ast_hash": "e9acf4e41f9b46ada4ff4850f51f5eef",
-    "semantic_hash": "e9acf4e41f9b46ada4ff4850f51f5eef"
-  },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/tsconfig.json": {
+  "packages/router/tsconfig.json": {
     "mtime": 1780725753.5148294,
     "ast_hash": "180b53e9cad50195b29e80366839c6a8",
     "semantic_hash": "180b53e9cad50195b29e80366839c6a8"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/vite.config.ts": {
+  "packages/router/vite.config.ts": {
     "mtime": 1780725753.5148783,
     "ast_hash": "2a3ceecd3fb8a0651e2d7bf4d9d80e95",
     "semantic_hash": "2a3ceecd3fb8a0651e2d7bf4d9d80e95"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/package.json": {
+  "packages/vite/package.json": {
     "mtime": 1780725753.515053,
     "ast_hash": "b2d96a7d44286c5041c807760f4ee4e2",
     "semantic_hash": "b2d96a7d44286c5041c807760f4ee4e2"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/build.test.ts": {
+  "packages/vite/src/build.test.ts": {
     "mtime": 1780600167.795931,
     "ast_hash": "970b5aeeaa1d08e499c2209543d6199f",
     "semantic_hash": "970b5aeeaa1d08e499c2209543d6199f"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/index.test.ts": {
+  "packages/vite/src/index.test.ts": {
     "mtime": 1780600167.7960634,
     "ast_hash": "a8c40b6017ec558289a4da9343d5cce9",
     "semantic_hash": "a8c40b6017ec558289a4da9343d5cce9"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/index.ts": {
+  "packages/vite/src/index.ts": {
     "mtime": 1780600167.7962875,
     "ast_hash": "f8774da61215c3a307fcd8170f0f21f6",
     "semantic_hash": "f8774da61215c3a307fcd8170f0f21f6"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/prune.test.ts": {
+  "packages/vite/src/prune.test.ts": {
     "mtime": 1780600167.7966213,
     "ast_hash": "0e70bc8c806b13821ccf67698f7e1a99",
     "semantic_hash": "0e70bc8c806b13821ccf67698f7e1a99"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/prune.ts": {
+  "packages/vite/src/prune.ts": {
     "mtime": 1780600167.7968109,
     "ast_hash": "6af8d78f66e15cf3a543a15fcf9dd0aa",
     "semantic_hash": "6af8d78f66e15cf3a543a15fcf9dd0aa"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/tsconfig.json": {
+  "packages/vite/tsconfig.json": {
     "mtime": 1780600167.7969275,
     "ast_hash": "4b4e66184d2ce9caa4f7814cde96c647",
     "semantic_hash": "4b4e66184d2ce9caa4f7814cde96c647"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/vite.config.ts": {
+  "packages/vite/vite.config.ts": {
     "mtime": 1780600167.7970707,
     "ast_hash": "d786e41446f3605e7b5f1402cf49cae8",
     "semantic_hash": "d786e41446f3605e7b5f1402cf49cae8"
   },
-  "/Users/stef/Documents/projects/effect-ui/tsconfig.base.json": {
+  "tsconfig.base.json": {
     "mtime": 1779994117.287216,
     "ast_hash": "e5561ab480fec604e502324306b1253e",
     "semantic_hash": "e5561ab480fec604e502324306b1253e"
   },
-  "/Users/stef/Documents/projects/effect-ui/vite.config.ts": {
-    "mtime": 1780339912.8002186,
-    "ast_hash": "953b9c89e7cf1248269510d8d996f624",
-    "semantic_hash": "953b9c89e7cf1248269510d8d996f624"
+  "vite.config.ts": {
+    "mtime": 1780742514.6656377,
+    "ast_hash": "98100b51a44964af03b94b2bdcaabc3e",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/vitest.browser.config.ts": {
+  "vitest.browser.config.ts": {
     "mtime": 1780339912.800342,
     "ast_hash": "377b1b91f8fd50e09648dfc640e3920c",
     "semantic_hash": "377b1b91f8fd50e09648dfc640e3920c"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/ISSUE_TEMPLATE/bug_report.yml": {
+  ".github/ISSUE_TEMPLATE/bug_report.yml": {
     "mtime": 1779476188.6641493,
     "ast_hash": "ea0f93dad74dbaad5ce6f4fdf8b8167d",
     "semantic_hash": "ea0f93dad74dbaad5ce6f4fdf8b8167d"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/ISSUE_TEMPLATE/feature_request.yml": {
+  ".github/ISSUE_TEMPLATE/feature_request.yml": {
     "mtime": 1779476188.6642354,
     "ast_hash": "1c4c1b6c66f1a43014c2aee39b30fea9",
     "semantic_hash": "1c4c1b6c66f1a43014c2aee39b30fea9"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/PULL_REQUEST_TEMPLATE.md": {
+  ".github/PULL_REQUEST_TEMPLATE.md": {
     "mtime": 1779476188.6643138,
     "ast_hash": "b8770ad17e4304f6c30983b9f1abd954",
     "semantic_hash": "b8770ad17e4304f6c30983b9f1abd954"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/actions/setup/action.yml": {
+  ".github/actions/setup/action.yml": {
     "mtime": 1779476188.6644707,
     "ast_hash": "45dd444c796bddb990a1004fd75a5766",
     "semantic_hash": "45dd444c796bddb990a1004fd75a5766"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/dependabot.yml": {
+  ".github/dependabot.yml": {
     "mtime": 1779476188.6645386,
     "ast_hash": "9bf9b7eaab80726b15b44142dd2b1368",
     "semantic_hash": "9bf9b7eaab80726b15b44142dd2b1368"
   },
-  "/Users/stef/Documents/projects/effect-ui/.github/workflows/ci-release.yml": {
+  ".github/workflows/ci-release.yml": {
     "mtime": 1780339912.7887974,
     "ast_hash": "75e064c684ca73bf096360bdf5c9b00d",
     "semantic_hash": "75e064c684ca73bf096360bdf5c9b00d"
   },
-  "/Users/stef/Documents/projects/effect-ui/CLAUDE.md": {
-    "mtime": 1780728857.550078,
-    "ast_hash": "88b436eb9483feb76317d2f606560450",
-    "semantic_hash": "88b436eb9483feb76317d2f606560450"
+  "CLAUDE.md": {
+    "mtime": 1780742527.641415,
+    "ast_hash": "332501061821b7ab848275952194a96e",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/README.md": {
+  "README.md": {
     "mtime": 1780725753.5058322,
     "ast_hash": "be3d8b515d0163c67ea62f91c34fdfe6",
     "semantic_hash": "be3d8b515d0163c67ea62f91c34fdfe6"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/api/core.md": {
+  "docs/api/core.md": {
     "mtime": 1780725753.5059514,
     "ast_hash": "a6c8c7a4a3f202c3ab59a416546998a2",
     "semantic_hash": "a6c8c7a4a3f202c3ab59a416546998a2"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/api/router.md": {
-    "mtime": 1780725753.5060465,
-    "ast_hash": "674a7bb756a69b202ce9218476a651ed",
-    "semantic_hash": "674a7bb756a69b202ce9218476a651ed"
+  "docs/api/router.md": {
+    "mtime": 1780745360.5475297,
+    "ast_hash": "065dda1122fad7f4f57e4b6859c8a476",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/concepts/combinator-api.md": {
+  "docs/concepts/combinator-api.md": {
     "mtime": 1780725753.506142,
     "ast_hash": "adaa45deb097f9bc4a32ef54a83ff3e5",
     "semantic_hash": "adaa45deb097f9bc4a32ef54a83ff3e5"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/concepts/reactive-primitives.md": {
+  "docs/concepts/reactive-primitives.md": {
     "mtime": 1780725753.5062156,
     "ast_hash": "2859849132cc5fed4fdaa51425780be3",
     "semantic_hash": "2859849132cc5fed4fdaa51425780be3"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/guides/component-authoring.md": {
+  "docs/guides/component-authoring.md": {
     "mtime": 1780725753.506328,
     "ast_hash": "8398a8b523f075b58f48b9b92ed66c78",
     "semantic_hash": "8398a8b523f075b58f48b9b92ed66c78"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/guides/getting-started.md": {
+  "docs/guides/getting-started.md": {
     "mtime": 1780725753.5064373,
     "ast_hash": "fd4af74c10dde20b0b77abd11066b5a7",
     "semantic_hash": "fd4af74c10dde20b0b77abd11066b5a7"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/guides/routing.md": {
-    "mtime": 1780725753.506544,
-    "ast_hash": "d44e98924520b702f6925602ebb20e37",
-    "semantic_hash": "d44e98924520b702f6925602ebb20e37"
+  "docs/guides/routing.md": {
+    "mtime": 1780745360.5285723,
+    "ast_hash": "1ea790dba669b9be6a3608055fe5ca9b",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/guides/server-side-rendering.md": {
+  "docs/guides/server-side-rendering.md": {
     "mtime": 1780725753.506651,
     "ast_hash": "13e4838452d258fcfa745c883fb16fa4",
     "semantic_hash": "13e4838452d258fcfa745c883fb16fa4"
   },
-  "/Users/stef/Documents/projects/effect-ui/docs/plans/element-ref-helper.md": {
+  "docs/plans/element-ref-helper.md": {
     "mtime": 1780725748.3175178,
     "ast_hash": "7d2a21df75e1649128d3198f7b25ff1b",
     "semantic_hash": "7d2a21df75e1649128d3198f7b25ff1b"
   },
-  "/Users/stef/Documents/projects/effect-ui/e2e/specs.md": {
+  "e2e/specs.md": {
     "mtime": 1780339912.7902203,
     "ast_hash": "eca16f13d2867b586d2f6f28e281d3e8",
     "semantic_hash": "eca16f13d2867b586d2f6f28e281d3e8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/index.html": {
+  "examples/async-data-loading/index.html": {
     "mtime": 1780339912.791218,
     "ast_hash": "7a83fae0b8fb0e27afda9d7ef1256f84",
     "semantic_hash": "7a83fae0b8fb0e27afda9d7ef1256f84"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/async-data-loading/readme.md": {
+  "examples/async-data-loading/readme.md": {
     "mtime": 1780725753.507304,
     "ast_hash": "b53f333a84578490e31cbde45cb793c5",
     "semantic_hash": "b53f333a84578490e31cbde45cb793c5"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/index.html": {
+  "examples/declarative-event-handlers/index.html": {
     "mtime": 1780339912.7922342,
     "ast_hash": "f5a25870e1e9863b36460035a76222f9",
     "semantic_hash": "f5a25870e1e9863b36460035a76222f9"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/declarative-event-handlers/readme.md": {
+  "examples/declarative-event-handlers/readme.md": {
     "mtime": 1779994117.275097,
     "ast_hash": "a259f30c8ca924630377fe4600957092",
     "semantic_hash": "a259f30c8ca924630377fe4600957092"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/index.html": {
+  "examples/element-ref/index.html": {
     "mtime": 1780339912.7930984,
     "ast_hash": "552556104038b147c542eca805e086d8",
     "semantic_hash": "552556104038b147c542eca805e086d8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/element-ref/readme.md": {
+  "examples/element-ref/readme.md": {
     "mtime": 1780725753.5078423,
     "ast_hash": "4d43fe3ca44db78fd850f3a211f416ad",
     "semantic_hash": "4d43fe3ca44db78fd850f3a211f416ad"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/index.html": {
+  "examples/error-boundary/index.html": {
     "mtime": 1780339912.7939746,
     "ast_hash": "8e41fec0addb23f45709130e9bd1c185",
     "semantic_hash": "8e41fec0addb23f45709130e9bd1c185"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/error-boundary/readme.md": {
+  "examples/error-boundary/readme.md": {
     "mtime": 1780725753.5084178,
     "ast_hash": "bfa770dd81ae4aa9656c4a5129556b37",
     "semantic_hash": "bfa770dd81ae4aa9656c4a5129556b37"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/index.html": {
+  "examples/form-handling/index.html": {
     "mtime": 1780339912.796078,
     "ast_hash": "94a0b14e94e8d64dd07566ab0f5c4411",
     "semantic_hash": "94a0b14e94e8d64dd07566ab0f5c4411"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/form-handling/readme.md": {
+  "examples/form-handling/readme.md": {
     "mtime": 1780725753.5088527,
     "ast_hash": "730243c838498e50d309ac015bae1e4b",
     "semantic_hash": "730243c838498e50d309ac015bae1e4b"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/index.html": {
+  "examples/keyed-list/index.html": {
     "mtime": 1780338022.531672,
     "ast_hash": "15e30ad9666287730efef5e8c7f67e75",
     "semantic_hash": "15e30ad9666287730efef5e8c7f67e75"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/keyed-list/readme.md": {
+  "examples/keyed-list/readme.md": {
     "mtime": 1780725753.5092669,
     "ast_hash": "8f592167fe10ff962c315dcee44ec47f",
     "semantic_hash": "8f592167fe10ff962c315dcee44ec47f"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/index.html": {
+  "examples/list-rendering/index.html": {
     "mtime": 1780339912.7969103,
     "ast_hash": "abcb67b07a39c94a3d1ad7111c9103c8",
     "semantic_hash": "abcb67b07a39c94a3d1ad7111c9103c8"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/list-rendering/readme.md": {
+  "examples/list-rendering/readme.md": {
     "mtime": 1780725753.5097005,
     "ast_hash": "d8055b971eadebfd432adf67a5384935",
     "semantic_hash": "d8055b971eadebfd432adf67a5384935"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/index.html": {
+  "examples/reactive-styles/index.html": {
     "mtime": 1780339912.7975945,
     "ast_hash": "8d82a4d932c9aa6931409071336c56ee",
     "semantic_hash": "8d82a4d932c9aa6931409071336c56ee"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/reactive-styles/readme.md": {
+  "examples/reactive-styles/readme.md": {
     "mtime": 1779994117.2774782,
     "ast_hash": "0a1bb29616d51d183e5c9d1920fa882d",
     "semantic_hash": "0a1bb29616d51d183e5c9d1920fa882d"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/router-ssr/readme.md": {
-    "mtime": 1780725753.5100813,
-    "ast_hash": "721d4b3ea7dd7ae61ddc11af467ce365",
-    "semantic_hash": "721d4b3ea7dd7ae61ddc11af467ce365"
+  "examples/router-ssr/readme.md": {
+    "mtime": 1780745154.4590492,
+    "ast_hash": "c6e7901526896c3743f8e9f69b2a0955",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/index.html": {
+  "examples/server-boundary/index.html": {
     "mtime": 1780600167.787578,
     "ast_hash": "b1579f708e440f4703e9492ac82c79e6",
     "semantic_hash": "b1579f708e440f4703e9492ac82c79e6"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/server-boundary/readme.md": {
+  "examples/server-boundary/readme.md": {
     "mtime": 1780600167.7878647,
     "ast_hash": "090e98b12b0295fea1eb15a1c9f31b15",
     "semantic_hash": "090e98b12b0295fea1eb15a1c9f31b15"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/index.html": {
+  "examples/ssr-hydration/index.html": {
     "mtime": 1779994117.2777636,
     "ast_hash": "4e21f46402d352afcd427da52305cdc2",
     "semantic_hash": "4e21f46402d352afcd427da52305cdc2"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/ssr-hydration/readme.md": {
+  "examples/ssr-hydration/readme.md": {
     "mtime": 1779994117.2779174,
     "ast_hash": "f4044dc729327fabb04b15ababc1c641",
     "semantic_hash": "f4044dc729327fabb04b15ababc1c641"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/index.html": {
+  "examples/subscription-ref/index.html": {
     "mtime": 1780339912.7987082,
     "ast_hash": "45ca8c740889fcd47de851493a7c4ad1",
     "semantic_hash": "45ca8c740889fcd47de851493a7c4ad1"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/subscription-ref/readme.md": {
+  "examples/subscription-ref/readme.md": {
     "mtime": 1780725753.511965,
     "ast_hash": "411ea2bc7b644390f2bc7d77a7070590",
     "semantic_hash": "411ea2bc7b644390f2bc7d77a7070590"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/index.html": {
+  "examples/suspense/index.html": {
     "mtime": 1779994117.2792144,
     "ast_hash": "e32c85cc7a4971504a8590a78758e546",
     "semantic_hash": "e32c85cc7a4971504a8590a78758e546"
   },
-  "/Users/stef/Documents/projects/effect-ui/examples/suspense/readme.md": {
+  "examples/suspense/readme.md": {
     "mtime": 1780725753.5122519,
     "ast_hash": "051df162c01258cfdfba410f236412e7",
     "semantic_hash": "051df162c01258cfdfba410f236412e7"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/boundary.specs.md": {
+  "packages/core/src/boundary/boundary.specs.md": {
     "mtime": 1780249714.3425167,
     "ast_hash": "2ea4b5e3ff45ec05a64c702980fd9e7f",
     "semantic_hash": "2ea4b5e3ff45ec05a64c702980fd9e7f"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/boundary/server.specs.md": {
-    "mtime": 1780600167.7904663,
-    "ast_hash": "86d73206d40b1859d58d161ce8e4865c",
-    "semantic_hash": "86d73206d40b1859d58d161ce8e4865c"
+  "packages/core/src/boundary/server.specs.md": {
+    "mtime": 1780747884.8566191,
+    "ast_hash": "4041700df889d62a9610876b898e51ab",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/combinator.spec.md": {
+  "packages/core/src/combinator/combinator.spec.md": {
     "mtime": 1780249714.343368,
     "ast_hash": "1275f898cec7dda10c3740f88b145488",
     "semantic_hash": "1275f898cec7dda10c3740f88b145488"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/combinator/list.specs.md": {
+  "packages/core/src/combinator/list.specs.md": {
     "mtime": 1780338022.533065,
     "ast_hash": "1515fee7d7036716c7ef265c3ae906eb",
     "semantic_hash": "1515fee7d7036716c7ef265c3ae906eb"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/core/src/stream/stream.specs.md": {
+  "packages/core/src/stream/stream.specs.md": {
     "mtime": 1780134455.8936377,
     "ast_hash": "f99905e0dc2f803e28756d5cb186bbe9",
     "semantic_hash": "f99905e0dc2f803e28756d5cb186bbe9"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/boundary-replay.specs.md": {
+  "packages/dom/src/boundary-replay.specs.md": {
     "mtime": 1780600167.7913728,
     "ast_hash": "e686e4b3949dba1d801035ff7583df82",
     "semantic_hash": "e686e4b3949dba1d801035ff7583df82"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/boundary.specs.md": {
+  "packages/dom/src/client/boundary.specs.md": {
     "mtime": 1780600167.792121,
     "ast_hash": "3c139d62285d2b906112e52fda2a86a7",
     "semantic_hash": "3c139d62285d2b906112e52fda2a86a7"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/diffing-model.checklist.md": {
+  "packages/dom/src/client/diffing-model.checklist.md": {
     "mtime": 1780338022.538612,
     "ast_hash": "ff7e823bf6d592ac40e0ad6a8a69cd31",
     "semantic_hash": "ff7e823bf6d592ac40e0ad6a8a69cd31"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/diffing-model.plan.md": {
+  "packages/dom/src/client/diffing-model.plan.md": {
     "mtime": 1780338022.5388446,
     "ast_hash": "462ec59d049f13addf1720a197a18717",
     "semantic_hash": "462ec59d049f13addf1720a197a18717"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/dom.events.specs.md": {
+  "packages/dom/src/client/dom.events.specs.md": {
     "mtime": 1779609518.287126,
     "ast_hash": "9ff0e35a5d819344fbbf9032a6c8afc6",
     "semantic_hash": "9ff0e35a5d819344fbbf9032a6c8afc6"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/dom.specs.md": {
+  "packages/dom/src/client/dom.specs.md": {
     "mtime": 1780338022.5390873,
     "ast_hash": "ebedf1ece58aaa606c1b2ad88d479a85",
     "semantic_hash": "ebedf1ece58aaa606c1b2ad88d479a85"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/hydrate.specs.md": {
+  "packages/dom/src/client/hydrate.specs.md": {
     "mtime": 1779609518.2878654,
     "ast_hash": "3805c13280c8c64925a606fc603460d7",
     "semantic_hash": "3805c13280c8c64925a606fc603460d7"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/list.specs.md": {
+  "packages/dom/src/client/list.specs.md": {
     "mtime": 1780338022.5398707,
     "ast_hash": "290d530c5470481da3f89a381b015eb0",
     "semantic_hash": "290d530c5470481da3f89a381b015eb0"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/server-boundary-hydrate.specs.md": {
-    "mtime": 1780600167.794378,
-    "ast_hash": "0bf92072fc9ce3811dbee6bce2d8ab7b",
-    "semantic_hash": "0bf92072fc9ce3811dbee6bce2d8ab7b"
+  "packages/dom/src/client/server-boundary-hydrate.specs.md": {
+    "mtime": 1780747971.1805856,
+    "ast_hash": "bc4c0a9abf0990bb99cf1db00017d251",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/client/suspense.specs.md": {
+  "packages/dom/src/client/suspense.specs.md": {
     "mtime": 1780249714.3513637,
     "ast_hash": "f21694727262f007769b59817b32404c",
     "semantic_hash": "f21694727262f007769b59817b32404c"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-stream.specs.md": {
+  "packages/dom/src/server/render-to-stream.specs.md": {
     "mtime": 1780249714.3532896,
     "ast_hash": "82e5543e878f5987b75c45003dfb8bc9",
     "semantic_hash": "82e5543e878f5987b75c45003dfb8bc9"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/render-to-string.specs.md": {
+  "packages/dom/src/server/render-to-string.specs.md": {
     "mtime": 1780249714.3542664,
     "ast_hash": "fb3e818e9121cff68ec3311670adf5be",
     "semantic_hash": "fb3e818e9121cff68ec3311670adf5be"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/server-boundary-ssr.specs.md": {
-    "mtime": 1780600167.795154,
-    "ast_hash": "a60ac572376f28a18e04b0222c40b4a5",
-    "semantic_hash": "a60ac572376f28a18e04b0222c40b4a5"
+  "packages/dom/src/server/server-boundary-ssr.specs.md": {
+    "mtime": 1780747904.1881783,
+    "ast_hash": "ea3ac047444cd17bd8f6d8b434afbe66",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/dom/src/server/suspense-ssr.specs.md": {
+  "packages/dom/src/server/suspense-ssr.specs.md": {
     "mtime": 1780249714.355017,
     "ast_hash": "6d2ed3043cad8995f3386127efe2db85",
     "semantic_hash": "6d2ed3043cad8995f3386127efe2db85"
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/router/router.specs.md": {
-    "mtime": 1780725753.512844,
-    "ast_hash": "7525975b82dfbc9529acac4b7d05df1e",
-    "semantic_hash": "7525975b82dfbc9529acac4b7d05df1e"
+  "packages/router/router.specs.md": {
+    "mtime": 1780744877.8894672,
+    "ast_hash": "ad084b73f2d9210e56204c45371035d8",
+    "semantic_hash": ""
   },
-  "/Users/stef/Documents/projects/effect-ui/packages/vite/src/prune.specs.md": {
+  "packages/vite/src/prune.specs.md": {
     "mtime": 1780600167.7964456,
     "ast_hash": "2f14b4e936a7b50246932c31da377a54",
     "semantic_hash": "2f14b4e936a7b50246932c31da377a54"
   },
-  "/Users/stef/Documents/projects/effect-ui/plans/boundary-component.md": {
+  "plans/boundary-component.md": {
     "mtime": 1780249714.3558087,
     "ast_hash": "d32951ed8420fa54dded883c005af921",
     "semantic_hash": "d32951ed8420fa54dded883c005af921"
   },
-  "/Users/stef/Documents/projects/effect-ui/plans/boundary-delivery-report.md": {
+  "plans/boundary-delivery-report.md": {
     "mtime": 1780249714.356051,
     "ast_hash": "7ab53eb90a3aeb484d6ed48fe7b78054",
     "semantic_hash": "7ab53eb90a3aeb484d6ed48fe7b78054"
   },
-  "/Users/stef/Documents/projects/effect-ui/plans/boundary-tests-and-implementation.md": {
+  "plans/boundary-tests-and-implementation.md": {
     "mtime": 1780249714.3562415,
     "ast_hash": "1efc13df7a29c26975018e3daaf0aa71",
     "semantic_hash": "1efc13df7a29c26975018e3daaf0aa71"
   },
-  "/Users/stef/Documents/projects/effect-ui/pnpm-workspace.yaml": {
+  "pnpm-workspace.yaml": {
     "mtime": 1780725753.5154512,
     "ast_hash": "528327e6bc9011641ad0c6be3dd472d4",
     "semantic_hash": "528327e6bc9011641ad0c6be3dd472d4"
+  },
+  ".claude/settings.json": {
+    "mtime": 1780728857.5502439,
+    "ast_hash": "bfee062c3962c14264fd704e975a6b38",
+    "semantic_hash": ""
+  },
+  "docs/plans/router-refactor.md": {
+    "mtime": 1780732218.4437447,
+    "ast_hash": "cc5f1095c7798438de3ff17306655b0f",
+    "semantic_hash": ""
+  },
+  "packages/router/src/client/router-live.test.ts": {
+    "mtime": 1780742335.9331148,
+    "ast_hash": "6ff15ad30bd2e36a40b77257cb2aba90",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/navigation.browser.test.ts": {
+    "mtime": 1780744828.2965667,
+    "ast_hash": "26ae562eca3f088a91e2162cd790a857",
+    "semantic_hash": ""
+  },
+  "packages/router/src/client/navigation.test.ts": {
+    "mtime": 1780744750.1220894,
+    "ast_hash": "51c036839b2a55dba172e7a523f4d085",
+    "semantic_hash": ""
+  },
+  "packages/router/src/client/navigation.ts": {
+    "mtime": 1780744712.491836,
+    "ast_hash": "15a9628d98cd92e1afae98b64703c9d5",
+    "semantic_hash": ""
+  },
+  "packages/core/src/boundary/registry.ts": {
+    "mtime": 1780748413.0295494,
+    "ast_hash": "6994e7f56ac406fd70fbce7fc79dbbb0",
+    "semantic_hash": ""
+  },
+  "packages/router/src/data-endpoint.ts": {
+    "mtime": 1780748782.2935014,
+    "ast_hash": "3a48cffef11492c21473e86ae84e9191",
+    "semantic_hash": ""
+  },
+  "packages/router/src/data-endpoint.specs.md": {
+    "mtime": 1780747999.2171412,
+    "ast_hash": "0ae3473441f7dd95c9044eb4b64deb9a",
+    "semantic_hash": ""
+  },
+  "packages/core/src/boundary/data-client.ts": {
+    "mtime": 1780763848.9026253,
+    "ast_hash": "dccec925c0ee613f8504f619480a024e",
+    "semantic_hash": ""
   }
 }

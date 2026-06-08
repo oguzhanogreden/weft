@@ -4,7 +4,14 @@ import { Effect, Stream } from "effect";
 import { Boundary, h } from "@effect-ui/core";
 import { JSDOM } from "jsdom";
 import { mount, hydrate } from "./render";
-import { renderToStringHydratable } from "~/server/render-to-string";
+import { renderToStringHydratable as _renderToStringHydratable } from "~/server/render-to-string";
+import type { Renderable } from "@effect-ui/core/types";
+import { NoRpc } from "../__tests__/rpc-stub";
+
+// These trees contain no `Boundary.rpc`; shadow the SSR fn with the no-op `NoRpc`
+// layer pre-provided (it requires an AppRpcClientTag unconditionally).
+const renderToStringHydratable = (n: Renderable) =>
+  Effect.provide(_renderToStringHydratable(n), NoRpc);
 
 // ============================================================================
 // Test Helpers

@@ -2,6 +2,7 @@ export type {
   ComponentSlot,
   Fields,
   FieldsType,
+  RouteHandlerProps,
   RouteNode,
   LayoutNode,
   TreeNode,
@@ -10,13 +11,13 @@ export type {
   SubtreeE,
   SubtreeR,
 } from "./route-tree";
-export { compile, leafRegistry } from "./compile";
+export { buildHttpApi, compile, leafRegistry } from "./compile";
 export type { RouterDef, RouterOptions, Compiled, CompiledLeaf, CompiledLayout } from "./compile";
 export { match, compileMatchers } from "./matcher";
 export type { RouteMatch } from "./matcher";
 export { href } from "./href";
 export type { HrefArgs } from "./href";
 export { Router } from "./router-service";
+export type { NavigateOptions, RouterHttpApiClient } from "./router-service";
 export { RouterApp, outletNode } from "./outlet";
-export type { RouterAppOptions } from "./outlet";
 export { RouterNotFound, RouterParamsError, notFound, isRouterNotFound } from "./errors";
