@@ -5,6 +5,10 @@
   "license": "MIT",
   "author": "Stef van Wijchen",
   "type": "module",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
