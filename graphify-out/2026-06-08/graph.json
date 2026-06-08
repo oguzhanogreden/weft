@@ -437,1093 +437,1048 @@
   },
   "nodes": [
     {
-      "label": "server.ts",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L1",
-      "id": "router_ssr_server",
-      "community": 146,
-      "norm_label": "server.ts"
-    },
-    {
-      "label": "__dirname",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L24",
-      "id": "router_ssr_server_dirname",
-      "community": 146,
-      "norm_label": "__dirname"
-    },
-    {
-      "label": "readBody()",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L38",
-      "id": "router_ssr_server_readbody",
-      "community": 146,
-      "norm_label": "readbody()"
-    },
-    {
-      "label": "toWebRequest()",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L52",
-      "id": "router_ssr_server_towebrequest",
-      "community": 146,
-      "norm_label": "towebrequest()"
-    },
-    {
-      "label": "server",
-      "file_type": "code",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L67",
-      "id": "router_ssr_server_server",
-      "community": 146,
-      "norm_label": "server"
-    },
-    {
       "label": "core.md",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L1",
+      "id": "api_core",
       "community": 67,
-      "norm_label": "core.md",
-      "id": "api_core"
+      "norm_label": "core.md"
     },
     {
       "label": "@effect-ui/core API Reference",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L1",
+      "id": "api_core_effect_ui_core_api_reference",
       "community": 67,
-      "norm_label": "@effect-ui/core api reference",
-      "id": "api_core_effect_ui_core_api_reference"
+      "norm_label": "@effect-ui/core api reference"
     },
     {
       "label": "Element builders",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L3",
+      "id": "api_core_element_builders",
       "community": 67,
-      "norm_label": "element builders",
-      "id": "api_core_element_builders"
+      "norm_label": "element builders"
     },
     {
       "label": "`h`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L5",
+      "id": "api_core_h",
       "community": 67,
-      "norm_label": "`h`",
-      "id": "api_core_h"
+      "norm_label": "`h`"
     },
     {
       "label": "`h.fragment`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L34",
+      "id": "api_core_h_fragment",
       "community": 67,
-      "norm_label": "`h.fragment`",
-      "id": "api_core_h_fragment"
+      "norm_label": "`h.fragment`"
     },
     {
       "label": "`Component`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L46",
+      "id": "api_core_component",
       "community": 67,
-      "norm_label": "`component`",
-      "id": "api_core_component"
+      "norm_label": "`component`"
     },
     {
       "label": "`Boundary` namespace",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L107",
+      "id": "api_core_boundary_namespace",
       "community": 67,
-      "norm_label": "`boundary` namespace",
-      "id": "api_core_boundary_namespace"
+      "norm_label": "`boundary` namespace"
     },
     {
       "label": "`Boundary.suspend`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L122",
+      "id": "api_core_boundary_suspend",
       "community": 67,
-      "norm_label": "`boundary.suspend`",
-      "id": "api_core_boundary_suspend"
+      "norm_label": "`boundary.suspend`"
     },
     {
       "label": "`Boundary.rpc`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L138",
+      "id": "api_core_boundary_rpc",
       "community": 67,
-      "norm_label": "`boundary.rpc`",
-      "id": "api_core_boundary_rpc"
+      "norm_label": "`boundary.rpc`"
     },
     {
       "label": "`Resource<A>`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L166",
+      "id": "api_core_resource_a",
       "community": 67,
-      "norm_label": "`resource<a>`",
-      "id": "api_core_resource_a"
+      "norm_label": "`resource<a>`"
     },
     {
       "label": "`RpcOptions`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L177",
+      "id": "api_core_rpcoptions",
       "community": 67,
-      "norm_label": "`rpcoptions`",
-      "id": "api_core_rpcoptions"
+      "norm_label": "`rpcoptions`"
     },
     {
       "label": "`SERVER_BOUNDARY`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L185",
+      "id": "api_core_server_boundary",
       "community": 67,
-      "norm_label": "`server_boundary`",
-      "id": "api_core_server_boundary"
+      "norm_label": "`server_boundary`"
     },
     {
       "label": "`AppRpcClientTag`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L193",
+      "id": "api_core_apprpcclienttag",
       "community": 67,
-      "norm_label": "`apprpcclienttag`",
-      "id": "api_core_apprpcclienttag"
+      "norm_label": "`apprpcclienttag`"
     },
     {
       "label": "`Boundary.catchAll`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L206",
+      "id": "api_core_boundary_catchall",
       "community": 67,
-      "norm_label": "`boundary.catchall`",
-      "id": "api_core_boundary_catchall"
+      "norm_label": "`boundary.catchall`"
     },
     {
       "label": "`Boundary.catchAllCause`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L219",
+      "id": "api_core_boundary_catchallcause",
       "community": 67,
-      "norm_label": "`boundary.catchallcause`",
-      "id": "api_core_boundary_catchallcause"
+      "norm_label": "`boundary.catchallcause`"
     },
     {
       "label": "`Boundary.catchTag`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L232",
+      "id": "api_core_boundary_catchtag",
       "community": 67,
-      "norm_label": "`boundary.catchtag`",
-      "id": "api_core_boundary_catchtag"
+      "norm_label": "`boundary.catchtag`"
     },
     {
       "label": "`Boundary.catchTags`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L248",
+      "id": "api_core_boundary_catchtags",
       "community": 67,
-      "norm_label": "`boundary.catchtags`",
-      "id": "api_core_boundary_catchtags"
+      "norm_label": "`boundary.catchtags`"
     },
     {
       "label": "`Boundary.catchSome`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L261",
+      "id": "api_core_boundary_catchsome",
       "community": 67,
-      "norm_label": "`boundary.catchsome`",
-      "id": "api_core_boundary_catchsome"
+      "norm_label": "`boundary.catchsome`"
     },
     {
       "label": "`Boundary.catchIf`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L274",
+      "id": "api_core_boundary_catchif",
       "community": 67,
-      "norm_label": "`boundary.catchif`",
-      "id": "api_core_boundary_catchif"
+      "norm_label": "`boundary.catchif`"
     },
     {
       "label": "Re-raise and nesting",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L288",
+      "id": "api_core_re_raise_and_nesting",
       "community": 67,
-      "norm_label": "re-raise and nesting",
-      "id": "api_core_re_raise_and_nesting"
+      "norm_label": "re-raise and nesting"
     },
     {
       "label": "ServerTag",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L305",
+      "id": "api_core_servertag",
       "community": 67,
-      "norm_label": "servertag",
-      "id": "api_core_servertag"
+      "norm_label": "servertag"
     },
     {
       "label": "Keyed lists",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L327",
+      "id": "api_core_keyed_lists",
       "community": 67,
-      "norm_label": "keyed lists",
-      "id": "api_core_keyed_lists"
+      "norm_label": "keyed lists"
     },
     {
       "label": "`List` namespace",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L329",
+      "id": "api_core_list_namespace",
       "community": 67,
-      "norm_label": "`list` namespace",
-      "id": "api_core_list_namespace"
+      "norm_label": "`list` namespace"
     },
     {
       "label": "`List.each`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L343",
+      "id": "api_core_list_each",
       "community": 67,
-      "norm_label": "`list.each`",
-      "id": "api_core_list_each"
+      "norm_label": "`list.each`"
     },
     {
       "label": "`List.Error<N>` and `List.Context<N>`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L370",
+      "id": "api_core_list_error_n_and_list_context_n",
       "community": 67,
-      "norm_label": "`list.error<n>` and `list.context<n>`",
-      "id": "api_core_list_error_n_and_list_context_n"
+      "norm_label": "`list.error<n>` and `list.context<n>`"
     },
     {
       "label": "Types",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L378",
+      "id": "api_core_types",
       "community": 67,
-      "norm_label": "types",
-      "id": "api_core_types"
+      "norm_label": "types"
     },
     {
       "label": "`Node<E, R>`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L380",
+      "id": "api_core_node_e_r",
       "community": 67,
-      "norm_label": "`node<e, r>`",
-      "id": "api_core_node_e_r"
+      "norm_label": "`node<e, r>`"
     },
     {
       "label": "`Source` namespace",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L388",
+      "id": "api_core_source_namespace",
       "community": 67,
-      "norm_label": "`source` namespace",
-      "id": "api_core_source_namespace"
+      "norm_label": "`source` namespace"
     },
     {
       "label": "`Source.toSubscribable(source, key?)`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L401",
+      "id": "api_core_source_tosubscribable_source_key",
       "community": 67,
-      "norm_label": "`source.tosubscribable(source, key?)`",
-      "id": "api_core_source_tosubscribable_source_key"
+      "norm_label": "`source.tosubscribable(source, key?)`"
     },
     {
       "label": "`NoPropValue`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L421",
+      "id": "api_core_nopropvalue",
       "community": 67,
-      "norm_label": "`nopropvalue`",
-      "id": "api_core_nopropvalue"
+      "norm_label": "`nopropvalue`"
     },
     {
       "label": "`PropsE<P>` and `PropsR<P>`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L433",
+      "id": "api_core_propse_p_and_propsr_p",
       "community": 67,
-      "norm_label": "`propse<p>` and `propsr<p>`",
-      "id": "api_core_propse_p_and_propsr_p"
+      "norm_label": "`propse<p>` and `propsr<p>`"
     },
     {
       "label": "Constants",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L446",
+      "id": "api_core_constants",
       "community": 67,
-      "norm_label": "constants",
-      "id": "api_core_constants"
+      "norm_label": "constants"
     },
     {
       "label": "`FRAGMENT`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L448",
+      "id": "api_core_fragment",
       "community": 67,
-      "norm_label": "`fragment`",
-      "id": "api_core_fragment"
+      "norm_label": "`fragment`"
     },
     {
       "label": "Utility functions",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L454",
+      "id": "api_core_utility_functions",
       "community": 67,
-      "norm_label": "utility functions",
-      "id": "api_core_utility_functions"
+      "norm_label": "utility functions"
     },
     {
       "label": "`isStream(value)`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L456",
+      "id": "api_core_isstream_value",
       "community": 67,
-      "norm_label": "`isstream(value)`",
-      "id": "api_core_isstream_value"
+      "norm_label": "`isstream(value)`"
     },
     {
       "label": "`toStream(value)`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L464",
+      "id": "api_core_tostream_value",
       "community": 67,
-      "norm_label": "`tostream(value)`",
-      "id": "api_core_tostream_value"
+      "norm_label": "`tostream(value)`"
     },
     {
       "label": "`isSubscribable(value)`",
       "file_type": "document",
       "source_file": "docs/api/core.md",
       "source_location": "L476",
+      "id": "api_core_issubscribable_value",
       "community": 67,
-      "norm_label": "`issubscribable(value)`",
-      "id": "api_core_issubscribable_value"
+      "norm_label": "`issubscribable(value)`"
     },
     {
       "label": "router.md",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L1",
+      "id": "api_router",
       "community": 87,
-      "norm_label": "router.md",
-      "id": "api_router"
+      "norm_label": "router.md"
     },
     {
       "label": "@effect-ui/router API Reference",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L1",
+      "id": "api_router_effect_ui_router_api_reference",
       "community": 87,
-      "norm_label": "@effect-ui/router api reference",
-      "id": "api_router_effect_ui_router_api_reference"
+      "norm_label": "@effect-ui/router api reference"
     },
     {
       "label": "`Router`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L13",
+      "id": "api_router_router",
       "community": 87,
-      "norm_label": "`router`",
-      "id": "api_router_router"
+      "norm_label": "`router`"
     },
     {
       "label": "`Router.route`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L23",
+      "id": "api_router_router_route",
       "community": 87,
-      "norm_label": "`router.route`",
-      "id": "api_router_router_route"
+      "norm_label": "`router.route`"
     },
     {
       "label": "`Router.layout`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L57",
+      "id": "api_router_router_layout",
       "community": 87,
-      "norm_label": "`router.layout`",
-      "id": "api_router_router_layout"
+      "norm_label": "`router.layout`"
     },
     {
       "label": "`Router.router`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L65",
+      "id": "api_router_router_router",
       "community": 87,
-      "norm_label": "`router.router`",
-      "id": "api_router_router_router"
+      "norm_label": "`router.router`"
     },
     {
       "label": "`Router.Outlet`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L73",
+      "id": "api_router_router_outlet",
       "community": 87,
-      "norm_label": "`router.outlet`",
-      "id": "api_router_router_outlet"
+      "norm_label": "`router.outlet`"
     },
     {
       "label": "`Router.params` / `Router.query`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L77",
+      "id": "api_router_router_params_router_query",
       "community": 87,
-      "norm_label": "`router.params` / `router.query`",
-      "id": "api_router_router_params_router_query"
+      "norm_label": "`router.params` / `router.query`"
     },
     {
       "label": "`Router.paramsStream` / `Router.queryStream`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L86",
+      "id": "api_router_router_paramsstream_router_querystream",
       "community": 87,
-      "norm_label": "`router.paramsstream` / `router.querystream`",
-      "id": "api_router_router_paramsstream_router_querystream"
+      "norm_label": "`router.paramsstream` / `router.querystream`"
     },
     {
       "label": "`href`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L95",
+      "id": "api_router_href",
       "community": 87,
-      "norm_label": "`href`",
-      "id": "api_router_href"
+      "norm_label": "`href`"
     },
     {
       "label": "Universal nodes",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L111",
+      "id": "api_router_universal_nodes",
       "community": 87,
-      "norm_label": "universal nodes",
-      "id": "api_router_universal_nodes"
+      "norm_label": "universal nodes"
     },
     {
       "label": "`RouterApp`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L113",
+      "id": "api_router_routerapp",
       "community": 87,
-      "norm_label": "`routerapp`",
-      "id": "api_router_routerapp"
+      "norm_label": "`routerapp`"
     },
     {
       "label": "`outletNode` (a.k.a. `RouterOutlet`)",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L123",
+      "id": "api_router_outletnode_a_k_a_routeroutlet",
       "community": 87,
-      "norm_label": "`outletnode` (a.k.a. `routeroutlet`)",
-      "id": "api_router_outletnode_a_k_a_routeroutlet"
+      "norm_label": "`outletnode` (a.k.a. `routeroutlet`)"
     },
     {
       "label": "Client \u2014 `@effect-ui/router/client`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L131",
+      "id": "api_router_client_effect_ui_router_client",
       "community": 87,
-      "norm_label": "client \u2014 `@effect-ui/router/client`",
-      "id": "api_router_client_effect_ui_router_client"
+      "norm_label": "client \u2014 `@effect-ui/router/client`"
     },
     {
       "label": "`RouterLive`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L133",
+      "id": "api_router_routerlive",
       "community": 87,
-      "norm_label": "`routerlive`",
-      "id": "api_router_routerlive"
+      "norm_label": "`routerlive`"
     },
     {
       "label": "Programmatic navigation",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L149",
+      "id": "api_router_programmatic_navigation",
       "community": 87,
-      "norm_label": "programmatic navigation",
-      "id": "api_router_programmatic_navigation"
+      "norm_label": "programmatic navigation"
     },
     {
       "label": "`installLinkInterceptor`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L176",
+      "id": "api_router_installlinkinterceptor",
       "community": 87,
-      "norm_label": "`installlinkinterceptor`",
-      "id": "api_router_installlinkinterceptor"
+      "norm_label": "`installlinkinterceptor`"
     },
     {
       "label": "Server \u2014 `@effect-ui/router/server`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L184",
+      "id": "api_router_server_effect_ui_router_server",
       "community": 87,
-      "norm_label": "server \u2014 `@effect-ui/router/server`",
-      "id": "api_router_server_effect_ui_router_server"
+      "norm_label": "server \u2014 `@effect-ui/router/server`"
     },
     {
       "label": "`RouterServer`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L186",
+      "id": "api_router_routerserver",
       "community": 87,
-      "norm_label": "`routerserver`",
-      "id": "api_router_routerserver"
+      "norm_label": "`routerserver`"
     },
     {
       "label": "Errors",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L204",
+      "id": "api_router_errors",
       "community": 87,
-      "norm_label": "errors",
-      "id": "api_router_errors"
+      "norm_label": "errors"
     },
     {
       "label": "`RouterNotFound`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L206",
+      "id": "api_router_routernotfound",
       "community": 87,
-      "norm_label": "`routernotfound`",
-      "id": "api_router_routernotfound"
+      "norm_label": "`routernotfound`"
     },
     {
       "label": "`RouterParamsError`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L210",
+      "id": "api_router_routerparamserror",
       "community": 87,
-      "norm_label": "`routerparamserror`",
-      "id": "api_router_routerparamserror"
+      "norm_label": "`routerparamserror`"
     },
     {
       "label": "`notFound`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L214",
+      "id": "api_router_notfound",
       "community": 87,
-      "norm_label": "`notfound`",
-      "id": "api_router_notfound"
+      "norm_label": "`notfound`"
     },
     {
       "label": "`isRouterNotFound`",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L222",
+      "id": "api_router_isrouternotfound",
       "community": 87,
-      "norm_label": "`isrouternotfound`",
-      "id": "api_router_isrouternotfound"
+      "norm_label": "`isrouternotfound`"
     },
     {
       "label": "Compilation & matching (advanced)",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L230",
+      "id": "api_router_compilation_matching_advanced",
       "community": 87,
-      "norm_label": "compilation & matching (advanced)",
-      "id": "api_router_compilation_matching_advanced"
+      "norm_label": "compilation & matching (advanced)"
     },
     {
       "label": "Types",
       "file_type": "document",
       "source_file": "docs/api/router.md",
       "source_location": "L242",
+      "id": "api_router_types",
       "community": 87,
-      "norm_label": "types",
-      "id": "api_router_types"
+      "norm_label": "types"
     },
     {
       "label": "getting-started.md",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L1",
+      "id": "guides_getting_started",
       "community": 187,
-      "norm_label": "getting-started.md",
-      "id": "guides_getting_started"
+      "norm_label": "getting-started.md"
     },
     {
       "label": "Getting Started",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L1",
+      "id": "guides_getting_started_getting_started",
       "community": 187,
-      "norm_label": "getting started",
-      "id": "guides_getting_started_getting_started"
+      "norm_label": "getting started"
     },
     {
       "label": "Prerequisites",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L5",
+      "id": "guides_getting_started_prerequisites",
       "community": 187,
-      "norm_label": "prerequisites",
-      "id": "guides_getting_started_prerequisites"
+      "norm_label": "prerequisites"
     },
     {
       "label": "Install",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L10",
+      "id": "guides_getting_started_install",
       "community": 187,
-      "norm_label": "install",
-      "id": "guides_getting_started_install"
+      "norm_label": "install"
     },
     {
       "label": "Your first component",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L18",
+      "id": "guides_getting_started_your_first_component",
       "community": 187,
-      "norm_label": "your first component",
-      "id": "guides_getting_started_your_first_component"
+      "norm_label": "your first component"
     },
     {
       "label": "Adding reactive state",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L36",
+      "id": "guides_getting_started_adding_reactive_state",
       "community": 187,
-      "norm_label": "adding reactive state",
-      "id": "guides_getting_started_adding_reactive_state"
+      "norm_label": "adding reactive state"
     },
     {
       "label": "Using services",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L61",
+      "id": "guides_getting_started_using_services",
       "community": 187,
-      "norm_label": "using services",
-      "id": "guides_getting_started_using_services"
+      "norm_label": "using services"
     },
     {
       "label": "Async loading states",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L97",
+      "id": "guides_getting_started_async_loading_states",
       "community": 187,
-      "norm_label": "async loading states",
-      "id": "guides_getting_started_async_loading_states"
+      "norm_label": "async loading states"
     },
     {
       "label": "Error boundaries",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L120",
+      "id": "guides_getting_started_error_boundaries",
       "community": 187,
-      "norm_label": "error boundaries",
-      "id": "guides_getting_started_error_boundaries"
+      "norm_label": "error boundaries"
     },
     {
       "label": "Server-side rendering",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L140",
+      "id": "guides_getting_started_server_side_rendering",
       "community": 187,
-      "norm_label": "server-side rendering",
-      "id": "guides_getting_started_server_side_rendering"
+      "norm_label": "server-side rendering"
     },
     {
       "label": "Next steps",
       "file_type": "document",
       "source_file": "docs/guides/getting-started.md",
       "source_location": "L159",
+      "id": "guides_getting_started_next_steps",
       "community": 187,
-      "norm_label": "next steps",
-      "id": "guides_getting_started_next_steps"
+      "norm_label": "next steps"
     },
     {
       "label": "routing.md",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L1",
+      "id": "guides_routing",
       "community": 167,
-      "norm_label": "routing.md",
-      "id": "guides_routing"
+      "norm_label": "routing.md"
     },
     {
       "label": "Routing",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L1",
+      "id": "guides_routing_routing",
       "community": 167,
-      "norm_label": "routing",
-      "id": "guides_routing_routing"
+      "norm_label": "routing"
     },
     {
       "label": "The mental model",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L14",
+      "id": "guides_routing_the_mental_model",
       "community": 167,
-      "norm_label": "the mental model",
-      "id": "guides_routing_the_mental_model"
+      "norm_label": "the mental model"
     },
     {
       "label": "Authoring routes",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L28",
+      "id": "guides_routing_authoring_routes",
       "community": 167,
-      "norm_label": "authoring routes",
-      "id": "guides_routing_authoring_routes"
+      "norm_label": "authoring routes"
     },
     {
       "label": "Reading the match: handler-arg props vs. injection",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L55",
+      "id": "guides_routing_reading_the_match_handler_arg_props_vs_injection",
       "community": 167,
-      "norm_label": "reading the match: handler-arg props vs. injection",
-      "id": "guides_routing_reading_the_match_handler_arg_props_vs_injection"
+      "norm_label": "reading the match: handler-arg props vs. injection"
     },
     {
       "label": "Handler-arg props (leaf pages)",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L59",
+      "id": "guides_routing_handler_arg_props_leaf_pages",
       "community": 167,
-      "norm_label": "handler-arg props (leaf pages)",
-      "id": "guides_routing_handler_arg_props_leaf_pages"
+      "norm_label": "handler-arg props (leaf pages)"
     },
     {
       "label": "Dependency injection (layouts and deep nodes)",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L78",
+      "id": "guides_routing_dependency_injection_layouts_and_deep_nodes",
       "community": 167,
-      "norm_label": "dependency injection (layouts and deep nodes)",
-      "id": "guides_routing_dependency_injection_layouts_and_deep_nodes"
+      "norm_label": "dependency injection (layouts and deep nodes)"
     },
     {
       "label": "Layouts and the outlet",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L95",
+      "id": "guides_routing_layouts_and_the_outlet",
       "community": 167,
-      "norm_label": "layouts and the outlet",
-      "id": "guides_routing_layouts_and_the_outlet"
+      "norm_label": "layouts and the outlet"
     },
     {
       "label": "Layout persistence",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L113",
+      "id": "guides_routing_layout_persistence",
       "community": 167,
-      "norm_label": "layout persistence",
-      "id": "guides_routing_layout_persistence"
+      "norm_label": "layout persistence"
     },
     {
       "label": "Sealing the tree",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L117",
+      "id": "guides_routing_sealing_the_tree",
       "community": 167,
-      "norm_label": "sealing the tree",
-      "id": "guides_routing_sealing_the_tree"
+      "norm_label": "sealing the tree"
     },
     {
       "label": "Type-safe links with `href`",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L133",
+      "id": "guides_routing_type_safe_links_with_href",
       "community": 167,
-      "norm_label": "type-safe links with `href`",
-      "id": "guides_routing_type_safe_links_with_href"
+      "norm_label": "type-safe links with `href`"
     },
     {
       "label": "Not-found",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L150",
+      "id": "guides_routing_not_found",
       "community": 167,
-      "norm_label": "not-found",
-      "id": "guides_routing_not_found"
+      "norm_label": "not-found"
     },
     {
       "label": "Client setup",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L169",
+      "id": "guides_routing_client_setup",
       "community": 167,
-      "norm_label": "client setup",
-      "id": "guides_routing_client_setup"
+      "norm_label": "client setup"
     },
     {
       "label": "Link interception",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L187",
+      "id": "guides_routing_link_interception",
       "community": 167,
-      "norm_label": "link interception",
-      "id": "guides_routing_link_interception"
+      "norm_label": "link interception"
     },
     {
       "label": "Programmatic navigation",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L191",
+      "id": "guides_routing_programmatic_navigation",
       "community": 167,
-      "norm_label": "programmatic navigation",
-      "id": "guides_routing_programmatic_navigation"
+      "norm_label": "programmatic navigation"
     },
     {
       "label": "Server setup",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L227",
+      "id": "guides_routing_server_setup",
       "community": 167,
-      "norm_label": "server setup",
-      "id": "guides_routing_server_setup"
+      "norm_label": "server setup"
     },
     {
       "label": "`@effect/platform` is the spine",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L262",
+      "id": "guides_routing_effect_platform_is_the_spine",
       "community": 167,
-      "norm_label": "`@effect/platform` is the spine",
-      "id": "guides_routing_effect_platform_is_the_spine"
+      "norm_label": "`@effect/platform` is the spine"
     },
     {
       "label": "Errors",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L269",
+      "id": "guides_routing_errors",
       "community": 167,
-      "norm_label": "errors",
-      "id": "guides_routing_errors"
+      "norm_label": "errors"
     },
     {
       "label": "`Boundary.rpc` interplay",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L278",
+      "id": "guides_routing_boundary_rpc_interplay",
       "community": 167,
-      "norm_label": "`boundary.rpc` interplay",
-      "id": "guides_routing_boundary_rpc_interplay"
+      "norm_label": "`boundary.rpc` interplay"
     },
     {
       "label": "See also",
       "file_type": "document",
       "source_file": "docs/guides/routing.md",
       "source_location": "L282",
+      "id": "guides_routing_see_also",
       "community": 167,
-      "norm_label": "see also",
-      "id": "guides_routing_see_also"
+      "norm_label": "see also"
     },
     {
       "label": "rpc-data-boundaries.md",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L1",
+      "id": "guides_rpc_data_boundaries",
       "community": 34,
-      "norm_label": "rpc-data-boundaries.md",
-      "id": "guides_rpc_data_boundaries"
+      "norm_label": "rpc-data-boundaries.md"
     },
     {
       "label": "RPC Data Boundaries",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L1",
+      "id": "guides_rpc_data_boundaries_rpc_data_boundaries",
       "community": 34,
-      "norm_label": "rpc data boundaries",
-      "id": "guides_rpc_data_boundaries_rpc_data_boundaries"
+      "norm_label": "rpc data boundaries"
     },
     {
       "label": "Overview",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L7",
+      "id": "guides_rpc_data_boundaries_overview",
       "community": 34,
-      "norm_label": "overview",
-      "id": "guides_rpc_data_boundaries_overview"
+      "norm_label": "overview"
     },
     {
       "label": "The contract / handler split",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L29",
+      "id": "guides_rpc_data_boundaries_the_contract_handler_split",
       "community": 34,
-      "norm_label": "the contract / handler split",
-      "id": "guides_rpc_data_boundaries_the_contract_handler_split"
+      "norm_label": "the contract / handler split"
     },
     {
       "label": "Wiring the router",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L66",
+      "id": "guides_rpc_data_boundaries_wiring_the_router",
       "community": 34,
-      "norm_label": "wiring the router",
-      "id": "guides_rpc_data_boundaries_wiring_the_router"
+      "norm_label": "wiring the router"
     },
     {
       "label": "Using the boundary: the `Resource` handle",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L96",
+      "id": "guides_rpc_data_boundaries_using_the_boundary_the_resource_handle",
       "community": 34,
-      "norm_label": "using the boundary: the `resource` handle",
-      "id": "guides_rpc_data_boundaries_using_the_boundary_the_resource_handle"
+      "norm_label": "using the boundary: the `resource` handle"
     },
     {
       "label": "The four lifecycles",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L118",
+      "id": "guides_rpc_data_boundaries_the_four_lifecycles",
       "community": 34,
-      "norm_label": "the four lifecycles",
-      "id": "guides_rpc_data_boundaries_the_four_lifecycles"
+      "norm_label": "the four lifecycles"
     },
     {
       "label": "Channel algebra",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L129",
+      "id": "guides_rpc_data_boundaries_channel_algebra",
       "community": 34,
-      "norm_label": "channel algebra",
-      "id": "guides_rpc_data_boundaries_channel_algebra"
+      "norm_label": "channel algebra"
     },
     {
       "label": "Typed-failure replay",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L143",
+      "id": "guides_rpc_data_boundaries_typed_failure_replay",
       "community": 34,
-      "norm_label": "typed-failure replay",
-      "id": "guides_rpc_data_boundaries_typed_failure_replay"
+      "norm_label": "typed-failure replay"
     },
     {
       "label": "Migration from `Boundary.server`",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L155",
+      "id": "guides_rpc_data_boundaries_migration_from_boundary_server",
       "community": 34,
-      "norm_label": "migration from `boundary.server`",
-      "id": "guides_rpc_data_boundaries_migration_from_boundary_server"
+      "norm_label": "migration from `boundary.server`"
     },
     {
       "label": "When to use",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L168",
+      "id": "guides_rpc_data_boundaries_when_to_use",
       "community": 34,
-      "norm_label": "when to use",
-      "id": "guides_rpc_data_boundaries_when_to_use"
+      "norm_label": "when to use"
     },
     {
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L173",
+      "id": "guides_rpc_data_boundaries_roadmap",
       "community": 34,
-      "norm_label": "roadmap",
-      "id": "guides_rpc_data_boundaries_roadmap"
+      "norm_label": "roadmap"
     },
     {
       "label": "See also",
       "file_type": "document",
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L182",
+      "id": "guides_rpc_data_boundaries_see_also",
       "community": 34,
-      "norm_label": "see also",
-      "id": "guides_rpc_data_boundaries_see_also"
+      "norm_label": "see also"
     },
     {
       "label": "server-side-rendering.md",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L1",
+      "id": "guides_server_side_rendering",
       "community": 191,
-      "norm_label": "server-side-rendering.md",
-      "id": "guides_server_side_rendering"
+      "norm_label": "server-side-rendering.md"
     },
     {
       "label": "Server-Side Rendering",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L1",
+      "id": "guides_server_side_rendering_server_side_rendering",
       "community": 191,
-      "norm_label": "server-side rendering",
-      "id": "guides_server_side_rendering_server_side_rendering"
+      "norm_label": "server-side rendering"
     },
     {
       "label": "The two halves",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L5",
+      "id": "guides_server_side_rendering_the_two_halves",
       "community": 191,
-      "norm_label": "the two halves",
-      "id": "guides_server_side_rendering_the_two_halves"
+      "norm_label": "the two halves"
     },
     {
       "label": "Loading server data with `Boundary.rpc`",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L40",
+      "id": "guides_server_side_rendering_loading_server_data_with_boundary_rpc",
       "community": 191,
-      "norm_label": "loading server data with `boundary.rpc`",
-      "id": "guides_server_side_rendering_loading_server_data_with_boundary_rpc"
+      "norm_label": "loading server data with `boundary.rpc`"
     },
     {
       "label": "Wiring the router",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L103",
+      "id": "guides_server_side_rendering_wiring_the_router",
       "community": 191,
-      "norm_label": "wiring the router",
-      "id": "guides_server_side_rendering_wiring_the_router"
+      "norm_label": "wiring the router"
     },
     {
       "label": "Brand server-only services with `ServerTag`",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L117",
+      "id": "guides_server_side_rendering_brand_server_only_services_with_servertag",
       "community": 191,
-      "norm_label": "brand server-only services with `servertag`",
-      "id": "guides_server_side_rendering_brand_server_only_services_with_servertag"
+      "norm_label": "brand server-only services with `servertag`"
     },
     {
       "label": "Typed-failure replay",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L121",
+      "id": "guides_server_side_rendering_typed_failure_replay",
       "community": 191,
-      "norm_label": "typed-failure replay",
-      "id": "guides_server_side_rendering_typed_failure_replay"
+      "norm_label": "typed-failure replay"
     },
     {
       "label": "When to use",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L125",
+      "id": "guides_server_side_rendering_when_to_use",
       "community": 191,
-      "norm_label": "when to use",
-      "id": "guides_server_side_rendering_when_to_use"
+      "norm_label": "when to use"
     },
     {
       "label": "See also",
       "file_type": "document",
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L132",
+      "id": "guides_server_side_rendering_see_also",
       "community": 191,
-      "norm_label": "see also",
-      "id": "guides_server_side_rendering_see_also"
+      "norm_label": "see also"
     },
     {
       "label": "package.json",
@@ -4491,7 +4446,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L449",
-      "community": 32,
+      "community": 12,
       "norm_label": "renderboundary()",
       "id": "client_render_renderboundary"
     },
@@ -4509,7 +4464,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L671",
-      "community": 32,
+      "community": 12,
       "norm_label": "renderserverboundary()",
       "id": "client_render_renderserverboundary"
     },
@@ -4680,7 +4635,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1435",
-      "community": 1,
+      "community": 12,
       "norm_label": "renderlist()",
       "id": "client_render_renderlist"
     },
@@ -4707,7 +4662,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1629",
-      "community": 8,
+      "community": 32,
       "norm_label": "renderitem()",
       "id": "client_render_renderitem"
     },
@@ -4788,7 +4743,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1998",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratenode()",
       "id": "client_render_hydratenode"
     },
@@ -4797,7 +4752,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2105",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratetext()",
       "id": "client_render_hydratetext"
     },
@@ -4815,7 +4770,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2166",
-      "community": 12,
+      "community": 1,
       "norm_label": "makesettleonce()",
       "id": "client_render_makesettleonce"
     },
@@ -4824,7 +4779,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2181",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratereactive()",
       "id": "client_render_hydratereactive"
     },
@@ -4842,7 +4797,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2309",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratefailureboundary()",
       "id": "client_render_hydratefailureboundary"
     },
@@ -4860,7 +4815,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2401",
-      "community": 32,
+      "community": 12,
       "norm_label": "makeclientresource()",
       "id": "client_render_makeclientresource"
     },
@@ -4869,7 +4824,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2460",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydrateserverboundary()",
       "id": "client_render_hydrateserverboundary"
     },
@@ -4878,7 +4833,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2532",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydrateelement()",
       "id": "client_render_hydrateelement"
     },
@@ -4887,7 +4842,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2562",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratechildren()",
       "id": "client_render_hydratechildren"
     },
@@ -4905,7 +4860,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2611",
-      "community": 12,
+      "community": 1,
       "norm_label": "hydratelist()",
       "id": "client_render_hydratelist"
     },
@@ -4950,7 +4905,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2945",
-      "community": 12,
+      "community": 1,
       "norm_label": "findmatchingend()",
       "id": "client_render_findmatchingend"
     },
@@ -4959,7 +4914,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2971",
-      "community": 12,
+      "community": 1,
       "norm_label": "describenode()",
       "id": "client_render_describenode"
     },
@@ -4968,7 +4923,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2987",
-      "community": 12,
+      "community": 1,
       "norm_label": "mismatch()",
       "id": "client_render_mismatch"
     },
@@ -9896,6 +9851,33 @@
       "id": "reactive_styles_vite_config"
     },
     {
+      "label": "server.ts",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/server.ts",
+      "source_location": "L1",
+      "community": 146,
+      "norm_label": "server.ts",
+      "id": "router_ssr_server"
+    },
+    {
+      "label": "__dirname",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/server.ts",
+      "source_location": "L18",
+      "community": 146,
+      "norm_label": "__dirname",
+      "id": "router_ssr_server_dirname"
+    },
+    {
+      "label": "server",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/server.ts",
+      "source_location": "L27",
+      "community": 146,
+      "norm_label": "server",
+      "id": "router_ssr_server_server"
+    },
+    {
       "label": "tsconfig.json",
       "file_type": "code",
       "source_file": "examples/router-ssr/tsconfig.json",
@@ -12447,7 +12429,7 @@
       "file_type": "code",
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L36",
-      "community": 6,
+      "community": 77,
       "norm_label": "getelementdescriptor()",
       "id": "combinator_descriptor_getelementdescriptor"
     },
@@ -15273,7 +15255,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L1",
-      "community": 1,
+      "community": 102,
       "norm_label": "data.ts",
       "id": "src_data"
     },
@@ -15282,7 +15264,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L10",
-      "community": 1,
+      "community": 102,
       "norm_label": "unsupportednodetypeerror",
       "id": "src_data_unsupportednodetypeerror"
     },
@@ -15291,7 +15273,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L18",
-      "community": 1,
+      "community": 102,
       "norm_label": "streamsubscriptionerror",
       "id": "src_data_streamsubscriptionerror"
     },
@@ -15300,7 +15282,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L26",
-      "community": 1,
+      "community": 102,
       "norm_label": "rendererror",
       "id": "src_data_rendererror"
     },
@@ -15309,7 +15291,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L36",
-      "community": 1,
+      "community": 102,
       "norm_label": "hydrationmismatcherror",
       "id": "src_data_hydrationmismatcherror"
     },
@@ -15318,7 +15300,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L49",
-      "community": 1,
+      "community": 102,
       "norm_label": "boundarycontext",
       "id": "src_data_boundarycontext"
     },
@@ -15327,7 +15309,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L69",
-      "community": 1,
+      "community": 102,
       "norm_label": "suspensecontext",
       "id": "src_data_suspensecontext"
     },
@@ -15336,7 +15318,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L86",
-      "community": 1,
+      "community": 102,
       "norm_label": "renderresult",
       "id": "src_data_renderresult"
     },
@@ -15345,7 +15327,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L105",
-      "community": 1,
+      "community": 102,
       "norm_label": "hydrationready",
       "id": "src_data_hydrationready"
     },
@@ -15354,7 +15336,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L118",
-      "community": 1,
+      "community": 12,
       "norm_label": "rendercontext",
       "id": "src_data_rendercontext"
     },
@@ -15363,7 +15345,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/index.ts",
       "source_location": "L1",
-      "community": 1,
+      "community": 102,
       "norm_label": "index.ts",
       "id": "packages_dom_src_index_ts_src_index"
     },
@@ -15561,7 +15543,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L104",
-      "community": 32,
+      "community": 12,
       "norm_label": "boundarystarttext()",
       "id": "src_shared_boundarystarttext"
     },
@@ -15570,7 +15552,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L112",
-      "community": 32,
+      "community": 12,
       "norm_label": "boundaryendtext()",
       "id": "src_shared_boundaryendtext"
     },
@@ -15579,7 +15561,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L126",
-      "community": 12,
+      "community": 1,
       "norm_label": "parsestreammarker()",
       "id": "src_shared_parsestreammarker"
     },
@@ -15588,7 +15570,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L152",
-      "community": 8,
+      "community": 32,
       "norm_label": "listitemstarttext()",
       "id": "src_shared_listitemstarttext"
     },
@@ -15597,7 +15579,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L160",
-      "community": 8,
+      "community": 32,
       "norm_label": "listitemendtext()",
       "id": "src_shared_listitemendtext"
     },
@@ -15624,7 +15606,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
-      "community": 1,
+      "community": 12,
       "norm_label": "utilities.ts",
       "id": "src_utilities"
     },
@@ -15633,7 +15615,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
-      "community": 1,
+      "community": 12,
       "norm_label": "nextstreamid()",
       "id": "src_utilities_nextstreamid"
     },
@@ -15642,7 +15624,7 @@
       "file_type": "code",
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L28",
-      "community": 1,
+      "community": 12,
       "norm_label": "nextboundaryid()",
       "id": "src_utilities_nextboundaryid"
     },
@@ -23472,57 +23454,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L18",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "router_ssr_server",
-      "target": "router_ssr_server_dirname"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L38",
-      "weight": 1.0,
-      "source": "router_ssr_server",
-      "target": "router_ssr_server_readbody",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L27",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "router_ssr_server",
-      "target": "router_ssr_server_server"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L52",
-      "weight": 1.0,
-      "source": "router_ssr_server",
-      "target": "router_ssr_server_towebrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "examples/router-ssr/server.ts",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "router_ssr_server_towebrequest",
-      "target": "router_ssr_server_readbody",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "docs/api/core.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -23696,9 +23627,9 @@
       "source_file": "docs/api/core.md",
       "source_location": "L138",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "api_core_boundary_namespace",
-      "target": "api_core_boundary_rpc"
+      "target": "api_core_boundary_rpc",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -23726,9 +23657,9 @@
       "source_file": "docs/api/core.md",
       "source_location": "L193",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "api_core_boundary_rpc",
-      "target": "api_core_apprpcclienttag"
+      "target": "api_core_apprpcclienttag",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -23736,9 +23667,9 @@
       "source_file": "docs/api/core.md",
       "source_location": "L166",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "api_core_boundary_rpc",
-      "target": "api_core_resource_a"
+      "target": "api_core_resource_a",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -23746,9 +23677,9 @@
       "source_file": "docs/api/core.md",
       "source_location": "L177",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "api_core_boundary_rpc",
-      "target": "api_core_rpcoptions"
+      "target": "api_core_rpcoptions",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -23756,9 +23687,9 @@
       "source_file": "docs/api/core.md",
       "source_location": "L185",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "api_core_boundary_rpc",
-      "target": "api_core_server_boundary"
+      "target": "api_core_server_boundary",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24256,9 +24187,9 @@
       "source_file": "docs/guides/routing.md",
       "source_location": "L278",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_routing_routing",
-      "target": "guides_routing_boundary_rpc_interplay"
+      "target": "guides_routing_boundary_rpc_interplay",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24426,9 +24357,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_rpc_data_boundaries"
+      "target": "guides_rpc_data_boundaries_rpc_data_boundaries",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24436,9 +24367,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L155",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_migration_from_boundary_server"
+      "target": "guides_rpc_data_boundaries_migration_from_boundary_server",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24446,9 +24377,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_overview"
+      "target": "guides_rpc_data_boundaries_overview",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24456,9 +24387,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L173",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_roadmap"
+      "target": "guides_rpc_data_boundaries_roadmap",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24466,9 +24397,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L182",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_see_also"
+      "target": "guides_rpc_data_boundaries_see_also",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24476,9 +24407,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L29",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_the_contract_handler_split"
+      "target": "guides_rpc_data_boundaries_the_contract_handler_split",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24486,9 +24417,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L118",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_the_four_lifecycles"
+      "target": "guides_rpc_data_boundaries_the_four_lifecycles",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24496,9 +24427,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L143",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_typed_failure_replay"
+      "target": "guides_rpc_data_boundaries_typed_failure_replay",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24506,9 +24437,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L96",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_using_the_boundary_the_resource_handle"
+      "target": "guides_rpc_data_boundaries_using_the_boundary_the_resource_handle",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24516,9 +24447,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L168",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_when_to_use"
+      "target": "guides_rpc_data_boundaries_when_to_use",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24526,9 +24457,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L66",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_rpc_data_boundaries",
-      "target": "guides_rpc_data_boundaries_wiring_the_router"
+      "target": "guides_rpc_data_boundaries_wiring_the_router",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24536,9 +24467,9 @@
       "source_file": "docs/guides/rpc-data-boundaries.md",
       "source_location": "L129",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_rpc_data_boundaries_the_four_lifecycles",
-      "target": "guides_rpc_data_boundaries_channel_algebra"
+      "target": "guides_rpc_data_boundaries_channel_algebra",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24556,9 +24487,9 @@
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L40",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_server_side_rendering_server_side_rendering",
-      "target": "guides_server_side_rendering_loading_server_data_with_boundary_rpc"
+      "target": "guides_server_side_rendering_loading_server_data_with_boundary_rpc",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24596,9 +24527,9 @@
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L117",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_server_side_rendering_loading_server_data_with_boundary_rpc",
-      "target": "guides_server_side_rendering_brand_server_only_services_with_servertag"
+      "target": "guides_server_side_rendering_brand_server_only_services_with_servertag",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24606,9 +24537,9 @@
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L121",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_server_side_rendering_loading_server_data_with_boundary_rpc",
-      "target": "guides_server_side_rendering_typed_failure_replay"
+      "target": "guides_server_side_rendering_typed_failure_replay",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -24616,9 +24547,9 @@
       "source_file": "docs/guides/server-side-rendering.md",
       "source_location": "L103",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "guides_server_side_rendering_loading_server_data_with_boundary_rpc",
-      "target": "guides_server_side_rendering_wiring_the_router"
+      "target": "guides_server_side_rendering_wiring_the_router",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -40922,6 +40853,26 @@
       "confidence_score": 1.0,
       "source": "reactive_styles_tsconfig",
       "target": "reactive_styles_tsconfig_include"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/server.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "router_ssr_server",
+      "target": "router_ssr_server_dirname"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/server.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "router_ssr_server",
+      "target": "router_ssr_server_server"
     },
     {
       "relation": "contains",
@@ -62653,5 +62604,5 @@
       "source_file": "plans/boundary-delivery-report.md"
     }
   ],
-  "built_at_commit": "83ffd906d7224477055d363320c3356bebc47e68"
+  "built_at_commit": "81c6d099f21c7ca403104a9ea8a68748b13e3f06"
 }
