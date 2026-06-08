@@ -249,7 +249,7 @@ function renderBoundarySSR(
             if (failureCollector === null) return fallbackHtml;
 
             // Drain the relocation slot: if this cause came from a server
-            // boundary's load, prepend its encoded failure payload.
+            // boundary's rpc call, prepend its encoded failure payload.
             const stashed = yield* Ref.getAndSet(failureCollector, Option.none());
             if (Option.isNone(stashed)) return fallbackHtml;
 

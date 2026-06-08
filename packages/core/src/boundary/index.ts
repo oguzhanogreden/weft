@@ -1,4 +1,4 @@
-import { Cause, type Effect, Option, type Schema, type Subscribable } from "effect";
+import { Cause, type Effect, Option, type Subscribable } from "effect";
 import type { Rpc } from "@effect/rpc";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";
@@ -361,22 +361,19 @@ export namespace Boundary {
     // The rpc instance carries its tag + schemas; the renderer reads `tag` to call
     // the ambient AppRpcClient and `successSchema`/`errorSchema` to decode the
     // inline SSR payload / refetch result. `payload` stays a thunk so each call
-    // (SSR, refetch, mount) gets a fresh value.
-    const props = rpc as unknown as {
-      readonly _tag: string;
-      readonly payloadSchema: Schema.Schema<any, any>;
-      readonly successSchema: Schema.Schema<any, any>;
-      readonly errorSchema: Schema.Schema<any, any>;
-    };
+    // (SSR, refetch, mount) gets a fresh value. `Rpc.AnyWithProps` is the public
+    // accessor view of an `Rpc` instance — these fields are part of `@effect/rpc`'s
+    // surface, so no `unknown` round-trip is needed.
+    const instance = rpc as unknown as Rpc.AnyWithProps;
     // Tag the descriptor with SERVER_BOUNDARY so the renderer processes it
     // synchronously via the {type, props} branch.
     return elementNode({
       type: SERVER_BOUNDARY,
       props: {
-        tag: props._tag,
-        payloadSchema: props.payloadSchema,
-        successSchema: props.successSchema,
-        errorSchema: props.errorSchema,
+        tag: instance._tag,
+        payloadSchema: instance.payloadSchema,
+        successSchema: instance.successSchema,
+        errorSchema: instance.errorSchema,
         payload,
         render,
         fallback: options?.fallback,

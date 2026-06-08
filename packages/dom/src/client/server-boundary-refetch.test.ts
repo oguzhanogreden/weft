@@ -187,6 +187,91 @@ describe("Boundary.rpc refetch — AC-H-S9: stale-on-error", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Defect path: a dying `call` is stale-on-error, not an escaping defect
+// ---------------------------------------------------------------------------
+
+describe("Boundary.rpc refetch — defect path", () => {
+  it("a dying rpc call clears pending and surfaces the defect as error (stale-on-error)", async () => {
+    createTestDOM();
+    const { app, captured } = captureResource();
+
+    // `Effect.die` is a defect — `Effect.either` would NOT capture it; the
+    // resource must still clear `pending` and keep the previous value.
+    const layer = Layer.succeed(AppRpcClientTag, {
+      call: () => Effect.die(new Error("transport exploded")),
+    } satisfies AppRpcClient);
+
+    const root = await seedServerHtml(app);
+    const productBefore = root.querySelector("div.product");
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
+
+    const resource = captured.current!;
+
+    // `refetch` itself must not reject (the defect is absorbed into `error`).
+    await Effect.runPromise(resource.refetch);
+    await waitFor(20);
+
+    assert.equal((await Effect.runPromise(resource.value.get)).name, "Widget");
+    assert.equal(Option.isSome(await Effect.runPromise(resource.error.get)), true);
+    assert.equal(await Effect.runPromise(resource.pending.get), false);
+    assert.equal(root.querySelector("div.product"), productBefore);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Concurrency: a refetch triggered while one is in flight is ignored
+// ---------------------------------------------------------------------------
+
+describe("Boundary.rpc refetch — ignore-while-pending", () => {
+  it("a second refetch during an in-flight call is a no-op (no double call, no out-of-order clobber)", async () => {
+    createTestDOM();
+    const { app, captured } = captureResource();
+
+    // A latch the test releases manually so two refetches overlap deterministically.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const state = { calls: 0 };
+    const layer = Layer.succeed(AppRpcClientTag, {
+      call: () =>
+        Effect.flatMap(
+          Effect.sync(() => {
+            state.calls++;
+          }),
+          () =>
+            Effect.map(
+              Effect.promise(() => gate),
+              (): ProductShape => ({ name: "Gadget", price: 12 }),
+            ),
+        ),
+    } satisfies AppRpcClient);
+
+    const root = await seedServerHtml(app);
+    await Effect.runPromise(Effect.provide(hydrate(app, root), layer));
+
+    const resource = captured.current!;
+
+    // Start the first refetch (forked: it parks on the gate, pending = true).
+    const first = Effect.runPromise(resource.refetch);
+    await waitFor(10);
+    assert.equal(await Effect.runPromise(resource.pending.get), true);
+
+    // Second refetch while the first is in flight: ignored — no second call.
+    await Effect.runPromise(resource.refetch);
+    assert.equal(state.calls, 1);
+
+    // Release the first; it completes normally and clears pending.
+    release();
+    await first;
+    await waitFor(20);
+    assert.equal(state.calls, 1);
+    assert.equal(await Effect.runPromise(resource.pending.get), false);
+    assert.equal((await Effect.runPromise(resource.value.get)).name, "Gadget");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // No transport: refetch is a no-op (router-less mount)
 // ---------------------------------------------------------------------------
 

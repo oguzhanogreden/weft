@@ -2392,11 +2392,14 @@ interface ServerBoundaryProps {
  * its first emission matches the rendered DOM; `refetch` re-reads the data through
  * the injected {@link AppRpcClientTag} by calling `call(tag, payload())` — the
  * rpc client returns an already-decoded success — then `SubscriptionRef.set`s
- * `value` so the subtree patches in place. A refetch is **stale-on-error**: a
- * transport/rpc failure leaves the previous `value` intact, sets `error` to
- * `Some`, and never raises into an enclosing failure `Boundary`. When no client
- * is present (`Option.none` — server, or a router-less mount) `refetch` is a
- * no-op.
+ * `value` so the subtree patches in place. A refetch is **stale-on-error**: any
+ * failure **or defect** (captured via `Effect.exit`) leaves the previous `value`
+ * intact, sets `error` to `Some`, and never raises into an enclosing failure
+ * `Boundary`; `pending` is always cleared (`Effect.ensuring`). A refetch
+ * triggered while one is already in flight is **ignored** (the `pending` guard),
+ * so concurrent triggers cannot clobber `value` out of completion order. When no
+ * client is present (`Option.none` — server, or a router-less mount) `refetch` is
+ * a no-op.
  */
 function makeClientResource(
   tag: string,
@@ -2415,20 +2418,30 @@ function makeClientResource(
       onNone: () => Effect.void,
       onSome: (rpcClient) =>
         Effect.gen(function* () {
+          // Ignore-while-pending: a refetch triggered while one is already in
+          // flight is a no-op, so concurrent triggers (e.g. a double click) cannot
+          // race and clobber `value` out of completion order. The guard sits
+          // outside the `ensuring` below so an ignored trigger does not clear the
+          // in-flight refetch's `pending`.
+          if (yield* SubscriptionRef.get(pendingRef)) return;
           yield* SubscriptionRef.set(pendingRef, true);
           // The rpc client returns an already-decoded success value, so no schema
           // decode is needed here (unlike the inline SSR payload, which is the
-          // encoded form). A fresh `payload()` is produced per call.
-          const next = yield* rpcClient.call(tag, payload()).pipe(Effect.either);
-          if (next._tag === "Right") {
-            // Success: push the new value (subtree patches in place) and clear error.
-            yield* SubscriptionRef.set(valueRef, next.right);
-            yield* SubscriptionRef.set(errorRef, Option.none());
-          } else {
-            // Stale-on-error: keep the previous value, surface the error inline.
-            yield* SubscriptionRef.set(errorRef, Option.some(next.left));
-          }
-          yield* SubscriptionRef.set(pendingRef, false);
+          // encoded form). A fresh `payload()` is produced per call. `Effect.exit`
+          // captures defects too (not just the typed error channel), so a transport
+          // defect is stale-on-error like any failure rather than escaping as an
+          // uncaught defect; `ensuring` always clears `pending`.
+          yield* Effect.gen(function* () {
+            const exit = yield* Effect.exit(rpcClient.call(tag, payload()));
+            if (Exit.isSuccess(exit)) {
+              // Success: push the new value (subtree patches in place), clear error.
+              yield* SubscriptionRef.set(valueRef, exit.value);
+              yield* SubscriptionRef.set(errorRef, Option.none());
+            } else {
+              // Stale-on-error: keep the previous value, surface the error inline.
+              yield* SubscriptionRef.set(errorRef, Option.some(Cause.squash(exit.cause)));
+            }
+          }).pipe(Effect.ensuring(SubscriptionRef.set(pendingRef, false)));
         }),
     });
 
@@ -2442,17 +2455,17 @@ function makeClientResource(
 }
 
 /**
- * Hydrates a {@link Boundary.server} region. The hydratable server renderer
- * emitted the encoded `load` result inline as a `<script type="application/json">`
+ * Hydrates a {@link Boundary.rpc} region. The hydratable server renderer
+ * emitted the encoded rpc result inline as a `<script type="application/json">`
  * payload at the region cursor, followed by the `render(resource)` HTML. Here we
- * **replay** that result — `load` is never run on the client: the payload is
- * decoded through `schema`, seeded into a live {@link Boundary.Resource} (see
- * {@link makeClientResource}), and `render(resource)` is hydrated against the
+ * **replay** that result — the rpc is never called on the client: the payload is
+ * decoded through `successSchema`, seeded into a live {@link Boundary.Resource}
+ * (see {@link makeClientResource}), and `render(resource)` is hydrated against the
  * adopted DOM at `script.nextSibling`. The payload script is then removed so it
  * does not linger in the live document. The region stays **live**: a later
- * `resource.refetch` re-fetches through the endpoint and patches it in place.
+ * `resource.refetch` re-calls the rpc and patches it in place.
  *
- * A missing payload, malformed JSON, or a value that fails `schema` decoding is
+ * A missing payload, malformed JSON, or a value that fails `successSchema` decoding is
  * a {@link HydrationMismatchError} (recoverable, logged) — the same typed,
  * non-defect failure surfaced by every other adopt-walk divergence — since the
  * region cannot be located/replayed without the data.
