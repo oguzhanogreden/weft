@@ -9,3 +9,12 @@ runs:
       with:
         node-version: 26
         cache: true
+
+    - name: Restore Vite+ task cache
+      uses: actions/cache@v4
+      with:
+        path: node_modules/.vite/task-cache
+        key: vp-task-cache-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: |
+          vp-task-cache-${{ runner.os }}-${{ github.job }}-
+          vp-task-cache-${{ runner.os }}-
