@@ -43,7 +43,7 @@ export namespace Node {
   export type Context<N> = [N] extends [Effect.Effect<any, any, infer R>] ? R : never;
 }
 
-/** Extract E from a props object — Stream/Effect/Subscribable prop values contribute their E channel. */
+/** Extract E from a props object — Stream/Effect/Subscribable prop values and Effect-returning event handlers contribute their E channel. */
 export type PropsE<P> = {
   [K in keyof P]: P[K] extends Stream.Stream<any, infer E, any>
     ? E
@@ -51,10 +51,14 @@ export type PropsE<P> = {
       ? E
       : P[K] extends Subscribable.Subscribable<any, infer E, any>
         ? E
-        : never;
+        : P[K] extends (...args: any[]) => infer Ret
+          ? Ret extends Effect.Effect<any, infer E, any>
+            ? E
+            : never
+          : never;
 }[keyof P];
 
-/** Extract R from a props object — Stream/Effect/Subscribable prop values contribute their R channel. */
+/** Extract R from a props object — Stream/Effect/Subscribable prop values and Effect-returning event handlers contribute their R channel. */
 export type PropsR<P> = {
   [K in keyof P]: P[K] extends Stream.Stream<any, any, infer R>
     ? R
@@ -62,7 +66,11 @@ export type PropsR<P> = {
       ? R
       : P[K] extends Subscribable.Subscribable<any, any, infer R>
         ? R
-        : never;
+        : P[K] extends (...args: any[]) => infer Ret
+          ? Ret extends Effect.Effect<any, any, infer R>
+            ? R
+            : never
+          : never;
 }[keyof P];
 
 /** Extract E from a children array — Node (Effect) and Stream children contribute their E. */
