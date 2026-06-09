@@ -6,7 +6,7 @@
  * requirement channels are exposed.
  */
 
-import { Stream } from "effect";
+import { Effect, Stream } from "effect";
 import type { Node } from "../types";
 import { Component } from "../component";
 import { List } from "../list";
@@ -70,3 +70,32 @@ const Avatar = Component.make((props: { src: Stream.Stream<string, RowError, Row
 const _avatarNode = Avatar({ src: nameStream });
 type _Co3 = Expect<Equal<Component.Error<typeof _avatarNode>, RowError>>;
 type _Co4 = Expect<Equal<Component.Context<typeof _avatarNode>, RowService>>;
+
+// =============================================================================
+// Event handler props surface their Effect E/R channels in the Node type
+// =============================================================================
+
+declare const handlerWithService: Effect.Effect<void, never, RowService>;
+declare const handlerWithError: Effect.Effect<void, RowError, never>;
+
+// Handler requiring a service ⇒ R surfaces on the node.
+const _btnService = h.button({ onclick: () => handlerWithService }, ["go"]);
+type _H1 = Expect<Equal<Node.Error<typeof _btnService>, never>>;
+type _H2 = Expect<Equal<Node.Context<typeof _btnService>, RowService>>;
+
+// Handler that can fail ⇒ E surfaces on the node.
+const _btnError = h.button({ onclick: () => handlerWithError }, ["go"]);
+type _H3 = Expect<Equal<Node.Error<typeof _btnError>, RowError>>;
+type _H4 = Expect<Equal<Node.Context<typeof _btnError>, never>>;
+
+// Plain void handler contributes nothing.
+const _btnVoid = h.button(
+  {
+    onclick: () => {
+      /* side effect only */
+    },
+  },
+  ["go"],
+);
+type _H5 = Expect<Equal<Node.Error<typeof _btnVoid>, never>>;
+type _H6 = Expect<Equal<Node.Context<typeof _btnVoid>, never>>;
