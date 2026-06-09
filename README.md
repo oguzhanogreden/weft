@@ -28,10 +28,8 @@ Weft is a monorepo with three packages:
 
 ## Installation
 
-Install from [GitHub releases](https://github.com/stefvw93/weft/releases) (not yet published to package registries).
-
 ```bash
-npm install @weftui/core @weftui/dom effect
+npm install @weftui/core @weftui/dom @weftui/router effect
 ```
 
 **New to Effect?** Check out the [Effect documentation](https://effect.website/docs/getting-started/introduction) to learn the fundamentals.
