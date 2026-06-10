@@ -31,7 +31,7 @@
     "csstype": "^3.2.3",
     "effect": "catalog:",
     "tsx": "catalog:",
-    "typescript": "^6.0.3",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {

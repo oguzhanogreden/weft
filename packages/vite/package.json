@@ -26,7 +26,7 @@
     "@types/node": "catalog:",
     "@weftui/core": "workspace:*",
     "effect": "catalog:",
-    "typescript": "^6.0.3",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
