@@ -4,6 +4,8 @@
 
 > Reactive UI, woven from [Effect](https://effect.website).
 
+Frontend at scale is hard. Real applications need robust API orchestration, error handling, retries, and telemetry. [Effect](https://effect.website) solves these problems elegantly; Weft brings the same patterns to the UI layer — in the browser and on the server.
+
 Weft is a reactive DOM library where every node _is_ an Effect. Components are plain functions that return `Node<E, R>` — a type alias for `Effect.Effect<DOMNode, E, R>` — so your component tree is the **warp**, the fixed structure held under tension, and streams are the **weft**, the live thread drawn across it. Error and requirement channels accumulate naturally through the tree, and all Effect combinators work on nodes directly. Streams drive all updates; there is no virtual DOM or diffing. On the server, the same component tree renders to an HTML string or a streaming response, and `hydrate()` resumes reactivity in place on the client without re-rendering.
 
 > **Early Development Notice**: Weft is in active early development. APIs may change rapidly. Not recommended for production use yet.
