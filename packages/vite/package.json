@@ -23,7 +23,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
+    "@types/node": "catalog:",
     "@weftui/core": "workspace:*",
     "effect": "catalog:",
     "typescript": "^6.0.3",

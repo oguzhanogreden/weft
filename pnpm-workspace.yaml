@@ -12,9 +12,10 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vitest: npm:@voidzero-dev/vite-plus-test@latest
   vite-plus: latest
-  effect: ^3.21.2
+  effect: ^3.21.3
   "@effect/platform": ^0.96.1
   "@effect/rpc": ^0.75.1
+  "@types/node": ^25.9.2
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
