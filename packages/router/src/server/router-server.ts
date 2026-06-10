@@ -1,5 +1,10 @@
 import { AppRpcClientTag, type Node } from "@weftui/core";
-import { renderToStringHydratable } from "@weftui/dom/server";
+import {
+  renderToHydratableShell,
+  renderToStringHydratable,
+  SuspenseFailureHandlerTag,
+  type SuspenseFailureHandler,
+} from "@weftui/dom/server";
 import {
   HttpApiBuilder,
   HttpApiEndpoint,
@@ -9,7 +14,7 @@ import {
   HttpServerResponse,
 } from "@effect/platform";
 import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "@effect/rpc";
-import { Effect, Layer, Option, Schema, Stream, Subscribable } from "effect";
+import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream, Subscribable } from "effect";
 import type { RouterDef } from "../compile";
 import { isRouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";
@@ -57,8 +62,13 @@ export namespace RouterServer {
   export interface Options {
     /** The document shell slot; reads the app to splice via `yield* Router.Outlet`. */
     readonly document: ComponentSlot;
-    /** The app's `Boundary.rpc` foundation (contract + server handlers). */
-    readonly rpc: RpcOptions;
+    /**
+     * The app's `Boundary.rpc` foundation (contract + server handlers). Optional:
+     * omit when the app has no `Boundary.rpc` — then `POST /_eui/rpc` is not
+     * served (it falls through to page dispatch) and a stray `Boundary.rpc`
+     * fails with a descriptive error instead of rendering.
+     */
+    readonly rpc?: RpcOptions;
   }
 
   /** The result of {@link render}. */
@@ -93,8 +103,25 @@ export namespace RouterServer {
    * ({@link RpcTest.makeClient}, flat, no protocol/serialization). SSR
    * `Boundary.rpc` resolution calls `call(tag, payload())` against this — the rpc
    * runs in-process, never over the network.
+   *
+   * The render path requires the tag unconditionally, so with no `rpc` configured
+   * a stub is provided whose `call` fails descriptively — a `Boundary.rpc` in an
+   * rpc-less app surfaces the misconfiguration instead of dying opaquely.
    */
-  function appRpcClientLayer(rpc: RpcOptions): Layer.Layer<AppRpcClientTag> {
+  function appRpcClientLayer(rpc: RpcOptions | undefined): Layer.Layer<AppRpcClientTag> {
+    if (rpc === undefined) {
+      return Layer.succeed(
+        AppRpcClientTag,
+        AppRpcClientTag.of({
+          call: (tag) =>
+            Effect.fail(
+              new Error(
+                `Boundary.rpc "${tag}" cannot resolve: no \`rpc\` option was passed to RouterServer`,
+              ),
+            ),
+        }),
+      );
+    }
     return Layer.scoped(
       AppRpcClientTag,
       Effect.map(
@@ -175,8 +202,75 @@ export namespace RouterServer {
     );
   }
 
+  /**
+   * The streaming pass's {@link SuspenseFailureHandlerTag} (SW1 late-404 row):
+   * a `RouterNotFound` escaping `Boundary.suspend` children after the shell has
+   * flushed is substituted with the router's `notFound` page plus a
+   * client-injected `<meta name="robots" content="noindex">` (Next.js soft-404
+   * parity). Any other cause keeps the dom swallow default (AC-ST8).
+   */
+  function notFoundSuspenseHandler(def: RouterDef): SuspenseFailureHandler {
+    return {
+      handle: (cause) => {
+        const failure = Cause.failureOption(cause);
+        return Option.isSome(failure) && isRouterNotFound(failure.value)
+          ? Option.some({
+              content: def.compiled.notFound() as Node<never, never>,
+              markNoindex: true,
+            })
+          : Option.none();
+      },
+    };
+  }
+
+  /**
+   * Streaming counterpart of {@link renderLeaf} (SW1 … SW6): renders the
+   * document via the dom shell-split API, decides the status off the buffered
+   * shell, then streams `<!DOCTYPE html>\n` + shell as the first chunk and the
+   * Suspense patches after it. A `RouterNotFound` raised during the shell walk
+   * is caught (nothing flushed yet) and re-rendered buffered at 404.
+   */
+  function renderLeafStreaming(
+    def: RouterDef,
+    options: Options,
+    matched: Extract<RouteMatch, { _tag: "Matched" }>,
+  ): Effect.Effect<HttpServerResponse.HttpServerResponse, Error> {
+    const router = serverRouter(matched);
+    const app = outletNode(def) as Node<never, never>;
+    return Effect.gen(function* () {
+      // The scope spans the response: resolution fibers fork into it, and it
+      // closes when the body stream ends or the consumer disconnects (SW5).
+      const scope = yield* Scope.make();
+      const documentNode = Effect.provideService(options.document({}), Router.Outlet, app);
+      const { shell, patches } = yield* renderToHydratableShell(documentNode).pipe(
+        Effect.provideService(Router, router),
+        Effect.provideService(SuspenseFailureHandlerTag, notFoundSuspenseHandler(def)),
+        Effect.provide(appRpcClientLayer(options.rpc)),
+        Scope.extend(scope),
+        Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause))),
+      );
+      const body = Stream.make(`<!DOCTYPE html>\n${shell}`).pipe(
+        Stream.concat(patches),
+        Stream.ensuring(Scope.close(scope, Exit.void)),
+        Stream.encodeText,
+      );
+      return HttpServerResponse.stream(body, {
+        status: 200,
+        contentType: "text/html; charset=utf-8",
+      });
+    }).pipe(
+      Effect.catchIf(isRouterNotFound, () => renderNotFoundDirect(def, options, matched.url, 404)),
+    );
+  }
+
   /** Memoized platform web handlers, keyed by `(def, document)`. */
   const handlerCache = new WeakMap<
+    RouterDef,
+    WeakMap<ComponentSlot, (request: Request) => Promise<Response>>
+  >();
+
+  /** Streaming handlers are memoized separately from the buffered ones. */
+  const streamingHandlerCache = new WeakMap<
     RouterDef,
     WeakMap<ComponentSlot, (request: Request) => Promise<Response>>
   >();
@@ -191,9 +285,18 @@ export namespace RouterServer {
    * unmatched path resolves a default empty 404 before any response hook can rewrite
    * it, so the catch-all is the route that keeps no-match rendering ours.)
    */
-  function webHandler(def: RouterDef, options: Options): (request: Request) => Promise<Response> {
-    const perDef = handlerCache.get(def) ?? new WeakMap();
-    handlerCache.set(def, perDef);
+  function webHandlerWith(
+    def: RouterDef,
+    options: Options,
+    cache: WeakMap<RouterDef, WeakMap<ComponentSlot, (request: Request) => Promise<Response>>>,
+    leafRenderer: (
+      def: RouterDef,
+      options: Options,
+      matched: Extract<RouteMatch, { _tag: "Matched" }>,
+    ) => Effect.Effect<HttpServerResponse.HttpServerResponse, Error>,
+  ): (request: Request) => Promise<Response> {
+    const perDef = cache.get(def) ?? new WeakMap();
+    cache.set(def, perDef);
     const cached = perDef.get(options.document);
     if (cached !== undefined) return cached;
 
@@ -223,7 +326,7 @@ export namespace RouterServer {
           (h: any, leaf) =>
             // oxlint-disable-next-line typescript/no-explicit-any
             h.handle(leaf.id, (request: any) =>
-              renderLeaf(def, options, {
+              leafRenderer(def, options, {
                 _tag: "Matched",
                 leaf,
                 path: request.path as Record<string, unknown>,
@@ -255,16 +358,26 @@ export namespace RouterServer {
     // `Boundary.rpc` data is served out-of-band from the page routes: an rpc web
     // handler over the app's merged `RpcGroup` + JSON serialization, claiming
     // `POST /_eui/rpc`. The combined handler delegates that path to rpc and every
-    // other URL to the HttpApi page dispatch above.
-    const { handler: rpcHandler } = RpcServer.toWebHandler(options.rpc.group, {
-      // oxlint-disable-next-line typescript/no-explicit-any
-      layer: Layer.mergeAll(options.rpc.handlers, RpcSerialization.layerJson) as any,
-    });
-    const handler = (request: Request): Promise<Response> =>
-      new URL(request.url).pathname === RPC_PATH ? rpcHandler(request) : pageHandler(request);
+    // other URL to the HttpApi page dispatch above. With no `rpc` configured the
+    // path is not claimed — `/_eui/rpc` falls through to page dispatch (404).
+    const rpc = options.rpc;
+    let handler = pageHandler;
+    if (rpc !== undefined) {
+      const { handler: rpcHandler } = RpcServer.toWebHandler(rpc.group, {
+        // oxlint-disable-next-line typescript/no-explicit-any
+        layer: Layer.mergeAll(rpc.handlers, RpcSerialization.layerJson) as any,
+      });
+      handler = (request: Request): Promise<Response> =>
+        new URL(request.url).pathname === RPC_PATH ? rpcHandler(request) : pageHandler(request);
+    }
 
     perDef.set(options.document, handler);
     return handler;
+  }
+
+  /** The buffered platform web handler (S2a). */
+  function webHandler(def: RouterDef, options: Options): (request: Request) => Promise<Response> {
+    return webHandlerWith(def, options, handlerCache, renderLeaf);
   }
 
   /** Coerces a possibly-relative URL/path into an absolute URL for a synthetic `Request`. */
@@ -303,5 +416,24 @@ export namespace RouterServer {
     options: Options,
   ): (request: Request) => Promise<Response> {
     return webHandler(def, options);
+  }
+
+  /**
+   * Streaming variant of {@link toWebHandler} (spec: "Streaming SSR" in
+   * `router.specs.md`, SW1 … SW7). Same `Options`, memoized separately. Per
+   * matched leaf the document renders via the dom shell-split API
+   * (`renderToHydratableShell`): the buffered shell decides the HTTP status
+   * before any bytes flush, then streams as the first chunk with the Suspense
+   * patch chunks after it. A `RouterNotFound` escaping `Boundary.suspend`
+   * children after the flush keeps 200 and patches in the `notFound` page plus
+   * a noindex robots meta (soft-404). No-match and shell-raised
+   * `RouterNotFound` stay real 404s; `POST /_eui/rpc` delegation is unchanged.
+   * `render` and `toWebHandler` remain fully buffered.
+   */
+  export function toStreamingWebHandler(
+    def: RouterDef,
+    options: Options,
+  ): (request: Request) => Promise<Response> {
+    return webHandlerWith(def, options, streamingHandlerCache, renderLeafStreaming);
   }
 }

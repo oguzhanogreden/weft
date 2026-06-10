@@ -172,7 +172,7 @@ When `null` (no Suspense in tree), all recursive calls take the existing fast pa
 
 ```typescript
 interface ServerSuspenseCtx {
-  readonly patchQueue: Queue.Queue<string>; // serialised patch strings
+  readonly patchQueue: Queue.Queue<Option.Option<string>>; // Some(patch) | terminal None
   readonly pendingCount: Ref.Ref<number>; // boundaries not yet resolved
 }
 ```
@@ -182,14 +182,17 @@ interface ServerSuspenseCtx {
 ```
 renderToStream(node)
   └─ mainStream   — document structure with fallbacks inline
-  └─ patchStream  — Stream.fromQueue(patchQueue), terminates on Queue.shutdown
+  └─ patchStream  — Stream.fromQueue(patchQueue) up to the terminal None
   └─ combined     — Stream.concat(mainStream, patchStream)
 ```
 
-`Queue.shutdown` is called when `pendingCount` reaches 0 (all boundaries resolved).
-If no `Boundary.suspend` boundaries exist, `pendingCount` never increments, the queue is
-shut down immediately after the main stream completes, and the combined stream
-terminates without emitting any patches.
+Patches are offered as `Some`; a terminal `None` is offered when `pendingCount`
+reaches 0 (all boundaries resolved), ending the patch stream **after** every
+queued patch has been consumed (a `Queue.shutdown` would drop patches still
+queued when the consumer attaches late — e.g. a synchronously-settling
+boundary). If no `Boundary.suspend` boundaries exist, `pendingCount` never
+increments, the terminal `None` is offered immediately after the main stream
+completes, and the combined stream terminates without emitting any patches.
 
 ### Per-boundary resolution fiber
 

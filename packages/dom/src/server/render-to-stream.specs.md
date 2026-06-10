@@ -65,3 +65,27 @@ string-accumulating destination), so the two share serialization semantics.
   `Stream.tap` accumulate to exactly the final `Stream.mkString` output.
 - AC-ST6: A non-terminating reactive node (e.g. `SubscriptionRef.changes`) is
   collapsed to its current value and the stream completes — SSR does not hang.
+
+## Suspense streaming & shell split (cross-reference)
+
+Suspense streaming behaviour (fallbacks, markers, patches) is specified in
+`suspense-ssr.specs.md`; the shell-split API (`renderToHydratableShell`) and the
+Suspense late-failure handler seam (`SuspenseFailureHandlerTag`) are specified
+in `streaming-shell.specs.md`. The combined-stream variants specified here are
+**unchanged** by the shell split and remain the equivalence baseline
+(`streaming-shell.specs.md` AC-SH1).
+
+Two behaviours of the combined streams, previously implicit, are pinned here:
+
+- AC-ST7: **Patches strictly follow the main walk.** Both variants are
+  structurally `Stream.concat(mainStream, patchStream)`: no Suspense patch
+  chunk is ever emitted before the main document walk has completed, regardless
+  of how quickly a boundary's children resolve. (`Boundary.rpc` is resolved
+  inline, blocking the walk — it never patches.)
+- AC-ST8: **Suspense resolution failures are swallowed by default.** A cause
+  raised inside `Boundary.suspend` children that no failure `Boundary` in those
+  children handles does not fail the stream: no patch is emitted for that
+  boundary, its fallback persists, and the patch stream still terminates once
+  remaining boundaries settle. This default is extensible via the optional
+  `SuspenseFailureHandlerTag` seam (`streaming-shell.specs.md` AC-FH1–AC-FH6),
+  which may substitute patch content for such causes.

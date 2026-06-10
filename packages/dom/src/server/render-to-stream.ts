@@ -38,6 +38,7 @@ import {
   type ServerBoundaryReplayProps,
 } from "~/boundary-replay";
 import { escapeHtml, serializeJsonForScript, serializeProps, VOID_ELEMENTS } from "./serialize";
+import { SuspenseFailureHandlerTag } from "./suspense-failure-handler";
 
 // ============================================================================
 // Internal types
@@ -57,8 +58,14 @@ interface RegionCounter {
  * functions so every suspense boundary (`Boundary.suspend`) in the tree can share it.
  */
 interface ServerSuspenseCtx {
-  /** Serialised patch strings pushed here as each boundary resolves. */
-  readonly patchQueue: Queue.Queue<string>;
+  /**
+   * Serialised patch strings pushed here (as `Some`) as each boundary
+   * resolves; a terminal `None` is offered when the last pending boundary
+   * settles, ending the patch stream **after** all queued patches are
+   * consumed (a `Queue.shutdown` would drop still-queued patches when the
+   * consumer attaches late).
+   */
+  readonly patchQueue: Queue.Queue<Option.Option<string>>;
   /** Number of boundaries not yet resolved; drives queue shutdown. */
   readonly pendingCount: Ref.Ref<number>;
   /** Monotonic boundary-id counter (shared with region counter). */
@@ -111,13 +118,22 @@ interface ListSSRProps {
 /**
  * Produces the `<template id="ef-s-N">…</template><script>…</script>` pair
  * that the browser executes to swap the fallback for resolved content.
+ *
+ * With `markNoindex` (a `SuspenseFailureHandler` substitute opting into the
+ * soft-404 pattern, AC-FH3) the script first appends
+ * `<meta name="robots" content="noindex">` to `document.head` — the head has
+ * long been flushed, so DOM injection is the only route.
  */
-function buildPatch(id: number, html: string): string {
+function buildPatch(id: number, html: string, markNoindex = false): string {
   const startText = suspenseStartText(id);
   const endText = suspenseEndText(id);
+  const noindex = markNoindex
+    ? `var m=document.createElement("meta");m.setAttribute("name","robots");m.setAttribute("content","noindex");document.head.appendChild(m);`
+    : "";
   return (
     `<template id="ef-s-${id}">${html}</template>` +
     `<script>(function(){` +
+    noindex +
     `var w=document.createTreeWalker(document,128),s,e;` +
     `while(w.nextNode()){var d=w.currentNode.data;` +
     `if(d==="${startText}")s=w.currentNode;` +
@@ -171,14 +187,36 @@ function renderSuspenseSSRInline(
       // Effect.ignore ensures a rendering error never fails the outer scope.
       const resolutionEffect = Effect.gen(function* () {
         const childrenHtml = yield* Stream.mkString(renderFn(childrenNode));
-        yield* Queue.offer(ctx.patchQueue, buildPatch(id, childrenHtml));
+        yield* Queue.offer(ctx.patchQueue, Option.some(buildPatch(id, childrenHtml)));
       }).pipe(
-        // Always decrement, even on failure/interruption, so the queue is
-        // eventually shut down regardless of rendering errors.
+        // Late-failure seam (AC-FH1 … AC-FH6): a cause that no failure
+        // `Boundary` inside the children handled may be substituted by the
+        // ambient SuspenseFailureHandler. Absent seam / Option.none keeps the
+        // swallow default (AC-ST8); a failing substitute render degrades to it
+        // via the trailing Effect.ignore (AC-FH6).
+        Effect.catchAllCause((cause) =>
+          Cause.isInterruptedOnly(cause)
+            ? Effect.failCause(cause)
+            : Effect.gen(function* () {
+                const handler = yield* Effect.serviceOption(SuspenseFailureHandlerTag);
+                if (Option.isNone(handler)) return;
+                const substitute = handler.value.handle(cause as Cause.Cause<unknown>);
+                if (Option.isNone(substitute)) return;
+                const html = yield* Stream.mkString(renderFn(substitute.value.content));
+                yield* Queue.offer(
+                  ctx.patchQueue,
+                  Option.some(buildPatch(id, html, substitute.value.markNoindex)),
+                );
+              }),
+        ),
+        // Always decrement, even on failure/interruption, so the patch stream
+        // eventually terminates regardless of rendering errors.
         Effect.ensuring(
           Ref.updateAndGet(ctx.pendingCount, (n) => n - 1).pipe(
             Effect.flatMap((remaining) =>
-              remaining <= 0 ? Queue.shutdown(ctx.patchQueue) : Effect.void,
+              remaining <= 0
+                ? Queue.offer(ctx.patchQueue, Option.none()).pipe(Effect.asVoid)
+                : Effect.void,
             ),
           ),
         ),
@@ -757,7 +795,7 @@ export const renderToStreamFallbackOnly = (
 export const renderToStream = (node: Renderable): Stream.Stream<string, Error, AppRpcClientTag> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
-      const patchQueue = yield* Queue.unbounded<string>();
+      const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
       const pendingCount = yield* Ref.make(0);
       const idCounter = { current: 0 };
       const scope = yield* Effect.scope;
@@ -772,18 +810,78 @@ export const renderToStream = (node: Renderable): Stream.Stream<string, Error, A
 
       const mainStream = renderSSRNode(node, ctx).pipe(
         // After the main document tree is exhausted: if no suspense boundary was
-        // encountered (pendingCount still 0), shut down the queue immediately
-        // so the patch stream terminates without hanging (AC-SS7).
+        // encountered (pendingCount still 0), terminate the patch stream
+        // immediately so it does not hang (AC-SS7).
         Stream.ensuring(
           Ref.get(pendingCount).pipe(
-            Effect.flatMap((n) => (n === 0 ? Queue.shutdown(patchQueue) : Effect.void)),
+            Effect.flatMap((n) =>
+              n === 0 ? Queue.offer(patchQueue, Option.none()).pipe(Effect.asVoid) : Effect.void,
+            ),
           ),
         ),
       );
 
-      return Stream.concat(mainStream, Stream.fromQueue(patchQueue));
+      return Stream.concat(mainStream, patchStream(patchQueue));
     }),
   );
+
+/**
+ * The patch queue as a string stream: emits each queued `Some` patch and
+ * completes at the terminal `None` — so patches offered before the consumer
+ * attaches are never dropped.
+ *
+ * @internal
+ */
+export const patchStream = (queue: Queue.Queue<Option.Option<string>>): Stream.Stream<string> =>
+  Stream.fromQueue(queue).pipe(
+    Stream.takeWhile(Option.isSome),
+    Stream.map((patch) => patch.value),
+  );
+
+/**
+ * Shared setup for the hydratable streaming passes: patch infrastructure, the
+ * suspense context (resolution fibers forked into `scope`), and the marker-ed
+ * main document stream with its terminal no-suspense queue shutdown (AC-SS7).
+ * Used by both {@link renderToStreamHydratable} (combined stream) and
+ * `renderToHydratableShell` (shell split, `streaming-shell.ts`).
+ *
+ * @internal
+ */
+export const makeHydratableSSR = (
+  node: Renderable,
+  scope: Scope.Scope,
+): Effect.Effect<{
+  readonly mainStream: Stream.Stream<string, Error, AppRpcClientTag>;
+  readonly patches: Stream.Stream<string>;
+}> =>
+  Effect.gen(function* () {
+    const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
+    const pendingCount = yield* Ref.make(0);
+    const idCounter = { current: 0 };
+    const failureCollector: FailureCollector = yield* Ref.make(
+      Option.none<ServerBoundaryFailure>(),
+    );
+    const ctx: ServerSuspenseCtx = {
+      patchQueue,
+      pendingCount,
+      idCounter,
+      scope,
+      failureCollector,
+    };
+    const counter: RegionCounter = { current: 0 };
+
+    const mainStream = renderHydratableSSRNode(node, counter, ctx).pipe(
+      Stream.ensuring(
+        Ref.get(pendingCount).pipe(
+          Effect.flatMap((n) =>
+            n === 0 ? Queue.offer(patchQueue, Option.none()).pipe(Effect.asVoid) : Effect.void,
+          ),
+        ),
+      ),
+    );
+
+    return { mainStream, patches: patchStream(patchQueue) };
+  });
 
 /**
  * Like {@link renderToStream}, but wraps each reactive (`Stream`/`Effect`)
@@ -796,30 +894,8 @@ export const renderToStreamHydratable = (
 ): Stream.Stream<string, Error, AppRpcClientTag> =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
-      const patchQueue = yield* Queue.unbounded<string>();
-      const pendingCount = yield* Ref.make(0);
-      const idCounter = { current: 0 };
       const scope = yield* Effect.scope;
-      const failureCollector: FailureCollector = yield* Ref.make(
-        Option.none<ServerBoundaryFailure>(),
-      );
-      const ctx: ServerSuspenseCtx = {
-        patchQueue,
-        pendingCount,
-        idCounter,
-        scope,
-        failureCollector,
-      };
-      const counter: RegionCounter = { current: 0 };
-
-      const mainStream = renderHydratableSSRNode(node, counter, ctx).pipe(
-        Stream.ensuring(
-          Ref.get(pendingCount).pipe(
-            Effect.flatMap((n) => (n === 0 ? Queue.shutdown(patchQueue) : Effect.void)),
-          ),
-        ),
-      );
-
-      return Stream.concat(mainStream, Stream.fromQueue(patchQueue));
+      const { mainStream, patches } = yield* makeHydratableSSR(node, scope);
+      return Stream.concat(mainStream, patches);
     }),
   );

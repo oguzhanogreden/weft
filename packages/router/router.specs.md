@@ -251,6 +251,73 @@ sourced from this pipeline — there is **no render-time status side-channel**
   `pathSchema`/`querySchema` encoded sides are typed string-encodeable, so the
   `setPath`/`setUrlParams` bridge carries **no `as any`** casts.
 
+### Streaming SSR (`RouterServer.toStreamingWebHandler`)
+
+```ts
+RouterServer.toStreamingWebHandler(def: RouterDef, options: Options): (request: Request) => Promise<Response>
+```
+
+A **separate function** from `toWebHandler` (not a flag): same `Options` shape
+(`document`, optional `rpc`), memoized separately from the buffered handler.
+`RouterServer.render` and `RouterServer.toWebHandler` stay fully buffered —
+changing them is explicitly out of scope.
+
+The handler adopts the **shell-gate** model (Next.js parity), built on the dom
+package's shell-split API
+(`packages/dom/src/server/streaming-shell.specs.md`): per matched leaf, the
+document is rendered via `renderToHydratableShell`; the buffered `shell` (the
+full document with Suspense fallbacks inline) decides the HTTP status _before_
+any bytes flush, then `<!DOCTYPE html>\n` + shell goes out as the first body
+chunk and the Suspense patch chunks are streamed after it
+(`HttpServerResponse.stream`), headers `text/html`.
+
+Status semantics:
+
+| Failure shape                                                                   | When decided | Status  | Body                                                                                                |
+| ------------------------------------------------------------------------------- | ------------ | ------- | --------------------------------------------------------------------------------------------------- |
+| Platform no-match (no leaf claims the URL)                                      | before flush | **404** | catch-all → `notFound` page, shell-buffered (same as today's S2)                                    |
+| `RouterNotFound` raised during the shell walk                                   | before flush | **404** | caught (existing S2 `renderLeaf` semantics) → `notFound` page rendered direct — nothing flushed yet |
+| `RouterNotFound` (or any unhandled cause) inside `Boundary.suspend` after flush | after flush  | **200** | patch swaps in the router's `notFound()` page + injects `<meta name="robots" content="noindex">`    |
+| Other shell errors                                                              | before flush | **500** | unchanged platform behaviour                                                                        |
+
+The late-404 row (Next.js soft-404 pattern) is wired by providing the dom
+package's `SuspenseFailureHandlerTag` to the render:
+`handle = (cause) => isRouterNotFound(cause) ? Option.some({ content: <compiled notFound page>, markNoindex: true }) : Option.none()` —
+non-`RouterNotFound` causes keep the dom default (swallowed, fallback
+persists, per `render-to-stream.specs.md` AC-ST8).
+
+- **SW1** Same status table as above; each row is an acceptance criterion.
+- **SW2 (first-chunk timing)** The shell (status + `<!DOCTYPE html>\n` + full
+  document with fallbacks) flushes before any pending `Boundary.suspend`
+  child resolves — a slow suspended child never delays the first chunk.
+- **SW3** The response stream terminates after all patches have been emitted
+  (or stays open while a boundary never resolves, per dom AC-SS6 — connection
+  timeouts are the HTTP server's concern).
+- **SW4** A page with no `Boundary.suspend` produces a single-chunk body,
+  byte-identical (modulo chunking) to `toWebHandler`'s buffered body for the
+  same request.
+- **SW5** Consumer disconnect (response stream cancelled) interrupts pending
+  Suspense resolution fibers via the render scope
+  (`streaming-shell.specs.md` AC-SH6).
+- **SW6** `Boundary.rpc` **blocks** the shell (resolved inline during the
+  walk, never patched) — documented, not changed; a slow rpc delays the first
+  chunk.
+- **SW7** `POST /_eui/rpc` delegation is unchanged: when `rpc` is configured
+  the path is claimed by the rpc web handler exactly as in `toWebHandler`;
+  without `rpc` it falls through to page dispatch.
+
+**Hydration note / open question (implementation session):** the client
+`hydrate` contract over patched regions is the existing
+`renderToStream`/`suspense-ssr.specs.md` contract (patches have executed
+before `hydrate()` runs). The streamed not-found patch content is **not**
+hydrated as the notFound route — the client router resolves the URL itself on
+hydrate, so the shell-said-"page"/patch-said-"not-found" case is a potential
+hydration mismatch to be resolved during implementation.
+
+Out of scope for this feature: progressive shell flushing (the shell is
+atomic), streaming for `RouterServer.render` (string API stays buffered), and
+a `redirect()`-after-flush analog.
+
 ### Dependency injection (`router-service.ts`, `outlet.ts`)
 
 - **D1** A layout's `component` thunk reads its outlet via `yield* Router.Outlet`; the router
@@ -362,8 +429,8 @@ Programmatic, type-safe navigation built on the `Router` service and the type-sa
 
 `Boundary.rpc` resolves through the ambient `AppRpcClientTag` seam (defined in
 `@weftui/core`), which the router provides on **both** sides over the app's
-merged `RpcGroup` (passed as `RouterServer`/`RouterLive`'s `rpc: { group, handlers }`
-option):
+merged `RpcGroup` (passed as `RouterServer`/`RouterLive`'s **optional**
+`rpc: { group, handlers }` option):
 
 - **Server** (`RouterServer`): provides an **in-process** flat client
   (`RpcTest.makeClient(group, { flatten: true })` over the handler Layer, no
@@ -388,3 +455,15 @@ This makes all three `Boundary.rpc` paths work end to end:
 
 A router-less mount (no `RouterLive`/`RouterServer`) has no `AppRpcClientTag`, so a
 `Boundary.rpc` mount fails with a descriptive error (see `@weftui/dom/client`).
+
+The `rpc` option is **optional** on both sides — an app with no `Boundary.rpc`
+omits it entirely:
+
+- **Server** (`RouterServer`): without `rpc`, no rpc web handler is mounted —
+  `POST /_eui/rpc` falls through to page dispatch (the catch-all 404) — and the
+  SSR render layer provides a stub `AppRpcClientTag` whose `call` fails with a
+  descriptive "no `rpc` option was passed to RouterServer" error, so a stray
+  `Boundary.rpc` surfaces the misconfiguration instead of crashing.
+- **Client** (`RouterLive`): without `rpc` (the whole options argument may be
+  omitted), no network rpc client is built; the provided `AppRpcClientTag` is the
+  same descriptive-failure stub.
