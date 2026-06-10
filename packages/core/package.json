@@ -30,7 +30,7 @@
     "@types/node": "catalog:",
     "csstype": "^3.2.3",
     "effect": "catalog:",
-    "tsx": "^4.22.3",
+    "tsx": "catalog:",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

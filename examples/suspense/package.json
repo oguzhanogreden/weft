@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "tsx": "^4.22.3",
+    "tsx": "catalog:",
     "vite-plus": "catalog:"
   }
 }

@@ -40,7 +40,7 @@
     "@types/node": "catalog:",
     "effect": "catalog:",
     "jsdom": "^29.1.1",
-    "tsx": "^4.22.3",
+    "tsx": "catalog:",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
