@@ -2898,7 +2898,7 @@
       "source_file": "examples/router-ssr/src/app.browser.test.ts",
       "source_location": "L1",
       "id": "examples_router_ssr_src_app_browser_test_ts_src_app_browser_test",
-      "community": 3,
+      "community": 130,
       "norm_label": "app.browser.test.ts"
     },
     {
@@ -2907,7 +2907,7 @@
       "source_file": "examples/router-ssr/src/app.browser.test.ts",
       "source_location": "L38",
       "id": "src_app_browser_test_serverhandler",
-      "community": 3,
+      "community": 130,
       "norm_label": "serverhandler"
     },
     {
@@ -2916,7 +2916,7 @@
       "source_file": "examples/router-ssr/src/app.browser.test.ts",
       "source_location": "L68",
       "id": "src_app_browser_test_mountat",
-      "community": 3,
+      "community": 221,
       "norm_label": "mountat()"
     },
     {
@@ -2925,7 +2925,7 @@
       "source_file": "examples/router-ssr/src/app.browser.test.ts",
       "source_location": "L75",
       "id": "src_app_browser_test_link",
-      "community": 3,
+      "community": 130,
       "norm_label": "link()"
     },
     {
@@ -2997,7 +2997,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L1",
       "id": "data_inventory",
-      "community": 3,
+      "community": 130,
       "norm_label": "inventory.ts"
     },
     {
@@ -3006,7 +3006,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L21",
       "id": "data_inventory_stock",
-      "community": 3,
+      "community": 130,
       "norm_label": "stock"
     },
     {
@@ -3015,7 +3015,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L27",
       "id": "data_inventory_stockkey",
-      "community": 3,
+      "community": 130,
       "norm_label": "stockkey"
     },
     {
@@ -3033,7 +3033,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L37",
       "id": "data_inventory_stockrpcs",
-      "community": 3,
+      "community": 130,
       "norm_label": "stockrpcs"
     },
     {
@@ -3042,7 +3042,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L43",
       "id": "data_inventory_inventory",
-      "community": 3,
+      "community": 130,
       "norm_label": "inventory"
     },
     {
@@ -3051,7 +3051,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L53",
       "id": "data_inventory_restocks",
-      "community": 3,
+      "community": 130,
       "norm_label": "restocks"
     },
     {
@@ -3060,7 +3060,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L56",
       "id": "data_inventory_inventorylive",
-      "community": 3,
+      "community": 130,
       "norm_label": "inventorylive"
     },
     {
@@ -3069,7 +3069,7 @@
       "source_file": "examples/router-ssr/src/data/inventory.ts",
       "source_location": "L74",
       "id": "data_inventory_stocklive",
-      "community": 3,
+      "community": 130,
       "norm_label": "stocklive"
     },
     {
@@ -3123,7 +3123,7 @@
       "source_file": "examples/router-ssr/src/data/products.ts",
       "source_location": "L80",
       "id": "data_products_getproduct",
-      "community": 3,
+      "community": 224,
       "norm_label": "getproduct()"
     },
     {
@@ -3150,7 +3150,7 @@
       "source_file": "examples/router-ssr/src/entry-client.ts",
       "source_location": "L1",
       "id": "examples_router_ssr_src_entry_client_ts_src_entry_client",
-      "community": 3,
+      "community": 130,
       "norm_label": "entry-client.ts"
     },
     {
@@ -3159,7 +3159,7 @@
       "source_file": "examples/router-ssr/src/entry-client.ts",
       "source_location": "L17",
       "id": "examples_router_ssr_src_entry_client_ts_src_entry_client_root",
-      "community": 3,
+      "community": 130,
       "norm_label": "root"
     },
     {
@@ -3168,7 +3168,7 @@
       "source_file": "examples/router-ssr/src/entry-client.ts",
       "source_location": "L25",
       "id": "src_entry_client_runtime",
-      "community": 3,
+      "community": 130,
       "norm_label": "runtime"
     },
     {
@@ -3177,7 +3177,7 @@
       "source_file": "examples/router-ssr/src/entry-server.ts",
       "source_location": "L1",
       "id": "examples_router_ssr_src_entry_server_ts_src_entry_server",
-      "community": 3,
+      "community": 130,
       "norm_label": "entry-server.ts"
     },
     {
@@ -3186,7 +3186,7 @@
       "source_file": "examples/router-ssr/src/entry-server.ts",
       "source_location": "L24",
       "id": "src_entry_server_rpc",
-      "community": 3,
+      "community": 130,
       "norm_label": "rpc"
     },
     {
@@ -3195,7 +3195,7 @@
       "source_file": "examples/router-ssr/src/entry-server.ts",
       "source_location": "L31",
       "id": "src_entry_server_documentshell",
-      "community": 3,
+      "community": 130,
       "norm_label": "documentshell"
     },
     {
@@ -3204,7 +3204,7 @@
       "source_file": "examples/router-ssr/src/entry-server.ts",
       "source_location": "L47",
       "id": "examples_router_ssr_src_entry_server_ts_src_entry_server_render",
-      "community": 3,
+      "community": 130,
       "norm_label": "render()"
     },
     {
@@ -3213,7 +3213,7 @@
       "source_file": "examples/router-ssr/src/entry-server.ts",
       "source_location": "L51",
       "id": "src_entry_server_handler",
-      "community": 3,
+      "community": 130,
       "norm_label": "handler"
     },
     {
@@ -3222,7 +3222,7 @@
       "source_file": "examples/router-ssr/src/listing.browser.test.ts",
       "source_location": "L1",
       "id": "src_listing_browser_test",
-      "community": 3,
+      "community": 130,
       "norm_label": "listing.browser.test.ts"
     },
     {
@@ -3231,7 +3231,7 @@
       "source_file": "examples/router-ssr/src/listing.browser.test.ts",
       "source_location": "L34",
       "id": "src_listing_browser_test_mountat",
-      "community": 3,
+      "community": 130,
       "norm_label": "mountat()"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_file": "examples/router-ssr/src/listing.browser.test.ts",
       "source_location": "L41",
       "id": "src_listing_browser_test_cardids",
-      "community": 3,
+      "community": 130,
       "norm_label": "cardids()"
     },
     {
@@ -3303,7 +3303,7 @@
       "source_file": "examples/router-ssr/src/navigation.browser.test.ts",
       "source_location": "L82",
       "id": "src_navigation_browser_test_mountat",
-      "community": 214,
+      "community": 221,
       "norm_label": "mountat()"
     },
     {
@@ -3402,7 +3402,7 @@
       "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
       "source_location": "L1",
       "id": "src_refetch_browser_test",
-      "community": 3,
+      "community": 224,
       "norm_label": "refetch.browser.test.ts"
     },
     {
@@ -3411,7 +3411,7 @@
       "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
       "source_location": "L37",
       "id": "src_refetch_browser_test_rpc",
-      "community": 3,
+      "community": 224,
       "norm_label": "rpc"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
       "source_location": "L45",
       "id": "src_refetch_browser_test_serverhandler",
-      "community": 3,
+      "community": 224,
       "norm_label": "serverhandler"
     },
     {
@@ -3429,7 +3429,7 @@
       "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
       "source_location": "L74",
       "id": "src_refetch_browser_test_ssrdocument",
-      "community": 3,
+      "community": 224,
       "norm_label": "ssrdocument()"
     },
     {
@@ -3438,8 +3438,71 @@
       "source_file": "examples/router-ssr/src/refetch.browser.test.ts",
       "source_location": "L82",
       "id": "src_refetch_browser_test_ssrandhydrate",
-      "community": 3,
+      "community": 224,
       "norm_label": "ssrandhydrate()"
+    },
+    {
+      "label": "streaming-404.browser.test.ts",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L1",
+      "id": "src_streaming_404_browser_test",
+      "community": 222,
+      "norm_label": "streaming-404.browser.test.ts"
+    },
+    {
+      "label": "homeRoute",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L36",
+      "id": "src_streaming_404_browser_test_homeroute",
+      "community": 222,
+      "norm_label": "homeroute"
+    },
+    {
+      "label": "lateRoute",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L41",
+      "id": "src_streaming_404_browser_test_lateroute",
+      "community": 222,
+      "norm_label": "lateroute"
+    },
+    {
+      "label": "def",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L54",
+      "id": "src_streaming_404_browser_test_def",
+      "community": 222,
+      "norm_label": "def"
+    },
+    {
+      "label": "documentShell",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L71",
+      "id": "src_streaming_404_browser_test_documentshell",
+      "community": 222,
+      "norm_label": "documentshell"
+    },
+    {
+      "label": "applyPatches()",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L101",
+      "id": "src_streaming_404_browser_test_applypatches",
+      "community": 222,
+      "norm_label": "applypatches()"
+    },
+    {
+      "label": "installStreamedDocument()",
+      "file_type": "code",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L117",
+      "id": "src_streaming_404_browser_test_installstreameddocument",
+      "community": 222,
+      "norm_label": "installstreameddocument()"
     },
     {
       "label": "tsconfig.json",
@@ -5490,7 +5553,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L1",
       "id": "boundary_boundary_test",
-      "community": 26,
+      "community": 13,
       "norm_label": "boundary.test.ts"
     },
     {
@@ -5499,7 +5562,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L11",
       "id": "boundary_boundary_test_fooerror",
-      "community": 26,
+      "community": 13,
       "norm_label": "fooerror"
     },
     {
@@ -5508,7 +5571,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L12",
       "id": "boundary_boundary_test_barerror",
-      "community": 26,
+      "community": 13,
       "norm_label": "barerror"
     },
     {
@@ -5517,7 +5580,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L14",
       "id": "boundary_boundary_test_fallbacknode",
-      "community": 26,
+      "community": 13,
       "norm_label": "fallbacknode"
     },
     {
@@ -5526,7 +5589,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L16",
       "id": "boundary_boundary_test_extractdescriptor",
-      "community": 26,
+      "community": 13,
       "norm_label": "extractdescriptor()"
     },
     {
@@ -5535,7 +5598,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L309",
       "id": "boundary_boundary_test_stockkey",
-      "community": 26,
+      "community": 13,
       "norm_label": "stockkey"
     },
     {
@@ -5544,7 +5607,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L310",
       "id": "boundary_boundary_test_stock",
-      "community": 26,
+      "community": 13,
       "norm_label": "stock"
     },
     {
@@ -5553,7 +5616,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L311",
       "id": "boundary_boundary_test_getstock",
-      "community": 26,
+      "community": 13,
       "norm_label": "getstock"
     },
     {
@@ -5571,7 +5634,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L13",
       "id": "boundary_index_failure_boundary",
-      "community": 26,
+      "community": 13,
       "norm_label": "failure_boundary"
     },
     {
@@ -6660,7 +6723,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L1",
       "id": "combinator_descriptor",
-      "community": 7,
+      "community": 206,
       "norm_label": "descriptor.ts"
     },
     {
@@ -6669,7 +6732,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L10",
       "id": "combinator_descriptor_element_descriptor",
-      "community": 7,
+      "community": 206,
       "norm_label": "element_descriptor"
     },
     {
@@ -6678,7 +6741,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L22",
       "id": "combinator_descriptor_elementnode",
-      "community": 13,
+      "community": 206,
       "norm_label": "elementnode()"
     },
     {
@@ -6687,7 +6750,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L36",
       "id": "combinator_descriptor_getelementdescriptor",
-      "community": 41,
+      "community": 206,
       "norm_label": "getelementdescriptor()"
     },
     {
@@ -6732,7 +6795,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L46",
       "id": "combinator_element_h",
-      "community": 14,
+      "community": 7,
       "norm_label": "h"
     },
     {
@@ -6741,7 +6804,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L66",
       "id": "combinator_element_createelementfn",
-      "community": 13,
+      "community": 206,
       "norm_label": "createelementfn()"
     },
     {
@@ -6786,7 +6849,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L1",
       "id": "combinator_list_test",
-      "community": 14,
+      "community": 206,
       "norm_label": "list.test.ts"
     },
     {
@@ -6795,7 +6858,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L7",
       "id": "combinator_list_test_person",
-      "community": 14,
+      "community": 206,
       "norm_label": "person"
     },
     {
@@ -6804,7 +6867,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L12",
       "id": "combinator_list_test_people",
-      "community": 14,
+      "community": 206,
       "norm_label": "people"
     },
     {
@@ -6813,7 +6876,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L1",
       "id": "combinator_list",
-      "community": 14,
+      "community": 206,
       "norm_label": "list.ts"
     },
     {
@@ -6822,7 +6885,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L10",
       "id": "combinator_list_list",
-      "community": 14,
+      "community": 206,
       "norm_label": "list"
     },
     {
@@ -6831,7 +6894,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L13",
       "id": "combinator_list_itemof",
-      "community": 14,
+      "community": 206,
       "norm_label": "itemof"
     },
     {
@@ -6840,7 +6903,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L26",
       "id": "combinator_list_options",
-      "community": 14,
+      "community": 206,
       "norm_label": "options"
     },
     {
@@ -6849,7 +6912,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L57",
       "id": "combinator_list_each",
-      "community": 13,
+      "community": 206,
       "norm_label": "each()"
     },
     {
@@ -6858,7 +6921,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L77",
       "id": "combinator_list_error",
-      "community": 14,
+      "community": 206,
       "norm_label": "error"
     },
     {
@@ -6867,7 +6930,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L82",
       "id": "combinator_list_context",
-      "community": 14,
+      "community": 206,
       "norm_label": "context"
     },
     {
@@ -9405,7 +9468,7 @@
       "source_file": "packages/dom/src/__tests__/rpc-stub.ts",
       "source_location": "L1",
       "id": "tests_rpc_stub",
-      "community": 81,
+      "community": 218,
       "norm_label": "rpc-stub.ts"
     },
     {
@@ -9414,7 +9477,7 @@
       "source_file": "packages/dom/src/__tests__/rpc-stub.ts",
       "source_location": "L12",
       "id": "tests_rpc_stub_norpc",
-      "community": 81,
+      "community": 218,
       "norm_label": "norpc"
     },
     {
@@ -9477,7 +9540,7 @@
       "source_file": "packages/dom/src/boundary-replay.ts",
       "source_location": "L32",
       "id": "src_boundary_replay_serverboundaryreplayprops",
-      "community": 28,
+      "community": 70,
       "norm_label": "serverboundaryreplayprops"
     },
     {
@@ -9729,7 +9792,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L1",
       "id": "client_dom_events_test",
-      "community": 216,
+      "community": 51,
       "norm_label": "dom.events.test.ts"
     },
     {
@@ -9738,7 +9801,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L16",
       "id": "client_dom_events_test_createtestdom",
-      "community": 216,
+      "community": 51,
       "norm_label": "createtestdom()"
     },
     {
@@ -9747,7 +9810,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L30",
       "id": "client_dom_events_test_createroot",
-      "community": 216,
+      "community": 51,
       "norm_label": "createroot()"
     },
     {
@@ -9756,7 +9819,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L40",
       "id": "client_dom_events_test_runmount",
-      "community": 216,
+      "community": 51,
       "norm_label": "runmount()"
     },
     {
@@ -9765,7 +9828,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L48",
       "id": "client_dom_events_test_waitfor",
-      "community": 216,
+      "community": 51,
       "norm_label": "waitfor()"
     },
     {
@@ -9774,7 +9837,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L55",
       "id": "client_dom_events_test_waitforstream",
-      "community": 216,
+      "community": 51,
       "norm_label": "waitforstream()"
     },
     {
@@ -9783,7 +9846,7 @@
       "source_file": "packages/dom/src/client/dom.events.test.ts",
       "source_location": "L210",
       "id": "client_dom_events_test_counterservice",
-      "community": 216,
+      "community": 51,
       "norm_label": "counterservice"
     },
     {
@@ -9931,6 +9994,105 @@
       "norm_label": "parent()"
     },
     {
+      "label": "hydrate-failure.test.ts",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L1",
+      "id": "client_hydrate_failure_test",
+      "community": 216,
+      "norm_label": "hydrate-failure.test.ts"
+    },
+    {
+      "label": "createTestDOM()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L10",
+      "id": "client_hydrate_failure_test_createtestdom",
+      "community": 216,
+      "norm_label": "createtestdom()"
+    },
+    {
+      "label": "createRoot()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L19",
+      "id": "client_hydrate_failure_test_createroot",
+      "community": 216,
+      "norm_label": "createroot()"
+    },
+    {
+      "label": "until()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L26",
+      "id": "client_hydrate_failure_test_until",
+      "community": 216,
+      "norm_label": "until()"
+    },
+    {
+      "label": "waitFor()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L36",
+      "id": "client_hydrate_failure_test_waitfor",
+      "community": 216,
+      "norm_label": "waitfor()"
+    },
+    {
+      "label": "capturingConsoleError()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L41",
+      "id": "client_hydrate_failure_test_capturingconsoleerror",
+      "community": 216,
+      "norm_label": "capturingconsoleerror()"
+    },
+    {
+      "label": "LateError",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L58",
+      "id": "client_hydrate_failure_test_lateerror",
+      "community": 216,
+      "norm_label": "lateerror"
+    },
+    {
+      "label": "NopeError",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L59",
+      "id": "client_hydrate_failure_test_nopeerror",
+      "community": 216,
+      "norm_label": "nopeerror"
+    },
+    {
+      "label": "MissingError",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L60",
+      "id": "client_hydrate_failure_test_missingerror",
+      "community": 216,
+      "norm_label": "missingerror"
+    },
+    {
+      "label": "neverChild",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L68",
+      "id": "client_hydrate_failure_test_neverchild",
+      "community": 216,
+      "norm_label": "neverchild"
+    },
+    {
+      "label": "failAfterFirst()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L77",
+      "id": "client_hydrate_failure_test_failafterfirst",
+      "community": 216,
+      "norm_label": "failafterfirst()"
+    },
+    {
       "label": "hydrate-ready.test.ts",
       "file_type": "code",
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
@@ -10017,7 +10179,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L17",
       "id": "client_hydrate_test_rendertostring",
-      "community": 218,
+      "community": 81,
       "norm_label": "rendertostring()"
     },
     {
@@ -10071,7 +10233,7 @@
       "source_file": "packages/dom/src/client/index.ts",
       "source_location": "L1",
       "id": "packages_dom_src_client_index_ts_client_index",
-      "community": 17,
+      "community": 51,
       "norm_label": "index.ts"
     },
     {
@@ -10321,7 +10483,7 @@
       "label": "isEventHandler()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L76",
+      "source_location": "L77",
       "id": "client_render_iseventhandler",
       "community": 45,
       "norm_label": "iseventhandler()"
@@ -10330,7 +10492,7 @@
       "label": "setElementProps()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "id": "client_render_setelementprops",
       "community": 45,
       "norm_label": "setelementprops()"
@@ -10339,7 +10501,7 @@
       "label": "isProperty()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L129",
+      "source_location": "L130",
       "id": "client_render_isproperty",
       "community": 45,
       "norm_label": "isproperty()"
@@ -10348,7 +10510,7 @@
       "label": "setProperty()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L150",
+      "source_location": "L151",
       "id": "client_render_setproperty",
       "community": 45,
       "norm_label": "setproperty()"
@@ -10357,7 +10519,7 @@
       "label": "setAttribute()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L183",
+      "source_location": "L184",
       "id": "client_render_setattribute",
       "community": 45,
       "norm_label": "setattribute()"
@@ -10366,7 +10528,7 @@
       "label": "serializeAttributeValue()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L238",
+      "source_location": "L239",
       "id": "client_render_serializeattributevalue",
       "community": 45,
       "norm_label": "serializeattributevalue()"
@@ -10375,7 +10537,7 @@
       "label": "handleStyle()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L252",
+      "source_location": "L253",
       "id": "client_render_handlestyle",
       "community": 45,
       "norm_label": "handlestyle()"
@@ -10384,7 +10546,7 @@
       "label": "setStyleFromObject()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L300",
+      "source_location": "L301",
       "id": "client_render_setstylefromobject",
       "community": 45,
       "norm_label": "setstylefromobject()"
@@ -10393,7 +10555,7 @@
       "label": "camelToKebab()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L333",
+      "source_location": "L334",
       "id": "client_render_cameltokebab",
       "community": 45,
       "norm_label": "cameltokebab()"
@@ -10402,7 +10564,7 @@
       "label": "subscribeToStream()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L341",
+      "source_location": "L342",
       "id": "client_render_subscribetostream",
       "community": 45,
       "norm_label": "subscribetostream()"
@@ -10411,25 +10573,34 @@
       "label": "setEventHandler()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L371",
+      "source_location": "L372",
       "id": "client_render_seteventhandler",
       "community": 45,
       "norm_label": "seteventhandler()"
     },
     {
+      "label": "boundaryRecoveryEffect()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L451",
+      "id": "client_render_boundaryrecoveryeffect",
+      "community": 220,
+      "norm_label": "boundaryrecoveryeffect()"
+    },
+    {
       "label": "renderBoundary()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L449",
+      "source_location": "L506",
       "id": "client_render_renderboundary",
-      "community": 17,
+      "community": 220,
       "norm_label": "renderboundary()"
     },
     {
       "label": "renderSuspenseBoundary()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L539",
+      "source_location": "L576",
       "id": "client_render_rendersuspenseboundary",
       "community": 220,
       "norm_label": "rendersuspenseboundary()"
@@ -10438,16 +10609,16 @@
       "label": "renderServerBoundary()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L671",
+      "source_location": "L708",
       "id": "client_render_renderserverboundary",
-      "community": 17,
+      "community": 220,
       "norm_label": "renderserverboundary()"
     },
     {
       "label": "renderNode()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L752",
+      "source_location": "L789",
       "id": "client_render_rendernode",
       "community": 45,
       "norm_label": "rendernode()"
@@ -10456,7 +10627,7 @@
       "label": "flattenChildren()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L858",
+      "source_location": "L895",
       "id": "client_render_flattenchildren",
       "community": 45,
       "norm_label": "flattenchildren()"
@@ -10465,7 +10636,7 @@
       "label": "renderChildren()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L884",
+      "source_location": "L921",
       "id": "client_render_renderchildren",
       "community": 45,
       "norm_label": "renderchildren()"
@@ -10474,7 +10645,7 @@
       "label": "renderFragment()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L920",
+      "source_location": "L957",
       "id": "client_render_renderfragment",
       "community": 45,
       "norm_label": "renderfragment()"
@@ -10483,7 +10654,7 @@
       "label": "renderElement()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L942",
+      "source_location": "L979",
       "id": "client_render_renderelement",
       "community": 45,
       "norm_label": "renderelement()"
@@ -10492,7 +10663,7 @@
       "label": "renderComponent()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L993",
+      "source_location": "L1030",
       "id": "client_render_rendercomponent",
       "community": 45,
       "norm_label": "rendercomponent()"
@@ -10501,7 +10672,7 @@
       "label": "handleStreamChild()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1061",
+      "source_location": "L1098",
       "id": "client_render_handlestreamchild",
       "community": 45,
       "norm_label": "handlestreamchild()"
@@ -10510,61 +10681,61 @@
       "label": "createStreamMarkers()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1125",
+      "source_location": "L1162",
       "id": "client_render_createstreammarkers",
-      "community": 130,
+      "community": 17,
       "norm_label": "createstreammarkers()"
     },
     {
       "label": "updateStreamChild()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1154",
+      "source_location": "L1191",
       "id": "client_render_updatestreamchild",
-      "community": 17,
+      "community": 45,
       "norm_label": "updatestreamchild()"
     },
     {
       "label": "isTextValue()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1206",
+      "source_location": "L1243",
       "id": "client_render_istextvalue",
-      "community": 17,
+      "community": 45,
       "norm_label": "istextvalue()"
     },
     {
       "label": "staticElementDescriptor()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1216",
+      "source_location": "L1253",
       "id": "client_render_staticelementdescriptor",
-      "community": 17,
+      "community": 45,
       "norm_label": "staticelementdescriptor()"
     },
     {
       "label": "patchElementInPlace()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1241",
+      "source_location": "L1278",
       "id": "client_render_patchelementinplace",
-      "community": 17,
+      "community": 45,
       "norm_label": "patchelementinplace()"
     },
     {
       "label": "patchChildrenInPlace()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1274",
+      "source_location": "L1311",
       "id": "client_render_patchchildreninplace",
-      "community": 17,
+      "community": 45,
       "norm_label": "patchchildreninplace()"
     },
     {
       "label": "appendRenderedChildren()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1334",
+      "source_location": "L1371",
       "id": "client_render_appendrenderedchildren",
       "community": 45,
       "norm_label": "appendrenderedchildren()"
@@ -10573,16 +10744,16 @@
       "label": "removeNodesBetweenMarkers()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1370",
+      "source_location": "L1407",
       "id": "client_render_removenodesbetweenmarkers",
-      "community": 17,
+      "community": 220,
       "norm_label": "removenodesbetweenmarkers()"
     },
     {
       "label": "ListProps",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1384",
+      "source_location": "L1421",
       "id": "client_render_listprops",
       "community": 17,
       "norm_label": "listprops"
@@ -10591,7 +10762,7 @@
       "label": "ItemRecord",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1397",
+      "source_location": "L1434",
       "id": "client_render_itemrecord",
       "community": 17,
       "norm_label": "itemrecord"
@@ -10600,7 +10771,7 @@
       "label": "ListState",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1416",
+      "source_location": "L1453",
       "id": "client_render_liststate",
       "community": 17,
       "norm_label": "liststate"
@@ -10609,16 +10780,16 @@
       "label": "renderList()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1435",
+      "source_location": "L1472",
       "id": "client_render_renderlist",
-      "community": 130,
+      "community": 17,
       "norm_label": "renderlist()"
     },
     {
       "label": "projectKeys()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1501",
+      "source_location": "L1538",
       "id": "client_render_projectkeys",
       "community": 17,
       "norm_label": "projectkeys()"
@@ -10627,7 +10798,7 @@
       "label": "reconcileList()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1533",
+      "source_location": "L1570",
       "id": "client_render_reconcilelist",
       "community": 17,
       "norm_label": "reconcilelist()"
@@ -10636,16 +10807,16 @@
       "label": "renderItem()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1629",
+      "source_location": "L1666",
       "id": "client_render_renderitem",
-      "community": 130,
+      "community": 17,
       "norm_label": "renderitem()"
     },
     {
       "label": "collectItemRange()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1666",
+      "source_location": "L1703",
       "id": "client_render_collectitemrange",
       "community": 17,
       "norm_label": "collectitemrange()"
@@ -10654,7 +10825,7 @@
       "label": "removeItemRange()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1683",
+      "source_location": "L1720",
       "id": "client_render_removeitemrange",
       "community": 17,
       "norm_label": "removeitemrange()"
@@ -10663,7 +10834,7 @@
       "label": "describeKey()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1696",
+      "source_location": "L1733",
       "id": "client_render_describekey",
       "community": 17,
       "norm_label": "describekey()"
@@ -10672,7 +10843,7 @@
       "label": "longestIncreasingSubsequence()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1715",
+      "source_location": "L1752",
       "id": "client_render_longestincreasingsubsequence",
       "community": 17,
       "norm_label": "longestincreasingsubsequence()"
@@ -10681,16 +10852,16 @@
       "label": "MountHandle",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1758",
+      "source_location": "L1795",
       "id": "client_render_mounthandle",
-      "community": 17,
+      "community": 51,
       "norm_label": "mounthandle"
     },
     {
       "label": "mount()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1790",
+      "source_location": "L1827",
       "id": "client_render_mount",
       "community": 51,
       "norm_label": "mount()"
@@ -10699,16 +10870,16 @@
       "label": "hydrate()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1914",
+      "source_location": "L1951",
       "id": "client_render_hydrate",
-      "community": 17,
+      "community": 36,
       "norm_label": "hydrate()"
     },
     {
       "label": "HydrateError",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1988",
+      "source_location": "L2025",
       "id": "client_render_hydrateerror",
       "community": 17,
       "norm_label": "hydrateerror"
@@ -10717,7 +10888,7 @@
       "label": "hydrateNode()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L1998",
+      "source_location": "L2035",
       "id": "client_render_hydratenode",
       "community": 36,
       "norm_label": "hydratenode()"
@@ -10726,7 +10897,7 @@
       "label": "hydrateText()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2105",
+      "source_location": "L2151",
       "id": "client_render_hydratetext",
       "community": 36,
       "norm_label": "hydratetext()"
@@ -10735,16 +10906,16 @@
       "label": "makeHydrationReady()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2141",
+      "source_location": "L2187",
       "id": "client_render_makehydrationready",
-      "community": 17,
+      "community": 36,
       "norm_label": "makehydrationready()"
     },
     {
       "label": "makeSettleOnce()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2166",
+      "source_location": "L2212",
       "id": "client_render_makesettleonce",
       "community": 36,
       "norm_label": "makesettleonce()"
@@ -10753,7 +10924,7 @@
       "label": "hydrateReactive()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2181",
+      "source_location": "L2227",
       "id": "client_render_hydratereactive",
       "community": 36,
       "norm_label": "hydratereactive()"
@@ -10762,25 +10933,43 @@
       "label": "hydrateFirstEmission()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2260",
+      "source_location": "L2322",
       "id": "client_render_hydratefirstemission",
-      "community": 17,
+      "community": 45,
       "norm_label": "hydratefirstemission()"
+    },
+    {
+      "label": "hydrateSubstitutedSuspense()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2368",
+      "id": "client_render_hydratesubstitutedsuspense",
+      "community": 36,
+      "norm_label": "hydratesubstitutedsuspense()"
+    },
+    {
+      "label": "findMatchingSuspenseEnd()",
+      "file_type": "code",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2436",
+      "id": "client_render_findmatchingsuspenseend",
+      "community": 36,
+      "norm_label": "findmatchingsuspenseend()"
     },
     {
       "label": "hydrateFailureBoundary()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2309",
+      "source_location": "L2485",
       "id": "client_render_hydratefailureboundary",
-      "community": 36,
+      "community": 220,
       "norm_label": "hydratefailureboundary()"
     },
     {
       "label": "ServerBoundaryProps",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2380",
+      "source_location": "L2609",
       "id": "client_render_serverboundaryprops",
       "community": 17,
       "norm_label": "serverboundaryprops"
@@ -10789,16 +10978,16 @@
       "label": "makeClientResource()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2404",
+      "source_location": "L2633",
       "id": "client_render_makeclientresource",
-      "community": 17,
+      "community": 220,
       "norm_label": "makeclientresource()"
     },
     {
       "label": "hydrateServerBoundary()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2473",
+      "source_location": "L2702",
       "id": "client_render_hydrateserverboundary",
       "community": 36,
       "norm_label": "hydrateserverboundary()"
@@ -10807,7 +10996,7 @@
       "label": "hydrateElement()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2545",
+      "source_location": "L2774",
       "id": "client_render_hydrateelement",
       "community": 36,
       "norm_label": "hydrateelement()"
@@ -10816,7 +11005,7 @@
       "label": "hydrateChildren()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2575",
+      "source_location": "L2804",
       "id": "client_render_hydratechildren",
       "community": 36,
       "norm_label": "hydratechildren()"
@@ -10825,7 +11014,7 @@
       "label": "AdoptedItem",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2608",
+      "source_location": "L2837",
       "id": "client_render_adopteditem",
       "community": 17,
       "norm_label": "adopteditem"
@@ -10834,7 +11023,7 @@
       "label": "hydrateList()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2624",
+      "source_location": "L2853",
       "id": "client_render_hydratelist",
       "community": 36,
       "norm_label": "hydratelist()"
@@ -10843,16 +11032,16 @@
       "label": "collectAdoptedItems()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2724",
+      "source_location": "L2953",
       "id": "client_render_collectadopteditems",
-      "community": 17,
+      "community": 36,
       "norm_label": "collectadopteditems()"
     },
     {
       "label": "hydrateFirstListEmission()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2781",
+      "source_location": "L3010",
       "id": "client_render_hydratefirstlistemission",
       "community": 17,
       "norm_label": "hydratefirstlistemission()"
@@ -10861,7 +11050,7 @@
       "label": "hydrateItem()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2847",
+      "source_location": "L3076",
       "id": "client_render_hydrateitem",
       "community": 17,
       "norm_label": "hydrateitem()"
@@ -10870,16 +11059,16 @@
       "label": "seedStreamIdCounter()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2940",
+      "source_location": "L3169",
       "id": "client_render_seedstreamidcounter",
-      "community": 17,
+      "community": 36,
       "norm_label": "seedstreamidcounter()"
     },
     {
       "label": "findMatchingEnd()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2958",
+      "source_location": "L3187",
       "id": "client_render_findmatchingend",
       "community": 36,
       "norm_label": "findmatchingend()"
@@ -10888,7 +11077,7 @@
       "label": "describeNode()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L2984",
+      "source_location": "L3213",
       "id": "client_render_describenode",
       "community": 36,
       "norm_label": "describenode()"
@@ -10897,7 +11086,7 @@
       "label": "mismatch()",
       "file_type": "code",
       "source_file": "packages/dom/src/client/render.ts",
-      "source_location": "L3000",
+      "source_location": "L3229",
       "id": "client_render_mismatch",
       "community": 36,
       "norm_label": "mismatch()"
@@ -11448,7 +11637,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L1",
       "id": "src_data",
-      "community": 69,
+      "community": 17,
       "norm_label": "data.ts"
     },
     {
@@ -11457,7 +11646,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L10",
       "id": "src_data_unsupportednodetypeerror",
-      "community": 69,
+      "community": 17,
       "norm_label": "unsupportednodetypeerror"
     },
     {
@@ -11466,7 +11655,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L18",
       "id": "src_data_streamsubscriptionerror",
-      "community": 69,
+      "community": 17,
       "norm_label": "streamsubscriptionerror"
     },
     {
@@ -11475,7 +11664,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L26",
       "id": "src_data_rendererror",
-      "community": 69,
+      "community": 17,
       "norm_label": "rendererror"
     },
     {
@@ -11484,7 +11673,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L36",
       "id": "src_data_hydrationmismatcherror",
-      "community": 69,
+      "community": 17,
       "norm_label": "hydrationmismatcherror"
     },
     {
@@ -11493,7 +11682,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L49",
       "id": "src_data_boundarycontext",
-      "community": 69,
+      "community": 17,
       "norm_label": "boundarycontext"
     },
     {
@@ -11502,7 +11691,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L69",
       "id": "src_data_suspensecontext",
-      "community": 69,
+      "community": 17,
       "norm_label": "suspensecontext"
     },
     {
@@ -11511,7 +11700,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L86",
       "id": "src_data_renderresult",
-      "community": 69,
+      "community": 17,
       "norm_label": "renderresult"
     },
     {
@@ -11520,7 +11709,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L105",
       "id": "src_data_hydrationready",
-      "community": 69,
+      "community": 17,
       "norm_label": "hydrationready"
     },
     {
@@ -11529,7 +11718,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L118",
       "id": "src_data_rendercontext",
-      "community": 69,
+      "community": 17,
       "norm_label": "rendercontext"
     },
     {
@@ -11538,7 +11727,7 @@
       "source_file": "packages/dom/src/index.ts",
       "source_location": "L1",
       "id": "packages_dom_src_index_ts_src_index",
-      "community": 69,
+      "community": 17,
       "norm_label": "index.ts"
     },
     {
@@ -11547,7 +11736,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L1",
       "id": "server_boundary_ssr_test",
-      "community": 206,
+      "community": 218,
       "norm_label": "boundary-ssr.test.ts"
     },
     {
@@ -11556,7 +11745,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L16",
       "id": "server_boundary_ssr_test_rendertostream",
-      "community": 206,
+      "community": 218,
       "norm_label": "rendertostream()"
     },
     {
@@ -11565,7 +11754,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L17",
       "id": "server_boundary_ssr_test_rendertostreamhydratable",
-      "community": 206,
+      "community": 218,
       "norm_label": "rendertostreamhydratable()"
     },
     {
@@ -11574,7 +11763,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L19",
       "id": "server_boundary_ssr_test_rendertostring",
-      "community": 206,
+      "community": 218,
       "norm_label": "rendertostring()"
     },
     {
@@ -11583,7 +11772,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L23",
       "id": "server_boundary_ssr_test_run",
-      "community": 206,
+      "community": 218,
       "norm_label": "run()"
     },
     {
@@ -11592,7 +11781,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L25",
       "id": "server_boundary_ssr_test_runhydratable",
-      "community": 206,
+      "community": 218,
       "norm_label": "runhydratable()"
     },
     {
@@ -11601,7 +11790,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L28",
       "id": "server_boundary_ssr_test_runstring",
-      "community": 206,
+      "community": 218,
       "norm_label": "runstring()"
     },
     {
@@ -11610,7 +11799,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L32",
       "id": "server_boundary_ssr_test_fooerror",
-      "community": 206,
+      "community": 218,
       "norm_label": "fooerror"
     },
     {
@@ -11682,77 +11871,77 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L1",
       "id": "server_render_to_stream",
-      "community": 28,
+      "community": 41,
       "norm_label": "render-to-stream.ts"
     },
     {
       "label": "RegionCounter",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L51",
+      "source_location": "L52",
       "id": "server_render_to_stream_regioncounter",
-      "community": 28,
+      "community": 41,
       "norm_label": "regioncounter"
     },
     {
       "label": "ServerSuspenseCtx",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L60",
+      "source_location": "L61",
       "id": "server_render_to_stream_serversuspensectx",
-      "community": 28,
+      "community": 41,
       "norm_label": "serversuspensectx"
     },
     {
       "label": "ServerBoundaryFailure",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L92",
+      "source_location": "L93",
       "id": "server_render_to_stream_serverboundaryfailure",
-      "community": 28,
+      "community": 70,
       "norm_label": "serverboundaryfailure"
     },
     {
       "label": "FailureCollector",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "id": "server_render_to_stream_failurecollector",
-      "community": 28,
+      "community": 41,
       "norm_label": "failurecollector"
     },
     {
       "label": "ListSSRProps",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L108",
+      "source_location": "L109",
       "id": "server_render_to_stream_listssrprops",
-      "community": 28,
+      "community": 41,
       "norm_label": "listssrprops"
     },
     {
       "label": "buildPatch()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L127",
+      "source_location": "L136",
       "id": "server_render_to_stream_buildpatch",
-      "community": 220,
+      "community": 41,
       "norm_label": "buildpatch()"
     },
     {
       "label": "renderSuspenseSSRInline()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L165",
+      "source_location": "L187",
       "id": "server_render_to_stream_rendersuspensessrinline",
-      "community": 220,
+      "community": 41,
       "norm_label": "rendersuspensessrinline()"
     },
     {
       "label": "renderBoundarySSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L263",
+      "source_location": "L292",
       "id": "server_render_to_stream_renderboundaryssr",
       "community": 41,
       "norm_label": "renderboundaryssr()"
@@ -11761,34 +11950,34 @@
       "label": "ServerBoundarySSRProps",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L319",
+      "source_location": "L348",
       "id": "server_render_to_stream_serverboundaryssrprops",
-      "community": 28,
+      "community": 41,
       "norm_label": "serverboundaryssrprops"
     },
     {
       "label": "stashServerBoundaryFailure()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L337",
+      "source_location": "L366",
       "id": "server_render_to_stream_stashserverboundaryfailure",
-      "community": 28,
+      "community": 41,
       "norm_label": "stashserverboundaryfailure()"
     },
     {
       "label": "staticResource()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L368",
+      "source_location": "L397",
       "id": "server_render_to_stream_staticresource",
-      "community": 28,
+      "community": 41,
       "norm_label": "staticresource()"
     },
     {
       "label": "renderServerBoundarySSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L397",
+      "source_location": "L426",
       "id": "server_render_to_stream_renderserverboundaryssr",
       "community": 41,
       "norm_label": "renderserverboundaryssr()"
@@ -11797,16 +11986,16 @@
       "label": "firstListEmission()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L439",
+      "source_location": "L468",
       "id": "server_render_to_stream_firstlistemission",
-      "community": 28,
+      "community": 41,
       "norm_label": "firstlistemission()"
     },
     {
       "label": "renderSSRNode()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L460",
+      "source_location": "L489",
       "id": "server_render_to_stream_renderssrnode",
       "community": 41,
       "norm_label": "renderssrnode()"
@@ -11815,25 +12004,25 @@
       "label": "listToSSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L571",
+      "source_location": "L600",
       "id": "server_render_to_stream_listtossr",
-      "community": 28,
+      "community": 41,
       "norm_label": "listtossr()"
     },
     {
       "label": "fragmentToSSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L587",
+      "source_location": "L616",
       "id": "server_render_to_stream_fragmenttossr",
-      "community": 28,
+      "community": 41,
       "norm_label": "fragmenttossr()"
     },
     {
       "label": "renderHydratableSSRNode()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L603",
+      "source_location": "L632",
       "id": "server_render_to_stream_renderhydratablessrnode",
       "community": 41,
       "norm_label": "renderhydratablessrnode()"
@@ -11842,25 +12031,25 @@
       "label": "listToHydratableSSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L731",
+      "source_location": "L760",
       "id": "server_render_to_stream_listtohydratablessr",
-      "community": 130,
+      "community": 41,
       "norm_label": "listtohydratablessr()"
     },
     {
       "label": "fragmentToHydratableSSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L757",
+      "source_location": "L786",
       "id": "server_render_to_stream_fragmenttohydratablessr",
-      "community": 28,
+      "community": 41,
       "norm_label": "fragmenttohydratablessr()"
     },
     {
       "label": "renderToStreamFallbackOnly()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L781",
+      "source_location": "L810",
       "id": "server_render_to_stream_rendertostreamfallbackonly",
       "community": 218,
       "norm_label": "rendertostreamfallbackonly()"
@@ -11869,25 +12058,25 @@
       "label": "renderToStream()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L795",
+      "source_location": "L824",
       "id": "server_render_to_stream_rendertostream",
-      "community": 206,
+      "community": 218,
       "norm_label": "rendertostream()"
     },
     {
       "label": "patchStream()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L835",
+      "source_location": "L864",
       "id": "server_render_to_stream_patchstream",
-      "community": 206,
+      "community": 218,
       "norm_label": "patchstream()"
     },
     {
       "label": "makeHydratableSSR()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L850",
+      "source_location": "L879",
       "id": "server_render_to_stream_makehydratablessr",
       "community": 28,
       "norm_label": "makehydratablessr()"
@@ -11896,7 +12085,7 @@
       "label": "renderToStreamHydratable()",
       "file_type": "code",
       "source_file": "packages/dom/src/server/render-to-stream.ts",
-      "source_location": "L892",
+      "source_location": "L921",
       "id": "server_render_to_stream_rendertostreamhydratable",
       "community": 28,
       "norm_label": "rendertostreamhydratable()"
@@ -11979,7 +12168,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L20",
       "id": "server_serialize_void_elements",
-      "community": 28,
+      "community": 41,
       "norm_label": "void_elements"
     },
     {
@@ -12265,7 +12454,7 @@
       "label": "SuspenseFailureHandler",
       "file_type": "code",
       "source_file": "packages/dom/src/server/suspense-failure-handler.ts",
-      "source_location": "L29",
+      "source_location": "L39",
       "id": "server_suspense_failure_handler_suspensefailurehandler",
       "community": 28,
       "norm_label": "suspensefailurehandler"
@@ -12274,7 +12463,7 @@
       "label": "SuspenseFailureHandlerTag",
       "file_type": "code",
       "source_file": "packages/dom/src/server/suspense-failure-handler.ts",
-      "source_location": "L40",
+      "source_location": "L50",
       "id": "server_suspense_failure_handler_suspensefailurehandlertag",
       "community": 28,
       "norm_label": "suspensefailurehandlertag"
@@ -12285,7 +12474,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L1",
       "id": "src_shared",
-      "community": 130,
+      "community": 41,
       "norm_label": "shared.ts"
     },
     {
@@ -12294,7 +12483,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L22",
       "id": "src_shared_streamstarttext",
-      "community": 130,
+      "community": 41,
       "norm_label": "streamstarttext()"
     },
     {
@@ -12303,7 +12492,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L30",
       "id": "src_shared_streamendtext",
-      "community": 130,
+      "community": 41,
       "norm_label": "streamendtext()"
     },
     {
@@ -12312,7 +12501,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L37",
       "id": "src_shared_streammarker",
-      "community": 130,
+      "community": 41,
       "norm_label": "streammarker"
     },
     {
@@ -12321,7 +12510,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L55",
       "id": "src_shared_suspensestarttext",
-      "community": 220,
+      "community": 41,
       "norm_label": "suspensestarttext()"
     },
     {
@@ -12330,50 +12519,50 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L63",
       "id": "src_shared_suspenseendtext",
-      "community": 220,
+      "community": 41,
       "norm_label": "suspenseendtext()"
     },
     {
       "label": "SuspenseMarker",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L70",
+      "source_location": "L80",
       "id": "src_shared_suspensemarker",
-      "community": 130,
+      "community": 41,
       "norm_label": "suspensemarker"
     },
     {
       "label": "parseSuspenseMarker()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L81",
+      "source_location": "L91",
       "id": "src_shared_parsesuspensemarker",
-      "community": 17,
+      "community": 36,
       "norm_label": "parsesuspensemarker()"
     },
     {
       "label": "boundaryStartText()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L104",
+      "source_location": "L114",
       "id": "src_shared_boundarystarttext",
-      "community": 17,
+      "community": 220,
       "norm_label": "boundarystarttext()"
     },
     {
       "label": "boundaryEndText()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L112",
+      "source_location": "L122",
       "id": "src_shared_boundaryendtext",
-      "community": 17,
+      "community": 220,
       "norm_label": "boundaryendtext()"
     },
     {
       "label": "parseStreamMarker()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L126",
+      "source_location": "L136",
       "id": "src_shared_parsestreammarker",
       "community": 36,
       "norm_label": "parsestreammarker()"
@@ -12382,36 +12571,36 @@
       "label": "listItemStartText()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L152",
+      "source_location": "L162",
       "id": "src_shared_listitemstarttext",
-      "community": 130,
+      "community": 41,
       "norm_label": "listitemstarttext()"
     },
     {
       "label": "listItemEndText()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L160",
+      "source_location": "L170",
       "id": "src_shared_listitemendtext",
-      "community": 130,
+      "community": 41,
       "norm_label": "listitemendtext()"
     },
     {
       "label": "ListItemMarker",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L167",
+      "source_location": "L177",
       "id": "src_shared_listitemmarker",
-      "community": 130,
+      "community": 41,
       "norm_label": "listitemmarker"
     },
     {
       "label": "parseListItemMarker()",
       "file_type": "code",
       "source_file": "packages/dom/src/shared.ts",
-      "source_location": "L183",
+      "source_location": "L193",
       "id": "src_shared_parselistitemmarker",
-      "community": 17,
+      "community": 36,
       "norm_label": "parselistitemmarker()"
     },
     {
@@ -12420,7 +12609,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
       "id": "src_utilities",
-      "community": 69,
+      "community": 17,
       "norm_label": "utilities.ts"
     },
     {
@@ -12429,7 +12618,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
       "id": "src_utilities_nextstreamid",
-      "community": 130,
+      "community": 17,
       "norm_label": "nextstreamid()"
     },
     {
@@ -12438,7 +12627,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L28",
       "id": "src_utilities_nextboundaryid",
-      "community": 17,
+      "community": 220,
       "norm_label": "nextboundaryid()"
     },
     {
@@ -13275,7 +13464,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L1",
       "id": "client_router_live_test",
-      "community": 48,
+      "community": 221,
       "norm_label": "router-live.test.ts"
     },
     {
@@ -13284,7 +13473,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L11",
       "id": "client_router_live_test_nooprpcs",
-      "community": 48,
+      "community": 221,
       "norm_label": "nooprpcs"
     },
     {
@@ -13293,7 +13482,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L13",
       "id": "client_router_live_test_page",
-      "community": 48,
+      "community": 221,
       "norm_label": "page()"
     },
     {
@@ -13302,7 +13491,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L16",
       "id": "client_router_live_test_passthrough",
-      "community": 48,
+      "community": 221,
       "norm_label": "passthrough"
     },
     {
@@ -13311,7 +13500,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L21",
       "id": "client_router_live_test_fixture",
-      "community": 48,
+      "community": 221,
       "norm_label": "fixture()"
     },
     {
@@ -13320,7 +13509,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L34",
       "id": "client_router_live_test_setupdom",
-      "community": 48,
+      "community": 221,
       "norm_label": "setupdom()"
     },
     {
@@ -13329,7 +13518,7 @@
       "source_file": "packages/router/src/client/router-live.test.ts",
       "source_location": "L49",
       "id": "client_router_live_test_readservice",
-      "community": 48,
+      "community": 221,
       "norm_label": "readservice()"
     },
     {
@@ -13356,7 +13545,7 @@
       "source_file": "packages/router/src/client/router-live.ts",
       "source_location": "L46",
       "id": "client_router_live_locationurl",
-      "community": 48,
+      "community": 221,
       "norm_label": "locationurl()"
     },
     {
@@ -13374,7 +13563,7 @@
       "source_file": "packages/router/src/client/router-live.ts",
       "source_location": "L74",
       "id": "client_router_live_routerlive",
-      "community": 48,
+      "community": 221,
       "norm_label": "routerlive()"
     },
     {
@@ -13491,7 +13680,7 @@
       "source_file": "packages/router/src/compile.ts",
       "source_location": "L72",
       "id": "src_compile_routerdef",
-      "community": 9,
+      "community": 16,
       "norm_label": "routerdef"
     },
     {
@@ -13653,7 +13842,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L1",
       "id": "src_href_test",
-      "community": 23,
+      "community": 48,
       "norm_label": "href.test.ts"
     },
     {
@@ -13662,7 +13851,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L9",
       "id": "src_href_test_page",
-      "community": 23,
+      "community": 48,
       "norm_label": "page()"
     },
     {
@@ -13671,7 +13860,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L10",
       "id": "src_href_test_notfound",
-      "community": 23,
+      "community": 48,
       "norm_label": "notfound()"
     },
     {
@@ -13680,7 +13869,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L13",
       "id": "src_href_test_passthrough",
-      "community": 23,
+      "community": 48,
       "norm_label": "passthrough"
     },
     {
@@ -13689,7 +13878,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L18",
       "id": "src_href_test_userroute",
-      "community": 23,
+      "community": 48,
       "norm_label": "userroute"
     },
     {
@@ -13698,7 +13887,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L22",
       "id": "src_href_test_searchroute",
-      "community": 23,
+      "community": 48,
       "norm_label": "searchroute"
     },
     {
@@ -13707,7 +13896,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L26",
       "id": "src_href_test_aboutroute",
-      "community": 23,
+      "community": 48,
       "norm_label": "aboutroute"
     },
     {
@@ -13716,7 +13905,7 @@
       "source_file": "packages/router/src/href.test.ts",
       "source_location": "L28",
       "id": "src_href_test_def",
-      "community": 23,
+      "community": 48,
       "norm_label": "def"
     },
     {
@@ -14506,7 +14695,7 @@
       "label": "notFoundSuspenseHandler()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L212",
+      "source_location": "L217",
       "id": "server_router_server_notfoundsuspensehandler",
       "community": 44,
       "norm_label": "notfoundsuspensehandler()"
@@ -14515,7 +14704,7 @@
       "label": "renderLeafStreaming()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L233",
+      "source_location": "L239",
       "id": "server_router_server_renderleafstreaming",
       "community": 44,
       "norm_label": "renderleafstreaming()"
@@ -14524,7 +14713,7 @@
       "label": "webHandlerWith()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L288",
+      "source_location": "L294",
       "id": "server_router_server_webhandlerwith",
       "community": 44,
       "norm_label": "webhandlerwith()"
@@ -14533,7 +14722,7 @@
       "label": "webHandler()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L379",
+      "source_location": "L385",
       "id": "server_router_server_webhandler",
       "community": 44,
       "norm_label": "webhandler()"
@@ -14542,7 +14731,7 @@
       "label": "absoluteUrl()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L384",
+      "source_location": "L390",
       "id": "server_router_server_absoluteurl",
       "community": 44,
       "norm_label": "absoluteurl()"
@@ -14551,7 +14740,7 @@
       "label": "render()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L395",
+      "source_location": "L401",
       "id": "server_router_server_render",
       "community": 44,
       "norm_label": "render()"
@@ -14560,7 +14749,7 @@
       "label": "toWebHandler()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L414",
+      "source_location": "L420",
       "id": "server_router_server_towebhandler",
       "community": 44,
       "norm_label": "towebhandler()"
@@ -14569,7 +14758,7 @@
       "label": "toStreamingWebHandler()",
       "file_type": "code",
       "source_file": "packages/router/src/server/router-server.ts",
-      "source_location": "L433",
+      "source_location": "L439",
       "id": "server_router_server_tostreamingwebhandler",
       "community": 44,
       "norm_label": "tostreamingwebhandler()"
@@ -20402,7 +20591,7 @@
       "file_type": "document",
       "source_file": "packages/dom/src/client/hydrate.specs.md",
       "source_location": "L1",
-      "id": "users_stef_documents_projects_effect_ui_packages_dom_src_client_hydrate_specs_md",
+      "id": "client_hydrate_specs",
       "community": 209,
       "norm_label": "hydrate.specs.md"
     },
@@ -21337,7 +21526,7 @@
       "label": "Acceptance criteria",
       "file_type": "document",
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
-      "source_location": "L115",
+      "source_location": "L119",
       "id": "server_streaming_shell_specs_acceptance_criteria",
       "community": 181,
       "norm_label": "acceptance criteria"
@@ -21346,7 +21535,7 @@
       "label": "Shell-split (`renderToHydratableShell`)",
       "file_type": "document",
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
-      "source_location": "L117",
+      "source_location": "L121",
       "id": "server_streaming_shell_specs_shell_split_rendertohydratableshell",
       "community": 181,
       "norm_label": "shell-split (`rendertohydratableshell`)"
@@ -21355,7 +21544,7 @@
       "label": "Failure-handler seam (`SuspenseFailureHandlerTag`)",
       "file_type": "document",
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
-      "source_location": "L145",
+      "source_location": "L149",
       "id": "server_streaming_shell_specs_failure_handler_seam_suspensefailurehandlertag",
       "community": 181,
       "norm_label": "failure-handler seam (`suspensefailurehandlertag`)"
@@ -21364,7 +21553,7 @@
       "label": "Out of scope",
       "file_type": "document",
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
-      "source_location": "L176",
+      "source_location": "L195",
       "id": "server_streaming_shell_specs_out_of_scope",
       "community": 181,
       "norm_label": "out of scope"
@@ -21478,10 +21667,19 @@
       "norm_label": "patch script specification"
     },
     {
-      "label": "Internal Architecture",
+      "label": "Substituted-patch (failure-replay) variant",
       "file_type": "document",
       "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
       "source_location": "L166",
+      "id": "server_suspense_ssr_specs_substituted_patch_failure_replay_variant",
+      "community": 189,
+      "norm_label": "substituted-patch (failure-replay) variant"
+    },
+    {
+      "label": "Internal Architecture",
+      "file_type": "document",
+      "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
+      "source_location": "L186",
       "id": "server_suspense_ssr_specs_internal_architecture",
       "community": 189,
       "norm_label": "internal architecture"
@@ -21490,7 +21688,7 @@
       "label": "`ServerSuspenseCtx`",
       "file_type": "document",
       "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
-      "source_location": "L168",
+      "source_location": "L188",
       "id": "server_suspense_ssr_specs_serversuspensectx",
       "community": 189,
       "norm_label": "`serversuspensectx`"
@@ -21499,7 +21697,7 @@
       "label": "Stream structure",
       "file_type": "document",
       "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
-      "source_location": "L180",
+      "source_location": "L200",
       "id": "server_suspense_ssr_specs_stream_structure",
       "community": 189,
       "norm_label": "stream structure"
@@ -21508,7 +21706,7 @@
       "label": "Per-boundary resolution fiber",
       "file_type": "document",
       "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
-      "source_location": "L197",
+      "source_location": "L217",
       "id": "server_suspense_ssr_specs_per_boundary_resolution_fiber",
       "community": 189,
       "norm_label": "per-boundary resolution fiber"
@@ -21517,7 +21715,7 @@
       "label": "Constraints",
       "file_type": "document",
       "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
-      "source_location": "L209",
+      "source_location": "L229",
       "id": "server_suspense_ssr_specs_constraints",
       "community": 189,
       "norm_label": "constraints"
@@ -21670,7 +21868,7 @@
       "label": "Dependency injection (`router-service.ts`, `outlet.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L321",
+      "source_location": "L332",
       "id": "router_router_specs_dependency_injection_router_service_ts_outlet_ts",
       "community": 185,
       "norm_label": "dependency injection (`router-service.ts`, `outlet.ts`)"
@@ -21679,7 +21877,7 @@
       "label": "Not-found (`errors.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L344",
+      "source_location": "L355",
       "id": "router_router_specs_not_found_errors_ts",
       "community": 185,
       "norm_label": "not-found (`errors.ts`)"
@@ -21688,7 +21886,7 @@
       "label": "Link interception (`client/link.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L352",
+      "source_location": "L363",
       "id": "router_router_specs_link_interception_client_link_ts",
       "community": 185,
       "norm_label": "link interception (`client/link.ts`)"
@@ -21697,7 +21895,7 @@
       "label": "Client runtime \u2014 derived `HttpApiClient` (`client/router-live.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L362",
+      "source_location": "L373",
       "id": "router_router_specs_client_runtime_derived_httpapiclient_client_router_live_ts",
       "community": 185,
       "norm_label": "client runtime \u2014 derived `httpapiclient` (`client/router-live.ts`)"
@@ -21706,7 +21904,7 @@
       "label": "Reactive accessors (`router-service.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L376",
+      "source_location": "L387",
       "id": "router_router_specs_reactive_accessors_router_service_ts",
       "community": 185,
       "norm_label": "reactive accessors (`router-service.ts`)"
@@ -21715,7 +21913,7 @@
       "label": "Client navigation (`client/navigation.ts`)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L394",
+      "source_location": "L405",
       "id": "router_router_specs_client_navigation_client_navigation_ts",
       "community": 185,
       "norm_label": "client navigation (`client/navigation.ts`)"
@@ -21724,7 +21922,7 @@
       "label": "Param / query decode on both sides",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L418",
+      "source_location": "L429",
       "id": "router_router_specs_param_query_decode_on_both_sides",
       "community": 185,
       "norm_label": "param / query decode on both sides"
@@ -21733,7 +21931,7 @@
       "label": "`Boundary.rpc` interplay (rpc data foundation)",
       "file_type": "document",
       "source_file": "packages/router/router.specs.md",
-      "source_location": "L428",
+      "source_location": "L439",
       "id": "router_router_specs_boundary_rpc_interplay_rpc_data_foundation",
       "community": 185,
       "norm_label": "`boundary.rpc` interplay (rpc data foundation)"
@@ -22232,6 +22430,15 @@
       "id": "src_router_service_querystream",
       "community": 170,
       "norm_label": "querystream"
+    },
+    {
+      "label": "hydrate.specs.md",
+      "file_type": "document",
+      "source_file": "packages/dom/src/client/hydrate.specs.md",
+      "source_location": "L1",
+      "community": 209,
+      "norm_label": "hydrate.specs.md",
+      "id": "users_stef_documents_projects_effect_ui_packages_dom_src_client_hydrate_specs_md"
     },
     {
       "label": "render-to-stream.specs.md",
@@ -23215,15 +23422,6 @@
       "id": "client_hydrate_ready_specs"
     },
     {
-      "label": "hydrate.specs.md",
-      "file_type": "document",
-      "source_file": "packages/dom/src/client/hydrate.specs.md",
-      "source_location": "L1",
-      "community": 209,
-      "norm_label": "hydrate.specs.md",
-      "id": "client_hydrate_specs"
-    },
-    {
       "label": "list.specs.md",
       "file_type": "document",
       "source_file": "packages/dom/src/client/list.specs.md",
@@ -24204,7 +24402,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 81,
+      "community": 220,
       "norm_label": "hydrate interactivity barrier (hydrate-ready)",
       "id": "hydrate_ready_concept"
     },
@@ -28814,6 +29012,77 @@
       "weight": 1.0,
       "source": "src_refetch_browser_test_ssrandhydrate",
       "target": "client_router_live_routerlive"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_applypatches",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_def",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_documentshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_homeroute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_installstreameddocument",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test",
+      "target": "src_streaming_404_browser_test_lateroute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "examples/router-ssr/src/streaming-404.browser.test.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "src_streaming_404_browser_test_installstreameddocument",
+      "target": "src_streaming_404_browser_test_applypatches",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -42651,9 +42920,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "tests_rpc_stub",
-      "confidence_score": 1.0
+      "target": "tests_rpc_stub"
     },
     {
       "relation": "contains",
@@ -42749,9 +43018,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "tests_rpc_stub_norpc",
-      "confidence_score": 1.0
+      "target": "tests_rpc_stub_norpc"
     },
     {
       "relation": "imports_from",
@@ -43658,6 +43927,128 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_capturingconsoleerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_createroot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_createtestdom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_failafterfirst",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_lateerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_missingerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_neverchild",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_nopeerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_until",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_hydrate_failure_test_waitfor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "client_hydrate_failure_test",
+      "target": "client_render_hydrate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "packages/dom/src/client/hydrate-ready.test.ts",
       "source_location": "L35",
       "weight": 1.0,
@@ -44484,6 +44875,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L451",
+      "weight": 1.0,
+      "source": "client_render",
+      "target": "client_render_boundaryrecoveryeffect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L333",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44549,6 +44950,16 @@
       "confidence_score": 1.0,
       "source": "client_render",
       "target": "client_render_findmatchingend"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2436",
+      "weight": 1.0,
+      "source": "client_render",
+      "target": "client_render_findmatchingsuspenseend",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -44699,6 +45110,16 @@
       "confidence_score": 1.0,
       "source": "client_render",
       "target": "client_render_hydrateserverboundary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2368",
+      "weight": 1.0,
+      "source": "client_render",
+      "target": "client_render_hydratesubstitutedsuspense",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -45664,6 +46085,50 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L482",
+      "weight": 1.0,
+      "source": "client_render_boundaryrecoveryeffect",
+      "target": "client_render_removenodesbetweenmarkers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L483",
+      "weight": 1.0,
+      "source": "client_render_boundaryrecoveryeffect",
+      "target": "client_render_rendernode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2542",
+      "weight": 1.0,
+      "source": "client_render_hydratefailureboundary",
+      "target": "client_render_boundaryrecoveryeffect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L550",
+      "weight": 1.0,
+      "source": "client_render_renderboundary",
+      "target": "client_render_boundaryrecoveryeffect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
       "source_location": null,
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46603,11 +47068,33 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2098",
+      "weight": 1.0,
+      "source": "client_render_hydratenode",
+      "target": "client_render_hydratesubstitutedsuspense",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2006",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "client_render_hydratenode",
       "target": "client_render_hydratetext"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2096",
+      "weight": 1.0,
+      "source": "client_render_hydratenode",
+      "target": "src_shared_parsesuspensemarker",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -46702,6 +47189,39 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2373",
+      "weight": 1.0,
+      "source": "client_render_hydratesubstitutedsuspense",
+      "target": "client_render_findmatchingsuspenseend",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2375",
+      "weight": 1.0,
+      "source": "client_render_hydratesubstitutedsuspense",
+      "target": "client_render_mismatch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2442",
+      "weight": 1.0,
+      "source": "client_render_findmatchingsuspenseend",
+      "target": "src_shared_parsesuspensemarker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2324",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46718,6 +47238,39 @@
       "confidence_score": 1.0,
       "source": "client_render_hydratefailureboundary",
       "target": "client_render_mismatch"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2533",
+      "weight": 1.0,
+      "source": "client_render_hydratefailureboundary",
+      "target": "src_shared_boundaryendtext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2532",
+      "weight": 1.0,
+      "source": "client_render_hydratefailureboundary",
+      "target": "src_shared_boundarystarttext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/render.ts",
+      "source_location": "L2531",
+      "weight": 1.0,
+      "source": "client_render_hydratefailureboundary",
+      "target": "src_utilities_nextboundaryid",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -48116,9 +48669,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_streaming_shell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell"
     },
     {
       "relation": "re_exports",
@@ -48127,9 +48680,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_streaming_shell_hydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_hydratableshell"
     },
     {
       "relation": "re_exports",
@@ -48138,9 +48691,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_streaming_shell_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_rendertohydratableshell"
     },
     {
       "relation": "re_exports",
@@ -48149,9 +48702,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_suspense_failure_handler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler"
     },
     {
       "relation": "re_exports",
@@ -48160,9 +48713,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_suspense_failure_handler_suspensefailurehandler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandler"
     },
     {
       "relation": "re_exports",
@@ -48171,9 +48724,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_suspense_failure_handler_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandlertag"
     },
     {
       "relation": "re_exports",
@@ -48182,9 +48735,9 @@
       "source_file": "packages/dom/src/server/index.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_dom_src_server_index_ts_server_index",
-      "target": "server_suspense_failure_handler_suspensefailuresubstitute",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailuresubstitute"
     },
     {
       "relation": "imports_from",
@@ -48421,9 +48974,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L850",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream",
-      "target": "server_render_to_stream_makehydratablessr",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_makehydratablessr"
     },
     {
       "relation": "contains",
@@ -48431,9 +48984,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L835",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream",
-      "target": "server_render_to_stream_patchstream",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_patchstream"
     },
     {
       "relation": "contains",
@@ -48637,9 +49190,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream",
-      "target": "server_suspense_failure_handler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler"
     },
     {
       "relation": "imports",
@@ -48648,9 +49201,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream",
-      "target": "server_suspense_failure_handler_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandlertag"
     },
     {
       "relation": "imports_from",
@@ -48758,9 +49311,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_render_to_stream",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream"
     },
     {
       "relation": "imports_from",
@@ -48769,8 +49322,19 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_render_to_stream",
+      "target": "server_render_to_stream"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/server/render-to-stream.ts",
+      "source_location": "L150",
+      "weight": 1.0,
+      "source": "server_render_to_stream_buildpatch",
+      "target": "server_serialize_serializejsonforscript",
       "confidence_score": 1.0
     },
     {
@@ -49052,9 +49616,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L873",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream_makehydratablessr",
-      "target": "server_render_to_stream_renderhydratablessrnode",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_renderhydratablessrnode"
     },
     {
       "relation": "calls",
@@ -49206,9 +49770,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L824",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream_rendertostream",
-      "target": "server_render_to_stream_patchstream",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_patchstream"
     },
     {
       "relation": "imports",
@@ -49228,9 +49792,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L883",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream_makehydratablessr",
-      "target": "server_render_to_stream_patchstream",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_patchstream"
     },
     {
       "relation": "calls",
@@ -49239,9 +49803,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L898",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream_rendertostreamhydratable",
-      "target": "server_render_to_stream_makehydratablessr",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_makehydratablessr"
     },
     {
       "relation": "imports",
@@ -49250,9 +49814,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_render_to_stream_makehydratablessr",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_makehydratablessr"
     },
     {
       "relation": "calls",
@@ -49283,9 +49847,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_render_to_stream_rendertostreamhydratable",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_rendertostreamhydratable"
     },
     {
       "relation": "imports_from",
@@ -49389,9 +49953,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_render_to_string",
-      "confidence_score": 1.0
+      "target": "server_render_to_string"
     },
     {
       "relation": "imports",
@@ -49422,9 +49986,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_render_to_string_rendertostringhydratable",
-      "confidence_score": 1.0
+      "target": "server_render_to_string_rendertostringhydratable"
     },
     {
       "relation": "contains",
@@ -49794,9 +50358,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_streaming_shell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell"
     },
     {
       "relation": "imports",
@@ -49805,9 +50369,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_streaming_shell_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_rendertohydratableshell"
     },
     {
       "relation": "contains",
@@ -49815,9 +50379,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_streaming_shell_test_badnode",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_test_badnode"
     },
     {
       "relation": "contains",
@@ -49825,9 +50389,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_streaming_shell_test_runshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_test_runshell"
     },
     {
       "relation": "imports_from",
@@ -49836,9 +50400,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_suspense_failure_handler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler"
     },
     {
       "relation": "imports",
@@ -49847,9 +50411,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_suspense_failure_handler_suspensefailurehandler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandler"
     },
     {
       "relation": "imports",
@@ -49858,9 +50422,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test",
-      "target": "server_suspense_failure_handler_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandlertag"
     },
     {
       "relation": "calls",
@@ -49869,9 +50433,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.test.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_test_runshell",
-      "target": "server_streaming_shell_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_rendertohydratableshell"
     },
     {
       "relation": "contains",
@@ -49879,9 +50443,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_streaming_shell_hydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_hydratableshell"
     },
     {
       "relation": "contains",
@@ -49889,9 +50453,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_streaming_shell_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_rendertohydratableshell"
     },
     {
       "relation": "imports_from",
@@ -49900,9 +50464,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_suspense_failure_handler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler"
     },
     {
       "relation": "imports",
@@ -49911,9 +50475,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell",
-      "target": "server_suspense_failure_handler_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandlertag"
     },
     {
       "relation": "calls",
@@ -49932,9 +50496,9 @@
       "source_file": "packages/dom/src/server/suspense-failure-handler.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_suspense_failure_handler",
-      "target": "server_suspense_failure_handler_suspensefailurehandler",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandler"
     },
     {
       "relation": "contains",
@@ -49942,9 +50506,9 @@
       "source_file": "packages/dom/src/server/suspense-failure-handler.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_suspense_failure_handler",
-      "target": "server_suspense_failure_handler_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailurehandlertag"
     },
     {
       "relation": "contains",
@@ -49952,9 +50516,9 @@
       "source_file": "packages/dom/src/server/suspense-failure-handler.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_suspense_failure_handler",
-      "target": "server_suspense_failure_handler_suspensefailuresubstitute",
-      "confidence_score": 1.0
+      "target": "server_suspense_failure_handler_suspensefailuresubstitute"
     },
     {
       "relation": "contains",
@@ -52920,6 +53484,17 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/server/router-server.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "server_router_server",
+      "target": "src_errors_routernotfound",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "packages/router/src/outlet.ts",
       "source_location": "L5",
       "weight": 1.0,
@@ -54650,9 +55225,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L212",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server",
-      "target": "server_router_server_notfoundsuspensehandler",
-      "confidence_score": 1.0
+      "target": "server_router_server_notfoundsuspensehandler"
     },
     {
       "relation": "contains",
@@ -54710,9 +55285,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L233",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server",
-      "target": "server_router_server_renderleafstreaming",
-      "confidence_score": 1.0
+      "target": "server_router_server_renderleafstreaming"
     },
     {
       "relation": "contains",
@@ -54760,9 +55335,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L433",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server",
-      "target": "server_router_server_tostreamingwebhandler",
-      "confidence_score": 1.0
+      "target": "server_router_server_tostreamingwebhandler"
     },
     {
       "relation": "contains",
@@ -54790,9 +55365,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L288",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server",
-      "target": "server_router_server_webhandlerwith",
-      "confidence_score": 1.0
+      "target": "server_router_server_webhandlerwith"
     },
     {
       "relation": "calls",
@@ -54812,9 +55387,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L238",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_renderleafstreaming",
-      "target": "server_router_server_serverrouter",
-      "confidence_score": 1.0
+      "target": "server_router_server_serverrouter"
     },
     {
       "relation": "calls",
@@ -54856,9 +55431,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L248",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_renderleafstreaming",
-      "target": "server_router_server_apprpcclientlayer",
-      "confidence_score": 1.0
+      "target": "server_router_server_apprpcclientlayer"
     },
     {
       "relation": "calls",
@@ -54900,9 +55475,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_renderleafstreaming",
-      "target": "server_router_server_notfoundsuspensehandler",
-      "confidence_score": 1.0
+      "target": "server_router_server_notfoundsuspensehandler"
     },
     {
       "relation": "calls",
@@ -54911,9 +55486,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L437",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_tostreamingwebhandler",
-      "target": "server_router_server_webhandlerwith",
-      "confidence_score": 1.0
+      "target": "server_router_server_webhandlerwith"
     },
     {
       "relation": "calls",
@@ -54922,9 +55497,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L380",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_webhandler",
-      "target": "server_router_server_webhandlerwith",
-      "confidence_score": 1.0
+      "target": "server_router_server_webhandlerwith"
     },
     {
       "relation": "calls",
@@ -54933,9 +55508,9 @@
       "source_file": "packages/router/src/server/router-server.ts",
       "source_location": "L354",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_router_server_webhandlerwith",
-      "target": "server_router_server_towebhandler",
-      "confidence_score": 1.0
+      "target": "server_router_server_towebhandler"
     },
     {
       "relation": "calls",
@@ -61367,16 +61942,6 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "users_stef_documents_projects_effect_ui_packages_dom_src_client_hydrate_specs_md",
-      "target": "client_hydrate_specs_hydrate_specification"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/dom/src/client/hydrate.specs.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "client_hydrate_specs",
       "target": "client_hydrate_specs_hydrate_specification"
     },
@@ -61409,6 +61974,16 @@
       "confidence_score": 1.0,
       "source": "client_hydrate_specs_hydrate_specification",
       "target": "client_hydrate_specs_overview"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/client/hydrate.specs.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "users_stef_documents_projects_effect_ui_packages_dom_src_client_hydrate_specs_md",
+      "target": "client_hydrate_specs_hydrate_specification"
     },
     {
       "relation": "contains",
@@ -62006,9 +62581,9 @@
       "source_file": "packages/dom/src/server/render-to-stream.specs.md",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_render_to_stream_specs_rendertostream_specification",
-      "target": "server_render_to_stream_specs_suspense_streaming_shell_split_cross_reference",
-      "confidence_score": 1.0
+      "target": "server_render_to_stream_specs_suspense_streaming_shell_split_cross_reference"
     },
     {
       "relation": "contains",
@@ -62336,9 +62911,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs",
-      "target": "server_streaming_shell_specs_streaming_shell_specification",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_streaming_shell_specification"
     },
     {
       "relation": "contains",
@@ -62346,9 +62921,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L115",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_streaming_shell_specification",
-      "target": "server_streaming_shell_specs_acceptance_criteria",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_acceptance_criteria"
     },
     {
       "relation": "contains",
@@ -62356,9 +62931,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_streaming_shell_specification",
-      "target": "server_streaming_shell_specs_api",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_api"
     },
     {
       "relation": "contains",
@@ -62366,9 +62941,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_streaming_shell_specification",
-      "target": "server_streaming_shell_specs_out_of_scope",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_out_of_scope"
     },
     {
       "relation": "contains",
@@ -62376,9 +62951,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_streaming_shell_specification",
-      "target": "server_streaming_shell_specs_overview",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_overview"
     },
     {
       "relation": "contains",
@@ -62386,9 +62961,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_overview",
-      "target": "server_streaming_shell_specs_why_the_status_after_bytes_problem",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_why_the_status_after_bytes_problem"
     },
     {
       "relation": "contains",
@@ -62396,9 +62971,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_api",
-      "target": "server_streaming_shell_specs_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_rendertohydratableshell"
     },
     {
       "relation": "contains",
@@ -62406,9 +62981,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_api",
-      "target": "server_streaming_shell_specs_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_suspensefailurehandlertag"
     },
     {
       "relation": "contains",
@@ -62416,9 +62991,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_acceptance_criteria",
-      "target": "server_streaming_shell_specs_failure_handler_seam_suspensefailurehandlertag",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_failure_handler_seam_suspensefailurehandlertag"
     },
     {
       "relation": "contains",
@@ -62426,9 +63001,9 @@
       "source_file": "packages/dom/src/server/streaming-shell.specs.md",
       "source_location": "L117",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "server_streaming_shell_specs_acceptance_criteria",
-      "target": "server_streaming_shell_specs_shell_split_rendertohydratableshell",
-      "confidence_score": 1.0
+      "target": "server_streaming_shell_specs_shell_split_rendertohydratableshell"
     },
     {
       "relation": "contains",
@@ -62569,6 +63144,16 @@
       "confidence_score": 1.0,
       "source": "server_suspense_ssr_specs_acceptance_criteria",
       "target": "server_suspense_ssr_specs_ac_ss7_no_boundary_suspend_in_tree_zero_overhead"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/dom/src/server/suspense-ssr.specs.md",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "server_suspense_ssr_specs_patch_script_specification",
+      "target": "server_suspense_ssr_specs_substituted_patch_failure_replay_variant",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -62816,9 +63401,9 @@
       "source_file": "packages/router/router.specs.md",
       "source_location": "L254",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_router_specs_acceptance_criteria",
-      "target": "router_router_specs_streaming_ssr_routerserver_tostreamingwebhandler",
-      "confidence_score": 1.0
+      "target": "router_router_specs_streaming_ssr_routerserver_tostreamingwebhandler"
     },
     {
       "relation": "contains",
@@ -64645,5 +65230,5 @@
       "source_file": "packages/router/src/client/navigation.ts"
     }
   ],
-  "built_at_commit": "56b0a02701c46d31283ab38ac184661618d721a8"
+  "built_at_commit": "39d51dd8aa73478619864392d2739b583e77cc59"
 }

@@ -695,8 +695,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/render.ts": {
-    "mtime": 1780918894.3431506,
-    "ast_hash": "25cd2031964fe81086f716756df449d1",
+    "mtime": 1781156651.546534,
+    "ast_hash": "a4ab75cc2daf8ec52992ef140c56e527",
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/server/render-to-stream.ts": {
-    "mtime": 1781123078.0110316,
-    "ast_hash": "d4e88b83442366cc2eabbdea2d6e7157",
+    "mtime": 1781156400.8529677,
+    "ast_hash": "7d11c8bb80f71996fcaab529ddb4cd25",
     "semantic_hash": ""
   },
   "packages/dom/src/server/render-to-string.test.ts": {
@@ -760,9 +760,9 @@
     "semantic_hash": ""
   },
   "packages/dom/src/shared.ts": {
-    "mtime": 1780338022.5433652,
-    "ast_hash": "d3f0b49088e53751af0b20adb9e20b24",
-    "semantic_hash": "d3f0b49088e53751af0b20adb9e20b24"
+    "mtime": 1781155849.2268698,
+    "ast_hash": "34e3740cf5d7c963b432eb47163fd1b8",
+    "semantic_hash": ""
   },
   "packages/dom/src/utilities.ts": {
     "mtime": 1780249714.355515,
@@ -880,13 +880,13 @@
     "semantic_hash": "06a500acbd3fc785fd018581fb6fe87e"
   },
   "packages/router/src/server/router-server.test.ts": {
-    "mtime": 1781123013.7548144,
-    "ast_hash": "bb230dd16f14655e7597fdd0fa539a6a",
+    "mtime": 1781156606.7818959,
+    "ast_hash": "c8063b095a04e26ee96e2a8072c97c72",
     "semantic_hash": ""
   },
   "packages/router/src/server/router-server.ts": {
-    "mtime": 1781123059.6563764,
-    "ast_hash": "9ee04633848da67519a653482e764406",
+    "mtime": 1781156417.249387,
+    "ast_hash": "903f5699702a9afe0ae0ea1832632f74",
     "semantic_hash": ""
   },
   "packages/router/tsconfig.json": {
@@ -1185,9 +1185,9 @@
     "semantic_hash": "ebedf1ece58aaa606c1b2ad88d479a85"
   },
   "packages/dom/src/client/hydrate.specs.md": {
-    "mtime": 1779609518.2878654,
-    "ast_hash": "3805c13280c8c64925a606fc603460d7",
-    "semantic_hash": "3805c13280c8c64925a606fc603460d7"
+    "mtime": 1781155808.3027074,
+    "ast_hash": "842bc7a67aea4a0fe819f93d75fc299b",
+    "semantic_hash": ""
   },
   "packages/dom/src/client/list.specs.md": {
     "mtime": 1780338022.5398707,
@@ -1220,13 +1220,13 @@
     "semantic_hash": ""
   },
   "packages/dom/src/server/suspense-ssr.specs.md": {
-    "mtime": 1781122907.42801,
-    "ast_hash": "c2a552671e7530b089b9e6cf406829eb",
+    "mtime": 1781155786.2384517,
+    "ast_hash": "537623e3e2124e1b2d942d404aea1531",
     "semantic_hash": ""
   },
   "packages/router/router.specs.md": {
-    "mtime": 1781122169.7369385,
-    "ast_hash": "38b1b723c5792873e9fc2604175bb07d",
+    "mtime": 1781155829.2672038,
+    "ast_hash": "20ced7491d749efcae7cbd3b2a813315",
     "semantic_hash": ""
   },
   "plans/boundary-component.md": {
@@ -1390,8 +1390,8 @@
     "semantic_hash": ""
   },
   "website/src/main.ts": {
-    "mtime": 1781120975.6531792,
-    "ast_hash": "63f2fce996c9e94ea8a221370b25c23c",
+    "mtime": 1781124095.130907,
+    "ast_hash": "69496fa78601f91e066eca5610faa6ba",
     "semantic_hash": ""
   },
   "website/src/routes.ts": {
@@ -1405,8 +1405,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/server/streaming-shell.test.ts": {
-    "mtime": 1781122686.5801759,
-    "ast_hash": "7f56a50185e48fea9f3847ea3c4f580f",
+    "mtime": 1781156103.4009862,
+    "ast_hash": "259b1199e91e599c306be27bee88e1e4",
     "semantic_hash": ""
   },
   "packages/dom/src/server/streaming-shell.ts": {
@@ -1415,13 +1415,23 @@
     "semantic_hash": ""
   },
   "packages/dom/src/server/suspense-failure-handler.ts": {
-    "mtime": 1781122686.576992,
-    "ast_hash": "60eb02a817a35f5b5438a93c27e06b11",
+    "mtime": 1781155845.7424335,
+    "ast_hash": "b094c93fba5e62411760e205f12a4702",
     "semantic_hash": ""
   },
   "packages/dom/src/server/streaming-shell.specs.md": {
-    "mtime": 1781122033.223402,
-    "ast_hash": "46b26f1b553c607922ab29017c6820b1",
+    "mtime": 1781155773.8085124,
+    "ast_hash": "4a47f4f0cea4de7f13417e7f448fffea",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/streaming-404.browser.test.ts": {
+    "mtime": 1781156283.4139462,
+    "ast_hash": "36c08449bd72ea49fee7fb60f83d05a4",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/hydrate-failure.test.ts": {
+    "mtime": 1781156669.8008277,
+    "ast_hash": "8bd1517d74f48ab8075620b5ad056bd8",
     "semantic_hash": ""
   }
 }

@@ -220,6 +220,12 @@ describe("RouterServer.toStreamingWebHandler (streaming SSR)", () => {
     assert.ok(body.includes("404 — not found"));
     assert.ok(body.includes("noindex"));
     assert.ok(body.includes("document.head.appendChild"));
+    // SW8: the patch is the failure-replay variant — sentinel script carrying the
+    // encoded RouterNotFound, and the suspense markers retained by the swap.
+    assert.ok(body.includes("data-weft-suspense-failure>"));
+    assert.ok(body.includes('"_tag":"RouterNotFound"'));
+    assert.ok(body.includes('"path":"/late"'));
+    assert.ok(!body.includes("p.removeChild(s)"));
   });
 
   test("a non-RouterNotFound cause inside Boundary.suspend keeps the dom swallow default (no patch)", async () => {

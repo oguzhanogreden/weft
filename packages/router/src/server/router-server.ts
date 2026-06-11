@@ -16,7 +16,7 @@ import {
 import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "@effect/rpc";
 import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream, Subscribable } from "effect";
 import type { RouterDef } from "../compile";
-import { isRouterNotFound } from "../errors";
+import { isRouterNotFound, RouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";
 import { outletNode } from "../outlet";
 import type { ComponentSlot } from "../route-tree";
@@ -208,6 +208,11 @@ export namespace RouterServer {
    * flushed is substituted with the router's `notFound` page plus a
    * client-injected `<meta name="robots" content="noindex">` (Next.js soft-404
    * parity). Any other cause keeps the dom swallow default (AC-ST8).
+   *
+   * The substitute also carries the `Schema`-encoded `RouterNotFound` as
+   * `failureReplay` (SW8), so the patch is the failure-replay variant
+   * (`streaming-shell.specs.md` AC-FH7) and a later `hydrate` replays the
+   * failure into `RouterApp`'s boundary instead of mismatching.
    */
   function notFoundSuspenseHandler(def: RouterDef): SuspenseFailureHandler {
     return {
@@ -217,6 +222,7 @@ export namespace RouterServer {
           ? Option.some({
               content: def.compiled.notFound() as Node<never, never>,
               markNoindex: true,
+              failureReplay: Schema.encodeSync(RouterNotFound)(failure.value),
             })
           : Option.none();
       },

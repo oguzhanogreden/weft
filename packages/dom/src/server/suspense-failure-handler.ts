@@ -15,6 +15,16 @@ export interface SuspenseFailureSubstitute {
    * only route — Googlebot's soft-404 pattern).
    */
   readonly markNoindex: boolean;
+  /**
+   * Optional already-Schema-encoded, JSON-serializable failure value. When
+   * present, the patch is emitted in the failure-replay variant (AC-FH7):
+   * the suspense markers are retained and a
+   * `<script type="application/json" data-weft-suspense-failure>` sentinel
+   * carrying `{"error":<this value>}` is prepended to the swapped-in content,
+   * so the client `hydrate` can replay the failure to its nearest boundary
+   * (`hydrate.specs.md` AC-H14).
+   */
+  readonly failureReplay?: unknown;
 }
 
 /**

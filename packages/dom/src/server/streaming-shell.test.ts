@@ -246,6 +246,43 @@ describe("SuspenseFailureHandlerTag — late-failure seam", () => {
     assert.equal(patchHtml, "");
   });
 
+  it("AC-FH7: a substitute with failureReplay emits the failure-replay patch — retained markers + sentinel script", async () => {
+    const handler: SuspenseFailureHandler = {
+      handle: () =>
+        Option.some({
+          content: h.p({}, "substituted"),
+          markNoindex: true,
+          failureReplay: { _tag: "RouterNotFound", path: "/late" },
+        }),
+    };
+    const tree = h.div({}, [Boundary.suspend({ fallback: "f" }, [Effect.fail(new Error("boom"))])]);
+    const { patchHtml } = await runShell(tree, handler);
+
+    // Sentinel script (inert application/json) prepended to the substituted content.
+    assert.ok(
+      patchHtml.includes(
+        '<script type="application/json" data-weft-suspense-failure>' +
+          '{"error":{"_tag":"RouterNotFound","path":"/late"}}</script><p>substituted</p>',
+      ),
+    );
+    // Markers retained: the swap script must not remove the start/end comments.
+    assert.ok(!patchHtml.includes("p.removeChild(s)"));
+    assert.ok(!patchHtml.includes("p.removeChild(e)"));
+    // AC-FH3 composes with the replay variant.
+    assert.ok(patchHtml.includes("noindex"));
+  });
+
+  it("AC-FH7: a substitute without failureReplay keeps today's patch format exactly", async () => {
+    const handler: SuspenseFailureHandler = {
+      handle: () => Option.some({ content: h.p({}, "substituted"), markNoindex: false }),
+    };
+    const tree = h.div({}, [Boundary.suspend({ fallback: "f" }, [Effect.fail(new Error("boom"))])]);
+    const { patchHtml } = await runShell(tree, handler);
+    assert.ok(!patchHtml.includes("data-weft-suspense-failure"));
+    // Standard script removes both markers after the swap.
+    assert.ok(patchHtml.includes("p.removeChild(s);p.removeChild(e);"));
+  });
+
   it("the seam also applies to the combined renderToStreamHydratable stream", async () => {
     const handler: SuspenseFailureHandler = {
       handle: () => Option.some({ content: h.p({}, "substituted"), markNoindex: false }),
