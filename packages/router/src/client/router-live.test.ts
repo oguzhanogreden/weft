@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { Component, h } from "@weftui/core";
+import { AppRpcClientTag, Component, h } from "@weftui/core";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Effect, Option, Schema } from "effect";
 import { JSDOM } from "jsdom";
@@ -77,5 +77,33 @@ describe("RouterLive — derived HttpApiClient", () => {
     // A custom baseUrl is accepted and the client still derives successfully.
     const service = await readService({ baseUrl: "https://api.example.com" });
     assert.equal(Option.isSome(service.httpApiClient), true);
+  });
+});
+
+describe("RouterLive without rpc (rpc optional)", () => {
+  test("provides Router with the options argument omitted entirely", async () => {
+    setupDom();
+    const service = await Effect.runPromise(
+      Effect.scoped(Effect.provide(Router, RouterLive(fixture()))),
+    );
+    assert.equal(Option.isSome(service.httpApiClient), true);
+  });
+
+  test("the provided AppRpcClientTag fails descriptively when `rpc` is omitted", async () => {
+    setupDom();
+    const failure = await Effect.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.gen(function* () {
+            const client = yield* AppRpcClientTag;
+            return yield* Effect.flip(client.call("GetStock", undefined));
+          }),
+          RouterLive(fixture(), {}),
+        ),
+      ),
+    );
+    assert.ok(failure instanceof Error);
+    assert.ok(failure.message.includes("GetStock"));
+    assert.ok(failure.message.includes("rpc"));
   });
 });

@@ -163,6 +163,26 @@ Each patch consists of a `<template>` + inline `<script>` pair:
 - The script is self-contained: no globals, no dependencies on any client-side
   Weft runtime.
 
+### Substituted-patch (failure-replay) variant
+
+When a `SuspenseFailureHandler` substitute carries a `failureReplay` value
+(`streaming-shell.specs.md` AC-FH7), the patch differs from the standard script
+in exactly two ways:
+
+1. The `<!-- suspense-start-N -->` / `<!-- suspense-end-N -->` comment markers
+   are **retained** in the document — the script skips the two
+   `removeChild(s)`/`removeChild(e)` calls. The markers signal to the client
+   `hydrate` walk that the region resolved to a handled failure and delimit
+   the substituted content's extent.
+2. The template content is prepended with a sentinel
+   `<script type="application/json" data-weft-suspense-failure>{"error":<encoded>}</script>`
+   carrying the Schema-encoded failure, which hydrate parses and replays to the
+   nearest failure boundary (`hydrate.specs.md` AC-H14). The sentinel is inert
+   (`type="application/json"` never executes).
+
+A substitute **without** `failureReplay`, and every ordinarily-resolved
+boundary, keeps the standard script above byte-for-byte.
+
 ## Internal Architecture
 
 ### `ServerSuspenseCtx`
@@ -172,7 +192,7 @@ When `null` (no Suspense in tree), all recursive calls take the existing fast pa
 
 ```typescript
 interface ServerSuspenseCtx {
-  readonly patchQueue: Queue.Queue<string>; // serialised patch strings
+  readonly patchQueue: Queue.Queue<Option.Option<string>>; // Some(patch) | terminal None
   readonly pendingCount: Ref.Ref<number>; // boundaries not yet resolved
 }
 ```
@@ -182,14 +202,17 @@ interface ServerSuspenseCtx {
 ```
 renderToStream(node)
   └─ mainStream   — document structure with fallbacks inline
-  └─ patchStream  — Stream.fromQueue(patchQueue), terminates on Queue.shutdown
+  └─ patchStream  — Stream.fromQueue(patchQueue) up to the terminal None
   └─ combined     — Stream.concat(mainStream, patchStream)
 ```
 
-`Queue.shutdown` is called when `pendingCount` reaches 0 (all boundaries resolved).
-If no `Boundary.suspend` boundaries exist, `pendingCount` never increments, the queue is
-shut down immediately after the main stream completes, and the combined stream
-terminates without emitting any patches.
+Patches are offered as `Some`; a terminal `None` is offered when `pendingCount`
+reaches 0 (all boundaries resolved), ending the patch stream **after** every
+queued patch has been consumed (a `Queue.shutdown` would drop patches still
+queued when the consumer attaches late — e.g. a synchronously-settling
+boundary). If no `Boundary.suspend` boundaries exist, `pendingCount` never
+increments, the terminal `None` is offered immediately after the main stream
+completes, and the combined stream terminates without emitting any patches.
 
 ### Per-boundary resolution fiber
 

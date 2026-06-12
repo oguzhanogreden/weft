@@ -65,6 +65,16 @@ export function suspenseEndText(id: number): string {
 }
 
 /**
+ * Marker attribute on the inline `<script type="application/json">` sentinel a
+ * failure-replay Suspense patch (AC-FH7) prepends to its substituted content.
+ * The script carries `{"error":<encoded failure>}`; the client `hydrate`
+ * recognises it inside a retained suspense-marker region and replays the
+ * failure to the nearest boundary (AC-H14). Shared so server and client agree
+ * on the exact wire marker (mirrors `BOUNDARY_FAILURE_ATTR`).
+ */
+export const SUSPENSE_FAILURE_ATTR = "data-weft-suspense-failure";
+
+/**
  * The kind and id parsed from a suspense boundary marker comment.
  */
 export interface SuspenseMarker {

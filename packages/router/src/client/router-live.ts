@@ -31,9 +31,11 @@ export interface RouterLiveOptions {
    * The app's `Boundary.rpc` foundation: the merged `RpcGroup` contract (shared
    * with the server handler Layer). Backs the {@link AppRpcClientTag} seam so a
    * hydrated boundary refetch — and a client-first SPA mount — resolve over the
-   * network rpc client.
+   * network rpc client. Optional: omit when the app has no `Boundary.rpc` — then
+   * no network rpc client is built and a stray `Boundary.rpc` fails with a
+   * descriptive error.
    */
-  readonly rpc: {
+  readonly rpc?: {
     /** The app's merged `RpcGroup` (pure Schema contract). */
     // oxlint-disable-next-line typescript/no-explicit-any
     readonly group: RpcGroup.RpcGroup<any>;
@@ -71,7 +73,7 @@ function normalizeTo(to: string): string {
  */
 export function RouterLive(
   def: RouterDef,
-  options: RouterLiveOptions,
+  options: RouterLiveOptions = {},
 ): Layer.Layer<Router | AppRpcClientTag> {
   return Layer.scopedContext(
     Effect.gen(function* () {
@@ -127,20 +129,35 @@ export function RouterLive(
       // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@weftui/dom`
       // reads this tag to resolve a `Boundary.rpc` — hydrated refetch and
       // client-first mount — without importing this package or `@effect/rpc`.
-      const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
-      const flatClient = yield* RpcClient.make(options.rpc.group, { flatten: true }).pipe(
-        Effect.provide(
-          RpcClient.layerProtocolHttp({ url: `${baseUrl}${RPC_PATH}` }).pipe(
-            Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerJson)),
+      // With no `rpc` configured the seam is a stub whose `call` fails
+      // descriptively, so a stray `Boundary.rpc` surfaces the misconfiguration.
+      const rpc = options.rpc;
+      let appRpcClient: AppRpcClientTag["Type"];
+      if (rpc === undefined) {
+        appRpcClient = AppRpcClientTag.of({
+          call: (tag) =>
+            Effect.fail(
+              new Error(
+                `Boundary.rpc "${tag}" cannot resolve: no \`rpc\` option was passed to RouterLive`,
+              ),
+            ),
+        });
+      } else {
+        const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
+        const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
+          Effect.provide(
+            RpcClient.layerProtocolHttp({ url: `${baseUrl}${RPC_PATH}` }).pipe(
+              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerJson)),
+            ),
           ),
-        ),
-        // The group is runtime-assembled (`RpcGroup<any>`); the flat caller is
-        // reached through the same loosening the core seam documents.
-        // oxlint-disable-next-line typescript/no-explicit-any
-      ) as Effect.Effect<any, never, never>;
-      const appRpcClient = AppRpcClientTag.of({
-        call: (tag, payload) => flatClient(tag, payload),
-      });
+          // The group is runtime-assembled (`RpcGroup<any>`); the flat caller is
+          // reached through the same loosening the core seam documents.
+          // oxlint-disable-next-line typescript/no-explicit-any
+        ) as Effect.Effect<any, never, never>;
+        appRpcClient = AppRpcClientTag.of({
+          call: (tag, payload) => flatClient(tag, payload),
+        });
+      }
 
       const router = Router.of({
         currentMatch,
