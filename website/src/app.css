@@ -155,3 +155,250 @@
   border: 0;
   border-radius: 0;
 }
+
+/* ---------------------------------------------------------------------------
+ * Docs shell (src/layouts/docs-shell.ts): top bar + sidebar / content / TOC.
+ * ------------------------------------------------------------------------- */
+
+.docs-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 3.25rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid #e5e5ec;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+
+.docs-topbar__brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #111;
+  text-decoration: none;
+}
+
+.docs-topbar__version {
+  font-size: 0.72rem;
+  color: #8b8b96;
+  font-variant-numeric: tabular-nums;
+}
+
+.docs-topbar__spacer {
+  flex: 1;
+}
+
+.docs-topbar__search {
+  width: 14rem;
+  max-width: 40vw;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.82rem;
+  border: 1px solid #e5e5ec;
+  border-radius: 6px;
+  background: #fafafc;
+}
+
+.docs-topbar__github {
+  font-size: 0.85rem;
+  color: #444;
+  text-decoration: none;
+}
+
+.docs-shell__body {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr) 15rem;
+  gap: 2rem;
+  max-width: 84rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+.docs-shell__sidebar {
+  position: sticky;
+  top: 4.75rem;
+  align-self: start;
+  max-height: calc(100vh - 5.5rem);
+  overflow-y: auto;
+}
+
+.docs-nav__group {
+  margin-bottom: 1.25rem;
+}
+
+.docs-nav__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b8b96;
+}
+
+.docs-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.docs-nav__link {
+  display: block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.88rem;
+  color: #444;
+  text-decoration: none;
+  border-radius: 5px;
+  border-left: 2px solid transparent;
+}
+
+.docs-nav__link:hover {
+  color: #111;
+  background: #f4f4f8;
+}
+
+.docs-nav__link.is-active {
+  color: #1f6feb;
+  font-weight: 600;
+  border-left-color: #1f6feb;
+  background: #eef4ff;
+}
+
+.docs-shell__content {
+  min-width: 0;
+}
+
+.docs-content {
+  line-height: 1.65;
+}
+
+.docs-content h1 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+.docs-content h2 {
+  font-size: 1.4rem;
+  margin: 2rem 0 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.docs-content h3 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.docs-content a {
+  color: #1f6feb;
+}
+
+.docs-content code:not(.code-block__pre code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: #f0f0f4;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.docs-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.docs-content th,
+.docs-content td {
+  border: 1px solid #e5e5ec;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+.docs-shell__toc {
+  position: sticky;
+  top: 4.75rem;
+  align-self: start;
+  font-size: 0.82rem;
+}
+
+.docs-toc__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b8b96;
+  margin-bottom: 0.4rem;
+}
+
+.docs-toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid #e5e5ec;
+}
+
+.docs-toc__link {
+  display: block;
+  padding: 0.15rem 0.75rem;
+  color: #666;
+  text-decoration: none;
+}
+
+.docs-toc__link:hover {
+  color: #1f6feb;
+}
+
+.docs-toc__link--h3 {
+  padding-left: 1.5rem;
+  font-size: 0.95em;
+}
+
+.docs-prevnext {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e5ec;
+}
+
+.docs-prevnext__slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #e5e5ec;
+  border-radius: 8px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.docs-prevnext__next {
+  text-align: right;
+  margin-left: auto;
+}
+
+.docs-prevnext__dir {
+  font-size: 0.72rem;
+  color: #8b8b96;
+}
+
+.docs-prevnext__title {
+  color: #1f6feb;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .docs-shell__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .docs-shell__sidebar,
+  .docs-shell__toc {
+    position: static;
+    max-height: none;
+  }
+
+  .docs-shell__toc {
+    display: none;
+  }
+}
