@@ -1,3 +1,10 @@
+---
+title: RPC Data Boundaries
+order: 4
+section: guides
+description: Boundary.rpc — server-resolved, client-refreshable data; the contract/handler split and the Resource handle's four lifecycles.
+---
+
 # RPC Data Boundaries
 
 `Boundary.rpc` is Weft's primitive for **server-resolved, client-refreshable** data. One [`Rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc) from the app's merged `RpcGroup` backs a single render boundary across four lifecycles: server-side render, hydrate-replay, client refetch, and client-first SPA mount. The rpc's `_tag` is the boundary's stable identity and its payload schema the typed input.

@@ -1,3 +1,10 @@
+---
+title: Component Authoring
+order: 2
+section: guides
+description: Plain functions vs. Component.gen / Component.make, instance scope, fragments, render-prop children, and service requirements.
+---
+
 # Component Authoring
 
 Weft components are plain TypeScript functions that return a `Node<E, R>`. This guide covers the two ways to define them and when to choose each.

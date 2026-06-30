@@ -1,3 +1,10 @@
+---
+title: Reactive Primitives
+order: 2
+section: concepts
+description: The Source<A, E, R> vocabulary; Stream, Effect, and Subscribable as prop values and children; derived streams, reactive styles, and NoPropValue.
+---
+
 # Reactive Primitives
 
 The unified `Source` vocabulary is what lets static values, Effects, Streams, and Subscribables be used interchangeably wherever reactivity is supported — props, children, and style values all accept the same type.

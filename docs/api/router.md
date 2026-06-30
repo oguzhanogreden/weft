@@ -1,3 +1,10 @@
+---
+title: "@weftui/router"
+order: 3
+section: api
+description: Full API surface for @weftui/router — universal nested routing, type-safe href, layouts, and SSR entry points.
+---
+
 # @weftui/router API Reference
 
 Universal nested router for Weft. See the [Routing guide](../guides/routing.md) for a narrative walkthrough.

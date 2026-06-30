@@ -1,3 +1,10 @@
+---
+title: The Combinator API
+order: 1
+section: concepts
+description: How h, h.fragment, and Component.gen / Component.make work; why Node is an Effect; how E and R accumulate through a tree.
+---
+
 # The Combinator API
 
 Weft builds UI trees by calling builder functions. Because component return types stay as generic `Effect.Effect<ElementDescriptor, E, R>`, the error channel (`E`) and requirements channel (`R`) propagate through the entire tree — visible to the type checker, satisfiable at the mount boundary. JSX collapses every component's return type to an opaque `JSX.Element`, erasing both channels; the combinator API exists specifically to keep them intact.

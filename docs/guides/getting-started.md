@@ -1,3 +1,10 @@
+---
+title: Getting Started
+order: 1
+section: guides
+description: Build your first Weft app from scratch — components, reactive state, services, async, error boundaries, and an SSR teaser.
+---
+
 # Getting Started
 
 This guide walks you through building your first Weft app from scratch.

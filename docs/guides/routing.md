@@ -1,3 +1,10 @@
+---
+title: Routing
+order: 5
+section: guides
+description: "@weftui/router — universal nested routing, Router.route / Router.layout / Router.router, type-safe href, layouts, and programmatic navigation."
+---
+
 # Routing
 
 `@weftui/router` is a universal (server + client) nested router for Weft. It maps a URL to a rendered `Node` tree on both sides:

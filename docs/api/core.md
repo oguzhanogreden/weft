@@ -1,3 +1,10 @@
+---
+title: "@weftui/core"
+order: 1
+section: api
+description: Full API surface for @weftui/core — element builders, components, sources, streams, and boundaries.
+---
+
 # @weftui/core API Reference
 
 ## Element builders

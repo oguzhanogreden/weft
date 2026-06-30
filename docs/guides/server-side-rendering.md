@@ -1,3 +1,10 @@
+---
+title: Server-Side Rendering
+order: 3
+section: guides
+description: renderToString / renderToStringHydratable / streaming variants, hydrate, and the server/client split.
+---
+
 # Server-Side Rendering
 
 Weft renders on the server and **hydrates** on the client: the server produces HTML (plus inline data), and the browser adopts that existing DOM in place rather than re-creating it. [`Boundary.rpc`](../api/core.md#boundaryrpc) extends this to **rpc-backed server data** — resolve an rpc on the server, serialize its result into the HTML, replay it on the client without a second request, and then keep the region live for refetch.
