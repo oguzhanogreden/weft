@@ -124,3 +124,34 @@
   margin: 0;
   font-size: 0.85rem;
 }
+
+/* ---------------------------------------------------------------------------
+ * Demo block (src/components/demo.ts): preview pane over a code pane.
+ * ------------------------------------------------------------------------- */
+
+.demo-block {
+  margin: 1.25rem 0;
+  border: 1px solid #2a2a35;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.demo-block__preview {
+  padding: 1.25rem;
+  background: #fafafc;
+  border-bottom: 1px solid #2a2a35;
+}
+
+.demo-block__warning {
+  padding: 0.75rem 1rem;
+  background: #fff8e1;
+  border-bottom: 1px solid #e6c200;
+  color: #7a5d00;
+  font-size: 0.85rem;
+}
+
+.demo-block__code .code-block {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
