@@ -9,6 +9,7 @@
  */
 
 import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite-plus";
 import { weftDocs } from "./src/lib/docs-plugin";
 
@@ -16,7 +17,10 @@ import { weftDocs } from "./src/lib/docs-plugin";
 const docsRoot = fileURLToPath(new URL("../docs", import.meta.url));
 
 export default defineConfig({
-  plugins: [weftDocs({ docsRoot })],
+  // `tailwindcss` must run in the SSR build too: `app.ts` imports `app.css`, whose
+  // `@import "tailwindcss"` the plugin intercepts (otherwise postcss-import tries to
+  // resolve it as a file and fails).
+  plugins: [tailwindcss(), weftDocs({ docsRoot })],
   build: {
     ssr: "src/entry-server.ts",
     outDir: "dist/server",
