@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Code block (src/components/code-block.ts)
+ * Minimal technical aesthetic: dark pane, mono, language label + copy button.
+ * Shiki token colors come from inline styles on the token spans; the pane
+ * background and chrome are styled here.
+ * ------------------------------------------------------------------------- */
+
+.code-block {
+  margin: 1rem 0;
+  border: 1px solid #2a2a35;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1117;
+}
+
+.code-block__bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid #2a2a35;
+  background: #161b22;
+}
+
+.code-block__lang {
+  margin-right: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8b949e;
+}
+
+.code-block__copy {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid #2a2a35;
+  border-radius: 5px;
+  background: #21262d;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+
+.code-block__copy:hover:not([disabled]) {
+  background: #30363d;
+}
+
+.code-block__copy[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.code-block__pre {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.code-block__pre code {
+  font: inherit;
+  white-space: pre;
+}
