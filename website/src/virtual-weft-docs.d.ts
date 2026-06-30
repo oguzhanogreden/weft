@@ -9,3 +9,10 @@ declare module "virtual:weft-docs" {
   export const getAllDocs: () => DocModel[];
   export const getDoc: (category: string, slug: string) => DocModel | undefined;
 }
+
+declare module "virtual:weft-home-snippet" {
+  import type { HastRoot } from "~/lib/markdown-loader";
+
+  /** The build-time-highlighted hast tree for the landing-page code teaser. */
+  export const tree: HastRoot;
+}
