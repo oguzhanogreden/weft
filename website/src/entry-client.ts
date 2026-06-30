@@ -6,6 +6,10 @@
  * link click interceptor installed). `hydrate` adopts the server DOM in place and
  * resumes the reactive outlet, after which back/forward and in-app link clicks
  * navigate without a full page load. No `rpc` option — the app has no `Boundary.rpc`.
+ *
+ * Route components read the doc model from the `liveDocs` module singleton (baked at
+ * build time into the client bundle), so client navigation resolves docs locally with
+ * no extra request and no service to provide.
  */
 
 import { hydrate } from "@weftui/dom/client";

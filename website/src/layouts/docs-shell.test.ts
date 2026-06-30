@@ -1,10 +1,6 @@
 import * as assert from "node:assert/strict";
 import { h } from "@weftui/core";
-import { describe, it, vi } from "vite-plus/test";
-
-// docs-shell.ts imports nav.ts (which loads virtual:weft-docs) and getDoc; stub it.
-vi.mock("virtual:weft-docs", () => ({ getAllDocs: () => [], getDoc: () => undefined }));
-
+import { describe, it } from "vite-plus/test";
 import { renderString } from "../__tests__/ssr";
 import type { DocHeading } from "../lib/markdown-loader";
 import type { NavGroup, NavNeighbours } from "../lib/nav";

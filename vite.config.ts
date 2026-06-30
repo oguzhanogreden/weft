@@ -1,6 +1,14 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
+import { weftDocs } from "./website/src/lib/docs-plugin";
+
+// The website's doc-model plugin is registered at the root so `virtual:weft-docs`
+// resolves to the real baked docs under the shared test runner (`vp test`). It only
+// activates for that virtual id, so other packages' tests are unaffected.
+const docsRoot = fileURLToPath(new URL("docs", import.meta.url));
 
 export default defineConfig({
+  plugins: [weftDocs({ docsRoot })],
   staged: {
     "*": "vp check --fix",
   },

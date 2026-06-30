@@ -2,14 +2,13 @@
  * Navigation manifest, derived from doc frontmatter.
  *
  * The sidebar is **data, not a hand-maintained list**: `buildNav` aggregates every
- * `DocModel` (from the baked `virtual:weft-docs` model) into grouped, ordered nav
- * data, and the module-level consts apply it to the real doc set. Adding a
- * `docs/**\/*.md` with frontmatter makes it appear in the sidebar with no other code
- * change. `buildNav` is the pure unit (unit-tested against fixtures); the consts are
- * the wired-up surface consumed by the docs shell and routing.
+ * `DocModel` into grouped, ordered nav data. Adding a `docs/**\/*.md` with frontmatter
+ * makes it appear in the sidebar with no other code change. `buildNav` is pure (unit
+ * tested against fixtures); the wired-up `NavData` is exposed on the `Docs` service
+ * (`lib/docs-service.ts`) so components read it from context rather than a module
+ * singleton.
  */
 
-import { getAllDocs } from "virtual:weft-docs";
 import type { DocModel } from "./markdown-loader";
 
 /** A single sidebar / prev-next link. */
@@ -113,14 +112,3 @@ export function buildNav(docs: readonly DocModel[]): NavData {
 
   return { groups, flat, firstDocPath, findNav };
 }
-
-const data = buildNav(getAllDocs());
-
-/** Ordered nav groups, ready for the sidebar. */
-export const navGroups = data.groups;
-/** Flat doc-order link list, for prev/next. */
-export const flatNav = data.flat;
-/** Path of the first doc — the `/docs` alias target. */
-export const firstDocPath = data.firstDocPath;
-/** Resolves the current link and its neighbours for a route path. */
-export const findNav = data.findNav;

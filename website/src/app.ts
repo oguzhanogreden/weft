@@ -5,23 +5,36 @@
  * to a hydratable HTML document, `entry-client.ts` hydrates and takes over
  * navigation. No `mount`/`hydrate`/`handler` here, so the module is importable by
  * tests and by both build targets without running anything.
+ *
+ * Route tree: a passthrough root layout holds the landing page (full-width, no
+ * sidebar) alongside the `DocsShell` layout, which wraps the doc and api routes so
+ * the chrome persists across doc-to-doc navigation.
  */
 
 import { Component, h } from "@weftui/core";
 import { Router } from "@weftui/router";
+import { DocsShell } from "./layouts/docs-shell";
+import { apiIndexRoute, apiRoute } from "./routes/api";
+import { docsIndexRoute, docsRoute } from "./routes/docs";
 import { Home } from "./routes/home";
 import "./app.css";
 
+/** A passthrough layout that renders the injected outlet directly (no chrome). */
+const RootLayout = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* outlet;
+});
+
 export const App = Router.router(
-  Router.layout(
-    {
-      component: Component.gen(function* () {
-        return yield* yield* Router.Outlet;
-      }),
-    },
-    [Home],
-  ),
+  Router.layout({ component: RootLayout }, [
+    Home,
+    Router.layout({ component: DocsShell }, [docsIndexRoute, docsRoute, apiIndexRoute, apiRoute]),
+  ]),
   {
-    notFound: () => h.section([h.h2("404 — page not found")]),
+    notFound: () =>
+      h.section({ class: "notfound" }, [
+        h.h2("404 — page not found"),
+        h.p([h.a({ href: "/" }, "Go home")]),
+      ]),
   },
 );

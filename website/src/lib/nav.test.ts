@@ -1,11 +1,5 @@
 import * as assert from "node:assert/strict";
-import { describe, it, vi } from "vite-plus/test";
-
-// `nav.ts` imports the build-time `virtual:weft-docs` module at load; stub it so the
-// module evaluates under the node test runner. The unit tests exercise `buildNav`
-// directly against fixtures, independent of the real doc set.
-vi.mock("virtual:weft-docs", () => ({ getAllDocs: () => [] }));
-
+import { describe, it } from "vite-plus/test";
 import type { DocModel } from "./markdown-loader";
 import { buildNav } from "./nav";
 

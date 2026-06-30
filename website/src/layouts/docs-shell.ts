@@ -17,9 +17,10 @@ import { Component, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { Router } from "@weftui/router";
 import { Stream } from "effect";
-import { getDoc } from "virtual:weft-docs";
+import { liveDocs } from "../lib/docs-live";
+import type { DocsService } from "../lib/docs-service";
 import type { DocHeading } from "../lib/markdown-loader";
-import { type NavGroup, type NavNeighbours, findNav, navGroups } from "../lib/nav";
+import type { NavGroup, NavNeighbours } from "../lib/nav";
 
 /** Repo URL for the top-bar GitHub link. */
 const REPO_URL = "https://github.com/stefvw93/weft";
@@ -30,16 +31,6 @@ const VERSION = "v0.0.0";
 function pathnameOf(url: string): string {
   const q = url.indexOf("?");
   return q === -1 ? url : url.slice(0, q);
-}
-
-/** Resolves the doc model for a route pathname (`/docs/:category/:slug` or `/api/:pkg`). */
-function docForPath(path: string): ReturnType<typeof getDoc> {
-  const parts = path.split("/").filter((p) => p.length > 0);
-  if (parts[0] === "api" && parts[1] !== undefined) return getDoc("api", parts[1]);
-  if (parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined) {
-    return getDoc(parts[1], parts[2]);
-  }
-  return undefined;
 }
 
 /** The static top bar: wordmark, version, GitHub link, and an inert search placeholder. */
@@ -130,14 +121,22 @@ export function renderPrevNext(neighbours: NavNeighbours): Renderable {
 }
 
 /** Headings for the doc at a route pathname (empty if none/unknown). */
-function headingsForPath(path: string): readonly DocHeading[] {
-  return docForPath(path)?.headings ?? [];
+function headingsForPath(path: string, get: DocsService["get"]): readonly DocHeading[] {
+  const parts = path.split("/").filter((p) => p.length > 0);
+  const doc =
+    parts[0] === "api" && parts[1] !== undefined
+      ? get("api", parts[1])
+      : parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined
+        ? get(parts[1], parts[2])
+        : undefined;
+  return doc?.headings ?? [];
 }
 
 /**
  * The docs shell component. Reads the live route path from `Router.currentMatch` and
- * drives the sidebar highlight, TOC, and prev/next reactively, while the outlet holds
- * the page content. Wrap with `Router.layout({ component: DocsShell }, [routes])`.
+ * drives the sidebar highlight, TOC, and prev/next reactively from the `liveDocs`
+ * model, while the outlet holds the page content. Wrap with
+ * `Router.layout({ component: DocsShell }, [routes])`.
  */
 export const DocsShell = Component.gen(function* () {
   const router = yield* Router;
@@ -148,14 +147,14 @@ export const DocsShell = Component.gen(function* () {
     TopBar(),
     h.div({ class: "docs-shell__body" }, [
       h.aside({ class: "docs-shell__sidebar" }, [
-        Stream.map(path, (current) => renderSidebar(navGroups, current)),
+        Stream.map(path, (current) => renderSidebar(liveDocs.nav.groups, current)),
       ]),
       h.main({ class: "docs-shell__content" }, [
         h.article({ class: "docs-content" }, [outlet]),
-        Stream.map(path, (current) => renderPrevNext(findNav(current))),
+        Stream.map(path, (current) => renderPrevNext(liveDocs.nav.findNav(current))),
       ]),
       h.aside({ class: "docs-shell__toc" }, [
-        Stream.map(path, (current) => renderToc(headingsForPath(current))),
+        Stream.map(path, (current) => renderToc(headingsForPath(current, liveDocs.get))),
       ]),
     ]),
   ]);
