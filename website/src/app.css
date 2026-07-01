@@ -20,83 +20,83 @@
  * 1-2 backgrounds · 3-5 component bg/hover/active · 6-8 borders ·
  * 9-10 solid fills · 11-12 text. */
 @plugin "daisyui/theme" {
-	name: "weft-dark";
-	default: true;
-	color-scheme: dark;
+  name: "weft-dark";
+  default: true;
+  color-scheme: dark;
 
-	--color-base-100: var(--slate-1);
-	--color-base-200: var(--slate-2);
-	--color-base-300: var(--slate-3);
-	--color-base-content: var(--slate-12);
+  --color-base-100: var(--slate-1);
+  --color-base-200: var(--slate-2);
+  --color-base-300: var(--slate-3);
+  --color-base-content: var(--slate-12);
 
-	--color-neutral: var(--slate-4);
-	--color-neutral-content: var(--slate-12);
+  --color-neutral: var(--slate-4);
+  --color-neutral-content: var(--slate-12);
 
-	--color-primary: var(--indigo-9);
-	--color-primary-content: white;
-	--color-secondary: var(--indigo-10);
-	--color-secondary-content: white;
-	--color-accent: var(--indigo-11);
-	--color-accent-content: var(--slate-1);
+  --color-primary: var(--indigo-9);
+  --color-primary-content: white;
+  --color-secondary: var(--indigo-10);
+  --color-secondary-content: white;
+  --color-accent: var(--indigo-11);
+  --color-accent-content: var(--slate-1);
 
-	--color-info: var(--blue-9);
-	--color-info-content: white;
-	--color-success: var(--green-9);
-	--color-success-content: white;
-	--color-warning: var(--amber-9);
-	--color-warning-content: var(--slate-1);
-	--color-error: var(--red-9);
-	--color-error-content: white;
+  --color-info: var(--blue-9);
+  --color-info-content: white;
+  --color-success: var(--green-9);
+  --color-success-content: white;
+  --color-warning: var(--amber-9);
+  --color-warning-content: var(--slate-1);
+  --color-error: var(--red-9);
+  --color-error-content: white;
 
-	--radius-selector: 0.5rem;
-	--radius-field: 0.5rem;
-	--radius-box: 0.75rem;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
 }
 
 /* Expose the raw Radix steps as Tailwind color utilities (bg-slate-2,
  * border-slate-6, text-indigo-11, …) and as `var(--color-*)` for the bespoke
  * component CSS below. Values resolve to the Radix dark scale under `.dark`. */
 @theme {
-	--color-slate-1: var(--slate-1);
-	--color-slate-2: var(--slate-2);
-	--color-slate-3: var(--slate-3);
-	--color-slate-4: var(--slate-4);
-	--color-slate-5: var(--slate-5);
-	--color-slate-6: var(--slate-6);
-	--color-slate-7: var(--slate-7);
-	--color-slate-8: var(--slate-8);
-	--color-slate-9: var(--slate-9);
-	--color-slate-10: var(--slate-10);
-	--color-slate-11: var(--slate-11);
-	--color-slate-12: var(--slate-12);
+  --color-slate-1: var(--slate-1);
+  --color-slate-2: var(--slate-2);
+  --color-slate-3: var(--slate-3);
+  --color-slate-4: var(--slate-4);
+  --color-slate-5: var(--slate-5);
+  --color-slate-6: var(--slate-6);
+  --color-slate-7: var(--slate-7);
+  --color-slate-8: var(--slate-8);
+  --color-slate-9: var(--slate-9);
+  --color-slate-10: var(--slate-10);
+  --color-slate-11: var(--slate-11);
+  --color-slate-12: var(--slate-12);
 
-	--color-indigo-1: var(--indigo-1);
-	--color-indigo-2: var(--indigo-2);
-	--color-indigo-3: var(--indigo-3);
-	--color-indigo-4: var(--indigo-4);
-	--color-indigo-5: var(--indigo-5);
-	--color-indigo-6: var(--indigo-6);
-	--color-indigo-7: var(--indigo-7);
-	--color-indigo-8: var(--indigo-8);
-	--color-indigo-9: var(--indigo-9);
-	--color-indigo-10: var(--indigo-10);
-	--color-indigo-11: var(--indigo-11);
-	--color-indigo-12: var(--indigo-12);
+  --color-indigo-1: var(--indigo-1);
+  --color-indigo-2: var(--indigo-2);
+  --color-indigo-3: var(--indigo-3);
+  --color-indigo-4: var(--indigo-4);
+  --color-indigo-5: var(--indigo-5);
+  --color-indigo-6: var(--indigo-6);
+  --color-indigo-7: var(--indigo-7);
+  --color-indigo-8: var(--indigo-8);
+  --color-indigo-9: var(--indigo-9);
+  --color-indigo-10: var(--indigo-10);
+  --color-indigo-11: var(--indigo-11);
+  --color-indigo-12: var(--indigo-12);
 }
 
 /* ---------------------------------------------------------------------------
  * Code block (src/components/code-block.ts)
  * Minimal technical aesthetic: dark pane, mono, language label + copy button.
  * Shiki token colors come from inline styles on the token spans; the pane
- * background and chrome are styled here.
+ * background and chrome are styled here (tokenized, not github-dark hex).
  * ------------------------------------------------------------------------- */
 
 .code-block {
   margin: 1rem 0;
-  border: 1px solid #2a2a35;
+  border: 1px solid var(--slate-7);
   border-radius: 8px;
   overflow: hidden;
-  background: #0d1117;
+  background: var(--slate-2);
 }
 
 .code-block__bar {
@@ -105,8 +105,8 @@
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.35rem 0.6rem;
-  border-bottom: 1px solid #2a2a35;
-  background: #161b22;
+  border-bottom: 1px solid var(--slate-7);
+  background: var(--slate-3);
 }
 
 .code-block__lang {
@@ -115,21 +115,21 @@
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b949e;
+  color: var(--slate-11);
 }
 
 .code-block__copy {
   font-size: 0.72rem;
   padding: 0.15rem 0.55rem;
-  border: 1px solid #2a2a35;
+  border: 1px solid var(--slate-7);
   border-radius: 5px;
-  background: #21262d;
-  color: #c9d1d9;
+  background: var(--slate-4);
+  color: var(--slate-12);
   cursor: pointer;
 }
 
 .code-block__copy:hover:not([disabled]) {
-  background: #30363d;
+  background: var(--slate-5);
 }
 
 .code-block__copy[disabled] {
@@ -157,9 +157,9 @@
 
 .demo {
   padding: 1rem;
-  border: 1px solid #2a2a35;
+  border: 1px solid var(--slate-7);
   border-radius: 8px;
-  background: #fff;
+  background: var(--slate-2);
 }
 
 .demo-counter {
@@ -173,14 +173,14 @@
   height: 2rem;
   font-size: 1.1rem;
   line-height: 1;
-  border: 1px solid #d0d0da;
+  border: 1px solid var(--slate-6);
   border-radius: 6px;
-  background: #f6f6f9;
+  background: var(--slate-3);
   cursor: pointer;
 }
 
 .demo-counter__btn:hover {
-  background: #ececf2;
+  background: var(--slate-4);
 }
 
 .demo-counter__value {
@@ -200,7 +200,7 @@
 .demo-input__field {
   padding: 0.5rem 0.65rem;
   font-size: 0.95rem;
-  border: 1px solid #d0d0da;
+  border: 1px solid var(--slate-6);
   border-radius: 6px;
 }
 
@@ -215,22 +215,22 @@
 
 .demo-block {
   margin: 1.25rem 0;
-  border: 1px solid #2a2a35;
+  border: 1px solid var(--slate-7);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .demo-block__preview {
   padding: 1.25rem;
-  background: #fafafc;
-  border-bottom: 1px solid #2a2a35;
+  background: var(--slate-2);
+  border-bottom: 1px solid var(--slate-7);
 }
 
 .demo-block__warning {
   padding: 0.75rem 1rem;
-  background: #fff8e1;
-  border-bottom: 1px solid #e6c200;
-  color: #7a5d00;
+  background: var(--amber-3);
+  border-bottom: 1px solid var(--amber-7);
+  color: var(--amber-11);
   font-size: 0.85rem;
 }
 
@@ -250,23 +250,23 @@
   gap: 1rem;
   height: 3.25rem;
   padding: 0 1.25rem;
-  border-bottom: 1px solid #e5e5ec;
+  border-bottom: 1px solid var(--slate-6);
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--slate-1);
   z-index: 10;
 }
 
 .docs-topbar__brand {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #111;
+  color: var(--slate-12);
   text-decoration: none;
 }
 
 .docs-topbar__version {
   font-size: 0.72rem;
-  color: #8b8b96;
+  color: var(--slate-11);
   font-variant-numeric: tabular-nums;
 }
 
@@ -279,14 +279,14 @@
   max-width: 40vw;
   padding: 0.3rem 0.6rem;
   font-size: 0.82rem;
-  border: 1px solid #e5e5ec;
+  border: 1px solid var(--slate-6);
   border-radius: 6px;
-  background: #fafafc;
+  background: var(--slate-2);
 }
 
 .docs-topbar__github {
   font-size: 0.85rem;
-  color: #444;
+  color: var(--slate-11);
   text-decoration: none;
 }
 
@@ -316,7 +316,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #8b8b96;
+  color: var(--slate-11);
 }
 
 .docs-nav__list {
@@ -329,22 +329,22 @@
   display: block;
   padding: 0.2rem 0.5rem;
   font-size: 0.88rem;
-  color: #444;
+  color: var(--slate-11);
   text-decoration: none;
   border-radius: 5px;
   border-left: 2px solid transparent;
 }
 
 .docs-nav__link:hover {
-  color: #111;
-  background: #f4f4f8;
+  color: var(--slate-12);
+  background: var(--slate-3);
 }
 
 .docs-nav__link.is-active {
-  color: #1f6feb;
+  color: var(--indigo-11);
   font-weight: 600;
-  border-left-color: #1f6feb;
-  background: #eef4ff;
+  border-left-color: var(--indigo-11);
+  background: var(--indigo-4);
 }
 
 .docs-shell__content {
@@ -364,7 +364,7 @@
   font-size: 1.4rem;
   margin: 2rem 0 0.75rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--slate-6);
 }
 
 .docs-content h3 {
@@ -373,13 +373,13 @@
 }
 
 .docs-content a {
-  color: #1f6feb;
+  color: var(--indigo-11);
 }
 
 .docs-content code:not(.code-block__pre code) {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.85em;
-  background: #f0f0f4;
+  background: var(--slate-3);
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
@@ -393,7 +393,7 @@
 
 .docs-content th,
 .docs-content td {
-  border: 1px solid #e5e5ec;
+  border: 1px solid var(--slate-6);
   padding: 0.4rem 0.6rem;
   text-align: left;
 }
@@ -409,7 +409,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #8b8b96;
+  color: var(--slate-11);
   margin-bottom: 0.4rem;
 }
 
@@ -417,18 +417,18 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border-left: 1px solid #e5e5ec;
+  border-left: 1px solid var(--slate-6);
 }
 
 .docs-toc__link {
   display: block;
   padding: 0.15rem 0.75rem;
-  color: #666;
+  color: var(--slate-11);
   text-decoration: none;
 }
 
 .docs-toc__link:hover {
-  color: #1f6feb;
+  color: var(--indigo-11);
 }
 
 .docs-toc__link--h3 {
@@ -442,7 +442,7 @@
   gap: 1rem;
   margin-top: 3rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e5ec;
+  border-top: 1px solid var(--slate-6);
 }
 
 .docs-prevnext__slot {
@@ -450,7 +450,7 @@
   flex-direction: column;
   gap: 0.2rem;
   padding: 0.6rem 0.9rem;
-  border: 1px solid #e5e5ec;
+  border: 1px solid var(--slate-6);
   border-radius: 8px;
   text-decoration: none;
   min-width: 0;
@@ -463,11 +463,11 @@
 
 .docs-prevnext__dir {
   font-size: 0.72rem;
-  color: #8b8b96;
+  color: var(--slate-11);
 }
 
 .docs-prevnext__title {
-  color: #1f6feb;
+  color: var(--indigo-11);
   font-weight: 600;
 }
 
@@ -513,7 +513,7 @@
   max-width: 40rem;
   margin: 0 auto 1.75rem;
   font-size: 1.1rem;
-  color: #555;
+  color: var(--slate-11);
   line-height: 1.6;
 }
 
@@ -526,20 +526,20 @@
 .home-btn {
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
-  border: 1px solid #d0d0da;
+  border: 1px solid var(--slate-6);
   font-weight: 600;
   text-decoration: none;
-  color: #222;
+  color: var(--slate-12);
 }
 
 .home-btn--primary {
-  background: #1f6feb;
-  border-color: #1f6feb;
-  color: #fff;
+  background: var(--indigo-9);
+  border-color: var(--indigo-9);
+  color: white;
 }
 
 .home-btn:hover {
-  border-color: #1f6feb;
+  border-color: var(--indigo-8);
 }
 
 .home-demo {
@@ -556,7 +556,7 @@
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #8b8b96;
+  color: var(--slate-11);
 }
 
 .home-diffs {
@@ -568,7 +568,7 @@
 
 .home-diff {
   padding: 1.1rem 1.25rem;
-  border: 1px solid #e5e5ec;
+  border: 1px solid var(--slate-6);
   border-radius: 10px;
 }
 
@@ -580,7 +580,7 @@
 .home-diff__body {
   margin: 0;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--slate-11);
   line-height: 1.55;
 }
 
@@ -592,7 +592,7 @@
 .home-footer {
   margin-top: 4rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e5ec;
+  border-top: 1px solid var(--slate-6);
   text-align: center;
 }
 
@@ -604,7 +604,7 @@
 }
 
 .home-footer__links a {
-  color: #1f6feb;
+  color: var(--indigo-11);
   text-decoration: none;
   font-size: 0.9rem;
 }
@@ -612,7 +612,7 @@
 .home-footer__note {
   margin: 0;
   font-size: 0.8rem;
-  color: #8b8b96;
+  color: var(--slate-11);
 }
 
 @media (max-width: 640px) {

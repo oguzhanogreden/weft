@@ -39,42 +39,42 @@ out of scope (v1)" line in `src/specs.md`.
 
 Role reference (per composing-a-palette):
 
-| Steps | Role |
-|---|---|
-| 1–2 | app / subtle backgrounds |
-| 3–5 | component bg / hover / active |
-| 6–8 | borders, separators, focus ring |
-| 9–10 | solid fills / hover |
-| 11–12 | low- / high-contrast text |
+| Steps | Role                            |
+| ----- | ------------------------------- |
+| 1–2   | app / subtle backgrounds        |
+| 3–5   | component bg / hover / active   |
+| 6–8   | borders, separators, focus ring |
+| 9–10  | solid fills / hover             |
+| 11–12 | low- / high-contrast text       |
 
 DaisyUI semantic tokens (theme `weft-dark`, Indigo + Slate):
 
-| DaisyUI token | Source | Rationale |
-|---|---|---|
-| `--color-base-100` | `--slate-1` | app background |
-| `--color-base-200` | `--slate-2` | subtle surface |
-| `--color-base-300` | `--slate-3` | raised/hover surface |
-| `--color-base-content` | `--slate-12` | body text |
-| `--color-neutral` | `--slate-4` | neutral surface/button |
-| `--color-neutral-content` | `--slate-12` | text on neutral |
-| `--color-primary` | `--indigo-9` | solid accent (buttons/links) |
-| `--color-primary-content` | `white` | indigo-9 pairs with white |
-| `--color-secondary` | `--indigo-10` | hover/secondary solid |
-| `--color-accent` | `--indigo-11` | accent text/emphasis |
-| `--color-info` | `--blue-9` | semantic |
-| `--color-success` | `--green-9` | semantic |
-| `--color-warning` | `--amber-9` | amber-9 needs dark text → `--color-warning-content: var(--slate-1)` |
-| `--color-error` | `--red-9` | semantic |
+| DaisyUI token             | Source        | Rationale                                                           |
+| ------------------------- | ------------- | ------------------------------------------------------------------- |
+| `--color-base-100`        | `--slate-1`   | app background                                                      |
+| `--color-base-200`        | `--slate-2`   | subtle surface                                                      |
+| `--color-base-300`        | `--slate-3`   | raised/hover surface                                                |
+| `--color-base-content`    | `--slate-12`  | body text                                                           |
+| `--color-neutral`         | `--slate-4`   | neutral surface/button                                              |
+| `--color-neutral-content` | `--slate-12`  | text on neutral                                                     |
+| `--color-primary`         | `--indigo-9`  | solid accent (buttons/links)                                        |
+| `--color-primary-content` | `white`       | indigo-9 pairs with white                                           |
+| `--color-secondary`       | `--indigo-10` | hover/secondary solid                                               |
+| `--color-accent`          | `--indigo-11` | accent text/emphasis                                                |
+| `--color-info`            | `--blue-9`    | semantic                                                            |
+| `--color-success`         | `--green-9`   | semantic                                                            |
+| `--color-warning`         | `--amber-9`   | amber-9 needs dark text → `--color-warning-content: var(--slate-1)` |
+| `--color-error`           | `--red-9`     | semantic                                                            |
 
 Bespoke CSS references raw steps directly, replacing the current hardcoded hex:
 
-| Old hex | Replace with | Use |
-|---|---|---|
-| `#e5e5ec`, `#2a2a35` | `var(--slate-6)` / `var(--slate-7)` | borders, separators |
-| `#8b8b96`, `#555`, `#666` | `var(--slate-11)` | muted text |
-| `#1f6feb` | `var(--indigo-11)` | links |
-| `#eef4ff` | `var(--indigo-4)` | active-nav background |
-| `#111` | `var(--slate-12)` | headings |
+| Old hex                   | Replace with                        | Use                   |
+| ------------------------- | ----------------------------------- | --------------------- |
+| `#e5e5ec`, `#2a2a35`      | `var(--slate-6)` / `var(--slate-7)` | borders, separators   |
+| `#8b8b96`, `#555`, `#666` | `var(--slate-11)`                   | muted text            |
+| `#1f6feb`                 | `var(--indigo-11)`                  | links                 |
+| `#eef4ff`                 | `var(--indigo-4)`                   | active-nav background |
+| `#111`                    | `var(--slate-12)`                   | headings              |
 
 ## Technical requirements
 
@@ -85,7 +85,7 @@ Bespoke CSS references raw steps directly, replacing the current hardcoded hex:
   2. Radix dark scales:
      `@import "@radix-ui/colors/{slate,indigo,blue,green,amber,red}-dark.css";`
   3. `@plugin "daisyui";` + `@plugin "daisyui/theme" { name: "weft-dark";
-     default: true; color-scheme: dark; … }` (semantic mapping above).
+default: true; color-scheme: dark; … }` (semantic mapping above).
   4. `@theme { --color-slate-1..12, --color-indigo-1..12 … }` exposing raw steps
      as utilities (`border-slate-6`, `text-indigo-11`).
   5. Bespoke component CSS (docs grid, nav, TOC, prose, code-block, demo, home) —
@@ -94,13 +94,13 @@ Bespoke CSS references raw steps directly, replacing the current hardcoded hex:
   (not `:root`). `<html>` must therefore carry `class="dark"`. Dark-only still
   needs this one attribute.
 - **`shell.ts` (`shell.ts:55`):** add `class: "dark"` and `"data-theme":
-  "weft-dark"` to the `h.html` props. No other shell edits.
+"weft-dark"` to the `h.html` props. No other shell edits.
 - **Components (hybrid):**
   - `routes/home.ts` — CTAs → `btn btn-primary` / `btn btn-outline`;
     differentiator cards → `card bg-base-200`; footer tokenized.
   - `layouts/docs-shell.ts` — top bar → DaisyUI `navbar`, **keep
     `docs-topbar__brand` on the wordmark**; search → `input input-bordered
-    input-sm`; GitHub link → `btn btn-ghost btn-sm`; sidebar nav stays custom
+input-sm`; GitHub link → `btn btn-ghost btn-sm`; sidebar nav stays custom
     (**keep `docs-nav__link` / `is-active`**), recolored only.
   - `components/code-block.ts`, `demos/*` — no markup change; recolor via
     `app.css`. Copy button → `btn btn-xs btn-ghost` (optional).
