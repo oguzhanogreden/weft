@@ -1380,13 +1380,13 @@
     "semantic_hash": ""
   },
   "website/package.json": {
-    "mtime": 1782846459.6200335,
-    "ast_hash": "2ba0c8ad0f19d7fb050cab0f351ad1e9",
+    "mtime": 1782931690.7555573,
+    "ast_hash": "e07906c4a2458d443452a63e4a6c218a",
     "semantic_hash": ""
   },
   "website/src/layouts/shell.ts": {
-    "mtime": 1782930760.205053,
-    "ast_hash": "13dc886ed824584ad46f6eb9c6580931",
+    "mtime": 1782932081.076478,
+    "ast_hash": "11dfc2f5180608f28b3e60c622ec88b5",
     "semantic_hash": ""
   },
   "website/tsconfig.json": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "website/src/layouts/docs-shell.ts": {
-    "mtime": 1782885458.5351985,
-    "ast_hash": "aa23b0bd334d7a137ea9bff47d8c60a9",
+    "mtime": 1782932413.1488385,
+    "ast_hash": "041278cb4dfdf8430c0e3908234efaa4",
     "semantic_hash": ""
   },
   "website/src/lib/__type-tests__/render-hast.test-d.ts": {
@@ -1575,13 +1575,13 @@
     "semantic_hash": ""
   },
   "website/src/routes/home.ts": {
-    "mtime": 1782850878.3487213,
-    "ast_hash": "af590d978b877ba62bdbb16e12c04fe7",
+    "mtime": 1782932420.033144,
+    "ast_hash": "dd1f67bf9eab5a61314952decd35549b",
     "semantic_hash": ""
   },
   "website/src/routes/routes.test.ts": {
-    "mtime": 1782885486.8268418,
-    "ast_hash": "72239e85e4b23fcc19249f348b3abc78",
+    "mtime": 1782932076.289364,
+    "ast_hash": "af91f22bc41de886a41e52701f4204b4",
     "semantic_hash": ""
   },
   "website/src/virtual-weft-docs.d.ts": {
@@ -1610,8 +1610,8 @@
     "semantic_hash": ""
   },
   "website/.build-progress.md": {
-    "mtime": 1782852564.7092762,
-    "ast_hash": "aa9a4ba436186cd327c12b974e9dad4e",
+    "mtime": 1782932096.67448,
+    "ast_hash": "908d33b173468a4776a564b7e6a66c53",
     "semantic_hash": ""
   },
   "website/src/components/code-block.specs.md": {
@@ -1712,6 +1712,16 @@
   "website/src/routes/doc-page-impl.ts": {
     "mtime": 1782929576.0094888,
     "ast_hash": "3a2558991480d0d349f0e820c73de172",
+    "semantic_hash": ""
+  },
+  "website/.claude/ralph-loop.local.md": {
+    "mtime": 1782931637.9384184,
+    "ast_hash": "3c6fc92b9ea98f4f012c35d5e7e8f647",
+    "semantic_hash": ""
+  },
+  "website/src/design-system.specs.md": {
+    "mtime": 1782932318.0461748,
+    "ast_hash": "2ff27f972fba73547dc99f3bb4ab8038",
     "semantic_hash": ""
   }
 }
