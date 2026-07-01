@@ -327,12 +327,11 @@
 
 .docs-nav__link {
   display: block;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   font-size: 0.88rem;
   color: var(--slate-11);
   text-decoration: none;
-  border-radius: 5px;
-  border-left: 2px solid transparent;
+  border-radius: 6px;
 }
 
 .docs-nav__link:hover {
@@ -343,7 +342,6 @@
 .docs-nav__link.is-active {
   color: var(--indigo-11);
   font-weight: 600;
-  border-left-color: var(--indigo-11);
   background: var(--indigo-4);
 }
 
