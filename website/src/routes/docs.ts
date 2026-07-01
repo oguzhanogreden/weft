@@ -1,42 +1,26 @@
 /**
- * Documentation routes.
+ * Documentation route descriptors.
  *
  * - `/docs` aliases to the first doc (getting-started) by rendering its content.
  * - `/docs/:category/:slug` looks up the doc model and renders it via `DocPage`;
  *   an unknown `(category, slug)`, or a doc whose section is `api` (served by the
  *   api routes), short-circuits to the router's not-found (404).
  *
- * Mounted under the `DocsShell` layout by `app.ts`.
+ * Only the **descriptors** (segment + component slot) live here, eagerly. Each
+ * component body is `Router.lazy(() => import("./doc-page-impl"))`, so the render
+ * code (`DocPage`, `render-hast`, `CodeBlock`, `Demo`) is emitted as its own chunk
+ * and loaded only for the matched leaf — the matcher/`href`/`buildHttpApi` still see
+ * a static descriptor. Mounted under the `DocsShell` layout by `app.ts`.
  */
 
-import { Component } from "@weftui/core";
-import { Router, notFound } from "@weftui/router";
-import { Schema } from "effect";
-import { Docs } from "./../lib/docs-service";
-import { DocPage } from "./doc-page";
+import { Router } from "@weftui/router";
 
 /** `/docs` → render the first doc in nav order (alias to getting-started). */
 export const docsIndexRoute = Router.route("docs", {
-  component: Component.gen(function* () {
-    const docs = yield* Docs;
-    const parts = docs.nav.firstDocPath.split("/").filter((p) => p.length > 0);
-    const doc =
-      parts[1] !== undefined && parts[2] !== undefined ? docs.get(parts[1], parts[2]) : undefined;
-    if (doc === undefined) return yield* notFound();
-    return yield* DocPage(doc);
-  }),
+  component: Router.lazy(() => import("./doc-page-impl").then((m) => m.DocsIndexPage)),
 });
 
 /** `/docs/:category/:slug` → the matching DocPage, or 404. */
 export const docsRoute = Router.route("docs/:category/:slug", {
-  component: Component.gen(function* () {
-    const docs = yield* Docs;
-    const { category, slug } = yield* Router.params({
-      category: Schema.String,
-      slug: Schema.String,
-    });
-    const doc = docs.get(category, slug);
-    if (doc === undefined || doc.category === "api") return yield* notFound();
-    return yield* DocPage(doc);
-  }),
+  component: Router.lazy(() => import("./doc-page-impl").then((m) => m.DocsPage)),
 });
