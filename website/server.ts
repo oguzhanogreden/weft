@@ -31,6 +31,38 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 3000);
 const isProd = process.env.NODE_ENV === "production";
 
+/** Maps a static asset's extension to its `Content-Type` (browsers block JS modules and CSS without one). */
+function contentTypeFor(filePath: string): string {
+  const ext = filePath.slice(filePath.lastIndexOf("."));
+  switch (ext) {
+    case ".js":
+    case ".mjs":
+      return "text/javascript; charset=utf-8";
+    case ".css":
+      return "text/css; charset=utf-8";
+    case ".json":
+    case ".map":
+      return "application/json; charset=utf-8";
+    case ".svg":
+      return "image/svg+xml";
+    case ".woff2":
+      return "font/woff2";
+    case ".woff":
+      return "font/woff";
+    case ".png":
+      return "image/png";
+    case ".jpg":
+    case ".jpeg":
+      return "image/jpeg";
+    case ".webp":
+      return "image/webp";
+    case ".ico":
+      return "image/x-icon";
+    default:
+      return "application/octet-stream";
+  }
+}
+
 /** Reads a Node request body stream into a UTF-8 string (JSON rpc round-trips losslessly). */
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -123,14 +155,21 @@ async function startProd(): Promise<void> {
   const clientDir = join(__dirname, "dist/client");
   const manifest = JSON.parse(
     await readFile(join(clientDir, ".vite/manifest.json"), "utf8"),
-  ) as Record<string, { file: string }>;
-  const clientEntry = `/${manifest["src/entry-client.ts"]!.file}`;
+  ) as Record<string, { file: string; css?: string[] }>;
+  const entry = manifest["src/entry-client.ts"]!;
+  const clientEntry = `/${entry.file}`;
+  // Prod extracts the client CSS to a hashed file; dev injects it through Vite's
+  // module graph. Link it explicitly here, resolved from the manifest's `css` array.
+  const styles = (entry.css ?? []).map((file) => `/${file}`);
 
   // The built server bundle exports the same `makeHandler` as the source entry.
   const { makeHandler } = (await import("./dist/server/entry-server.js")) as {
-    makeHandler: (clientEntry: string) => (request: Request) => Promise<Response>;
+    makeHandler: (
+      clientEntry: string,
+      styles?: readonly string[],
+    ) => (request: Request) => Promise<Response>;
   };
-  const handler = makeHandler(clientEntry);
+  const handler = makeHandler(clientEntry, styles);
 
   const server = createHttpServer((req, res) => {
     void (async () => {
@@ -138,9 +177,12 @@ async function startProd(): Promise<void> {
         const url = req.url ?? "/";
         // Hashed build assets are immutable — serve them directly from disk.
         if (url.startsWith("/assets/") || url === clientEntry) {
-          const filePath = join(clientDir, url);
+          const filePath = join(clientDir, url.split("?")[0]!);
           res.statusCode = 200;
           res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          // Module scripts are blocked by the browser without a JS MIME type, and
+          // stylesheets need `text/css` — Node's http server sets neither by default.
+          res.setHeader("Content-Type", contentTypeFor(filePath));
           createReadStream(filePath).pipe(res);
           return;
         }

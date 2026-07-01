@@ -8,6 +8,11 @@
  * router's render-time `context` seam). The client entry `src` differs between dev and
  * prod — dev points at the raw `/src/entry-client.ts`, prod at the hashed build
  * artifact — so it is a parameter rather than hardcoded.
+ *
+ * Stylesheets are likewise passed in: in dev Vite injects CSS through the client
+ * module graph (`app.ts` imports `app.css`), so `styles` is empty; in prod the CSS is
+ * extracted to a hashed file that the server links here via `<link rel="stylesheet">`,
+ * resolved from the Vite manifest's `css` array for the client entry.
  */
 
 import { Component, h } from "@weftui/core";
@@ -39,8 +44,8 @@ function metaFor(path: string, get: DocsService["get"]): { title: string; descri
   return { title: `${doc.frontmatter.title} · Weft`, description: doc.frontmatter.description };
 }
 
-/** Builds the document shell `component` thunk for a given client entry `src`. */
-export const documentShell = (clientEntry: string) =>
+/** Builds the document shell `component` thunk for a given client entry `src` and stylesheet hrefs. */
+export const documentShell = (clientEntry: string, styles: readonly string[] = []) =>
   Component.gen(function* () {
     const docs = yield* Docs;
     const router = yield* Router;
@@ -55,6 +60,7 @@ export const documentShell = (clientEntry: string) =>
         ...(meta.description === undefined
           ? []
           : [h.meta({ name: "description", content: meta.description })]),
+        ...styles.map((href) => h.link({ rel: "stylesheet", href })),
       ]),
       h.body([h.main({ id: "root" }, [outlet]), h.script({ type: "module", src: clientEntry })]),
     ]);

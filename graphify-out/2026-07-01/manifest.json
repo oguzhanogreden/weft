@@ -1555,8 +1555,8 @@
     "semantic_hash": ""
   },
   "website/src/routes/api.ts": {
-    "mtime": 1782926661.0779805,
-    "ast_hash": "4e1a2e27ad4d0f9762c23c7eec8d1797",
+    "mtime": 1782929591.3095694,
+    "ast_hash": "467a0900072bf3167e9950f6e07473a0",
     "semantic_hash": ""
   },
   "website/src/routes/doc-page.ts": {
@@ -1565,8 +1565,8 @@
     "semantic_hash": ""
   },
   "website/src/routes/docs.ts": {
-    "mtime": 1782926649.6911488,
-    "ast_hash": "e080e739cff76043eb6f1903f4fe47e4",
+    "mtime": 1782929583.4507236,
+    "ast_hash": "714c42cb3f7acf974920a33fc20a779b",
     "semantic_hash": ""
   },
   "website/src/routes/home.test.ts": {
@@ -1700,13 +1700,18 @@
     "semantic_hash": ""
   },
   ".claude/ralph-loop.local.md": {
-    "mtime": 1782929169.9805377,
-    "ast_hash": "9dc8c1d75d4a1528313a6a4f83339f77",
+    "mtime": 1782929457.4096851,
+    "ast_hash": "57acde80fb39cfe06ae10e4e4f2600fd",
     "semantic_hash": ""
   },
   "packages/router/src/lazy-component.specs.md": {
     "mtime": 1782929150.8131945,
     "ast_hash": "e07f735fa5403e968a08ab74b77d1354",
+    "semantic_hash": ""
+  },
+  "website/src/routes/doc-page-impl.ts": {
+    "mtime": 1782929576.0094888,
+    "ast_hash": "3a2558991480d0d349f0e820c73de172",
     "semantic_hash": ""
   }
 }

@@ -45,7 +45,7 @@ export default defineConfig({
         dependsOn: ["build:client", "build:server"],
       },
       start: {
-        command: "NODE_ENV=production tsx server.ts",
+        command: "NODE_ENV=production node server.ts",
         dependsOn: ["build"],
       },
     },

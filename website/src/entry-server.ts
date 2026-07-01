@@ -17,9 +17,12 @@ import { App } from "./app";
 import { DocsLive } from "./lib/docs-live";
 import { documentShell } from "./layouts/shell";
 
-/** Builds the web handler for a given client entry `src`. */
-export const makeHandler = (clientEntry: string): ((request: Request) => Promise<Response>) => {
-  const document = documentShell(clientEntry);
+/** Builds the web handler for a given client entry `src` and stylesheet hrefs. */
+export const makeHandler = (
+  clientEntry: string,
+  styles: readonly string[] = [],
+): ((request: Request) => Promise<Response>) => {
+  const document = documentShell(clientEntry, styles);
   return (request) => {
     const url = new URL(request.url);
     return Effect.runPromise(
