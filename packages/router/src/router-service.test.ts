@@ -34,6 +34,10 @@ const routerFor = (m: RouteMatch): Router["Type"] =>
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: () => Effect.void,
     httpApiClient: Option.none(),
+    navigating: Subscribable.make({
+      get: Effect.succeed({ _tag: "Idle" } as const),
+      changes: Stream.make({ _tag: "Idle" } as const),
+    }),
   });
 
 /** Runs an accessor against the match for `url`, returning its `Exit`. */

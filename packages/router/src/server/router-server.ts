@@ -20,7 +20,7 @@ import { isRouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";
 import { outletNode } from "../outlet";
 import type { ComponentSlot } from "../route-tree";
-import { Router } from "../router-service";
+import { type NavState, Router } from "../router-service";
 
 /**
  * Server-side rendering for a {@link RouterDef}. Dispatch runs through the
@@ -129,6 +129,9 @@ export namespace RouterServer {
 
   /** Builds the fixed per-request `Router` from an already-resolved match; `navigate` is a no-op on the server. */
   function serverRouter(matched: RouteMatch): Router["Type"] {
+    // Server render is buffered, so navigation state is a client-only concern: a
+    // constant `Idle` keeps the service shape sound on both sides (AC-N10).
+    const idle: NavState = { _tag: "Idle" };
     return Router.of({
       currentMatch: Subscribable.make({
         get: Effect.succeed(matched),
@@ -137,6 +140,10 @@ export namespace RouterServer {
       navigate: () => Effect.void,
       // The server is the origin; no derived client (network work is a client concern).
       httpApiClient: Option.none(),
+      navigating: Subscribable.make({
+        get: Effect.succeed(idle),
+        changes: Stream.make(idle),
+      }),
     });
   }
 

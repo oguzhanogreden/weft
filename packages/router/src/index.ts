@@ -18,6 +18,6 @@ export type { RouteMatch } from "./matcher";
 export { href } from "./href";
 export type { HrefArgs } from "./href";
 export { Router } from "./router-service";
-export type { NavigateOptions, RouterHttpApiClient } from "./router-service";
+export type { NavigateOptions, NavState, RouterHttpApiClient } from "./router-service";
 export { RouterApp, outletNode } from "./outlet";
 export { RouterNotFound, RouterParamsError, notFound, isRouterNotFound } from "./errors";

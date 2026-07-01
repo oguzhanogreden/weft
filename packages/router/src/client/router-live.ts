@@ -13,7 +13,13 @@ import {
 } from "effect";
 import type { RouterDef } from "../compile";
 import { match, type RouteMatch } from "../matcher";
-import { type NavigateOptions, Router, type RouterHttpApiClient } from "../router-service";
+import { getPreload } from "../route-tree";
+import {
+  type NavigateOptions,
+  type NavState,
+  Router,
+  type RouterHttpApiClient,
+} from "../router-service";
 import { installLinkInterceptor } from "./link";
 
 /** Path the client rpc protocol posts to; mirrors `RouterServer`'s server route. */
@@ -103,6 +109,9 @@ export function RouterLive<R>(
   const core: Layer.Layer<Router | AppRpcClientTag> = Layer.scopedContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
+      // Reactive navigation state (`pending-navigation.specs.md`): `Navigating{to}`
+      // while a deferred-commit navigation resolves its lazy chunk(s), else `Idle`.
+      const navRef = yield* SubscriptionRef.make<NavState>({ _tag: "Idle" });
       const runtime = yield* Effect.runtime<never>();
 
       // The authoritative HttpApi is typed `HttpApi.Any` (runtime-assembled), so
@@ -118,30 +127,86 @@ export function RouterLive<R>(
       ) as unknown as Effect.Effect<RouterHttpApiClient>;
       const httpApiClient = yield* makeClient;
 
-      // popstate (back/forward) → resync the ref from the live location.
+      // A monotonic token; only the newest navigation may commit or reset
+      // `navigating` (latest-wins across in-flight lazy preloads — AC-N7).
+      let latest = 0;
+
+      // The `Router.lazy` preloads for a matched branch (leaf component + each
+      // layout in its chain); empty for an eager branch or a no-match, which take
+      // the synchronous fast path.
+      const collectPreloads = (m: RouteMatch): ReadonlyArray<() => Promise<unknown>> =>
+        m._tag !== "Matched"
+          ? []
+          : [m.leaf.component, ...m.leaf.layoutChain.map((l) => l.component)]
+              .map(getPreload)
+              .filter((p): p is () => Promise<unknown> => p !== undefined);
+
+      const commitUrl = (normalized: string, replace: boolean): Effect.Effect<void> =>
+        Effect.sync(() => {
+          // `replaceState` swaps the current entry (no new history step); `pushState`
+          // adds one. Neither fires `popstate`, so the url ref is set explicitly to
+          // drive the reactive re-render.
+          if (replace) {
+            window.history.replaceState(null, "", normalized);
+          } else {
+            window.history.pushState(null, "", normalized);
+          }
+        });
+
+      // Deferred-commit navigation core (`pending-navigation.specs.md`): resolve the
+      // matched branch's lazy chunk(s) **before** committing the url + match, so the
+      // previous outlet stays mounted during the fetch and the swap is a single tick
+      // (the lazy slot then renders synchronously). `pushUrl` distinguishes an app
+      // navigation (History push/replace) from a popstate resync (browser already
+      // moved the url — set the ref only).
+      const commitTo = (
+        normalized: string,
+        pushUrl: boolean,
+        replace: boolean,
+      ): Effect.Effect<void> =>
+        Effect.gen(function* () {
+          const preloads = collectPreloads(match(def, normalized));
+
+          // Fast path: no lazy nodes → synchronous commit, `navigating` stays Idle
+          // (AC-N3), byte-for-byte the pre-feature behavior for eager routes.
+          if (preloads.length === 0) {
+            if (pushUrl) yield* commitUrl(normalized, replace);
+            yield* SubscriptionRef.set(urlRef, normalized);
+            return;
+          }
+
+          // Pending path: keep the old outlet mounted while the chunk(s) resolve.
+          const token = ++latest;
+          yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
+          yield* Effect.promise(() => Promise.all(preloads.map((p) => p()))).pipe(
+            // A rejected chunk load is a defect (AC-E1); reset `navigating` (if this
+            // is still the latest nav) before the defect propagates, so no stuck
+            // pending state remains.
+            Effect.onError(() =>
+              token === latest ? SubscriptionRef.set(navRef, { _tag: "Idle" }) : Effect.void,
+            ),
+          );
+          // Superseded by a newer navigation → do not commit or reset; the newer nav
+          // owns both. This fetch still populated the shared per-slot memo (AC-N7).
+          if (token !== latest) return;
+          if (pushUrl) yield* commitUrl(normalized, replace);
+          yield* SubscriptionRef.set(urlRef, normalized);
+          yield* SubscriptionRef.set(navRef, { _tag: "Idle" });
+        });
+
+      const navigate = (to: string, options?: NavigateOptions): Effect.Effect<void> =>
+        commitTo(normalizeTo(to), true, options?.replace === true);
+
+      // popstate (back/forward): the browser already moved the url, so only resync
+      // the ref — but resolve the target branch's lazy chunk(s) first so back-nav is
+      // also blank-free (AC-N8).
       const onPopState = (): void => {
-        Runtime.runFork(runtime)(SubscriptionRef.set(urlRef, locationUrl()));
+        Runtime.runFork(runtime)(commitTo(locationUrl(), false, false));
       };
       yield* Effect.acquireRelease(
         Effect.sync(() => window.addEventListener("popstate", onPopState)),
         () => Effect.sync(() => window.removeEventListener("popstate", onPopState)),
       );
-
-      const navigate = (to: string, options?: NavigateOptions): Effect.Effect<void> =>
-        Effect.gen(function* () {
-          const normalized = normalizeTo(to);
-          yield* Effect.sync(() => {
-            // `replaceState` swaps the current entry (no new history step);
-            // `pushState` adds one. Neither fires `popstate`, so the ref is set
-            // explicitly below to drive the reactive re-render.
-            if (options?.replace === true) {
-              window.history.replaceState(null, "", normalized);
-            } else {
-              window.history.pushState(null, "", normalized);
-            }
-          });
-          yield* SubscriptionRef.set(urlRef, normalized);
-        });
 
       yield* installLinkInterceptor(def, navigate);
 
@@ -193,6 +258,7 @@ export function RouterLive<R>(
         currentMatch,
         navigate,
         httpApiClient: Option.some(httpApiClient),
+        navigating: navRef,
       });
 
       return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));

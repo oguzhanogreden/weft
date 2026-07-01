@@ -12,9 +12,10 @@ import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Component, h } from "@weftui/core";
 import type { Node } from "@weftui/core";
 import { renderToString } from "@weftui/dom/server";
-import { Effect, Layer } from "effect";
+import { Effect, Exit, Layer } from "effect";
 import { describe, it } from "vite-plus/test";
 import { Router } from "~/index";
+import { getPreload } from "~/route-tree";
 
 /** No `Boundary.rpc` in these pages; discharge the ambient rpc seam with a dying stub. */
 const NoRpc = Layer.succeed(AppRpcClientTag, {
@@ -66,5 +67,34 @@ describe("Router.lazy — unit", () => {
     assert.match(first, /x/);
     assert.match(second, /x/);
     assert.equal(calls, 1);
+  });
+
+  it("exposes a preload that populates the memo so a later invocation renders synchronously (AC-N2/AC-N4)", async () => {
+    let calls = 0;
+    const slot = Router.lazy(() => {
+      calls += 1;
+      return Promise.resolve(Component.make(() => h.div({}, "sync-body")));
+    });
+    const preload = getPreload(slot);
+    assert.ok(preload !== undefined, "a lazy slot must expose a preload capability");
+    await preload();
+    // Post-preload the slot returns a synchronously-resolvable node (the DOM renderer's
+    // `runSyncExit` probe succeeds → atomic swap, no blank).
+    const exit = Effect.runSyncExit(slot() as unknown as Effect.Effect<unknown, never, never>);
+    assert.ok(Exit.isSuccess(exit), "post-preload slot must render synchronously");
+    // The preload and the render share the single memoized load — the loader runs once.
+    assert.equal(calls, 1);
+  });
+
+  it("a preloaded slot still renders the resolved component to HTML", async () => {
+    const slot = Router.lazy(() => Promise.resolve(Component.make(() => h.div({}, "preloaded"))));
+    await getPreload(slot)!();
+    const html = await render(slot());
+    assert.match(html, /preloaded/);
+  });
+
+  it("an eager slot has no preload capability", () => {
+    const eager = Component.make(() => h.div({}, "eager"));
+    assert.equal(getPreload(eager), undefined);
   });
 });

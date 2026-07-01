@@ -105,14 +105,19 @@ must propagate the **resolved** component's channels, not `unknown`:
   property; `hydrate.specs.md`). The doc body/interactive regions become live once the
   chunk resolves.
 - **AC-H2** No Suspense/Boundary is introduced by `Router.lazy`; a fallback flash would
-  only occur if the author wraps the lazy component in one, which is their choice.
+  only occur if the author wraps the lazy component in one, which is their choice. With
+  deferred-commit client navigation (AC-C1, `pending-navigation.specs.md`) there is no
+  blank to fall back **from**, so this is now moot for the chunk dimension rather than a
+  limitation.
 
 ### Client navigation
 
-- **AC-C1** On `navigate`, the matcher (static, unchanged) resolves the target leaf; the
-  outlet re-renders, invoking the target's lazy slot, which fetches its chunk and swaps the
-  outlet content once resolved. A route with no lazy nodes navigates synchronously as
-  today.
+- **AC-C1** On `navigate`, the matcher (static, unchanged) resolves the target leaf.
+  Navigation is **deferred-commit** (`pending-navigation.specs.md`): `navigate`
+  resolves the matched branch's lazy chunk(s) **before** committing the URL and the
+  match, so the previous outlet content stays mounted during the fetch and the swap is
+  a single blank-free tick once the chunk is in memory (the slot then renders
+  synchronously). A route with no lazy nodes navigates synchronously as today.
 - **AC-C2** A revisit to an already-loaded route is synchronous. `Router.lazy` **memoizes
   its load `Promise` per slot**: the first render triggers the import; every later render
   and back-navigation reuses the resolved module — no second fetch, and (independently) the
@@ -143,12 +148,15 @@ its heavy deps — `renderHast`, per-page libraries) into a separate module refe
 through `Router.lazy(() => import("./impl"))`. A descriptor file that still statically
 imports the impl gains nothing.
 
-## Preloading (deferred, cross-referenced)
+## Preloading (cross-referenced)
 
-Correctness holds without preload (SSR content is visible; the chunk resolves shortly
-after). As in the doc-data split, a `modulepreload` of the matched leaf's chunk (server
-inject on first paint; hover/viewport prefetch on the client) is a **latency
-optimization** left to a follow-up once the manifest→chunk mapping is wired. Non-goal here.
+Client navigation now resolves the matched branch's chunk **before** committing the
+route (deferred commit — see `pending-navigation.specs.md`), which eliminates the
+navigation blank. That is a **correctness/UX** change, distinct from a
+`modulepreload` of the matched leaf's chunk (server inject on first paint;
+hover/viewport prefetch on the client) which is a **latency optimization** that would
+shorten the resolve window itself — still left to a follow-up once the manifest→chunk
+mapping is wired. Non-goal here.
 
 ## Non-goals
 
