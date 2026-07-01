@@ -805,8 +805,8 @@
     "semantic_hash": "f1b906c4fdcdc89e1085b13cf3f8edba"
   },
   "packages/router/src/client/router-live.ts": {
-    "mtime": 1782885283.3647323,
-    "ast_hash": "bec1994a278f07d56b6f2d999ded6149",
+    "mtime": 1782923905.7083974,
+    "ast_hash": "fa87cc1996c8347a73be71b2cd28b273",
     "semantic_hash": ""
   },
   "packages/router/src/compile.test.ts": {
@@ -860,8 +860,8 @@
     "semantic_hash": ""
   },
   "packages/router/src/route-tree.ts": {
-    "mtime": 1780918894.3483045,
-    "ast_hash": "fab2c15bc07a77626fd4108be8a3d59e",
+    "mtime": 1782929102.3473194,
+    "ast_hash": "6f8d383a9a93e17d00c1c44ebbd37aa7",
     "semantic_hash": ""
   },
   "packages/router/src/router-service.test.ts": {
@@ -870,8 +870,8 @@
     "semantic_hash": ""
   },
   "packages/router/src/router-service.ts": {
-    "mtime": 1780918894.3486772,
-    "ast_hash": "1ae8c4cf7891211b1dce162afe4a1f0a",
+    "mtime": 1782928393.0775409,
+    "ast_hash": "b394877d9be97a388e8a52d48361bbdf",
     "semantic_hash": ""
   },
   "packages/router/src/server/index.ts": {
@@ -1425,12 +1425,12 @@
     "semantic_hash": ""
   },
   "website/src/__tests__/website.browser.test.ts": {
-    "mtime": 1782851475.794931,
-    "ast_hash": "dc36fca44f4719eaf3f69ca24639967d",
+    "mtime": 1782926971.523154,
+    "ast_hash": "21b4ce3e7e56aad0aea5f998b3268acd",
     "semantic_hash": ""
   },
   "website/src/app.ts": {
-    "mtime": 1782849230.327932,
+    "mtime": 1782926981.5439827,
     "ast_hash": "30bfcdd01b2c160cddb1bb14ef401dea",
     "semantic_hash": ""
   },
@@ -1485,7 +1485,7 @@
     "semantic_hash": ""
   },
   "website/src/entry-client.ts": {
-    "mtime": 1782885479.5563369,
+    "mtime": 1782923105.674046,
     "ast_hash": "1071ec7cde1fb9aed9fbbb312ec802cf",
     "semantic_hash": ""
   },
@@ -1510,18 +1510,18 @@
     "semantic_hash": ""
   },
   "website/src/lib/docs-live.ts": {
-    "mtime": 1782885408.906873,
-    "ast_hash": "f86ffc01d620bc323d0c4ec3e26c2786",
+    "mtime": 1782926632.1292431,
+    "ast_hash": "f3669b979d270619b665468f12641926",
     "semantic_hash": ""
   },
   "website/src/lib/docs-plugin.ts": {
-    "mtime": 1782850751.0572686,
-    "ast_hash": "7621b62eb42839c0c5dfce045fce89cd",
+    "mtime": 1782926673.4968731,
+    "ast_hash": "16f5673f7ee4f43721e9320e2bccad70",
     "semantic_hash": ""
   },
   "website/src/lib/docs-service.ts": {
-    "mtime": 1782885402.6500437,
-    "ast_hash": "56695a656781a94b8938a4cc9030ca63",
+    "mtime": 1782926626.5121598,
+    "ast_hash": "9fd26c6ccd4938b68a3466f736ca2447",
     "semantic_hash": ""
   },
   "website/src/lib/markdown-loader.test.ts": {
@@ -1530,8 +1530,8 @@
     "semantic_hash": ""
   },
   "website/src/lib/markdown-loader.ts": {
-    "mtime": 1782847544.9462123,
-    "ast_hash": "d3226c01899d439997c5b033b408708b",
+    "mtime": 1782926511.8921714,
+    "ast_hash": "529c8baa20d5249d559acc7676f8c0ea",
     "semantic_hash": ""
   },
   "website/src/lib/nav.test.ts": {
@@ -1540,8 +1540,8 @@
     "semantic_hash": ""
   },
   "website/src/lib/nav.ts": {
-    "mtime": 1782849521.8176413,
-    "ast_hash": "a2aa22261a2b54dc19e28785b38998b5",
+    "mtime": 1782926607.6266506,
+    "ast_hash": "d93b0508ce744ff55923fee101fcb018",
     "semantic_hash": ""
   },
   "website/src/lib/render-hast.test.ts": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": ""
   },
   "website/src/routes/api.ts": {
-    "mtime": 1782885430.772185,
-    "ast_hash": "585dea874a75e4646dc87ae979f6c687",
+    "mtime": 1782929591.3095694,
+    "ast_hash": "467a0900072bf3167e9950f6e07473a0",
     "semantic_hash": ""
   },
   "website/src/routes/doc-page.ts": {
@@ -1565,8 +1565,8 @@
     "semantic_hash": ""
   },
   "website/src/routes/docs.ts": {
-    "mtime": 1782885419.242942,
-    "ast_hash": "2b124529bed558d74d1ad5c133efec14",
+    "mtime": 1782929583.4507236,
+    "ast_hash": "714c42cb3f7acf974920a33fc20a779b",
     "semantic_hash": ""
   },
   "website/src/routes/home.test.ts": {
@@ -1585,13 +1585,13 @@
     "semantic_hash": ""
   },
   "website/src/virtual-weft-docs.d.ts": {
-    "mtime": 1782850757.0013742,
-    "ast_hash": "ec6e74e7ad5a8bfe094ad0eb0b856116",
+    "mtime": 1782926586.2864718,
+    "ast_hash": "ecfd53c6d0e8b7c9a7978a5644185620",
     "semantic_hash": ""
   },
   "website/vite.config.ts": {
-    "mtime": 1782852020.9725964,
-    "ast_hash": "0a0938ab798e819be48e7c16b397c9e3",
+    "mtime": 1782926909.8702781,
+    "ast_hash": "4779d0b8d54cf05f64045ecb1a7ac842",
     "semantic_hash": ""
   },
   "website/vite.ssr.config.ts": {
@@ -1667,6 +1667,51 @@
   "website/src/specs.md": {
     "mtime": 1782847544.2743893,
     "ast_hash": "9184bb26210604a2af4a8cc741f5da6d",
+    "semantic_hash": ""
+  },
+  "website/src/lib/docs-service.test.ts": {
+    "mtime": 1782926751.6183167,
+    "ast_hash": "88a55bbe5fa71413b3ca2fc9bb7e2d34",
+    "semantic_hash": ""
+  },
+  "website/src/lib/docs-split.specs.md": {
+    "mtime": 1782926471.5744293,
+    "ast_hash": "7bc42af50d69380eca13f24712dd0f4e",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/lazy-page.ts": {
+    "mtime": 1782929281.4164445,
+    "ast_hash": "d7492b017936454478ed33d8e54e905c",
+    "semantic_hash": ""
+  },
+  "examples/router-ssr/src/lazy-route.browser.test.ts": {
+    "mtime": 1782929352.1866343,
+    "ast_hash": "c3732a1f3fe8d1e35bb62533270f1783",
+    "semantic_hash": ""
+  },
+  "packages/router/src/__type-tests__/lazy.test-d.ts": {
+    "mtime": 1782928688.7590418,
+    "ast_hash": "36a7b3e460d280823d74b346f9ed1775",
+    "semantic_hash": ""
+  },
+  "packages/router/src/lazy-component.test.ts": {
+    "mtime": 1782929110.7470891,
+    "ast_hash": "08a222db79db4c2d53631d13e345397f",
+    "semantic_hash": ""
+  },
+  ".claude/ralph-loop.local.md": {
+    "mtime": 1782929457.4096851,
+    "ast_hash": "57acde80fb39cfe06ae10e4e4f2600fd",
+    "semantic_hash": ""
+  },
+  "packages/router/src/lazy-component.specs.md": {
+    "mtime": 1782929150.8131945,
+    "ast_hash": "e07f735fa5403e968a08ab74b77d1354",
+    "semantic_hash": ""
+  },
+  "website/src/routes/doc-page-impl.ts": {
+    "mtime": 1782929576.0094888,
+    "ast_hash": "3a2558991480d0d349f0e820c73de172",
     "semantic_hash": ""
   }
 }
