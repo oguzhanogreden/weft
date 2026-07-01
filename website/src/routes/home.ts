@@ -49,8 +49,11 @@ function Hero(): Renderable {
       "Weft is an Effect-native reactive DOM library — streams drive every update, on the server and in the browser, with no virtual DOM and no JSX.",
     ),
     h.div({ class: "home-hero__cta" }, [
-      h.a({ href: GETTING_STARTED, class: "home-btn home-btn--primary" }, "Get started"),
-      h.a({ href: REPO_URL, class: "home-btn", target: "_blank", rel: "noreferrer" }, "GitHub"),
+      h.a({ href: GETTING_STARTED, class: "btn btn-primary" }, "Get started"),
+      h.a(
+        { href: REPO_URL, class: "btn btn-outline", target: "_blank", rel: "noreferrer" },
+        "GitHub",
+      ),
     ]),
   ]);
 }
@@ -68,9 +71,11 @@ function Differentiators(): Renderable {
   return h.section(
     { class: "home-diffs" },
     DIFFERENTIATORS.map((item) =>
-      h.div({ class: "home-diff" }, [
-        h.h3({ class: "home-diff__title" }, item.title),
-        h.p({ class: "home-diff__body" }, item.body),
+      h.div({ class: "card bg-base-200" }, [
+        h.div({ class: "card-body" }, [
+          h.h3({ class: "card-title home-diff__title" }, item.title),
+          h.p({ class: "home-diff__body" }, item.body),
+        ]),
       ]),
     ),
   );

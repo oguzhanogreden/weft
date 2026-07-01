@@ -34,19 +34,24 @@ function pathnameOf(url: string): string {
 
 /** The static top bar: wordmark, version, GitHub link, and an inert search placeholder. */
 export function TopBar(): Renderable {
-  return h.header({ class: "docs-topbar" }, [
+  return h.header({ class: "docs-topbar navbar" }, [
     h.a({ href: "/", class: "docs-topbar__brand" }, "Weft"),
     h.span({ class: "docs-topbar__version" }, VERSION),
     h.div({ class: "docs-topbar__spacer" }),
     h.input({
       type: "search",
-      class: "docs-topbar__search",
+      class: "docs-topbar__search input input-bordered input-sm",
       placeholder: "Search (coming soon)",
       disabled: true,
       "aria-label": "Search (coming soon)",
     }),
     h.a(
-      { href: REPO_URL, class: "docs-topbar__github", target: "_blank", rel: "noreferrer" },
+      {
+        href: REPO_URL,
+        class: "docs-topbar__github btn btn-ghost btn-sm",
+        target: "_blank",
+        rel: "noreferrer",
+      },
       "GitHub",
     ),
   ]);
