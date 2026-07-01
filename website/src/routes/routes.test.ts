@@ -44,6 +44,14 @@ describe("website routes (SSR integration)", () => {
     assert.match(html, /name="description"/);
   });
 
+  it("DS: the document root activates the dark DaisyUI/Radix theme", async () => {
+    const { html } = await render("/docs/guides/getting-started");
+    // `class="dark"` resolves the Radix dark-scale vars (scoped to `.dark`);
+    // `data-theme="weft-dark"` selects the DaisyUI theme. See design-system.specs.md.
+    assert.match(html, /<html[^>]*class="dark"[^>]*>/);
+    assert.match(html, /<html[^>]*data-theme="weft-dark"[^>]*>/);
+  });
+
   it("AC2: /docs aliases to the first doc (getting-started)", async () => {
     const { html, status } = await render("/docs");
     assert.equal(status, 200);
