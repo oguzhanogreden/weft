@@ -9,7 +9,7 @@
  * singleton.
  */
 
-import type { DocModel } from "./markdown-loader";
+import type { DocMeta } from "./markdown-loader";
 
 /** A single sidebar / prev-next link. */
 export type NavLink = {
@@ -56,7 +56,7 @@ function labelFor(section: string): string {
 }
 
 /** Route path for a doc: `api` docs map to `/api/:pkg`, everything else to `/docs/:section/:slug`. */
-function linkPath(doc: DocModel): string {
+function linkPath(doc: DocMeta): string {
   return doc.category === "api" ? `/api/${doc.slug}` : `/docs/${doc.category}/${doc.slug}`;
 }
 
@@ -71,7 +71,7 @@ function compareSections(a: string, b: string): number {
 }
 
 /** Orders two docs within a group by `order`, tie-broken deterministically by `title`. */
-function compareDocs(a: DocModel, b: DocModel): number {
+function compareDocs(a: DocMeta, b: DocMeta): number {
   // Infinity - Infinity is NaN (falsy) → falls through to the title tie-break.
   return (
     a.frontmatter.order - b.frontmatter.order ||
@@ -80,8 +80,8 @@ function compareDocs(a: DocModel, b: DocModel): number {
 }
 
 /** Builds grouped/ordered nav data from a doc set. Pure — same input yields the same nav. */
-export function buildNav(docs: readonly DocModel[]): NavData {
-  const bySection = new Map<string, DocModel[]>();
+export function buildNav(docs: readonly DocMeta[]): NavData {
+  const bySection = new Map<string, DocMeta[]>();
   for (const doc of docs) {
     const bucket = bySection.get(doc.category);
     if (bucket) bucket.push(doc);

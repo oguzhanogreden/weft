@@ -10,12 +10,12 @@
  * instead.
  */
 
-import { getAllDocs } from "virtual:weft-docs";
+import { getAllMeta, loadDocTree } from "virtual:weft-docs";
 import { Layer } from "effect";
 import { Docs, type DocsService, makeDocs } from "./docs-service";
 
-/** The documentation model baked at build time. */
-export const liveDocs: DocsService = makeDocs(getAllDocs());
+/** The documentation model: metadata baked at build time, trees lazily fetched per doc. */
+export const liveDocs: DocsService = makeDocs(getAllMeta(), loadDocTree);
 
 /** The `Docs` service layer over the build-time model, for the render-time `context` seam. */
 export const DocsLive: Layer.Layer<Docs> = Layer.succeed(Docs, liveDocs);

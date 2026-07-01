@@ -2,10 +2,13 @@
  * Vite plugin that bakes `docs/**\/*.md` into the `virtual:weft-docs` module, and the
  * hand-authored landing-page hero snippet into `virtual:weft-home-snippet`.
  *
- * On `load` it globs the docs tree, runs each file through `parseDoc`, and emits a
- * pure-data module exporting `getAllDocs()` / `getDoc(category, slug)`. The doc model
- * is therefore resolved once at build time and imported as plain data by both the
- * server and client bundles — no markdown/highlighter code reaches the browser. The
+ * On `load` it globs the docs tree, runs each file through `parseDoc`, and emits a light
+ * index module (`getAllMeta()` — every doc minus its `tree` — plus `loadDocTree()`) and
+ * one lazy `virtual:weft-doc/<category>/<slug>` module per doc holding that doc's `tree`.
+ * The heavy hast trees are thus code-split per doc and stay out of the initial client
+ * graph; only the current page's tree is fetched (see `docs-split.specs.md`). The doc
+ * model is resolved once at build time and imported as plain data by both the server and
+ * client bundles — no markdown/highlighter code reaches the browser. The
  * home snippet is highlighted by the same pipeline and exported as a `tree` the
  * landing page renders via `renderHast`. In dev it watches the docs tree and triggers
  * a reload when a `.md` file changes.
@@ -20,8 +23,22 @@ const VIRTUAL_ID = "virtual:weft-docs";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const SNIPPET_ID = "virtual:weft-home-snippet";
 const SNIPPET_RESOLVED_ID = `\0${SNIPPET_ID}`;
+/** Prefix for the per-doc tree modules — `virtual:weft-doc/<category>/<slug>`, one lazy chunk each. */
+const DOC_PREFIX = "virtual:weft-doc/";
+const DOC_RESOLVED_PREFIX = `\0${DOC_PREFIX}`;
 /** Sentinel for `Infinity` (not JSON-representable) — replaced with a JS literal in the emitted module. */
 const INFINITY_TOKEN = "__WEFT_INFINITY__";
+
+/** JSON-stringifies `value`, emitting `Infinity` (from `frontmatter.order`) as a JS literal. */
+function toLiteral(value: unknown): string {
+  const json = JSON.stringify(value, (_key, v) => (v === Infinity ? INFINITY_TOKEN : v));
+  return json.replaceAll(`"${INFINITY_TOKEN}"`, "Infinity");
+}
+
+/** The `(category, slug)` key that joins a doc to its route and per-doc module. */
+function docKey(doc: Pick<DocModel, "category" | "slug">): string {
+  return `${doc.category}/${doc.slug}`;
+}
 
 /** The landing-page code teaser, highlighted at build time through the doc pipeline. */
 const HOME_SNIPPET = `---
@@ -73,37 +90,66 @@ async function loadAllDocs(docsRoot: string): Promise<DocModel[]> {
   return docs;
 }
 
-/** Emits the `virtual:weft-docs` module source for a resolved doc set. */
-function toModuleSource(docs: readonly DocModel[]): string {
-  const json = JSON.stringify(docs, (_key, value) => (value === Infinity ? INFINITY_TOKEN : value));
-  const literal = json.replaceAll(`"${INFINITY_TOKEN}"`, "Infinity");
+/**
+ * Emits the `virtual:weft-docs` index module: the light metadata manifest (`getAllMeta`,
+ * every doc minus its `tree`) plus `loadDocTree`, a static map of `import()` thunks — one
+ * statically-analyzable specifier per doc — so each `tree` is a lazily-loaded chunk that
+ * never enters the initial client graph (see `docs-split.specs.md`).
+ */
+function toIndexModuleSource(docs: readonly DocModel[]): string {
+  const metas = docs.map(({ tree: _tree, ...meta }) => meta);
+  const loaders = docs
+    .map(
+      (doc) =>
+        `  ${JSON.stringify(docKey(doc))}: () => import(${JSON.stringify(DOC_PREFIX + docKey(doc))}),`,
+    )
+    .join("\n");
   return [
-    `const docs = ${literal};`,
-    `const byKey = new Map(docs.map((d) => [d.category + "/" + d.slug, d]));`,
-    `export const getAllDocs = () => docs;`,
-    `export const getDoc = (category, slug) => byKey.get(category + "/" + slug);`,
+    `const meta = ${toLiteral(metas)};`,
+    `const loaders = {\n${loaders}\n};`,
+    `export const getAllMeta = () => meta;`,
+    `export const loadDocTree = (category, slug) => {`,
+    `  const load = loaders[category + "/" + slug];`,
+    `  return load ? load().then((m) => m.tree) : Promise.resolve(undefined);`,
+    `};`,
     "",
   ].join("\n");
+}
+
+/** Emits a per-doc tree module (`virtual:weft-doc/<category>/<slug>`) for the given key. */
+function toDocModuleSource(docs: readonly DocModel[], key: string): string {
+  const doc = docs.find((d) => docKey(d) === key);
+  if (doc === undefined) throw new Error(`Unknown doc module: virtual:weft-doc/${key}`);
+  return `export const tree = ${toLiteral(doc.tree)};\n`;
 }
 
 /** Builds the `virtual:weft-docs` plugin for a given absolute `docsRoot`. */
 export function weftDocs(options: { readonly docsRoot: string }): Plugin {
   const docsRoot = toPosix(options.docsRoot);
+  // Parse the docs tree once; the index module and every per-doc module read this one
+  // resolved set. Cleared on a dev `.md` change so the next request re-globs (below).
+  let cache: Promise<DocModel[]> | undefined;
+  const allDocs = (): Promise<DocModel[]> => (cache ??= loadAllDocs(docsRoot));
   return {
     name: "weft-docs",
     resolveId(id) {
       if (id === VIRTUAL_ID) return RESOLVED_ID;
       if (id === SNIPPET_ID) return SNIPPET_RESOLVED_ID;
+      if (id.startsWith(DOC_PREFIX)) return `\0${id}`;
       return undefined;
     },
     async load(id) {
-      if (id === RESOLVED_ID) return toModuleSource(await loadAllDocs(docsRoot));
+      if (id === RESOLVED_ID) return toIndexModuleSource(await allDocs());
+      if (id.startsWith(DOC_RESOLVED_PREFIX)) {
+        return toDocModuleSource(await allDocs(), id.slice(DOC_RESOLVED_PREFIX.length));
+      }
       if (id === SNIPPET_ID || id === SNIPPET_RESOLVED_ID) return snippetModuleSource(docsRoot);
       return undefined;
     },
     configureServer(server) {
       const reload = (file: string): void => {
         if (!toPosix(file).startsWith(docsRoot) || !file.endsWith(".md")) return;
+        cache = undefined;
         const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
         if (mod) server.moduleGraph.invalidateModule(mod);
         server.ws.send({ type: "full-reload" });

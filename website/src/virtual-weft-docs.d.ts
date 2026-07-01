@@ -1,13 +1,16 @@
 /**
- * Ambient type for the build-time `virtual:weft-docs` module emitted by the
- * `weftDocs` Vite plugin (`src/lib/docs-plugin.ts`). Lets `nav.ts`, `routes/docs.ts`,
- * and `routes/api.ts` import the baked doc model as typed, pure data.
+ * Ambient types for the build-time modules emitted by the `weftDocs` Vite plugin
+ * (`src/lib/docs-plugin.ts`). `virtual:weft-docs` is the light index (metadata manifest +
+ * lazy tree loader); each `virtual:weft-doc/<category>/<slug>` is one doc's `tree`, split
+ * into its own chunk (see `docs-split.specs.md`).
  */
 declare module "virtual:weft-docs" {
-  import type { DocModel } from "~/lib/markdown-loader";
+  import type { DocMeta, HastRoot } from "~/lib/markdown-loader";
 
-  export const getAllDocs: () => DocModel[];
-  export const getDoc: (category: string, slug: string) => DocModel | undefined;
+  /** Every doc's metadata (no `tree`). Static — always in the initial client graph. */
+  export const getAllMeta: () => DocMeta[];
+  /** Resolves a doc's `tree` from its lazy per-doc chunk, or `undefined` for an unknown key. */
+  export const loadDocTree: (category: string, slug: string) => Promise<HastRoot | undefined>;
 }
 
 declare module "virtual:weft-home-snippet" {

@@ -83,6 +83,14 @@ export type DocModel = {
   readonly tree: HastRoot;
 };
 
+/**
+ * The light per-doc record: a {@link DocModel} without its heavy `tree`. Powers nav,
+ * routing, the TOC, and per-route `<title>`/meta — everything except rendering the doc
+ * body — so it can ship to the client for **every** doc while each `tree` stays a lazy
+ * per-doc chunk (see `docs-split.specs.md`).
+ */
+export type DocMeta = Omit<DocModel, "tree">;
+
 /** Element tags dropped wholesale (content and all) — defense in depth; our docs never emit them. */
 const DROPPED_TAGS = new Set(["script", "style", "iframe", "object", "embed", "base"]);
 
