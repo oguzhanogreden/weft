@@ -5,7 +5,7 @@ import { makeRouter } from "./compile";
 import { RouterParamsError } from "./errors";
 import type { RouteMatch } from "./matcher";
 import type { Fields, FieldsType } from "./route-tree";
-import { makeLayout, makeRoute } from "./route-tree";
+import { lazyComponent, makeLayout, makeRoute } from "./route-tree";
 
 /**
  * The universal router service. Provided per render — by `RouterLive` on the
@@ -179,6 +179,8 @@ export namespace Router {
   export const route = makeRoute;
   /** Declares a layout wrapping an injected outlet. See {@link makeLayout}. */
   export const layout = makeLayout;
+  /** Wraps a dynamic-import loader as a lazy component slot. See {@link lazyComponent}. */
+  export const lazy = lazyComponent;
   /** Seals a route tree into a `RouterDef`. See {@link makeRouter}. */
   export const router = makeRouter;
   /** The injected outlet service value (yieldable Tag). See {@link OutletTag}. */

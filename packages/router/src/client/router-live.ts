@@ -1,6 +1,6 @@
 import { AppRpcClientTag } from "@weftui/core";
 import { FetchHttpClient, HttpApiClient } from "@effect/platform";
-import { type RpcGroup, RpcClient, RpcSerialization } from "@effect/rpc";
+import type { RpcGroup } from "@effect/rpc";
 import {
   Context,
   Effect,
@@ -168,6 +168,11 @@ export function RouterLive<R>(
             ),
         });
       } else {
+        // `@effect/rpc` (and its `msgpackr` serialization dependency) is loaded
+        // lazily so it stays out of the base client bundle: an app with no
+        // `Boundary.rpc` never passes `rpc`, so this branch — and the async
+        // chunk it pulls — never runs. Only rpc-enabled apps pay the cost.
+        const { RpcClient, RpcSerialization } = yield* Effect.promise(() => import("@effect/rpc"));
         const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
         const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
           Effect.provide(
