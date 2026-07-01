@@ -1,6 +1,90 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
+ * Design system — DaisyUI + Radix Colors (Indigo accent + Slate gray, dark).
+ * See src/design-system.specs.md. Radix dark scales scope their vars to
+ * `.dark, .dark-theme`, so <html> carries class="dark" (set in shell.ts).
+ * The `data-theme="weft-dark"` attribute selects the DaisyUI theme below.
+ * ------------------------------------------------------------------------- */
+
+@import "@radix-ui/colors/slate-dark.css";
+@import "@radix-ui/colors/indigo-dark.css";
+@import "@radix-ui/colors/blue-dark.css";
+@import "@radix-ui/colors/green-dark.css";
+@import "@radix-ui/colors/amber-dark.css";
+@import "@radix-ui/colors/red-dark.css";
+
+@plugin "daisyui";
+
+/* Semantic tokens mapped from Radix dark steps (composing-a-palette roles):
+ * 1-2 backgrounds · 3-5 component bg/hover/active · 6-8 borders ·
+ * 9-10 solid fills · 11-12 text. */
+@plugin "daisyui/theme" {
+	name: "weft-dark";
+	default: true;
+	color-scheme: dark;
+
+	--color-base-100: var(--slate-1);
+	--color-base-200: var(--slate-2);
+	--color-base-300: var(--slate-3);
+	--color-base-content: var(--slate-12);
+
+	--color-neutral: var(--slate-4);
+	--color-neutral-content: var(--slate-12);
+
+	--color-primary: var(--indigo-9);
+	--color-primary-content: white;
+	--color-secondary: var(--indigo-10);
+	--color-secondary-content: white;
+	--color-accent: var(--indigo-11);
+	--color-accent-content: var(--slate-1);
+
+	--color-info: var(--blue-9);
+	--color-info-content: white;
+	--color-success: var(--green-9);
+	--color-success-content: white;
+	--color-warning: var(--amber-9);
+	--color-warning-content: var(--slate-1);
+	--color-error: var(--red-9);
+	--color-error-content: white;
+
+	--radius-selector: 0.5rem;
+	--radius-field: 0.5rem;
+	--radius-box: 0.75rem;
+}
+
+/* Expose the raw Radix steps as Tailwind color utilities (bg-slate-2,
+ * border-slate-6, text-indigo-11, …) and as `var(--color-*)` for the bespoke
+ * component CSS below. Values resolve to the Radix dark scale under `.dark`. */
+@theme {
+	--color-slate-1: var(--slate-1);
+	--color-slate-2: var(--slate-2);
+	--color-slate-3: var(--slate-3);
+	--color-slate-4: var(--slate-4);
+	--color-slate-5: var(--slate-5);
+	--color-slate-6: var(--slate-6);
+	--color-slate-7: var(--slate-7);
+	--color-slate-8: var(--slate-8);
+	--color-slate-9: var(--slate-9);
+	--color-slate-10: var(--slate-10);
+	--color-slate-11: var(--slate-11);
+	--color-slate-12: var(--slate-12);
+
+	--color-indigo-1: var(--indigo-1);
+	--color-indigo-2: var(--indigo-2);
+	--color-indigo-3: var(--indigo-3);
+	--color-indigo-4: var(--indigo-4);
+	--color-indigo-5: var(--indigo-5);
+	--color-indigo-6: var(--indigo-6);
+	--color-indigo-7: var(--indigo-7);
+	--color-indigo-8: var(--indigo-8);
+	--color-indigo-9: var(--indigo-9);
+	--color-indigo-10: var(--indigo-10);
+	--color-indigo-11: var(--indigo-11);
+	--color-indigo-12: var(--indigo-12);
+}
+
+/* ---------------------------------------------------------------------------
  * Code block (src/components/code-block.ts)
  * Minimal technical aesthetic: dark pane, mono, language label + copy button.
  * Shiki token colors come from inline styles on the token spans; the pane
