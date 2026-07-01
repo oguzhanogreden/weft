@@ -3,16 +3,19 @@ import { RouterServer } from "@weftui/router/server";
 import { Effect } from "effect";
 import { describe, it } from "vite-plus/test";
 import { App } from "../app";
+import { DocsLive } from "../lib/docs-live";
 import { documentShell } from "../layouts/shell";
 
 // The app reads the real baked doc model (`virtual:weft-docs`, resolved by the
-// `weftDocs` plugin registered in the root vite config) — no module mocking. These
-// assertions target structure and the known first docs, not exact prose.
+// `weftDocs` plugin registered in the root vite config) — no module mocking. The
+// `Docs` service is provided through the router's render-time `context` seam as the
+// build-time `DocsLive` layer. These assertions target structure and the known first
+// docs, not exact prose.
 const document = documentShell("/src/entry-client.ts");
 
 /** Renders a URL through the real app, returning `{ html, status }`. */
 function render(url: string): Promise<{ html: string; status: number }> {
-  return Effect.runPromise(RouterServer.render(App, { document, url }));
+  return Effect.runPromise(RouterServer.render(App, { document, url, context: DocsLive }));
 }
 
 describe("website routes (SSR integration)", () => {

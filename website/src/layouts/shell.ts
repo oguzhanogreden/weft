@@ -4,15 +4,15 @@
  * Builds `<html>/<head>/<body>` with the `#root` mount point and the client entry
  * `<script>`, splicing the app via `yield* Router.Outlet` (injected per request by
  * `RouterServer`). The `<title>` and meta description are derived per request from the
- * current route's doc frontmatter (read from the `liveDocs` model). The client entry
- * `src` differs between dev and prod — dev points at the raw `/src/entry-client.ts`,
- * prod at the hashed build artifact — so it is a parameter rather than hardcoded.
+ * current route's doc frontmatter (read from the `Docs` service, injected via the
+ * router's render-time `context` seam). The client entry `src` differs between dev and
+ * prod — dev points at the raw `/src/entry-client.ts`, prod at the hashed build
+ * artifact — so it is a parameter rather than hardcoded.
  */
 
 import { Component, h } from "@weftui/core";
 import { Router } from "@weftui/router";
-import { liveDocs } from "../lib/docs-live";
-import type { DocsService } from "../lib/docs-service";
+import { Docs, type DocsService } from "../lib/docs-service";
 
 /** Default landing meta for non-doc routes. */
 const DEFAULT_META = {
@@ -42,9 +42,10 @@ function metaFor(path: string, get: DocsService["get"]): { title: string; descri
 /** Builds the document shell `component` thunk for a given client entry `src`. */
 export const documentShell = (clientEntry: string) =>
   Component.gen(function* () {
+    const docs = yield* Docs;
     const router = yield* Router;
     const match = yield* router.currentMatch.get;
-    const meta = metaFor(pathnameOf(match.url), liveDocs.get);
+    const meta = metaFor(pathnameOf(match.url), docs.get);
     const outlet = yield* Router.Outlet;
     return yield* h.html({ lang: "en" }, [
       h.head([

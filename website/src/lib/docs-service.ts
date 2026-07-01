@@ -1,14 +1,17 @@
 /**
  * The documentation model surface.
  *
- * `makeDocs` builds an indexed, nav-derived view over a doc set. The build-time-backed
- * singleton lives in `docs-live.ts` (`liveDocs`), which route components and the
- * document shell import directly — a plain module value rather than an Effect service,
- * because the router renders route leaves in a fixed context that an app-provided
- * service cannot reach (see `packages/router/ambient-context-propagation.specs.md`).
- * `makeDocs` stays pure and dependency-free so it is unit-testable with fixtures.
+ * `makeDocs` builds an indexed, nav-derived view over a doc set, exposed to route
+ * components / layouts / the document shell as the {@link Docs} Effect service. The
+ * build-time-backed {@link DocsService} value and its `DocsLive` layer live in
+ * `docs-live.ts`; the layer is provided through `RouterServer.render` /
+ * `RouterLive`'s render-time `context` seam (see
+ * `packages/router/ambient-context-propagation.specs.md`), so every route leaf can
+ * `yield* Docs`. `makeDocs` stays pure and dependency-free so it is unit-testable
+ * with fixtures (and tests provide a fixture `Docs` layer).
  */
 
+import { Context } from "effect";
 import type { DocModel } from "./markdown-loader";
 import { type NavData, buildNav } from "./nav";
 
@@ -21,6 +24,13 @@ export interface DocsService {
   /** The nav manifest derived from `all` (groups, flat order, first path, neighbours). */
   readonly nav: NavData;
 }
+
+/**
+ * The `Docs` Effect service: the app-wide documentation model, injected through the
+ * router's render-time `context` seam and read by any route/layout/shell via
+ * `yield* Docs`. `DocsLive` (build-time model) and fixture layers live in `docs-live.ts`.
+ */
+export class Docs extends Context.Tag("website/Docs")<Docs, DocsService>() {}
 
 /** Builds a `DocsService` from a doc set: an index map plus the derived nav. */
 export function makeDocs(all: readonly DocModel[]): DocsService {

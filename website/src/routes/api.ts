@@ -14,12 +14,12 @@
 import { Component } from "@weftui/core";
 import { Router, notFound } from "@weftui/router";
 import { Schema } from "effect";
-import { liveDocs } from "./../lib/docs-live";
+import { Docs, type DocsService } from "./../lib/docs-service";
 import { DocPage } from "./doc-page";
 
 /** The slug of the first API doc in nav order (e.g. `"core"`), if any. */
-function firstApiSlug(): string | undefined {
-  const group = liveDocs.nav.groups.find((g) => g.section === "api");
+function firstApiSlug(nav: DocsService["nav"]): string | undefined {
+  const group = nav.groups.find((g) => g.section === "api");
   const path = group?.links[0]?.path;
   return path?.split("/").filter((p) => p.length > 0)[1];
 }
@@ -27,8 +27,9 @@ function firstApiSlug(): string | undefined {
 /** `/api` → render the first API doc (alias to /api/core). */
 export const apiIndexRoute = Router.route("api", {
   component: Component.gen(function* () {
-    const slug = firstApiSlug();
-    const doc = slug === undefined ? undefined : liveDocs.get("api", slug);
+    const docs = yield* Docs;
+    const slug = firstApiSlug(docs.nav);
+    const doc = slug === undefined ? undefined : docs.get("api", slug);
     if (doc === undefined) return yield* notFound();
     return yield* DocPage(doc);
   }),
@@ -37,8 +38,9 @@ export const apiIndexRoute = Router.route("api", {
 /** `/api/:pkg` → the matching API reference page, or 404. */
 export const apiRoute = Router.route("api/:pkg", {
   component: Component.gen(function* () {
+    const docs = yield* Docs;
     const { pkg } = yield* Router.params({ pkg: Schema.String });
-    const doc = liveDocs.get("api", pkg);
+    const doc = docs.get("api", pkg);
     if (doc === undefined) return yield* notFound();
     return yield* DocPage(doc);
   }),

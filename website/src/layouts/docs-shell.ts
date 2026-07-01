@@ -17,8 +17,7 @@ import { Component, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { Router } from "@weftui/router";
 import { Stream } from "effect";
-import { liveDocs } from "../lib/docs-live";
-import type { DocsService } from "../lib/docs-service";
+import { Docs, type DocsService } from "../lib/docs-service";
 import type { DocHeading } from "../lib/markdown-loader";
 import type { NavGroup, NavNeighbours } from "../lib/nav";
 
@@ -134,11 +133,12 @@ function headingsForPath(path: string, get: DocsService["get"]): readonly DocHea
 
 /**
  * The docs shell component. Reads the live route path from `Router.currentMatch` and
- * drives the sidebar highlight, TOC, and prev/next reactively from the `liveDocs`
- * model, while the outlet holds the page content. Wrap with
- * `Router.layout({ component: DocsShell }, [routes])`.
+ * drives the sidebar highlight, TOC, and prev/next reactively from the `Docs` service
+ * (injected via the router's render-time `context` seam), while the outlet holds the
+ * page content. Wrap with `Router.layout({ component: DocsShell }, [routes])`.
  */
 export const DocsShell = Component.gen(function* () {
+  const docs = yield* Docs;
   const router = yield* Router;
   const outlet = yield* Router.Outlet;
   const path = Stream.map(router.currentMatch.changes, (match) => pathnameOf(match.url));
@@ -147,14 +147,14 @@ export const DocsShell = Component.gen(function* () {
     TopBar(),
     h.div({ class: "docs-shell__body" }, [
       h.aside({ class: "docs-shell__sidebar" }, [
-        Stream.map(path, (current) => renderSidebar(liveDocs.nav.groups, current)),
+        Stream.map(path, (current) => renderSidebar(docs.nav.groups, current)),
       ]),
       h.main({ class: "docs-shell__content" }, [
         h.article({ class: "docs-content" }, [outlet]),
-        Stream.map(path, (current) => renderPrevNext(liveDocs.nav.findNav(current))),
+        Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
       ]),
       h.aside({ class: "docs-shell__toc" }, [
-        Stream.map(path, (current) => renderToc(headingsForPath(current, liveDocs.get))),
+        Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get))),
       ]),
     ]),
   ]);

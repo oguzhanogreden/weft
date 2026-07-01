@@ -19,6 +19,31 @@ import { installLinkInterceptor } from "./link";
 /** Path the client rpc protocol posts to; mirrors `RouterServer`'s server route. */
 const RPC_PATH = "/_eui/rpc";
 
+/**
+ * The residual app services a caller must still provide through the {@link RouterLiveOptions.context}
+ * seam — a def's aggregate `R` minus the services `RouterLive` already threads
+ * (`Router`, `Router.Outlet`, `AppRpcClientTag`). The client mirror of
+ * `RouterServer.AppServices`; resolves to `never` for an app with no app-wide service.
+ */
+export type AppServices<R> = Exclude<R, Router | Router.Outlet | AppRpcClientTag>;
+
+/** True only for the exact `any` type — a loosely-typed `RouterDef<any, any>`. */
+// oxlint-disable-next-line typescript/no-explicit-any
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+/**
+ * Conditionally shapes the `context` field: **required** when the def has statically
+ * known residual {@link AppServices}, **absent** when it has none, and **optional**
+ * for a loosely-typed `RouterDef<any, any>`. Client parity with the server seam (AC4)
+ * is thus a compile-time guarantee, and no-service / loosely-typed apps stay unchanged (AC3).
+ */
+export type ContextOption<R> = [AppServices<R>] extends [never]
+  ? { readonly context?: undefined }
+  : IsAny<AppServices<R>> extends true
+    ? // oxlint-disable-next-line typescript/no-explicit-any
+      { readonly context?: Layer.Layer<any, never, never> }
+    : { readonly context: Layer.Layer<AppServices<R>, never, never> };
+
 /** Options for {@link RouterLive}. */
 export interface RouterLiveOptions {
   /**
@@ -71,11 +96,11 @@ function normalizeTo(to: string): string {
  * refetch and client-first mount) without depending on this package or
  * `@effect/rpc`.
  */
-export function RouterLive(
-  def: RouterDef,
-  options: RouterLiveOptions = {},
-): Layer.Layer<Router | AppRpcClientTag> {
-  return Layer.scopedContext(
+export function RouterLive<R>(
+  def: RouterDef<any, R>,
+  options: RouterLiveOptions & ContextOption<R> = {} as RouterLiveOptions & ContextOption<R>,
+): Layer.Layer<Router | AppRpcClientTag | AppServices<R>> {
+  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.scopedContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
       const runtime = yield* Effect.runtime<never>();
@@ -168,4 +193,16 @@ export function RouterLive(
       return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));
     }),
   );
+
+  // The render-time provide seam (AC4): the app-wide `context` Layer is merged into
+  // the router layer, so the `ManagedRuntime` the client mounts under carries the
+  // app services and every hydrated route/layout leaf reads them via `yield* Service`.
+  // No context ⇒ the bare `core` layer, unchanged for `rpc`-only / no-service apps.
+  const context = (options as { readonly context?: Layer.Layer<AppServices<R>, never, never> })
+    .context;
+  // When no context is provided the residual `AppServices<R>` is empty, so widening
+  // `core` to the declared return type is sound (nothing extra is actually promised).
+  return (context === undefined ? core : Layer.merge(core, context)) as Layer.Layer<
+    Router | AppRpcClientTag | AppServices<R>
+  >;
 }

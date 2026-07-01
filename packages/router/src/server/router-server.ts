@@ -58,6 +58,14 @@ export namespace RouterServer {
    * params), so the document may use either. Mirrors the route/layout `component` slot,
    * so it accepts both a plain thunk and a `Component.make` / `Component.gen` component.
    * `<!DOCTYPE html>` is prepended at serialize time.
+   *
+   * `context` is the render-time provide seam (spec:
+   * `ambient-context-propagation.specs.md`): an app-wide `Layer` provided to the
+   * document shell **and** every route/layout leaf. It is required exactly when the
+   * def carries residual app services ({@link AppServices} — its aggregate `R` minus
+   * the `Router` / `Router.Outlet` / `AppRpcClientTag` the router already threads) and
+   * disallowed otherwise, so a missing provide is a compile error and `rpc`-only /
+   * no-service apps stay unchanged (surfaced via {@link ContextOption} at each entry).
    */
   export interface Options {
     /** The document shell slot; reads the app to splice via `yield* Router.Outlet`. */
@@ -70,6 +78,40 @@ export namespace RouterServer {
      */
     readonly rpc?: RpcOptions;
   }
+
+  /**
+   * The residual app services a caller must still provide through the {@link Options.context}
+   * seam: a def's aggregate requirement `R` **minus** the services the router already
+   * threads in per render — `Router` and `Router.Outlet` (provided by the outlet /
+   * document plumbing) and `AppRpcClientTag` (provided from the `rpc` option). When this
+   * resolves to `never` the app has no app-wide service to inject and `context` is disallowed.
+   */
+  export type AppServices<R> = Exclude<R, Router | Router.Outlet | AppRpcClientTag>;
+
+  /** True only for the exact `any` type — a loosely-typed `RouterDef<any, any>`. */
+  // oxlint-disable-next-line typescript/no-explicit-any
+  type IsAny<T> = 0 extends 1 & T ? true : false;
+
+  /**
+   * Conditionally shapes the `context` field at each entry point: **required** (a
+   * `Layer` supplying every residual {@link AppServices}) when the def has statically
+   * known app-wide services, **absent** when it has none, and **optional** for a
+   * loosely-typed `RouterDef<any, any>` (residual services can't be tracked, so the
+   * seam is not forced). This makes a missing provide a compile error for a precisely
+   * typed def (AC2) while keeping no-service / loosely-typed apps unchanged (AC3).
+   */
+  export type ContextOption<R> = [AppServices<R>] extends [never]
+    ? { readonly context?: undefined }
+    : IsAny<AppServices<R>> extends true
+      ? // oxlint-disable-next-line typescript/no-explicit-any
+        { readonly context?: Layer.Layer<any, never, never> }
+      : { readonly context: Layer.Layer<AppServices<R>, never, never> };
+
+  /** Internal options shape once the caller's `context` is erased to a loose `Layer`. */
+  type RenderOptions = Options & {
+    // oxlint-disable-next-line typescript/no-explicit-any
+    readonly context?: Layer.Layer<any, never, never>;
+  };
 
   /** The result of {@link render}. */
   export interface Rendered {
@@ -135,9 +177,15 @@ export namespace RouterServer {
     ).pipe(Layer.provide(rpc.handlers)) as Layer.Layer<AppRpcClientTag>;
   }
 
-  /** Renders the document shell — with `app` spliced via `Router.Outlet` — to a hydratable HTML string. */
+  /**
+   * Renders the document shell — with `app` spliced via `Router.Outlet` — to a
+   * hydratable HTML string. The whole tree (shell + every route/layout leaf) drains
+   * in this one `renderToStringHydratable` context, so the app-wide `options.context`
+   * Layer provided here reaches the leaves too (the render-time provide seam). No
+   * context ⇒ `Layer.empty`, a no-op.
+   */
   function renderDocument(
-    options: Options,
+    options: RenderOptions,
     app: Node<never, never>,
     router: Router["Type"],
   ): Effect.Effect<string, Error> {
@@ -145,6 +193,7 @@ export namespace RouterServer {
     return renderToStringHydratable(document).pipe(
       Effect.provideService(Router, router),
       Effect.provide(appRpcClientLayer(options.rpc)),
+      Effect.provide(options.context ?? Layer.empty),
     );
   }
 
@@ -156,7 +205,7 @@ export namespace RouterServer {
    */
   function renderNotFoundDirect(
     def: RouterDef,
-    options: Options,
+    options: RenderOptions,
     url: string,
     status: number,
   ): Effect.Effect<HttpServerResponse.HttpServerResponse, Error> {
@@ -175,7 +224,7 @@ export namespace RouterServer {
    */
   function renderNoMatch(
     def: RouterDef,
-    options: Options,
+    options: RenderOptions,
     url: string,
   ): Effect.Effect<HttpServerResponse.HttpServerResponse, Error> {
     const router = serverRouter({ _tag: "NotFound", url });
@@ -191,7 +240,7 @@ export namespace RouterServer {
    */
   function renderLeaf(
     def: RouterDef,
-    options: Options,
+    options: RenderOptions,
     matched: Extract<RouteMatch, { _tag: "Matched" }>,
   ): Effect.Effect<HttpServerResponse.HttpServerResponse, Error> {
     const router = serverRouter(matched);
@@ -232,7 +281,7 @@ export namespace RouterServer {
    */
   function renderLeafStreaming(
     def: RouterDef,
-    options: Options,
+    options: RenderOptions,
     matched: Extract<RouteMatch, { _tag: "Matched" }>,
   ): Effect.Effect<HttpServerResponse.HttpServerResponse, Error> {
     const router = serverRouter(matched);
@@ -246,6 +295,9 @@ export namespace RouterServer {
         Effect.provideService(Router, router),
         Effect.provideService(SuspenseFailureHandlerTag, notFoundSuspenseHandler(def)),
         Effect.provide(appRpcClientLayer(options.rpc)),
+        // Same render-time provide seam as the buffered path (renderDocument): the
+        // shell walk and every leaf drain in this context, so app-wide services reach them.
+        Effect.provide(options.context ?? Layer.empty),
         Scope.extend(scope),
         Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause))),
       );
@@ -287,11 +339,11 @@ export namespace RouterServer {
    */
   function webHandlerWith(
     def: RouterDef,
-    options: Options,
+    options: RenderOptions,
     cache: WeakMap<RouterDef, WeakMap<ComponentSlot, (request: Request) => Promise<Response>>>,
     leafRenderer: (
       def: RouterDef,
-      options: Options,
+      options: RenderOptions,
       matched: Extract<RouteMatch, { _tag: "Matched" }>,
     ) => Effect.Effect<HttpServerResponse.HttpServerResponse, Error>,
   ): (request: Request) => Promise<Response> {
@@ -376,7 +428,10 @@ export namespace RouterServer {
   }
 
   /** The buffered platform web handler (S2a). */
-  function webHandler(def: RouterDef, options: Options): (request: Request) => Promise<Response> {
+  function webHandler(
+    def: RouterDef,
+    options: RenderOptions,
+  ): (request: Request) => Promise<Response> {
     return webHandlerWith(def, options, handlerCache, renderLeaf);
   }
 
@@ -392,13 +447,16 @@ export namespace RouterServer {
    * with `<!DOCTYPE html>` prepended and the status sourced from the platform
    * pipeline (200, or 404 for a no-match / page-raised `RouterNotFound`).
    */
-  export function render(
-    def: RouterDef,
-    options: Options & { readonly url: string },
+  export function render<R>(
+    def: RouterDef<any, R>,
+    options: Options & { readonly url: string } & ContextOption<R>,
   ): Effect.Effect<Rendered, Error> {
+    // The public signature discharges the def's residual `R` via `ContextOption`; the
+    // conditional shape is erased to the loose `RenderOptions` for the runtime plumbing.
+    const opts = options as RenderOptions & { readonly url: string };
     return Effect.tryPromise({
       try: async () => {
-        const response = await webHandler(def, options)(new Request(absoluteUrl(options.url)));
+        const response = await webHandler(def, opts)(new Request(absoluteUrl(opts.url)));
         return { html: await response.text(), status: response.status };
       },
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),
@@ -411,11 +469,11 @@ export namespace RouterServer {
    * `text/html`. Suitable for bridging into a dev server (e.g. Vite) or any
    * Web-platform server.
    */
-  export function toWebHandler(
-    def: RouterDef,
-    options: Options,
+  export function toWebHandler<R>(
+    def: RouterDef<any, R>,
+    options: Options & ContextOption<R>,
   ): (request: Request) => Promise<Response> {
-    return webHandler(def, options);
+    return webHandler(def, options as RenderOptions);
   }
 
   /**
@@ -430,10 +488,15 @@ export namespace RouterServer {
    * `RouterNotFound` stay real 404s; `POST /_eui/rpc` delegation is unchanged.
    * `render` and `toWebHandler` remain fully buffered.
    */
-  export function toStreamingWebHandler(
-    def: RouterDef,
-    options: Options,
+  export function toStreamingWebHandler<R>(
+    def: RouterDef<any, R>,
+    options: Options & ContextOption<R>,
   ): (request: Request) => Promise<Response> {
-    return webHandlerWith(def, options, streamingHandlerCache, renderLeafStreaming);
+    return webHandlerWith(
+      def,
+      options as RenderOptions,
+      streamingHandlerCache,
+      renderLeafStreaming,
+    );
   }
 }

@@ -1,8 +1,10 @@
 import { Component, h } from "@weftui/core";
 import type { Node } from "@weftui/core";
-import { Context, Effect, Schema } from "effect";
+import { Context, Effect, Layer, Schema } from "effect";
 import { navigate, push, replace } from "~/client/navigation";
+import { RouterLive } from "~/client/router-live";
 import { href, Router, RouterApp, RouterParamsError } from "~/index";
+import { RouterServer } from "~/server/router-server";
 
 // ── Router.params / Router.query: typed values + RouterParamsError in E ────────
 
@@ -194,3 +196,71 @@ navigate(userRoute, { path: { id: 1 }, query: { nope: "x" } });
 // push / replace take a raw string and require the `Router` service.
 const _push: Effect.Effect<void, never, Router> = push("/about");
 const _replace: Effect.Effect<void, never, Router> = replace("/about");
+
+// ── Render-time context seam requiredness (AC2 / AC3) ──────────────────────────
+
+class Other extends Context.Tag("@test/Other")<Other, string>() {}
+
+const themedDoc = Component.make(() => h.div({}, "doc"));
+
+// A def whose leaf requires an app service ⇒ its `R` carries `Theme`.
+const themedDef = Router.router(
+  Router.layout(
+    {
+      component: Component.gen(function* () {
+        const outlet = yield* Router.Outlet;
+        return yield* outlet;
+      }),
+    },
+    [
+      Router.route("themed", {
+        component: Component.gen(function* () {
+          return yield* h.div({}, yield* Theme);
+        }),
+      }),
+    ],
+  ),
+  { notFound: () => h.div({}, "404") },
+);
+
+const ThemeLive = Layer.succeed(Theme, "dark");
+
+// Should compile — `context` supplies the residual `Theme` service (AC2 satisfied).
+RouterServer.render(themedDef, { document: themedDoc, url: "/themed", context: ThemeLive });
+RouterServer.toWebHandler(themedDef, { document: themedDoc, context: ThemeLive });
+RouterServer.toStreamingWebHandler(themedDef, { document: themedDoc, context: ThemeLive });
+
+// @ts-expect-error — `context` is required: the def needs `Theme` (AC2 — missing provide is a compile error).
+RouterServer.render(themedDef, { document: themedDoc, url: "/themed" });
+
+const wrongCtx = Layer.succeed(Other, "x");
+// @ts-expect-error — the context Layer must supply `Theme`, not an unrelated service.
+RouterServer.render(themedDef, { document: themedDoc, url: "/themed", context: wrongCtx });
+
+// Client parity (AC4): `RouterLive` requires the same `context` for a themed def.
+RouterLive(themedDef, { context: ThemeLive });
+
+// @ts-expect-error — client seam also requires `context` when the def has app services.
+RouterLive(themedDef, {});
+
+// A no-service def: `context` is disallowed, and both seams work with none (AC3).
+const staticDef = Router.router(
+  Router.layout(
+    {
+      component: Component.gen(function* () {
+        const outlet = yield* Router.Outlet;
+        return yield* outlet;
+      }),
+    },
+    [Router.route("", { component: Component.make(() => h.div({}, "home")) })],
+  ),
+  { notFound: () => h.div({}, "404") },
+);
+
+// Should compile — no residual services, so `context` may be omitted.
+RouterServer.render(staticDef, { document: themedDoc, url: "/" });
+RouterServer.toWebHandler(staticDef, { document: themedDoc });
+RouterLive(staticDef);
+
+// @ts-expect-error — a no-service def disallows `context` (nothing to provide).
+RouterServer.render(staticDef, { document: themedDoc, url: "/", context: ThemeLive });

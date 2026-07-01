@@ -16,16 +16,13 @@ catalog:
   effect: ^3.21.3
   tsx: ^4.22.4
   typescript: ^6.0.3
-  vite-plus: ^0.2.1
-  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite-plus: 0.2.1
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.1
   vitest: 4.1.9
 overrides:
   vite: "catalog:"
-  vitest: "catalog:"
 peerDependencyRules:
   allowAny:
     - vite
-    - vitest
   allowedVersions:
     vite: "*"
-    vitest: "*"

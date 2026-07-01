@@ -1,16 +1,19 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Component, h } from "@weftui/core";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Effect, Option, Schema } from "effect";
+import { Context, Effect, Layer, Option, Schema } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test } from "vite-plus/test";
 import { Router } from "~/index";
-import { RouterLive } from "~/client/router-live";
+import { RouterLive, type RouterLiveOptions } from "~/client/router-live";
 
 /** Minimal rpc group: the fixture has no `Boundary.rpc`, but `rpc` is required. */
 const NoopRpcs = RpcGroup.make(Rpc.make("Noop", { payload: Schema.Void, success: Schema.Void }));
 
 const Page = (label: string) => () => h.div({}, label);
+
+/** An app-wide service exercised through the render-time `context` seam (AC4). */
+class Greeting extends Context.Tag("test/Greeting")<Greeting, string>() {}
 
 /** A passthrough layout `component`: renders the injected outlet directly. */
 const passthrough = Component.gen(function* () {
@@ -46,7 +49,7 @@ afterEach(() => {
 });
 
 /** Reads the `Router` service exposed by `RouterLive(def, options)`. */
-function readService(options?: Partial<Parameters<typeof RouterLive>[1]>): Promise<Router["Type"]> {
+function readService(options?: Partial<RouterLiveOptions>): Promise<Router["Type"]> {
   return Effect.runPromise(
     Effect.scoped(
       Effect.provide(
@@ -105,5 +108,38 @@ describe("RouterLive without rpc (rpc optional)", () => {
     assert.ok(failure instanceof Error);
     assert.ok(failure.message.includes("GetStock"));
     assert.ok(failure.message.includes("rpc"));
+  });
+});
+
+/** A fixture whose leaf reads the `Greeting` app service, so the def's `R` carries it. */
+function greetingFixture() {
+  return Router.router(
+    Router.layout({ component: passthrough }, [
+      Router.route("", {
+        component: Component.gen(function* () {
+          return yield* h.div({}, yield* Greeting);
+        }),
+      }),
+    ]),
+    { notFound: () => h.h1({}, "404") },
+  );
+}
+
+describe("RouterLive render-time context seam (AC4)", () => {
+  test("AC4: a service provided via `context` is merged into the layer and read by the hydrated tree", async () => {
+    setupDom();
+    const value = await Effect.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.gen(function* () {
+            return yield* Greeting;
+          }),
+          // The same seam the client entry uses: the app service rides alongside
+          // `Router` / `AppRpcClientTag`, so a `yield* Greeting` in the tree resolves.
+          RouterLive(greetingFixture(), { context: Layer.succeed(Greeting, "hi-from-context") }),
+        ),
+      ),
+    );
+    assert.equal(value, "hi-from-context");
   });
 });

@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { Boundary, Component, h } from "@weftui/core";
 import type { Node } from "@weftui/core";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Deferred, Effect, Schema } from "effect";
+import { Context, Deferred, Effect, Layer, Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, notFound } from "~/index";
 import { RouterServer } from "~/server/router-server";
@@ -361,5 +361,69 @@ describe("RouterServer.toStreamingWebHandler (streaming SSR)", () => {
     const buffered = RouterServer.toWebHandler(def, { document, rpc });
     assert.equal(a, b);
     assert.notEqual(a, buffered);
+  });
+});
+
+// ── Render-time provide seam (ambient-context-propagation.specs.md, AC1) ───────
+
+/** An app-wide service that must reach the shell, layouts, and route leaves. */
+class Greeting extends Context.Tag("test/Greeting")<Greeting, { readonly text: string }>() {}
+
+/** A leaf that reads the app service — the core failing case from the spec. */
+const GreetingLeaf = Component.gen(function* () {
+  const g = yield* Greeting;
+  return yield* h.h1({}, g.text);
+});
+
+/** A layout that reads the app service alongside the injected outlet. */
+const GreetingLayout = Component.gen(function* () {
+  const g = yield* Greeting;
+  const outlet = yield* Router.Outlet;
+  return yield* h.div({ class: "greet-shell", "data-greet": g.text }, [outlet]);
+});
+
+const ctxDef = Router.router(
+  Router.layout({ component: GreetingLayout }, [Router.route("", { component: GreetingLeaf })]),
+  { notFound: NotFound },
+);
+
+/** The document shell also reads the app service (via the same seam). */
+const greetDocument = Component.gen(function* () {
+  const g = yield* Greeting;
+  const app = yield* Router.Outlet;
+  return yield* h.html([h.head([h.title({}, g.text)]), h.body([h.div({ id: "root" }, [app])])]);
+});
+
+const GreetingLive = Layer.succeed(Greeting, { text: "hello-from-context" });
+
+describe("RouterServer render-time context seam (AC1)", () => {
+  test("AC1: a context-provided service is read by the leaf, layout, and document shell (render)", async () => {
+    const { html, status } = await Effect.runPromise(
+      RouterServer.render(ctxDef, { document: greetDocument, url: "/", context: GreetingLive }),
+    );
+    assert.equal(status, 200);
+    assert.ok(html.includes("<title>hello-from-context</title>")); // shell
+    assert.ok(html.includes('data-greet="hello-from-context"')); // layout
+    assert.ok(html.includes("<h1>hello-from-context</h1>")); // leaf
+  });
+
+  test("AC1: the seam works through toWebHandler", async () => {
+    const handler = RouterServer.toWebHandler(ctxDef, {
+      document: greetDocument,
+      context: GreetingLive,
+    });
+    const res = await handler(new Request("http://localhost/"));
+    assert.equal(res.status, 200);
+    assert.ok((await res.text()).includes("<h1>hello-from-context</h1>"));
+  });
+
+  test("AC1: the seam works through toStreamingWebHandler", async () => {
+    const handler = RouterServer.toStreamingWebHandler(ctxDef, {
+      document: greetDocument,
+      context: GreetingLive,
+    });
+    const res = await handler(new Request("http://localhost/"));
+    assert.equal(res.status, 200);
+    assert.ok((await res.text()).includes("<h1>hello-from-context</h1>"));
   });
 });
