@@ -16,7 +16,7 @@
 import { Component, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { Router } from "@weftui/router";
-import { Stream } from "effect";
+import { Stream, SubscriptionRef } from "effect";
 import { Docs, type DocsService } from "../lib/docs-service";
 import type { DocHeading } from "../lib/markdown-loader";
 import type { NavGroup, NavNeighbours } from "../lib/nav";
@@ -39,20 +39,36 @@ function pathnameOf(url: string): string {
  * row is capped at the body's `max-w-[84rem]` and shares the body's `px-5`, so the
  * brand lines up with the content column's left edge. The row is exactly `3.25rem`
  * tall — the value the sidebar/TOC sticky offset (`top-[4.75rem]`) is computed from.
+ *
+ * When passed the optional `nav` control, the row leads with a hamburger button that
+ * toggles the mobile sidebar drawer; it is hidden at `md`+ where the sidebar is inline.
  */
-export function TopBar(): Renderable {
+export function TopBar(nav?: { open: Stream.Stream<boolean>; onToggle: () => void }): Renderable {
   return h.header({ class: "sticky top-0 z-10 border-b border-slate-6 bg-slate-1" }, [
     h.div({ class: "mx-auto flex h-[3.25rem] w-full max-w-[84rem] items-center gap-4 px-5" }, [
+      nav
+        ? h.button(
+            {
+              type: "button",
+              class: "btn btn-ghost btn-sm text-xl leading-none md:hidden",
+              "aria-label": "Toggle navigation",
+              "aria-controls": "docs-drawer",
+              "aria-expanded": Stream.map(nav.open, (o) => (o ? "true" : "false")),
+              onclick: nav.onToggle,
+            },
+            "≡",
+          )
+        : null,
       h.a({ href: "/", class: "text-lg font-bold text-slate-12 no-underline" }, "Weft"),
       h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
       h.div({ class: "flex-1" }),
-      h.input({
-        type: "search",
-        class: "input input-bordered input-sm w-56 max-w-[40vw]",
-        placeholder: "Search (coming soon)",
-        disabled: true,
-        "aria-label": "Search (coming soon)",
-      }),
+      // h.input({
+      //   type: "search",
+      //   class: "input input-bordered input-sm w-56 max-w-[40vw]",
+      //   placeholder: "Search (coming soon)",
+      //   disabled: true,
+      //   "aria-label": "Search (coming soon)",
+      // }),
       h.a(
         { href: REPO_URL, class: "btn btn-ghost btn-sm", target: "_blank", rel: "noreferrer" },
         "GitHub",
@@ -64,8 +80,18 @@ export function TopBar(): Renderable {
 /** Base utilities shared by every sidebar link (`docs-nav-link` is the test hook). */
 const NAV_LINK_BASE = "docs-nav-link block rounded-md px-2.5 py-1 text-[0.88rem] no-underline";
 
-/** Renders the grouped sidebar nav, marking the link that matches `activePath`. */
-export function renderSidebar(groups: readonly NavGroup[], activePath: string): Renderable {
+/**
+ * Renders the grouped sidebar nav, marking the link that matches `activePath`.
+ *
+ * When `onClose` is supplied, each link fires it on click so the mobile drawer closes
+ * on navigation; it does not `preventDefault`, so the router's SPA interception still
+ * runs, and at `md`+ (drawer force-open) closing the state is a harmless no-op.
+ */
+export function renderSidebar(
+  groups: readonly NavGroup[],
+  activePath: string,
+  onClose?: () => void,
+): Renderable {
   return h.nav(
     { "aria-label": "Documentation" },
     groups.map((group) =>
@@ -85,6 +111,7 @@ export function renderSidebar(groups: readonly NavGroup[], activePath: string): 
                 {
                   href: link.path,
                   class: cls,
+                  ...(onClose ? { onclick: onClose } : {}),
                   ...(active ? { "aria-current": "page" as const } : {}),
                 },
                 link.title,
@@ -173,44 +200,70 @@ export const DocsShell = Component.gen(function* () {
   const outlet = yield* Router.Outlet;
   const path = Stream.map(router.currentMatch.changes, (match) => pathnameOf(match.url));
 
-  // Grid collapses to a single column below `lg`; the sidebar/TOC drop their
-  // sticky/scroll behaviour there, and the TOC hides entirely. The `top-[4.75rem]`
-  // offset = 3.25rem topbar + 1.5rem body top padding, so nothing jumps on scroll.
+  // Mobile sidebar drawer state (source of truth). daisyUI's drawer CSS keys off the
+  // hidden checkbox's `:checked`, which we drive from this ref via its `checked`
+  // attribute. The checkbox must stay non-dirty for content-attribute → `:checked`
+  // reflection to work, so nothing targets it with a `<label for>`; the hamburger is a
+  // `<button>` and the overlay a plain `<div>`, both flipping the ref directly.
+  const open = yield* SubscriptionRef.make(false);
+  const toggle = () => SubscriptionRef.update(open, (o) => !o);
+  const close = () => SubscriptionRef.set(open, false);
+
+  // Below `md` the left nav is an off-canvas daisyUI drawer (hamburger-toggled, slides
+  // in over a dimmed overlay). At `md`+ `md:drawer-open` turns `.drawer` into a
+  // `max-content auto` grid, so the sidebar sits inline exactly as before; the inner
+  // grid then splits `main` + the right-hand TOC. The `top-[4.75rem]` offset =
+  // 3.25rem topbar + 1.5rem body top padding, so nothing jumps on scroll.
   return yield* h.div({ class: "docs-shell" }, [
-    TopBar(),
+    TopBar({ open: open.changes, onToggle: toggle }),
     h.div(
-      {
-        class: "mx-auto grid max-w-[84rem] grid-cols-1 gap-8 px-5 pb-16 pt-6 md:grid-cols-12",
-      },
+      { class: "drawer md:drawer-open mx-auto w-full max-w-[84rem] px-5 pb-16 pt-6 md:gap-8" },
       [
+        h.input({
+          id: "docs-drawer",
+          type: "checkbox",
+          class: "drawer-toggle",
+          checked: Stream.map(open.changes, (o) => o),
+          "aria-hidden": "true",
+          tabindex: -1,
+        }),
+        h.div({ class: "drawer-content min-w-0" }, [
+          h.div({ class: "grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_14rem]" }, [
+            h.main({ class: "min-w-0 xl:px-20" }, [
+              h.article(
+                {
+                  class:
+                    "docs-content prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-indigo-11",
+                },
+                [outlet],
+              ),
+              Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
+            ]),
+            h.aside(
+              {
+                class: "self-start text-[0.82rem] hidden lg:block lg:sticky lg:top-[4.75rem]",
+              },
+              [Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get)))],
+            ),
+          ]),
+        ]),
         h.aside(
           {
             class: [
-              "self-start md:sticky md:top-[4.75rem] md:max-h-[calc(100vh-5.5rem)] md:overflow-y-auto",
-              "col-span-3 xl:col-span-2",
+              "drawer-side z-20",
+              "md:z-auto md:sticky md:top-[4.75rem] md:max-h-[calc(100vh-5.5rem)] md:overflow-y-auto",
             ].join(" "),
           },
-          [Stream.map(path, (current) => renderSidebar(docs.nav.groups, current))],
-        ),
-        h.main(
-          { class: ["min-w-0 xl:px-20", "col-span-9 lg:col-span-7 xl:col-span-8"].join(" ") },
           [
-            h.article(
+            h.div({ class: "drawer-overlay", onclick: close }),
+            h.div(
               {
                 class:
-                  "docs-content prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-indigo-11",
+                  "min-h-full w-72 bg-slate-1 p-5 md:min-h-0 md:w-56 md:bg-transparent md:p-0 xl:w-52",
               },
-              [outlet],
+              [Stream.map(path, (current) => renderSidebar(docs.nav.groups, current, close))],
             ),
-            Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
           ],
-        ),
-        h.aside(
-          {
-            class:
-              "self-start text-[0.82rem] hidden lg:block lg:sticky lg:top-[4.75rem] col-span-2",
-          },
-          [Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get)))],
         ),
       ],
     ),

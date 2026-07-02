@@ -1,16 +1,16 @@
 # Graph Report - weft  (2026-07-02)
 
 ## Corpus Check
-- 356 files · ~257,541 words
+- 356 files · ~257,962 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2995 nodes · 4347 edges · 240 communities (219 shown, 21 thin omitted)
+- 2995 nodes · 4347 edges · 241 communities (220 shown, 21 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ae032f31`
+- Built from commit: `75131be7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -231,6 +231,7 @@
 - [[_COMMUNITY_Community 232|Community 232]]
 - [[_COMMUNITY_Community 233|Community 233]]
 - [[_COMMUNITY_Community 234|Community 234]]
+- [[_COMMUNITY_Community 240|Community 240]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `HTMLAttributeSource` - 135 edges
@@ -259,7 +260,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (240 total, 21 thin omitted)
+## Communities (241 total, 21 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
@@ -275,7 +276,7 @@ Nodes (51): CircleSVGAttributes, ClipPathSVGAttributes, ConditionalProcessingSVG
 
 ### Community 3 - "Community 3"
 Cohesion: 0.09
-Nodes (44): createStreamMarkers(), renderItem(), renderList(), renderSuspenseBoundary(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR() (+36 more)
+Nodes (42): createStreamMarkers(), renderItem(), renderSuspenseBoundary(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR(), fragmentToSSR() (+34 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.11
@@ -366,8 +367,8 @@ Cohesion: 0.19
 Nodes (22): appendRenderedChildren(), camelToKebab(), flattenChildren(), handleStreamChild(), handleStyle(), isEventHandler(), isProperty(), renderChildren() (+14 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.10
-Nodes (19): createRoot(), Failing, fromValue(), GetProduct, LoadError, Product, ProductBoundary(), ProductShape (+11 more)
+Cohesion: 0.16
+Nodes (10): createRoot(), Failing, fromValue(), GetProduct, LoadError, Product, ProductBoundary(), ProductShape (+2 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.15
@@ -1040,6 +1041,10 @@ Nodes (3): compilerOptions, extends, include
 ### Community 195 - "Community 195"
 Cohesion: 0.50
 Nodes (3): Design system (DaisyUI + Radix Colors) — see `src/design-system.specs.md`, Notes, Website build progress (Ralph ledger)
+
+### Community 240 - "Community 240"
+Cohesion: 0.20
+Nodes (11): renderList(), BoundaryContext, HydrationMismatchError, HydrationReady, RenderContext, RenderError, RenderResult, StreamSubscriptionError (+3 more)
 
 ## Knowledge Gaps
 - **1602 isolated node(s):** `PreToolUse`, `branches`, `tagFormat`, `initialVersion`, `plugins` (+1597 more)
