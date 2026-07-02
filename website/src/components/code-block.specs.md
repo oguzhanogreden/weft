@@ -39,4 +39,13 @@ export const CodeBlock: (props: {
 ## Edge cases
 
 - Empty `raw` → copy button disabled/no-op.
-- Very long lines → horizontal scroll within the pane (CSS), no layout break.
+- Very long lines → horizontal scroll within the pane (utilities), no layout break.
+
+## Styling & test hooks
+
+- Styled with Tailwind utilities + DaisyUI (`btn btn-ghost btn-xs` for copy); no
+  bespoke CSS. The root `<figure>` carries `not-prose` so the Typography plugin
+  never restyles the pane and Shiki inline token colors survive.
+- Semantic (non-styling) hooks for tests: `code-block` on the root `<figure>`,
+  `code-block-lang` on the language `<span>`. The copy button is selected via its
+  stable `aria-label="Copy code"`; the code itself via the `<pre>`/`<code>` tags.

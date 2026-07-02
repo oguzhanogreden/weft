@@ -62,7 +62,7 @@ describe("renderHast", () => {
     ]);
     const out = await html(pre);
     assert.match(out, /code-block/);
-    assert.match(out, /code-block__lang[^>]*>ts</);
+    assert.match(out, /code-block-lang[^>]*>ts</);
     assert.match(out, /color:#79c0ff/); // shiki token color survives prop mapping
     assert.match(out, /const/);
   });

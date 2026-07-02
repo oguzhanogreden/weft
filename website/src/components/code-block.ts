@@ -56,20 +56,45 @@ export const CodeBlock = Component.gen(function* (props: CodeBlockProps) {
 
   const label = Stream.map(copied.changes, (done) => (done ? "Copied" : "Copy"));
 
-  return yield* h.figure({ class: "code-block" }, [
-    h.figcaption({ class: "code-block__bar" }, [
-      props.lang === undefined ? null : h.span({ class: "code-block__lang" }, props.lang),
-      h.button(
+  // `code-block` is a semantic (non-styling) hook: tests select on it and the
+  // demo component flush-overrides it. `not-prose` exempts the pane from the
+  // Typography plugin so Shiki tokens keep their inline colors.
+  return yield* h.figure(
+    {
+      class:
+        "code-block not-prose my-4 overflow-hidden rounded-lg border border-slate-7 bg-slate-2",
+    },
+    [
+      h.figcaption(
         {
-          type: "button",
-          class: "code-block__copy",
-          "aria-label": "Copy code",
-          disabled: isEmpty,
-          onclick: isEmpty ? null : () => copy(),
+          class:
+            "flex items-center justify-end gap-2 border-b border-slate-7 bg-slate-3 px-2.5 py-1.5",
         },
-        [label],
+        [
+          props.lang === undefined
+            ? null
+            : h.span(
+                {
+                  class:
+                    "code-block-lang mr-auto font-mono text-xs uppercase tracking-wide text-slate-11",
+                },
+                props.lang,
+              ),
+          h.button(
+            {
+              type: "button",
+              class: "btn btn-ghost btn-xs",
+              "aria-label": "Copy code",
+              disabled: isEmpty,
+              onclick: isEmpty ? null : () => copy(),
+            },
+            [label],
+          ),
+        ],
       ),
-    ]),
-    h.pre({ class: "code-block__pre" }, [h.code([...props.tokens])]),
-  ]) satisfies Node;
+      h.pre({ class: "m-0 overflow-x-auto px-4 py-3.5 font-mono text-sm leading-relaxed" }, [
+        h.code([...props.tokens]),
+      ]),
+    ],
+  ) satisfies Node;
 });
