@@ -180,30 +180,38 @@ export const DocsShell = Component.gen(function* () {
     TopBar(),
     h.div(
       {
-        class:
-          "mx-auto grid max-w-[84rem] grid-cols-1 gap-8 px-5 pb-16 pt-6 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]",
+        class: "mx-auto grid max-w-[84rem] grid-cols-1 gap-8 px-5 pb-16 pt-6 md:grid-cols-12",
       },
       [
         h.aside(
           {
-            class:
-              "self-start lg:sticky lg:top-[4.75rem] lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto",
+            class: [
+              "self-start md:sticky md:top-[4.75rem] md:max-h-[calc(100vh-5.5rem)] md:overflow-y-auto",
+              "col-span-3 xl:col-span-2",
+            ].join(" "),
           },
           [Stream.map(path, (current) => renderSidebar(docs.nav.groups, current))],
         ),
-        h.main({ class: "min-w-0" }, [
-          h.article(
-            {
-              class:
-                "docs-content prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-indigo-11",
-            },
-            [outlet],
-          ),
-          Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
-        ]),
-        h.aside({ class: "self-start text-[0.82rem] max-lg:hidden lg:sticky lg:top-[4.75rem]" }, [
-          Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get))),
-        ]),
+        h.main(
+          { class: ["min-w-0 xl:px-20", "col-span-9 lg:col-span-7 xl:col-span-8"].join(" ") },
+          [
+            h.article(
+              {
+                class:
+                  "docs-content prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-indigo-11",
+              },
+              [outlet],
+            ),
+            Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
+          ],
+        ),
+        h.aside(
+          {
+            class:
+              "self-start text-[0.82rem] hidden lg:block lg:sticky lg:top-[4.75rem] col-span-2",
+          },
+          [Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get)))],
+        ),
       ],
     ),
   ]);
