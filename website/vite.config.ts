@@ -55,6 +55,10 @@ export default defineConfig({
         command: "echo website built",
         dependsOn: ["build:client", "build:server"],
       },
+      "build:static": {
+        command: "tsx prerender.ts",
+        dependsOn: ["build"],
+      },
       start: {
         command: "NODE_ENV=production node server.ts",
         dependsOn: ["build"],
