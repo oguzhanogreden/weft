@@ -1,7 +1,7 @@
 ---
 title: "@weftui/dom"
 order: 2
-section: api
+section: reference
 description: Full API surface for @weftui/dom — the client renderer (mount, hydrate) and the server renderer (renderToString and streaming variants).
 ---
 
@@ -9,7 +9,7 @@ description: Full API surface for @weftui/dom — the client renderer (mount, hy
 
 The DOM renderer for Weft. It has two entry points — `@weftui/dom/client` for the
 browser and `@weftui/dom/server` for Node — plus a package root that re-exports the
-renderer error types. See the [Server-Side Rendering guide](../guides/server-side-rendering.md)
+renderer error types. See the [Server-Side Rendering guide](../how-to/render-on-the-server.md)
 for a narrative walkthrough.
 
 ## `@weftui/dom/client`

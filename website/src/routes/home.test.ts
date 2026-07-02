@@ -12,7 +12,7 @@ describe("Home landing page (SSR)", () => {
   it("AC1/AC3: renders the hero with the tagline and the getting-started + GitHub CTAs", async () => {
     const html = await renderHome();
     assert.match(html, /Reactive UI, woven from Effect\./);
-    assert.match(html, /href="\/docs\/guides\/getting-started"/);
+    assert.match(html, /href="\/docs\/tutorial\/getting-started"/);
     assert.match(html, /href="https:\/\/github.com\/stefvw93\/weft"/);
   });
 

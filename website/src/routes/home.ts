@@ -18,7 +18,7 @@ import { renderHast } from "../lib/render-hast";
 /** Repo URL for GitHub links. */
 const REPO_URL = "https://github.com/stefvw93/weft";
 /** Primary CTA target. */
-const GETTING_STARTED = "/docs/guides/getting-started";
+const GETTING_STARTED = "/docs/tutorial/getting-started";
 
 /** The differentiators row content. */
 const DIFFERENTIATORS: ReadonlyArray<{ title: string; body: string }> = [
@@ -94,7 +94,7 @@ function Footer(): Renderable {
   return h.footer({ class: "home-footer" }, [
     h.nav({ class: "home-footer__links" }, [
       h.a({ href: GETTING_STARTED }, "Docs"),
-      h.a({ href: "/api/core" }, "API"),
+      h.a({ href: "/docs/reference/core" }, "API"),
       h.a({ href: REPO_URL, target: "_blank", rel: "noreferrer" }, "GitHub"),
     ]),
     h.p({ class: "home-footer__note" }, "Weft is in early development. APIs may change."),

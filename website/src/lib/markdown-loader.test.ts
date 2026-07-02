@@ -141,25 +141,25 @@ Hello.
     assert.ok(textOf(doc.tree).includes("Safe paragraph."));
   });
 
-  it("rewrites relative inter-doc .md links to site routes; api maps to /api/:pkg", async () => {
+  it("rewrites relative inter-doc .md links uniformly to /docs/:section/:slug", async () => {
     const doc = await parseDoc(
-      `---\ntitle: T\n---\n\n[routing](./routing.md) and [core](../api/core.md) and [effect](https://effect.website)\n`,
+      `---\ntitle: T\n---\n\n[routing](./routing.md) and [core](../reference/core.md) and [effect](https://effect.website)\n`,
       GUIDE_PATH,
       DOCS_ROOT,
     );
     const hrefs = findAll(doc.tree, "a").map((a) => a.properties["href"]);
     assert.ok(hrefs.includes("/docs/guides/routing"));
-    assert.ok(hrefs.includes("/api/core"));
+    assert.ok(hrefs.includes("/docs/reference/core"));
     assert.ok(hrefs.includes("https://effect.website"));
   });
 
   it("preserves a hash on a rewritten inter-doc link", async () => {
     const doc = await parseDoc(
-      `---\ntitle: T\n---\n\n[rpc](../api/core.md#boundaryrpc)\n`,
+      `---\ntitle: T\n---\n\n[rpc](../reference/core.md#boundaryrpc)\n`,
       GUIDE_PATH,
       DOCS_ROOT,
     );
-    assert.equal(find(doc.tree, "a")?.properties["href"], "/api/core#boundaryrpc");
+    assert.equal(find(doc.tree, "a")?.properties["href"], "/docs/reference/core#boundaryrpc");
   });
 
   it("edge: a frontmatter-only file yields a valid model with an empty tree", async () => {

@@ -1,7 +1,7 @@
 ---
 title: The Combinator API
 order: 1
-section: concepts
+section: explanation
 description: How h, h.fragment, and Component.gen / Component.make work; why Node is an Effect; how E and R accumulate through a tree.
 ---
 
@@ -134,7 +134,7 @@ Components also accept an optional `children` argument, either as `readonly Rend
 
 Without `Component`, a plain function's return type is fixed at definition time and does not reflect the caller's reactive prop types.
 
-See [component-authoring.md](../guides/component-authoring.md) for a full walkthrough.
+See [component-authoring.md](../how-to/author-components.md) for a full walkthrough.
 
 ## Suspense boundaries
 
@@ -153,4 +153,4 @@ The fallback is replaced atomically — either all children are visible or none 
 
 On the server, `renderToStreamHydratable` emits the fallback inline and appends patch scripts as children resolve. On the client, `hydrate` sees through `Boundary.suspend` boundaries and adopts the already-resolved DOM directly.
 
-`Boundary.suspend` is one of the boundary combinators — see [api/core.md](../api/core.md#boundarysuspend) for the full `Boundary.*` surface, including the failure-catch variants and `Boundary.rpc`.
+`Boundary.suspend` is one of the boundary combinators — see the [core reference](../reference/core.md#boundarysuspend) for the full `Boundary.*` surface, including the failure-catch variants and `Boundary.rpc`.

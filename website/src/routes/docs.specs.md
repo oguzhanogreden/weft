@@ -25,7 +25,7 @@ Uses `@weftui/router` `Router.route`, type-safe params, under the `DocsShell`
 
 ## Acceptance criteria
 
-- AC1: `/docs/guides/getting-started` renders the getting-started prose, headings,
+- AC1: `/docs/tutorial/getting-started` renders the getting-started prose, headings,
   links, and highlighted code.
 - AC2: `/docs` redirects/aliases to the first doc.
 - AC3: Unknown slug → 404 fallback.
@@ -38,4 +38,5 @@ Uses `@weftui/router` `Router.route`, type-safe params, under the `DocsShell`
 ## Edge cases
 
 - A category that exists but slug that doesn't → 404 (not a blank page).
-- Doc whose `section` is `api` is **not** served here (served by `src/routes/api.ts`).
+- Every section — tutorial, how-to, explanation, reference — is served here through
+  the single `/docs/:category/:slug` route; there is no separate `/api` route.

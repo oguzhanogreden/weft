@@ -20,7 +20,7 @@ export const DocsShell: LayoutNode; // Router.layout(...) wrapping doc routes
 - **Sidebar (left)**: grouped nav from `navGroups` (`src/lib/nav.ts`). Current page
   highlighted (derived from current route). Groups labelled (Guides, Concepts,
   API Reference).
-- **Content (center)**: `Router.Outlet` — the DocPage/ApiPage.
+- **Content (center)**: `Router.Outlet` — the DocPage for the matched route.
 - **TOC (right)**: "On this page" from the current doc's `headings` (h2–h3).
   Hidden on narrow viewports.
 - **Footer**: prev/next links from `findNav(currentPath)`.

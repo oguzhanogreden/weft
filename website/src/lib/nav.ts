@@ -41,13 +41,14 @@ export type NavData = {
 };
 
 /** Fixed display order for the known sections; others are appended alphabetically. */
-const SECTION_ORDER = ["guides", "concepts", "api"];
+const SECTION_ORDER = ["tutorial", "how-to", "explanation", "reference"];
 
 /** Human labels for the known sections. */
 const SECTION_LABELS: Record<string, string> = {
-  guides: "Guides",
-  concepts: "Concepts",
-  api: "API Reference",
+  tutorial: "Tutorial",
+  "how-to": "How-to",
+  explanation: "Explanation",
+  reference: "Reference",
 };
 
 /** Human label for a section, falling back to a capitalized section name. */
@@ -55,9 +56,9 @@ function labelFor(section: string): string {
   return SECTION_LABELS[section] ?? section.charAt(0).toUpperCase() + section.slice(1);
 }
 
-/** Route path for a doc: `api` docs map to `/api/:pkg`, everything else to `/docs/:section/:slug`. */
+/** Route path for a doc — every section routes uniformly through `/docs/:section/:slug`. */
 function linkPath(doc: DocMeta): string {
-  return doc.category === "api" ? `/api/${doc.slug}` : `/docs/${doc.category}/${doc.slug}`;
+  return `/docs/${doc.category}/${doc.slug}`;
 }
 
 /** Orders two sections: fixed order first, then any extras alphabetically. */

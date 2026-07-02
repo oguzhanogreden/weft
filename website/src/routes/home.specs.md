@@ -9,7 +9,7 @@ aesthetic, roughly one screen, dense.
 ## Sections
 
 1. **Hero**: tagline ("Reactive UI, woven from Effect."), one-line value prop,
-   primary CTA → Getting Started (`/docs/guides/getting-started`), secondary →
+   primary CTA → Getting Started (`/docs/tutorial/getting-started`), secondary →
    GitHub.
 2. **Live hero demo**: a small interactive component from the demo registry
    (e.g. `reactive-counter`) — proves reactivity on the landing page itself.

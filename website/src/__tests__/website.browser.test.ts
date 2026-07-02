@@ -105,9 +105,9 @@ describe("per-route doc-data split — flash-free lazy hydration (browser)", () 
   /** A doc's metadata (no tree) for the split `Docs` service. */
   const introMeta: DocMeta = {
     slug: "intro",
-    category: "guides",
-    path: "guides/intro",
-    frontmatter: { title: "Intro", order: 0, section: "guides" },
+    category: "tutorial",
+    path: "tutorial/intro",
+    frontmatter: { title: "Intro", order: 0, section: "tutorial" },
     headings: [],
   };
 

@@ -1,13 +1,13 @@
 ---
 title: "@weftui/router"
 order: 3
-section: api
+section: reference
 description: Full API surface for @weftui/router — universal nested routing, type-safe href, layouts, and SSR entry points.
 ---
 
 # @weftui/router API Reference
 
-Universal nested router for Weft. See the [Routing guide](../guides/routing.md) for a narrative walkthrough.
+Universal nested router for Weft. See the [Routing guide](../how-to/add-routing.md) for a narrative walkthrough.
 
 Three entry points mirror `@weftui/dom`:
 
@@ -146,7 +146,7 @@ RouterLive(
 ): Layer.Layer<Router | AppRpcClientTag>;
 ```
 
-The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@weftui/dom` can resolve a [`Boundary.rpc`](../api/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `@effect/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
+The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@weftui/dom` can resolve a [`Boundary.rpc`](../reference/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `@effect/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
 
 ```typescript
 const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } }));
@@ -204,7 +204,7 @@ Dispatch runs through the `def.httpApi` spine via `HttpApiBuilder`: platform own
 - **`toWebHandler`** returns a Web `fetch`-style handler `(Request) => Promise<Response>` that dispatches through `HttpApiBuilder.toWebHandler` and replies `text/html`. Suitable for bridging into a dev server (Vite) or any Web-platform server.
 - **`render`** drives that handler for a single `url`, returning `{ html, status }` with `<!DOCTYPE html>` prepended. `status` is sourced from the platform pipeline — `200`, or `404` for a no-match / a page-raised `RouterNotFound`.
 - **`document`** is a [`ComponentSlot`](#types) that splices the app via `yield* Router.Outlet`; the router provides both `Router.Outlet` (the app, per request) and `Router`.
-- **`rpc`** is the app's [`Boundary.rpc`](../api/core.md#boundaryrpc) data foundation: `{ group: RpcGroup<any>; handlers: Layer<any, never, never> }` — the merged `RpcGroup` (shared with the client) plus its server-only handler Layer (`group.toLayer(...)` ⊕ its dependencies). `toWebHandler` serves the handlers at `POST /_eui/rpc` (so a client refetch / client-first mount re-runs them on the server), and an in-process client over the same handlers (backing the [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam) resolves SSR boundaries in-process — never over the network.
+- **`rpc`** is the app's [`Boundary.rpc`](../reference/core.md#boundaryrpc) data foundation: `{ group: RpcGroup<any>; handlers: Layer<any, never, never> }` — the merged `RpcGroup` (shared with the client) plus its server-only handler Layer (`group.toLayer(...)` ⊕ its dependencies). `toWebHandler` serves the handlers at `POST /_eui/rpc` (so a client refetch / client-first mount re-runs them on the server), and an in-process client over the same handlers (backing the [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam) resolves SSR boundaries in-process — never over the network.
 
 > The `HttpApi` is not generated on the server — it is built once when the tree is sealed (`buildHttpApi` during `Router.router`) and lives on `def.httpApi` as the single source of truth both the server dispatch and the client matcher / derived `HttpApiClient` read from.
 

@@ -26,12 +26,12 @@ export const findNav: (path: string) => {
 ## Behaviour
 
 - Group by `frontmatter.section`; sort links within a group by `frontmatter.order`
-  then `title`. Group order is fixed: `guides`, `concepts`, `api` (others appended
-  alphabetically).
-- `label` is a human title per section (`guides` → "Guides", `concepts` →
-  "Concepts", `api` → "API Reference").
-- `path` is the route path: `/docs/:section/:slug`, or `/api/:pkg` for the `api`
-  section.
+  then `title`. Group order is fixed (the Diátaxis quadrants): `tutorial`, `how-to`,
+  `explanation`, `reference` (others appended alphabetically).
+- `label` is a human title per section (`tutorial` → "Tutorial", `how-to` →
+  "How-to", `explanation` → "Explanation", `reference` → "Reference").
+- `path` is the route path — every section routes uniformly through
+  `/docs/:section/:slug`.
 - `flatNav` is the concatenation of groups in display order — drives prev/next.
 
 ## Acceptance criteria
@@ -49,5 +49,6 @@ export const findNav: (path: string) => {
 
 - Two docs with the same `order` in a group → stable, deterministic tie-break by
   `title`.
-- `api` section sourced from `docs/api/*` maps to `/api/:pkg`, not
-  `/docs/api/:pkg`.
+- Reference docs (sourced from `docs/reference/*`) route through the same
+  `/docs/:section/:slug` shape as every other section — there is no `/api/:pkg`
+  special-case.

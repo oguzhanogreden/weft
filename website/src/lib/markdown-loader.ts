@@ -76,7 +76,7 @@ export type DocModel = {
   readonly slug: string;
   /** Nav group, from `frontmatter.section` or the containing directory name. */
   readonly category: string;
-  /** Route path within its section, e.g. `"guides/getting-started"`. */
+  /** Route path within its section, e.g. `"tutorial/getting-started"`. */
   readonly path: string;
   readonly frontmatter: DocFrontmatter;
   readonly headings: readonly DocHeading[];
@@ -202,8 +202,7 @@ function rewriteHref(href: string, fileDir: string, docsRoot: string): string {
   const relToDocs = relative(docsRoot, targetAbs);
   const section = dirname(relToDocs);
   const slug = basename(relToDocs, ".md");
-  const route = section === "api" ? `/api/${slug}` : `/docs/${section}/${slug}`;
-  return route + hash;
+  return `/docs/${section}/${slug}${hash}`;
 }
 
 /** Coerces a raw hast property value into the serializable subset, dropping anything else. */

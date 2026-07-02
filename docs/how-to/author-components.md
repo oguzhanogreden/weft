@@ -1,7 +1,7 @@
 ---
 title: Component Authoring
-order: 2
-section: guides
+order: 1
+section: how-to
 description: Plain functions vs. Component.gen / Component.make, instance scope, fragments, render-prop children, and service requirements.
 ---
 

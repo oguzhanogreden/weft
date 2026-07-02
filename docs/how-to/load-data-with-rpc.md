@@ -1,7 +1,7 @@
 ---
 title: RPC Data Boundaries
-order: 4
-section: guides
+order: 3
+section: how-to
 description: Boundary.rpc — server-resolved, client-refreshable data; the contract/handler split and the Resource handle's four lifecycles.
 ---
 
@@ -11,7 +11,7 @@ description: Boundary.rpc — server-resolved, client-refreshable data; the cont
 
 ## Overview
 
-A `Boundary.rpc` is a **thin consumer**. It carries an rpc, a payload thunk, and a `render` that receives a reactive [`Resource`](../api/core.md#resourcea); the renderer resolves the rpc through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam (provided by `@weftui/router`). The same rpc serves every lifecycle, so SSR-replay, refetch, and client-first mount are one mechanism, not three.
+A `Boundary.rpc` is a **thin consumer**. It carries an rpc, a payload thunk, and a `render` that receives a reactive [`Resource`](../reference/core.md#resourcea); the renderer resolves the rpc through the ambient [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam (provided by `@weftui/router`). The same rpc serves every lifecycle, so SSR-replay, refetch, and client-first mount are one mechanism, not three.
 
 ```typescript
 import { Boundary, h } from "@weftui/core";
@@ -68,7 +68,7 @@ export const StockLive = StockRpcs.toLayer({
 }).pipe(Layer.provide(InventoryLive));
 ```
 
-Declare server-only services with [`ServerTag`](../api/core.md#servertag) (not `Context.Tag`) when they might be referenced from universal code: the brand makes a leak into `render` a compile error at the `hydrate` call site rather than a runtime surprise.
+Declare server-only services with [`ServerTag`](../reference/core.md#servertag) (not `Context.Tag`) when they might be referenced from universal code: the brand makes a leak into `render` a compile error at the `hydrate` call site rather than a runtime surprise.
 
 ## Wiring the router
 
@@ -95,8 +95,8 @@ const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } 
 void runtime.runPromise(hydrate(RouterApp(App), root));
 ```
 
-- **Server** ([`RouterServer`](../api/router.md#routerserver)) mounts the handler Layer at `POST /_eui/rpc` (so a client refetch re-runs it on the server) **and** exposes an in-process client over the same handlers for SSR resolution — never a network hop.
-- **Client** ([`RouterLive`](../api/router.md#routerlive)) provides a network flat rpc client over the merged group, posting to `<origin>/_eui/rpc`.
+- **Server** ([`RouterServer`](../reference/router.md#routerserver)) mounts the handler Layer at `POST /_eui/rpc` (so a client refetch re-runs it on the server) **and** exposes an in-process client over the same handlers for SSR resolution — never a network hop.
+- **Client** ([`RouterLive`](../reference/router.md#routerlive)) provides a network flat rpc client over the merged group, posting to `<origin>/_eui/rpc`.
 
 In a **router-less mount** there is no `AppRpcClientTag`, so a `Boundary.rpc` resolves to a typed, descriptive "needs router/rpc" error (not a defect).
 
@@ -113,7 +113,7 @@ Because the SSR path seeds `value` await-first (it emits the seed immediately), 
 
 ## The `Resource` handle
 
-`render` receives a [`Resource<A>`](../api/core.md#resourcea) (`A` = the rpc's decoded success), not a bare value. After hydrate the region is live:
+`render` receives a [`Resource<A>`](../reference/core.md#resourcea) (`A` = the rpc's decoded success), not a bare value. After hydrate the region is live:
 
 | Field     | What it gives you                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------------------- |
@@ -162,11 +162,11 @@ A transport **defect** (no `Cause.failureOption`), or an rpc with no `error` sch
 ## When to use
 
 - **`Boundary.rpc`** — data resolved on the server (behind a server-only service, credential, or private network) and rendered into the initial HTML, then **refreshable** on the client over the same rpc.
-- **`Boundary.suspend`** — async data that loads purely on the client; see the [Boundary API](../api/core.md#boundarysuspend).
+- **`Boundary.suspend`** — async data that loads purely on the client; see the [Boundary API](../reference/core.md#boundarysuspend).
 
 ## See also
 
-- [`Boundary.rpc` API reference](../api/core.md#boundaryrpc) — signature, `Resource`, `RpcOptions`, `AppRpcClientTag`
-- [Server-Side Rendering](./server-side-rendering.md) — the SSR + hydration model this builds on
-- [Routing](./routing.md) — `@weftui/router`, which provides the `AppRpcClientTag` seam
+- [`Boundary.rpc` API reference](../reference/core.md#boundaryrpc) — signature, `Resource`, `RpcOptions`, `AppRpcClientTag`
+- [Server-Side Rendering](./render-on-the-server.md) — the SSR + hydration model this builds on
+- [Routing](./add-routing.md) — `@weftui/router`, which provides the `AppRpcClientTag` seam
 - [examples/router-ssr](../../examples/router-ssr) — a runnable shop with an SSR-replayed, refetchable live-stock `Boundary.rpc`

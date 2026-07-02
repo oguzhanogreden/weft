@@ -30,19 +30,18 @@ Tagline: **"Reactive UI, woven from Effect."**
 
 ## Module map (each has its own specs.md)
 
-| Module               | Path                           | Responsibility                           |
-| -------------------- | ------------------------------ | ---------------------------------------- |
-| Markdown loader      | `src/lib/markdown-loader.ts`   | Build-time `.md` → doc model.            |
-| hast → Weft renderer | `src/lib/render-hast.ts`       | Doc model `hast` → `h.*` nodes.          |
-| Nav manifest         | `src/lib/nav.ts`               | Aggregate doc frontmatter → grouped nav. |
-| Demo registry        | `src/demos/index.ts`           | `id → () => Node` live-demo lookup.      |
-| Code block           | `src/components/code-block.ts` | Highlighted, copyable code pane.         |
-| Demo block           | `src/components/demo.ts`       | Code pane + live preview pane.           |
-| Docs shell           | `src/layouts/docs-shell.ts`    | Sidebar + content + TOC layout.          |
-| Doc routes           | `src/routes/docs.ts`           | `/docs/:category/:slug` → DocPage.       |
-| API routes           | `src/routes/api.ts`            | `/api/:pkg` → ApiPage.                   |
-| Landing              | `src/routes/home.ts`           | Marketing home with live hero demo.      |
-| Document shell       | `src/layouts/shell.ts`         | `<html>` head/meta per route.            |
+| Module               | Path                           | Responsibility                                    |
+| -------------------- | ------------------------------ | ------------------------------------------------- |
+| Markdown loader      | `src/lib/markdown-loader.ts`   | Build-time `.md` → doc model.                     |
+| hast → Weft renderer | `src/lib/render-hast.ts`       | Doc model `hast` → `h.*` nodes.                   |
+| Nav manifest         | `src/lib/nav.ts`               | Aggregate doc frontmatter → grouped nav.          |
+| Demo registry        | `src/demos/index.ts`           | `id → () => Node` live-demo lookup.               |
+| Code block           | `src/components/code-block.ts` | Highlighted, copyable code pane.                  |
+| Demo block           | `src/components/demo.ts`       | Code pane + live preview pane.                    |
+| Docs shell           | `src/layouts/docs-shell.ts`    | Sidebar + content + TOC layout.                   |
+| Doc routes           | `src/routes/docs.ts`           | `/docs/:category/:slug` → DocPage (all sections). |
+| Landing              | `src/routes/home.ts`           | Marketing home with live hero demo.               |
+| Document shell       | `src/layouts/shell.ts`         | `<html>` head/meta per route.                     |
 
 ## Frontmatter contract (added to `docs/**/*.md`)
 
@@ -50,13 +49,13 @@ Tagline: **"Reactive UI, woven from Effect."**
 ---
 title: Getting Started # sidebar + <title> + nav link text
 order: 1 # sort within its group
-section: guides # nav group: guides | concepts | api
+section: tutorial # nav group: tutorial | how-to | explanation | reference
 description: ... # meta description / og
 ---
 ```
 
 - `title` **required**. `order` defaults to `Infinity` (sorts last) if absent.
-- `section` defaults to the doc's directory name (`guides`/`concepts`/`api`).
+- `section` defaults to the doc's directory name (`tutorial`/`how-to`/`explanation`/`reference`).
 - Backfill all existing `docs/**/*.md`. The order in `docs/index.md`'s learning
   list is the authoritative ordering to encode.
 
@@ -65,7 +64,8 @@ description: ... # meta description / og
 - AC1: Visiting `/` renders the landing page with a working live demo after hydrate.
 - AC2: Every `docs/**/*.md` is reachable at `/docs/:section/:slug` and renders its
   prose, headings, links, and highlighted code.
-- AC3: Each package (`core`, `dom`, `router`) API doc is reachable under `/api/:pkg`.
+- AC3: Each package (`core`, `dom`, `router`) reference doc is reachable under
+  `/docs/reference/:pkg`, the same uniform route as every other section.
 - AC4: Sidebar nav is generated from frontmatter (no hand-maintained list),
   grouped by `section`, ordered by `order`, with the current page highlighted.
 - AC5: Server and client produce identical trees — no `HydrationMismatchError`,

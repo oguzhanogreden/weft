@@ -1,7 +1,7 @@
 ---
 title: Routing
-order: 5
-section: guides
+order: 4
+section: how-to
 description: "@weftui/router — universal nested routing, Router.route / Router.layout / Router.router, type-safe href, layouts, and programmatic navigation."
 ---
 
@@ -20,7 +20,7 @@ npm install @weftui/router
 
 ## The mental model
 
-A route's **component is its handler** — a page is a component that renders, and its `component` slot is invoked at render time on whichever side the request arrives. Server-resolved data stays with [`Boundary.rpc`](./rpc-data-boundaries.md); client-side async stays with `Boundary.suspend`.
+A route's **component is its handler** — a page is a component that renders, and its `component` slot is invoked at render time on whichever side the request arrives. Server-resolved data stays with [`Boundary.rpc`](./load-data-with-rpc.md); client-side async stays with `Boundary.suspend`.
 
 You author an **explicit nested route tree** with three namespaced combinators — mirroring the `h.div` / `Component.gen` / `Boundary.catchTag` surface — and seal it once:
 
@@ -34,7 +34,7 @@ The tree is the source of truth. The same sealed `RouterDef` drives both server 
 
 ## Authoring routes
 
-Every `component` slot is a **`ComponentSlot`** — a callable producing a `Node`, passed **uncalled**. Use [`Component.make` / `Component.gen`](./component-authoring.md) (or a plain `() => Node` thunk). The router invokes it at render time, which is what lets `href(…)` resolve after the tree is compiled.
+Every `component` slot is a **`ComponentSlot`** — a callable producing a `Node`, passed **uncalled**. Use [`Component.make` / `Component.gen`](./author-components.md) (or a plain `() => Node` thunk). The router invokes it at render time, which is what lets `href(…)` resolve after the tree is compiled.
 
 ```typescript
 import { Component, h } from "@weftui/core";
@@ -284,13 +284,13 @@ Both are modeled as `Schema.TaggedError`, so they encode/decode across the wire 
 
 ## `Boundary.rpc` interplay
 
-Initial SSR navigation works end to end: the server resolves the rpc and inlines its payload, and the client replays it during `hydrate`. **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount** — it renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result. `@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server), so the same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./rpc-data-boundaries.md).
+Initial SSR navigation works end to end: the server resolves the rpc and inlines its payload, and the client replays it during `hydrate`. **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount** — it renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result. `@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server), so the same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./load-data-with-rpc.md).
 
 ## See also
 
-- [`@weftui/router` API reference](../api/router.md)
+- [`@weftui/router` API reference](../reference/router.md)
 - [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `@effect/platform` spine
-- [Component Authoring](./component-authoring.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
-- [Server-Side Rendering](./server-side-rendering.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
-- [RPC Data Boundaries](./rpc-data-boundaries.md) — `Boundary.rpc`, the `Resource` handle, and the four lifecycles
+- [Component Authoring](./author-components.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
+- [Server-Side Rendering](./render-on-the-server.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
+- [RPC Data Boundaries](./load-data-with-rpc.md) — `Boundary.rpc`, the `Resource` handle, and the four lifecycles
 - [`packages/router/router.specs.md`](../../packages/router/router.specs.md) — the full specification

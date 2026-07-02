@@ -1,7 +1,7 @@
 ---
 title: "@weftui/core"
 order: 1
-section: api
+section: reference
 description: Full API surface for @weftui/core — element builders, components, sources, streams, and boundaries.
 ---
 
@@ -209,7 +209,7 @@ class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
 
 The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@weftui/dom` resolve a boundary without importing `@effect/rpc` or `@weftui/router`. `@weftui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@weftui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
 
-See the [rpc data boundaries guide](../guides/rpc-data-boundaries.md) and [examples/router-ssr](../../examples/router-ssr).
+See the [rpc data boundaries guide](../how-to/load-data-with-rpc.md) and [examples/router-ssr](../../examples/router-ssr).
 
 #### `Boundary.catchAll`
 

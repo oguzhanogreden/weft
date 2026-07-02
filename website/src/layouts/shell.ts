@@ -35,11 +35,9 @@ function pathnameOf(url: string): string {
 function metaFor(path: string, get: DocsService["get"]): { title: string; description?: string } {
   const parts = path.split("/").filter((p) => p.length > 0);
   const doc =
-    parts[0] === "api" && parts[1] !== undefined
-      ? get("api", parts[1])
-      : parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined
-        ? get(parts[1], parts[2])
-        : undefined;
+    parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined
+      ? get(parts[1], parts[2])
+      : undefined;
   if (doc === undefined) return { ...DEFAULT_META };
   return { title: `${doc.frontmatter.title} · Weft`, description: doc.frontmatter.description };
 }

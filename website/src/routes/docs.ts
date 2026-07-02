@@ -1,10 +1,11 @@
 /**
  * Documentation route descriptors.
  *
- * - `/docs` aliases to the first doc (getting-started) by rendering its content.
+ * - `/docs` aliases to the first doc (the tutorial's getting-started) by rendering
+ *   its content.
  * - `/docs/:category/:slug` looks up the doc model and renders it via `DocPage`;
- *   an unknown `(category, slug)`, or a doc whose section is `api` (served by the
- *   api routes), short-circuits to the router's not-found (404).
+ *   an unknown `(category, slug)` short-circuits to the router's not-found (404).
+ *   Every section — tutorial, how-to, explanation, reference — routes through here.
  *
  * Only the **descriptors** (segment + component slot) live here, eagerly. Each
  * component body is `Router.lazy(() => import("./doc-page-impl"))`, so the render

@@ -14,21 +14,21 @@ Weft is an Effect-native reactive DOM library — reactive UI, woven from Effect
 
 ## Learning order
 
-1. **[Getting Started](guides/getting-started.md)** — install, first component, reactive state, services, async, error boundaries, SSR teaser.
+1. **[Getting Started](tutorial/getting-started.md)** — install, first component, reactive state, services, async, error boundaries, SSR teaser.
 
-2. **[The Combinator API](concepts/combinator-api.md)** — how `h`, `h.fragment`, and `Component.gen` / `Component.make` work; why `Node` is an `Effect`; how `E` and `R` accumulate through a tree.
+2. **[The Combinator API](explanation/combinator-api.md)** — how `h`, `h.fragment`, and `Component.gen` / `Component.make` work; why `Node` is an `Effect`; how `E` and `R` accumulate through a tree.
 
-3. **[Reactive Primitives](concepts/reactive-primitives.md)** — the `Source<A, E, R>` vocabulary; `Stream`, `Effect`, and `Subscribable` as prop values and children; derived streams, reactive styles, and `NoPropValue`.
+3. **[Reactive Primitives](explanation/reactive-primitives.md)** — the `Source<A, E, R>` vocabulary; `Stream`, `Effect`, and `Subscribable` as prop values and children; derived streams, reactive styles, and `NoPropValue`.
 
-4. **[Component Authoring](guides/component-authoring.md)** — plain functions vs. `Component.gen` / `Component.make`; instance scope and `Effect.forkScoped`; fragments, render-prop children, and service requirements.
+4. **[Component Authoring](how-to/author-components.md)** — plain functions vs. `Component.gen` / `Component.make`; instance scope and `Effect.forkScoped`; fragments, render-prop children, and service requirements.
 
-5. **[Server-Side Rendering](guides/server-side-rendering.md)** — `renderToString` / `renderToStringHydratable` / streaming variants; `hydrate`; the server/client split.
+5. **[Server-Side Rendering](how-to/render-on-the-server.md)** — `renderToString` / `renderToStringHydratable` / streaming variants; `hydrate`; the server/client split.
 
-6. **[RPC Data Boundaries](guides/rpc-data-boundaries.md)** — `Boundary.rpc`: server-resolved, client-refreshable data; the contract/handler split; the `Resource` handle and its four lifecycles.
+6. **[RPC Data Boundaries](how-to/load-data-with-rpc.md)** — `Boundary.rpc`: server-resolved, client-refreshable data; the contract/handler split; the `Resource` handle and its four lifecycles.
 
-7. **[Routing](guides/routing.md)** — `@weftui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
+7. **[Routing](how-to/add-routing.md)** — `@weftui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
 
-8. **[`@weftui/core` API Reference](api/core.md)**, **[`@weftui/dom` API Reference](api/dom.md)**, and **[`@weftui/router` API Reference](api/router.md)** — full API surface for all three packages.
+8. **[`@weftui/core` API Reference](reference/core.md)**, **[`@weftui/dom` API Reference](reference/dom.md)**, and **[`@weftui/router` API Reference](reference/router.md)** — full API surface for all three packages.
 
 ---
 

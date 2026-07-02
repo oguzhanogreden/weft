@@ -1,7 +1,7 @@
 ---
 title: Getting Started
 order: 1
-section: guides
+section: tutorial
 description: Build your first Weft app from scratch — components, reactive state, services, async, error boundaries, and an SSR teaser.
 ---
 
@@ -159,14 +159,14 @@ const StockPanel = (id: number) =>
   );
 ```
 
-See the [rpc data boundaries guide](./rpc-data-boundaries.md) for the full model — the contract/handler split, router wiring, the four lifecycles, and typed-failure replay.
+See the [rpc data boundaries guide](./load-data-with-rpc.md) for the full model — the contract/handler split, router wiring, the four lifecycles, and typed-failure replay.
 
 ## Next steps
 
-- [Combinator API](../concepts/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
-- [Reactive Primitives](../concepts/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
-- [Component Authoring](./component-authoring.md) — writing reusable components with `Component.gen` / `Component.make`
-- [Server-Side Rendering](./server-side-rendering.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
-- [Routing](./routing.md) — universal nested routing with `@weftui/router`
-- [`@weftui/core` API Reference](../api/core.md) and [`@weftui/router` API Reference](../api/router.md)
+- [Combinator API](../explanation/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
+- [Reactive Primitives](../explanation/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
+- [Component Authoring](./author-components.md) — writing reusable components with `Component.gen` / `Component.make`
+- [Server-Side Rendering](./render-on-the-server.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
+- [Routing](./add-routing.md) — universal nested routing with `@weftui/router`
+- [`@weftui/core` API Reference](../reference/core.md) and [`@weftui/router` API Reference](../reference/router.md)
 - [examples/](../../examples/) — runnable examples covering common patterns

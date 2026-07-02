@@ -128,11 +128,9 @@ export function renderPrevNext(neighbours: NavNeighbours): Renderable {
 function headingsForPath(path: string, get: DocsService["get"]): readonly DocHeading[] {
   const parts = path.split("/").filter((p) => p.length > 0);
   const doc =
-    parts[0] === "api" && parts[1] !== undefined
-      ? get("api", parts[1])
-      : parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined
-        ? get(parts[1], parts[2])
-        : undefined;
+    parts[0] === "docs" && parts[1] !== undefined && parts[2] !== undefined
+      ? get(parts[1], parts[2])
+      : undefined;
   return doc?.headings ?? [];
 }
 

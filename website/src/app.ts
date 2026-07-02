@@ -7,14 +7,14 @@
  * tests and by both build targets without running anything.
  *
  * Route tree: a passthrough root layout holds the landing page (full-width, no
- * sidebar) alongside the `DocsShell` layout, which wraps the doc and api routes so
- * the chrome persists across doc-to-doc navigation.
+ * sidebar) alongside the `DocsShell` layout, which wraps the doc routes so the
+ * chrome persists across doc-to-doc navigation. Every section — tutorial, how-to,
+ * explanation, reference — routes uniformly through `/docs/:category/:slug`.
  */
 
 import { Component, h } from "@weftui/core";
 import { Router } from "@weftui/router";
 import { DocsShell } from "./layouts/docs-shell";
-import { apiIndexRoute, apiRoute } from "./routes/api";
 import { docsIndexRoute, docsRoute } from "./routes/docs";
 import { Home } from "./routes/home";
 import "./app.css";
@@ -28,7 +28,7 @@ const RootLayout = Component.gen(function* () {
 export const App = Router.router(
   Router.layout({ component: RootLayout }, [
     Home,
-    Router.layout({ component: DocsShell }, [docsIndexRoute, docsRoute, apiIndexRoute, apiRoute]),
+    Router.layout({ component: DocsShell }, [docsIndexRoute, docsRoute]),
   ]),
   {
     notFound: () =>

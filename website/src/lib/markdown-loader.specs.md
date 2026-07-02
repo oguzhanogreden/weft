@@ -29,7 +29,7 @@ in `website/vite.config.ts`. Source files live **outside** `website/` (in repo
 type DocModel = {
   slug: string; // file basename without extension, e.g. "getting-started"
   category: string; // nav group, from frontmatter.section or dir name
-  path: string; // route path, e.g. "guides/getting-started"
+  path: string; // route path, e.g. "tutorial/getting-started"
   frontmatter: {
     title: string;
     order: number; // Infinity if absent
@@ -50,7 +50,7 @@ type DocModel = {
 - A virtual/generated module exposing all docs: `getAllDocs(): DocModel[]` and
   `getDoc(category, slug): DocModel | undefined` (or an equivalent map). Must be a
   pure data import — no runtime parsing in either bundle.
-- Importable in `src/lib/nav.ts`, `src/routes/docs.ts`, `src/routes/api.ts`.
+- Importable in `src/lib/nav.ts`, `src/routes/docs.ts`.
 
 ## Acceptance criteria
 
@@ -78,8 +78,8 @@ type DocModel = {
 
 - Empty file / frontmatter-only file → valid `DocModel` with empty `tree.children`.
 - Duplicate `(category, slug)` across files → build error (ambiguous route).
-- Relative markdown links between docs (e.g. `./routing.md`) → rewritten to site
-  routes (`/docs/guides/routing`); external links left untouched.
+- Relative markdown links between docs (e.g. `./add-routing.md`) → rewritten to site
+  routes (`/docs/how-to/add-routing`); external links left untouched.
 - Code block with no language → rendered as plain (un-highlighted) code, no error.
 
 ## Dependencies

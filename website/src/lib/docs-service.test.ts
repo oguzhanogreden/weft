@@ -32,16 +32,16 @@ function tree(slug: string): HastRoot {
 
 describe("makeDocs — metadata surface (AC5)", () => {
   it("exposes all/get as metadata and derives nav without any tree", () => {
-    const docs = makeDocs([meta("guides", "intro"), meta("api", "core")], () =>
+    const docs = makeDocs([meta("tutorial", "intro"), meta("reference", "core")], () =>
       Promise.resolve(undefined),
     );
     assert.equal(docs.all.length, 2);
-    assert.equal(docs.get("guides", "intro")?.frontmatter.title, "intro title");
-    assert.equal(docs.get("guides", "missing"), undefined);
-    // nav is grouped from meta alone (api ordered after guides).
+    assert.equal(docs.get("tutorial", "intro")?.frontmatter.title, "intro title");
+    assert.equal(docs.get("tutorial", "missing"), undefined);
+    // nav is grouped from meta alone (reference ordered after tutorial).
     assert.deepEqual(
       docs.nav.groups.map((g) => g.section),
-      ["guides", "api"],
+      ["tutorial", "reference"],
     );
   });
 });

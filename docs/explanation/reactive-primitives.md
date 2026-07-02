@@ -1,7 +1,7 @@
 ---
 title: Reactive Primitives
 order: 2
-section: concepts
+section: explanation
 description: The Source<A, E, R> vocabulary; Stream, Effect, and Subscribable as prop values and children; derived streams, reactive styles, and NoPropValue.
 ---
 

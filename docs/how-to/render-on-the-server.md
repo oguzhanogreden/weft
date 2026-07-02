@@ -1,13 +1,13 @@
 ---
 title: Server-Side Rendering
-order: 3
-section: guides
+order: 2
+section: how-to
 description: renderToString / renderToStringHydratable / streaming variants, hydrate, and the server/client split.
 ---
 
 # Server-Side Rendering
 
-Weft renders on the server and **hydrates** on the client: the server produces HTML (plus inline data), and the browser adopts that existing DOM in place rather than re-creating it. [`Boundary.rpc`](../api/core.md#boundaryrpc) extends this to **rpc-backed server data** — resolve an rpc on the server, serialize its result into the HTML, replay it on the client without a second request, and then keep the region live for refetch.
+Weft renders on the server and **hydrates** on the client: the server produces HTML (plus inline data), and the browser adopts that existing DOM in place rather than re-creating it. [`Boundary.rpc`](../reference/core.md#boundaryrpc) extends this to **rpc-backed server data** — resolve an rpc on the server, serialize its result into the HTML, replay it on the client without a second request, and then keep the region live for refetch.
 
 ## The two halves
 
@@ -67,20 +67,20 @@ const StockPanel = (productId: number) =>
   );
 ```
 
-Under SSR the server resolves the rpc in-process, `successSchema`-encodes the result inline as `<script type="application/json">`, and renders in place; `hydrate` reads that payload positionally, seeds the `Resource`, and adopts the DOM **without re-calling the rpc** (replay, never retry). The full model — the contract/handler split, router wiring, the four lifecycles, the `Resource` handle, and typed-failure replay — lives in one place: the [RPC Data Boundaries guide](./rpc-data-boundaries.md). This page does not repeat it.
+Under SSR the server resolves the rpc in-process, `successSchema`-encodes the result inline as `<script type="application/json">`, and renders in place; `hydrate` reads that payload positionally, seeds the `Resource`, and adopts the DOM **without re-calling the rpc** (replay, never retry). The full model — the contract/handler split, router wiring, the four lifecycles, the `Resource` handle, and typed-failure replay — lives in one place: the [RPC Data Boundaries guide](./load-data-with-rpc.md). This page does not repeat it.
 
-> **Note.** `Boundary.rpc` resolves through the ambient [`AppRpcClientTag`](../api/core.md#apprpcclienttag) seam, which `@weftui/router` provides on both sides. In a router-less mount there is no seam, so the boundary resolves to a descriptive "needs router/rpc" error (not a defect).
+> **Note.** `Boundary.rpc` resolves through the ambient [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam, which `@weftui/router` provides on both sides. In a router-less mount there is no seam, so the boundary resolves to a descriptive "needs router/rpc" error (not a defect).
 
 ## When to use
 
 - **`Boundary.rpc`** — data that must be resolved on the server (behind a server-only service, credential, or private network) and rendered into the initial HTML, then **refreshable** on the client (refetch / client-first SPA mount) over the same rpc.
-- **`Boundary.suspend`** — async data that loads on the client (or streams the shell then fills); see the [Boundary API](../api/core.md#boundarysuspend).
+- **`Boundary.suspend`** — async data that loads on the client (or streams the shell then fills); see the [Boundary API](../reference/core.md#boundarysuspend).
 
 ## See also
 
-- [rpc data boundaries guide](./rpc-data-boundaries.md) — the full `Boundary.rpc` walkthrough: contract/handler split, router wiring, the four lifecycles, and typed-failure replay
-- [Routing](./routing.md) — `@weftui/router` builds on this SSR + hydration model for full-page nested routing
-- [`Boundary.rpc` API reference](../api/core.md#boundaryrpc)
-- [`ServerTag` API reference](../api/core.md#servertag)
+- [rpc data boundaries guide](./load-data-with-rpc.md) — the full `Boundary.rpc` walkthrough: contract/handler split, router wiring, the four lifecycles, and typed-failure replay
+- [Routing](./add-routing.md) — `@weftui/router` builds on this SSR + hydration model for full-page nested routing
+- [`Boundary.rpc` API reference](../reference/core.md#boundaryrpc)
+- [`ServerTag` API reference](../reference/core.md#servertag)
 - [examples/router-ssr](../../examples/router-ssr) — a runnable shop with an SSR-replayed, refetchable live-stock `Boundary.rpc`
 - [examples/ssr-hydration](../../examples/ssr-hydration) — SSR + hydration without server data loading
