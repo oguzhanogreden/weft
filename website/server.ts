@@ -163,6 +163,7 @@ async function startProd(): Promise<void> {
   const styles = (entry.css ?? []).map((file) => `/${file}`);
 
   // The built server bundle exports the same `makeHandler` as the source entry.
+  // @ts-ignore — resolved only after `vp build`; absent during `vp check`.
   const { makeHandler } = (await import("./dist/server/entry-server.js")) as {
     makeHandler: (
       clientEntry: string,
