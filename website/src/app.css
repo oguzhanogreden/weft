@@ -58,8 +58,8 @@
 }
 
 /* Expose the raw Radix steps as Tailwind color utilities (bg-slate-2,
- * border-slate-6, text-indigo-11, …) and as `var(--color-*)` for the bespoke
- * component CSS below. Values resolve to the Radix dark scale under `.dark`. */
+ * border-slate-6, text-indigo-11, …) — this is how components pull Radix colors.
+ * Values resolve to the Radix dark scale under `.dark`. */
 @theme {
   --color-slate-1: var(--slate-1);
   --color-slate-2: var(--slate-2);
