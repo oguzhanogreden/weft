@@ -14,8 +14,16 @@
 import { RouterServer } from "@weftui/router/server";
 import { Effect } from "effect";
 import { App } from "./app";
-import { DocsLive } from "./lib/docs-live";
+import { DocsLive, liveDocs } from "./lib/docs-live";
+import { prerenderPathsFor } from "./lib/prerender";
 import { documentShell } from "./layouts/shell";
+
+/**
+ * Every prerenderable pathname, derived from the baked doc model (`liveDocs.all`
+ * through `prerenderPathsFor`) — the single source of truth for the static build.
+ * Consumed by `website/prerender.ts` from the built server bundle.
+ */
+export const prerenderPaths: readonly string[] = prerenderPathsFor(liveDocs.all);
 
 /** Builds the web handler for a given client entry `src` and stylesheet hrefs. */
 export const makeHandler = (

@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual escape hatch: deploy the website without waiting for a release
+  # (used for the first Pages deploy and ad-hoc redeploys).
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -92,6 +95,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check, test, test-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      released: ${{ steps.semantic-release.outputs.released }}
+      version: ${{ steps.semantic-release.outputs.version }}
 
     steps:
       - name: Checkout (full history)
@@ -106,6 +112,53 @@ jobs:
         run: vp run pack
 
       - name: Release
+        id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: vpx semantic-release
+
+  deploy-website:
+    name: Deploy Website
+    runs-on: ubuntu-latest
+    needs: release
+    # Runs when a release was published, or on manual dispatch (release job is
+    # skipped then — hence !cancelled() instead of the default success() gate).
+    if: ${{ !cancelled() && (needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch') }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Never cancel an in-flight Pages deployment mid-publish.
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v6
+        with:
+          # Tags needed: website/build-version.ts derives __WEFT_VERSION__ from
+          # `git describe --tags`, including the tag pushed by the release job above.
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build static site
+        working-directory: website
+        run: vp run build:static
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: website/dist/static
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

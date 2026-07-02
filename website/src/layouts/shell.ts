@@ -50,6 +50,7 @@ export const documentShell = (clientEntry: string, styles: readonly string[] = [
     const match = yield* router.currentMatch.get;
     const meta = metaFor(pathnameOf(match.url), docs.get);
     const outlet = yield* Router.Outlet;
+    console.log(process.env.NODE_ENV);
     // `class="dark"` resolves the Radix dark-scale vars (scoped to `.dark, .dark-theme`)
     // and `data-theme="weft-dark"` selects the DaisyUI theme. See design-system.specs.md.
     return yield* h.html({ lang: "en", class: "dark", "data-theme": "weft-dark" }, [
@@ -62,6 +63,14 @@ export const documentShell = (clientEntry: string, styles: readonly string[] = [
           : [h.meta({ name: "description", content: meta.description })]),
         ...styles.map((href) => h.link({ rel: "stylesheet", href })),
       ]),
-      h.body([h.main({ id: "root" }, [outlet]), h.script({ type: "module", src: clientEntry })]),
+      h.body([
+        h.main({ id: "root" }, [outlet]),
+        h.script({ type: "module", src: clientEntry }),
+        h.script({
+          "data-goatcounter": "https://weft.goatcounter.com/count",
+          async: true,
+          src: "//gc.zgo.at/count.js",
+        }),
+      ]),
     ]);
   });
