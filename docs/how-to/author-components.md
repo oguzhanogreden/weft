@@ -255,3 +255,10 @@ const TableCells = ({ row }: { row: Row }) =>
 ```
 
 `h.fragment` returns a `Node<E, R>` that accumulates channels from all its children.
+
+## See also
+
+- [The Combinator API](../explanation/combinator-api.md) — `h`, `h.fragment`, and how `E`/`R` accumulate
+- [Reactive Primitives](../explanation/reactive-primitives.md) — the `Source` vocabulary props accept
+- [Add Routing](./add-routing.md) — route components are `Component` slots
+- [`@weftui/core` reference](../reference/core.md) — `Component`, `Source`, and the full surface

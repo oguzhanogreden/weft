@@ -20,11 +20,11 @@ function render(url: string): Promise<{ html: string; status: number }> {
 
 describe("website routes (SSR integration)", () => {
   it("AC1: /docs/:category/:slug renders the DocPage inside the DocsShell", async () => {
-    const { html, status } = await render("/docs/tutorial/getting-started");
+    const { html, status } = await render("/docs/tutorial/01-your-first-app");
     assert.equal(status, 200);
     assert.match(html, /class="docs-shell"/);
     // The markdown h1 (anchor-wrapped by rehype-autolink-headings).
-    assert.match(html, /<h1[^>]*>.*Getting Started.*<\/h1>/s);
+    assert.match(html, /<h1[^>]*>.*Your First App.*<\/h1>/s);
     // Sidebar groups + active link + TOC + footer all present.
     assert.match(html, /aria-current="page"/);
     assert.match(html, /On this page/);
@@ -39,23 +39,23 @@ describe("website routes (SSR integration)", () => {
   });
 
   it("AC6: the meta title reflects the doc frontmatter", async () => {
-    const { html } = await render("/docs/tutorial/getting-started");
-    assert.match(html, /<title>Getting Started · Weft<\/title>/);
+    const { html } = await render("/docs/tutorial/01-your-first-app");
+    assert.match(html, /<title>Your First App · Weft<\/title>/);
     assert.match(html, /name="description"/);
   });
 
   it("DS: the document root activates the dark DaisyUI/Radix theme", async () => {
-    const { html } = await render("/docs/tutorial/getting-started");
+    const { html } = await render("/docs/tutorial/01-your-first-app");
     // `class="dark"` resolves the Radix dark-scale vars (scoped to `.dark`);
     // `data-theme="weft-dark"` selects the DaisyUI theme. See design-system.specs.md.
     assert.match(html, /<html[^>]*class="dark"[^>]*>/);
     assert.match(html, /<html[^>]*data-theme="weft-dark"[^>]*>/);
   });
 
-  it("AC2: /docs aliases to the first doc (getting-started)", async () => {
+  it("AC2: /docs aliases to the first doc (the tutorial's first step)", async () => {
     const { html, status } = await render("/docs");
     assert.equal(status, 200);
-    assert.match(html, /<h1[^>]*>.*Getting Started.*<\/h1>/s);
+    assert.match(html, /<h1[^>]*>.*Your First App.*<\/h1>/s);
   });
 
   it("AC3: an unknown doc slug renders the 404 fallback", async () => {

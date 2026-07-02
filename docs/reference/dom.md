@@ -95,3 +95,9 @@ Re-exports the renderer error types:
 - `UnsupportedNodeTypeError` — a node type the renderer cannot handle was encountered.
 - `RenderError` — a general rendering failure.
 - `StreamSubscriptionError` — a reactive stream backing the tree failed to subscribe.
+
+## See also
+
+- [Render on the Server](../how-to/render-on-the-server.md) — a narrative walkthrough of the server/client split
+- [The Rendering Model](../explanation/rendering-model.md) — hydrate-in-place and why there is no virtual DOM
+- [`@weftui/core` reference](./core.md) · [`@weftui/router` reference](./router.md)

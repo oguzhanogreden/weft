@@ -24,7 +24,7 @@ import { Schema } from "effect";
 import { Docs } from "./../lib/docs-service";
 import { DocPage } from "./doc-page";
 
-/** `/docs` → render the first doc in nav order (alias to getting-started). */
+/** `/docs` → render the first doc in nav order (alias to the first tutorial step). */
 export const DocsIndexPage = Component.gen(function* () {
   const docs = yield* Docs;
   const parts = docs.nav.firstDocPath.split("/").filter((p) => p.length > 0);

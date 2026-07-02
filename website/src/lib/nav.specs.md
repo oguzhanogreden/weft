@@ -39,7 +39,7 @@ export const findNav: (path: string) => {
 - AC1: `navGroups` contains one group per distinct `section`, in the fixed order.
 - AC2: Links within a group are ordered by `order` then `title`.
 - AC3: `firstDocPath` equals the path of the first link in the first group
-  (getting-started) — used as the `/docs` alias target.
+  (the tutorial's first step) — used as the `/docs` alias target.
 - AC4: `findNav(path)` returns the matching `current` and correct `prev`/`next`
   per `flatNav`; ends of the list yield `undefined` neighbours.
 - AC5: Manifest is pure data built from the doc model — adding a `docs/*.md` with

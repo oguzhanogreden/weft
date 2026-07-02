@@ -154,3 +154,11 @@ The fallback is replaced atomically — either all children are visible or none 
 On the server, `renderToStreamHydratable` emits the fallback inline and appends patch scripts as children resolve. On the client, `hydrate` sees through `Boundary.suspend` boundaries and adopts the already-resolved DOM directly.
 
 `Boundary.suspend` is one of the boundary combinators — see the [core reference](../reference/core.md#boundarysuspend) for the full `Boundary.*` surface, including the failure-catch variants and `Boundary.rpc`.
+
+## See also
+
+- [The Rendering Model](./rendering-model.md) — why a `Node` is an `Effect` and how the tree renders
+- [Reactive Primitives](./reactive-primitives.md) — the `Source` vocabulary that reactive props and children accept
+- [Boundaries and Suspense](./boundaries-and-suspense.md) — the boundary combinators as tree nodes
+- [Author Components](../how-to/author-components.md) — `Component.gen` / `Component.make` in practice
+- [`@weftui/core` reference](../reference/core.md)

@@ -9,7 +9,7 @@ aesthetic, roughly one screen, dense.
 ## Sections
 
 1. **Hero**: tagline ("Reactive UI, woven from Effect."), one-line value prop,
-   primary CTA → Getting Started (`/docs/tutorial/getting-started`), secondary →
+   primary CTA → Tutorial (`/docs/tutorial/01-your-first-app`), secondary →
    GitHub.
 2. **Live hero demo**: a small interactive component from the demo registry
    (e.g. `reactive-counter`) — proves reactivity on the landing page itself.
@@ -24,7 +24,7 @@ aesthetic, roughly one screen, dense.
 - AC1: `/` renders hero, live demo, differentiators, code teaser, footer.
 - AC2: The live hero demo is interactive after hydrate (browser test asserts an
   interaction changes the DOM).
-- AC3: Primary CTA links to getting-started; GitHub link present.
+- AC3: Primary CTA links to the tutorial; GitHub link present.
 - AC4: SSR + hydrate identical (no mismatch, no flash).
 - AC5: `<title>` and meta description set for the landing page.
 

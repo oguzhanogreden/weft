@@ -17,8 +17,8 @@ import { renderHast } from "../lib/render-hast";
 
 /** Repo URL for GitHub links. */
 const REPO_URL = "https://github.com/stefvw93/weft";
-/** Primary CTA target. */
-const GETTING_STARTED = "/docs/tutorial/getting-started";
+/** Primary CTA target — the first step of the tutorial. */
+const GETTING_STARTED = "/docs/tutorial/01-your-first-app";
 
 /** The differentiators row content. */
 const DIFFERENTIATORS: ReadonlyArray<{ title: string; body: string }> = [

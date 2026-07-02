@@ -141,3 +141,10 @@ pipe(
 ```
 
 In practice you only encounter `NoPropValue` if you use a finite `Stream` as a prop and it ends before emitting — e.g., `Stream.empty` or `Stream.take(0, stream)`. Most usage with `SubscriptionRef.changes` or infinite streams never raises it.
+
+## See also
+
+- [The Rendering Model](./rendering-model.md) — streams as the weft woven through a static tree
+- [The Combinator API](./combinator-api.md) — how reactive props and children contribute `E`/`R`
+- [Style Reactively](../how-to/style-reactively.md) and [Render Keyed Lists](../how-to/render-keyed-lists.md) — reactive props and collections in practice
+- [`Source` reference](../reference/core.md#source-namespace) — the `Source` type and `Source.toSubscribable`

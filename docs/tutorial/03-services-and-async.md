@@ -1,0 +1,77 @@
+---
+title: Services and Async
+order: 3
+section: tutorial
+description: Give handlers access to services from the environment, and render async loading states by returning a Stream of nodes.
+---
+
+# Services and Async
+
+[So far](./02-reactivity.md) our state has been self-contained. Real apps talk to services and wait on async work. Both fall out of the same fact — a `Node` is an `Effect` — so both use plain Effect.
+
+## Handlers that use services
+
+An event handler can **return an Effect**, and that Effect runs in the component's environment — so it can read any service you provide at the mount boundary:
+
+```typescript
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
+import { Context, Effect, Layer, pipe } from "effect";
+
+class Logger extends Context.Tag("Logger")<
+  Logger,
+  { log: (message: string) => Effect.Effect<void> }
+>() {}
+
+const LoggerLive = Layer.succeed(Logger, {
+  log: (message) => Effect.sync(() => console.log(message)),
+});
+
+const LogButton = () =>
+  h.button(
+    {
+      onclick: () =>
+        Effect.gen(function* () {
+          const logger = yield* Logger;
+          yield* logger.log("Button clicked");
+        }),
+    },
+    "Log",
+  );
+
+// Provide the layer at mount — every handler in the tree can now read Logger.
+void Effect.runPromise(
+  pipe(mount(LogButton(), document.getElementById("root")!), Effect.provide(LoggerLive)),
+);
+```
+
+`Logger` entered the tree's requirement channel the moment `LogButton` read it, and you discharged it **once**, at `mount`, with `Effect.provide`. Provide too little and it is a compile error at the mount call. This is Weft's entire dependency-injection story — it is just Effect's. The deeper treatment is [Services and Context](../explanation/services-and-context.md).
+
+## Async loading states
+
+A component can return a **`Stream<Node>`** to show different content over time. Sequence a loading placeholder before the resolved content with `Stream.concat`:
+
+```typescript
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
+import { Effect, Stream } from "effect";
+
+const AsyncGreeting = ({ name }: { name: string }) =>
+  Stream.concat(
+    Stream.make(h.span("Loading…")),
+    Stream.fromEffect(
+      Effect.gen(function* () {
+        yield* Effect.sleep("1 second");
+        return yield* h.span(`Hello, ${name}!`);
+      }),
+    ),
+  );
+
+void Effect.runPromise(mount(AsyncGreeting({ name: "World" }), document.getElementById("root")!));
+```
+
+The stream emits the loading node first, then the resolved node — the renderer swaps the DOM in place on the second emission. This is the raw mechanism; for coordinating _several_ async regions with a single fallback, reach for [`Boundary.suspend`](../explanation/boundaries-and-suspense.md), which you will meet in the next step.
+
+## Next
+
+- [Errors and Server Rendering →](./04-errors-and-server.md) — catch failures with boundaries and render on the server

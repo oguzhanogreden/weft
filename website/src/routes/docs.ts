@@ -1,7 +1,7 @@
 /**
  * Documentation route descriptors.
  *
- * - `/docs` aliases to the first doc (the tutorial's getting-started) by rendering
+ * - `/docs` aliases to the first doc (the tutorial's first step) by rendering
  *   its content.
  * - `/docs/:category/:slug` looks up the doc model and renders it via `DocPage`;
  *   an unknown `(category, slug)` short-circuits to the router's not-found (404).
@@ -16,7 +16,7 @@
 
 import { Router } from "@weftui/router";
 
-/** `/docs` → render the first doc in nav order (alias to getting-started). */
+/** `/docs` → render the first doc in nav order (alias to the first tutorial step). */
 export const docsIndexRoute = Router.route("docs", {
   component: Router.lazy(() => import("./doc-page-impl").then((m) => m.DocsIndexPage)),
 });

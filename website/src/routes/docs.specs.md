@@ -7,7 +7,7 @@ build-time doc model. Mounted under the `DocsShell` layout.
 
 ## Routes
 
-- `/docs` → alias/redirect to `firstDocPath` (getting-started).
+- `/docs` → alias/redirect to `firstDocPath` (the tutorial's first step).
 - `/docs/:category/:slug` → `DocPage`: look up `getDoc(category, slug)`; render its
   `tree` via `renderHast`. Unknown `(category, slug)` → router `notFound` (404).
 
@@ -25,8 +25,8 @@ Uses `@weftui/router` `Router.route`, type-safe params, under the `DocsShell`
 
 ## Acceptance criteria
 
-- AC1: `/docs/tutorial/getting-started` renders the getting-started prose, headings,
-  links, and highlighted code.
+- AC1: `/docs/tutorial/01-your-first-app` renders the first tutorial step's prose,
+  headings, links, and highlighted code.
 - AC2: `/docs` redirects/aliases to the first doc.
 - AC3: Unknown slug → 404 fallback.
 - AC4: Relative inter-doc markdown links resolve to site routes and navigate via

@@ -300,3 +300,10 @@ These power the runtime and are exported for tooling/tests; most apps never touc
 | `Fields` / `FieldsType<F>`                                       | `Schema.Struct.Fields` and the `Type` side of its `Schema.Struct`.                                                          |
 | `Compiled` / `CompiledLeaf` / `CompiledLayout`                   | The compiled tree shapes.                                                                                                   |
 | `RouterOptions`                                                  | Options for `Router.router` (`notFound`).                                                                                   |
+
+## See also
+
+- [Add Routing](../how-to/add-routing.md) — the narrative guide to authoring a route tree
+- [Split Routes Lazily](../how-to/split-routes-lazily.md) · [Show Navigation Progress](../how-to/show-navigation-progress.md) — `Router.lazy` and `Router.navigating`
+- [`@weftui/core` reference](./core.md) · [`@weftui/dom` reference](./dom.md)
+- [`packages/router/router.specs.md`](../../packages/router/router.specs.md) — the full specification
