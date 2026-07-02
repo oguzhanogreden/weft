@@ -95,4 +95,3 @@ Re-exports the renderer error types:
 - `UnsupportedNodeTypeError` — a node type the renderer cannot handle was encountered.
 - `RenderError` — a general rendering failure.
 - `StreamSubscriptionError` — a reactive stream backing the tree failed to subscribe.
-  </content>

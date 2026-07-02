@@ -140,7 +140,7 @@ const SafeWidget = () =>
 
 Errors that fail their `match` condition (e.g. wrong tag in `catchTag`) re-raise to the nearest parent boundary. If there is no parent, the mount fails.
 
-See [examples/error-boundary](../../examples/error-boundary) for a runnable demo of all six variants.
+See [examples/error-boundary](../../examples/error-boundary) for a runnable demo of all six failure-catch variants.
 
 ## Server-side rendering
 

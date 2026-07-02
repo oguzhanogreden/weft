@@ -28,7 +28,7 @@ Weft is an Effect-native reactive DOM library — reactive UI, woven from Effect
 
 7. **[Routing](guides/routing.md)** — `@weftui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
 
-8. **[`@weftui/core` API Reference](api/core.md)** and **[`@weftui/router` API Reference](api/router.md)** — full API surface for both packages.
+8. **[`@weftui/core` API Reference](api/core.md)**, **[`@weftui/dom` API Reference](api/dom.md)**, and **[`@weftui/router` API Reference](api/router.md)** — full API surface for all three packages.
 
 ---
 
@@ -41,7 +41,7 @@ The [`examples/`](../examples/) directory contains standalone runnable apps. Eac
 | `async-data-loading`         | Loading states, retry, error boundaries with Stream and Effect        |
 | `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive handlers         |
 | `element-ref`                | DOM refs with `SubscriptionRef<Option<HTMLElement>>`                  |
-| `error-boundary`             | All six `Boundary.*` variants                                         |
+| `error-boundary`             | All six failure-catch `Boundary.*` variants                           |
 | `form-handling`              | Reactive inputs, Schema validation, Effect submit handlers            |
 | `keyed-list`                 | Keyed list rendering                                                  |
 | `list-rendering`             | Static and stream-based lists, fragments, nested iterables            |

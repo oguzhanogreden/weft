@@ -138,17 +138,19 @@ See [component-authoring.md](../guides/component-authoring.md) for a full walkth
 
 ## Suspense boundaries
 
-`Suspense` wraps async children and shows a fallback until all of them have emitted their first value:
+`Boundary.suspend` wraps async children and shows a fallback until all of them have emitted their first value:
 
 ```typescript
-import { h, Suspense } from "@weftui/core";
+import { Boundary, h } from "@weftui/core";
 
-Suspense({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
+Boundary.suspend({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
   AsyncCard({ id: 1 }),
   AsyncCard({ id: 2 }),
 ]);
 ```
 
-The fallback is replaced atomically — either all children are visible or none are. This prevents partial flicker when multiple async siblings resolve at different times.
+The fallback is replaced atomically — either all children are visible or none are. This prevents partial flicker when multiple async siblings resolve at different times. The boundary's node type is `Node<ChildrenE, ChildrenR>`: the children's `E`/`R` channels accumulate onto it, exactly as they would for a plain `h.*` parent.
 
-On the server, `renderToStreamHydratable` emits the fallback inline and appends patch scripts as children resolve. On the client, `hydrate` sees through `Suspense` boundaries and adopts the already-resolved DOM directly.
+On the server, `renderToStreamHydratable` emits the fallback inline and appends patch scripts as children resolve. On the client, `hydrate` sees through `Boundary.suspend` boundaries and adopts the already-resolved DOM directly.
+
+`Boundary.suspend` is one of the boundary combinators — see [api/core.md](../api/core.md#boundarysuspend) for the full `Boundary.*` surface, including the failure-catch variants and `Boundary.rpc`.
