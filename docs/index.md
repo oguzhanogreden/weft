@@ -26,6 +26,17 @@ The docs follow the [Diátaxis](https://diataxis.fr) model. Pick your entry poin
 
 New to the model itself? Read [The Rendering Model](explanation/rendering-model.md) — why there is no virtual DOM, and what "streams are the weft" means.
 
+## Packages
+
+Three published packages make up Weft's public API, plus one build-time plugin:
+
+- **`@weftui/core`** — element builders (`h`), components, sources/streams, and boundaries. Start here.
+- **`@weftui/dom`** — the renderer: `./client` (`mount`/`hydrate`) and `./server` (`renderToString*`).
+- **`@weftui/router`** — universal nested routing, `Router.lazy`, and the rpc seam.
+- **`@weftui/vite`** — a build-time Vite plugin (tooling, not a runtime API).
+
+`@weftui/base` is an internal, currently-empty stub — it has no public primitives; ignore it.
+
 ## Examples
 
 The [`examples/`](../examples/) directory contains standalone runnable apps. Each covers a specific pattern and ships with a browser test:
@@ -41,6 +52,8 @@ The [`examples/`](../examples/) directory contains standalone runnable apps. Eac
 | `list-rendering`             | Static and stream-based lists, fragments, nested iterables                           |
 | `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions                         |
 | `router-ssr`                 | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc`, `Router.lazy` |
+| `server-boundary`            | `Boundary.rpc` client-first mount + refetch, router-less                             |
 | `ssr-hydration`              | SSR + hydration without server data loading                                          |
 | `subscription-ref`           | Local state, derived streams, coordinating multiple refs                             |
 | `suspense`                   | Suspense boundaries for streaming SSR and client coordination                        |
+| `type-augmentation`          | Typed custom elements on `h` via the `CustomElements` interface                      |
