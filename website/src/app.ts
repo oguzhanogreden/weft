@@ -32,9 +32,9 @@ export const App = Router.router(
   ]),
   {
     notFound: () =>
-      h.section({ class: "notfound" }, [
-        h.h2("404 — page not found"),
-        h.p([h.a({ href: "/" }, "Go home")]),
+      h.section({ class: "mx-auto max-w-4xl px-5 py-24 text-center" }, [
+        h.h2({ class: "mb-4 text-2xl font-semibold" }, "404 — page not found"),
+        h.p([h.a({ href: "/", class: "text-indigo-11 no-underline" }, "Go home")]),
       ]),
   },
 );

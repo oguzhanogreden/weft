@@ -41,7 +41,7 @@ describe("Home landing page (SSR)", () => {
 
   it("AC1: renders the footer with links and the early-development note", async () => {
     const html = await renderHome();
-    assert.match(html, /home-footer/);
+    assert.match(html, /<footer/);
     assert.match(html, /early development/);
   });
 });
