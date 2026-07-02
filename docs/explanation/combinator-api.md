@@ -1,6 +1,6 @@
 ---
 title: The Combinator API
-order: 1
+order: 2
 section: explanation
 description: How h, h.fragment, and Component.gen / Component.make work; why Node is an Effect; how E and R accumulate through a tree.
 ---

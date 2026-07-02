@@ -110,12 +110,11 @@ When you want the caller's reactive prop types to flow into the returned node's 
 - **`Component.gen`** — body is a generator. Use when you need `yield*` to set up local state or pull from services.
 
 ```typescript
-import { Component, h } from "@weftui/core";
-import { Stream } from "effect";
+import { Component, h, Source } from "@weftui/core";
 
 interface CardProps {
-  title: string | Stream.Stream<string>;
-  body?: string | Stream.Stream<string>;
+  title: Source.Source<string>;
+  body?: Source.Source<string>;
 }
 
 const Card = Component.make((props: CardProps) =>
@@ -125,6 +124,8 @@ const Card = Component.make((props: CardProps) =>
   ]),
 );
 ```
+
+`Source.Source<string>` is Weft's caller-facing prop vocabulary — a single type covering a static `string`, a `Stream<string>`, an `Effect<string>`, or a `Subscribable<string>` — so you don't hand-write `string | Stream.Stream<string> | …` on every prop. Passing a `Source` straight to `h` (as above) is all you need when the value is just spliced into the tree; the renderer normalizes it.
 
 Now the caller's stream types are visible in the returned node:
 
@@ -168,19 +169,36 @@ ItemList({ items: ["a", "b"] }, (item) => [h.li(item)]);
 
 ## Props typing
 
-For components that accept both static and reactive values for a prop, type the prop as a union:
+For a prop that accepts both static and reactive values, type it as [`Source.Source<T>`](../reference/core.md#source-namespace) rather than hand-writing the union. `Source.Source<T>` **is** that union — `T | Stream<T> | Effect<T> | Subscribable<T>` — so the caller can pass a plain value or any reactive shape interchangeably, and you write it once:
 
 ```typescript
-import { Stream } from "effect";
+import { Source } from "@weftui/core";
 
 interface ButtonProps {
-  label: string | Stream.Stream<string>; // static or reactive text
-  disabled?: boolean | Stream.Stream<boolean>; // static or reactive boolean
+  label: Source.Source<string>; // static or reactive text
+  disabled?: Source.Source<boolean>; // static or reactive boolean
   onclick?: () => void | Effect.Effect<void>; // plain or Effect-returning handler
 }
 ```
 
-When a caller passes a plain string, the component's node type has `never` for that prop's channels. When they pass a `Stream.Stream<string, never, SomeService>`, `SomeService` appears in the `R` channel.
+When a caller passes a plain string, the component's node type has `never` for that prop's channels. When they pass a `Stream.Stream<string, never, SomeService>`, `SomeService` appears in the `R` channel — the extraction is exactly `Source.Success` / `Source.Error` / `Source.Context`.
+
+### Reading a `Source` in the body
+
+Splicing a `Source` straight into `h` (`[props.label]`) is enough when you only place it in the tree. When the body needs to **read or derive** from the value — combine two props, feed a stream operator, drive logic — normalize it first with [`Source.toSubscribable`](../reference/core.md#sourcetosubscribablesource-key), which turns any `Source<A>` into an await-first, hot `Subscribable<A>`:
+
+```typescript
+import { Component, h, Source } from "@weftui/core";
+import { Stream } from "effect";
+
+const LoudLabel = Component.gen(function* (props: { label: Source.Source<string> }) {
+  const label = yield* Source.toSubscribable(props.label); // Subscribable<string>
+  // Now derive from it like any Subscribable — static, Effect, and Stream inputs all work.
+  return yield* h.strong([Stream.map(label.changes, (text) => text.toUpperCase())]);
+});
+```
+
+`toSubscribable` is scoped: a `Stream` prop is pumped by a fiber that terminates with the component's instance scope, an `Effect` prop is memoized, an existing `Subscribable` is threaded through by reference, and a static value emits once. It is the same normalization the renderer applies to props internally — reach for it whenever you need the value as a `Subscribable` instead of leaving it opaque.
 
 ## Composing components
 

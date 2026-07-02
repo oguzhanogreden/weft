@@ -77,6 +77,23 @@ Router.router<T, NF>(root: T, options: { notFound: () => NF }): RouterDef<E, R>;
 
 Seals a route tree into a [`RouterDef`](#types), compiling it eagerly (so leaf references are stamped for `href`) and capturing the app-level not-found page. The tree's aggregate channels (plus the not-found page's) ride on the returned `RouterDef`'s phantom `E`/`R`.
 
+### `Router.lazy`
+
+```typescript
+Router.lazy<S extends ComponentSlot>(
+  load: () => Promise<S>,
+): () => Node<Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>>;
+```
+
+Wraps a dynamic-import loader as a component slot, so a route's **component** is code-split into its own chunk while the **descriptor** (segment + param schemas) stays eager. `load` returns a `Promise` resolving the component — typically `() => import("./page").then((m) => m.Page)`. Drops directly into `Router.route({ component })` and `Router.layout({ component })`.
+
+- **Channels preserved.** The returned slot's `E`/`R` equal the resolved component's, so a lazy route has the identical type to declaring it eagerly (an unmet requirement is still a compile error at `Router.router`).
+- **Only the matched branch loads**, on the server during render and on the client on navigation. Client navigation is **deferred-commit** (see [`Router.navigating`](#routernavigating)): the chunk resolves _before_ the URL commits, so the previous page stays mounted and the swap is blank-free. The load `Promise` is memoized per slot, so revisits are synchronous.
+- **A rejected `load` is a defect** (`Effect.promise` dies) — a deploy-skew/offline condition surfaced through normal defect handling, kept off the `E` channel; the rejection is memoized (no silent retry).
+- The resolved value should be a `Component` (`Component.make`/`Component.gen`); a bare `() => Node` thunk loses its channels through the loader `Promise` — wrap it in `Component.make`.
+
+See the [Split Routes Lazily](../how-to/split-routes-lazily.md) how-to and `packages/router/src/lazy-component.specs.md`.
+
 ### `Router.Outlet`
 
 A `Context.Tag` whose value is the node to splice for the next level down. A layout (or the server document shell) reads it with `const outlet = yield* Router.Outlet`. Typed **opaque** as `Node<never, never>`, and discharged by the router at render time, so it never appears in a reader's aggregate requirement channel.
@@ -98,6 +115,28 @@ Router.queryStream<F extends Fields>(fields: F): Effect<Subscribable<FieldsType<
 ```
 
 The **reactive** counterparts. Each resolves a `Subscribable<FieldsType<F>>` derived from `currentMatch.changes`, so a component can render `[(yield* Router.queryStream(fields)).changes]` and update **in place** even when the outlet keeps the same leaf mounted — exactly the query-only case (`setQuery` / `patchQuery`) a snapshot `Router.query` would miss. Resilient across navigations: a `NotFound` match yields the empty subset rather than failing, so the stream stays live.
+
+### `Router.navigating`
+
+```typescript
+type NavState =
+  | { readonly _tag: "Idle" }
+  | { readonly _tag: "Navigating"; readonly to: string };
+
+// on the Router service:
+readonly navigating: Subscribable.Subscribable<NavState>;
+
+// accessor, mirroring paramsStream/queryStream:
+Router.navigatingStream: Effect<Subscribable<NavState>, never, Router>;
+```
+
+The reactive navigation-state signal, for rendering pending UI (a top progress bar, dimmed outlet) during a **deferred-commit** navigation. It transitions `Idle → Navigating{ to }` while the router resolves a [`Router.lazy`](#routerlazy) chunk in the target branch, and back to `Idle` on commit. `NavState` is exported from `@weftui/router` and `@weftui/router/client`.
+
+- **Eager navigations never flip it** — a branch with no lazy node commits synchronously and `navigating` stays `Idle`, so reading it costs nothing in an eager app.
+- **Latest-wins** across rapid navigations (a superseded navigation never resets it); **popstate** (back/forward) into a lazy route also reports; a **rejected chunk load** resets it to `Idle` before the defect surfaces.
+- **Server-side it is a constant `Idle`** (server render is buffered), so a component reading it type-checks and renders on both sides.
+
+See the [Show Navigation Progress](../how-to/show-navigation-progress.md) how-to and `packages/router/src/pending-navigation.specs.md`.
 
 ## `href`
 

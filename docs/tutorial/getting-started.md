@@ -159,14 +159,14 @@ const StockPanel = (id: number) =>
   );
 ```
 
-See the [rpc data boundaries guide](./load-data-with-rpc.md) for the full model — the contract/handler split, router wiring, the four lifecycles, and typed-failure replay.
+See the [rpc data boundaries guide](../how-to/load-data-with-rpc.md) for the full model — the contract/handler split, router wiring, the four lifecycles, and typed-failure replay.
 
 ## Next steps
 
 - [Combinator API](../explanation/combinator-api.md) — deep dive into `h`, `h.fragment`, and `Component.gen` / `Component.make`
 - [Reactive Primitives](../explanation/reactive-primitives.md) — the full `Source` vocabulary and how streams flow through the tree
-- [Component Authoring](./author-components.md) — writing reusable components with `Component.gen` / `Component.make`
-- [Server-Side Rendering](./render-on-the-server.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
-- [Routing](./add-routing.md) — universal nested routing with `@weftui/router`
+- [Component Authoring](../how-to/author-components.md) — writing reusable components with `Component.gen` / `Component.make`
+- [Server-Side Rendering](../how-to/render-on-the-server.md) — SSR, hydration, and rpc-backed data with `Boundary.rpc`
+- [Routing](../how-to/add-routing.md) — universal nested routing with `@weftui/router`
 - [`@weftui/core` API Reference](../reference/core.md) and [`@weftui/router` API Reference](../reference/router.md)
 - [examples/](../../examples/) — runnable examples covering common patterns
