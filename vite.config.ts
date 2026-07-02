@@ -1,17 +1,6 @@
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
-import { weftDocs } from "./website/src/lib/docs-plugin";
-
-// The website's doc-model plugin is registered at the root so `virtual:weft-docs`
-// resolves to the real baked docs under the shared test runner (`vp test`). It only
-// activates for that virtual id, so other packages' tests are unaffected.
-const docsRoot = fileURLToPath(new URL("docs", import.meta.url));
 
 export default defineConfig({
-  // `tsconfigPaths` resolves each package's `~/*` alias per-file from its own
-  // tsconfig (the built-in `resolve.tsconfigPaths` reads only a root tsconfig, which
-  // does not exist here, so `packages/*` tests could not resolve `~` under `vp test`).
-  plugins: [weftDocs({ docsRoot })],
   staged: {
     "*": "vp check --fix",
   },
@@ -37,12 +26,12 @@ export default defineConfig({
       },
     },
   },
-  resolve: {
-    tsconfigPaths: true,
-  },
+  // Each Vitest project runs under its own package's vite config, so
+  // package-specific settings (defines, plugins like the website's `weftDocs`,
+  // `~` alias resolution) apply to that package's tests without hoisting
+  // anything to this root config.
   test: {
-    include: ["**/*.test.{ts,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**", "**/*.browser.test.{ts,tsx}"],
+    projects: ["packages/*", "website"],
   },
   fmt: {
     ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],

@@ -23,6 +23,13 @@ export default defineConfig({
     __WEFT_VERSION__: JSON.stringify(latestReleaseTag()),
   },
   plugins: [tailwindcss(), weftDocs({ docsRoot })],
+  // Node/jsdom tests for this package (run as a Vitest project from the root
+  // config). Browser e2e tests are excluded here and run via the root
+  // `vitest.browser.config.ts` instead.
+  test: {
+    include: ["src/**/*.test.{ts,tsx}"],
+    exclude: ["**/*.browser.test.{ts,tsx}"],
+  },
   build: {
     manifest: true,
     outDir: "dist/client",
