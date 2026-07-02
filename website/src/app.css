@@ -92,3 +92,20 @@
   --color-indigo-11: var(--brown-11);
   --color-indigo-12: var(--brown-12);
 }
+
+:root {
+  --top-bar-height: 3.5rem;
+}
+
+.prose {
+  & h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    & a {
+      text-decoration: none;
+    }
+  }
+}

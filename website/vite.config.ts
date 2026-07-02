@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 import tailwindcss from "@tailwindcss/vite";
 import { weftDocs } from "./src/lib/docs-plugin";
+import { latestReleaseTag } from "./build-version";
 
 const weftPacks = ["@weftui/core#pack", "@weftui/dom#pack", "@weftui/router#pack"];
 
@@ -18,6 +19,9 @@ const weftPacks = ["@weftui/core#pack", "@weftui/dom#pack", "@weftui/router#pack
 const docsRoot = fileURLToPath(new URL("../docs", import.meta.url));
 
 export default defineConfig({
+  define: {
+    __WEFT_VERSION__: JSON.stringify(latestReleaseTag()),
+  },
   plugins: [tailwindcss(), weftDocs({ docsRoot })],
   build: {
     manifest: true,

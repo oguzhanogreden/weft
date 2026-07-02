@@ -9594,7 +9594,7 @@
       "source_file": "packages/dom/src/__tests__/rpc-stub.ts",
       "source_location": "L1",
       "id": "tests_rpc_stub",
-      "community": 27,
+      "community": 133,
       "norm_label": "rpc-stub.ts"
     },
     {
@@ -9603,7 +9603,7 @@
       "source_file": "packages/dom/src/__tests__/rpc-stub.ts",
       "source_location": "L12",
       "id": "tests_rpc_stub_norpc",
-      "community": 27,
+      "community": 133,
       "norm_label": "norpc"
     },
     {
@@ -9666,7 +9666,7 @@
       "source_file": "packages/dom/src/boundary-replay.ts",
       "source_location": "L32",
       "id": "src_boundary_replay_serverboundaryreplayprops",
-      "community": 3,
+      "community": 90,
       "norm_label": "serverboundaryreplayprops"
     },
     {
@@ -10125,7 +10125,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L1",
       "id": "client_hydrate_failure_test",
-      "community": 106,
+      "community": 103,
       "norm_label": "hydrate-failure.test.ts"
     },
     {
@@ -10134,7 +10134,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L10",
       "id": "client_hydrate_failure_test_createtestdom",
-      "community": 106,
+      "community": 103,
       "norm_label": "createtestdom()"
     },
     {
@@ -10143,7 +10143,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L19",
       "id": "client_hydrate_failure_test_createroot",
-      "community": 106,
+      "community": 103,
       "norm_label": "createroot()"
     },
     {
@@ -10152,7 +10152,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L26",
       "id": "client_hydrate_failure_test_until",
-      "community": 106,
+      "community": 103,
       "norm_label": "until()"
     },
     {
@@ -10161,7 +10161,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L36",
       "id": "client_hydrate_failure_test_waitfor",
-      "community": 106,
+      "community": 103,
       "norm_label": "waitfor()"
     },
     {
@@ -10170,7 +10170,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L41",
       "id": "client_hydrate_failure_test_capturingconsoleerror",
-      "community": 106,
+      "community": 103,
       "norm_label": "capturingconsoleerror()"
     },
     {
@@ -10179,7 +10179,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L58",
       "id": "client_hydrate_failure_test_lateerror",
-      "community": 106,
+      "community": 103,
       "norm_label": "lateerror"
     },
     {
@@ -10188,7 +10188,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L59",
       "id": "client_hydrate_failure_test_nopeerror",
-      "community": 106,
+      "community": 103,
       "norm_label": "nopeerror"
     },
     {
@@ -10197,7 +10197,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L60",
       "id": "client_hydrate_failure_test_missingerror",
-      "community": 106,
+      "community": 103,
       "norm_label": "missingerror"
     },
     {
@@ -10206,7 +10206,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L68",
       "id": "client_hydrate_failure_test_neverchild",
-      "community": 106,
+      "community": 103,
       "norm_label": "neverchild"
     },
     {
@@ -10215,7 +10215,7 @@
       "source_file": "packages/dom/src/client/hydrate-failure.test.ts",
       "source_location": "L77",
       "id": "client_hydrate_failure_test_failafterfirst",
-      "community": 106,
+      "community": 103,
       "norm_label": "failafterfirst()"
     },
     {
@@ -10296,7 +10296,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L1",
       "id": "client_hydrate_test",
-      "community": 134,
+      "community": 133,
       "norm_label": "hydrate.test.ts"
     },
     {
@@ -10305,7 +10305,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L17",
       "id": "client_hydrate_test_rendertostring",
-      "community": 27,
+      "community": 133,
       "norm_label": "rendertostring()"
     },
     {
@@ -10314,7 +10314,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L18",
       "id": "client_hydrate_test_rendertostringhydratable",
-      "community": 134,
+      "community": 133,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -10323,7 +10323,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L25",
       "id": "client_hydrate_test_createtestdom",
-      "community": 134,
+      "community": 133,
       "norm_label": "createtestdom()"
     },
     {
@@ -10332,7 +10332,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L34",
       "id": "client_hydrate_test_createroot",
-      "community": 134,
+      "community": 133,
       "norm_label": "createroot()"
     },
     {
@@ -10341,7 +10341,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L41",
       "id": "client_hydrate_test_seedserverhtml",
-      "community": 134,
+      "community": 133,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -10350,7 +10350,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L48",
       "id": "client_hydrate_test_waitfor",
-      "community": 134,
+      "community": 133,
       "norm_label": "waitfor()"
     },
     {
@@ -10818,7 +10818,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1191",
       "id": "client_render_updatestreamchild",
-      "community": 159,
+      "community": 4,
       "norm_label": "updatestreamchild()"
     },
     {
@@ -10827,7 +10827,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1243",
       "id": "client_render_istextvalue",
-      "community": 159,
+      "community": 4,
       "norm_label": "istextvalue()"
     },
     {
@@ -10836,7 +10836,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1253",
       "id": "client_render_staticelementdescriptor",
-      "community": 159,
+      "community": 4,
       "norm_label": "staticelementdescriptor()"
     },
     {
@@ -10845,7 +10845,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1278",
       "id": "client_render_patchelementinplace",
-      "community": 159,
+      "community": 4,
       "norm_label": "patchelementinplace()"
     },
     {
@@ -10854,7 +10854,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1311",
       "id": "client_render_patchchildreninplace",
-      "community": 159,
+      "community": 4,
       "norm_label": "patchchildreninplace()"
     },
     {
@@ -10908,7 +10908,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1472",
       "id": "client_render_renderlist",
-      "community": 240,
+      "community": 3,
       "norm_label": "renderlist()"
     },
     {
@@ -10998,7 +10998,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1951",
       "id": "client_render_hydrate",
-      "community": 4,
+      "community": 103,
       "norm_label": "hydrate()"
     },
     {
@@ -11016,7 +11016,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2035",
       "id": "client_render_hydratenode",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratenode()"
     },
     {
@@ -11025,7 +11025,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2151",
       "id": "client_render_hydratetext",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratetext()"
     },
     {
@@ -11034,7 +11034,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2187",
       "id": "client_render_makehydrationready",
-      "community": 4,
+      "community": 103,
       "norm_label": "makehydrationready()"
     },
     {
@@ -11043,7 +11043,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2212",
       "id": "client_render_makesettleonce",
-      "community": 4,
+      "community": 106,
       "norm_label": "makesettleonce()"
     },
     {
@@ -11052,7 +11052,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2227",
       "id": "client_render_hydratereactive",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratereactive()"
     },
     {
@@ -11061,7 +11061,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2322",
       "id": "client_render_hydratefirstemission",
-      "community": 159,
+      "community": 4,
       "norm_label": "hydratefirstemission()"
     },
     {
@@ -11070,7 +11070,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2368",
       "id": "client_render_hydratesubstitutedsuspense",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratesubstitutedsuspense()"
     },
     {
@@ -11079,7 +11079,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2436",
       "id": "client_render_findmatchingsuspenseend",
-      "community": 4,
+      "community": 106,
       "norm_label": "findmatchingsuspenseend()"
     },
     {
@@ -11115,7 +11115,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2702",
       "id": "client_render_hydrateserverboundary",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydrateserverboundary()"
     },
     {
@@ -11124,7 +11124,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2774",
       "id": "client_render_hydrateelement",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydrateelement()"
     },
     {
@@ -11133,7 +11133,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2804",
       "id": "client_render_hydratechildren",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratechildren()"
     },
     {
@@ -11151,7 +11151,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2853",
       "id": "client_render_hydratelist",
-      "community": 4,
+      "community": 106,
       "norm_label": "hydratelist()"
     },
     {
@@ -11160,7 +11160,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L2953",
       "id": "client_render_collectadopteditems",
-      "community": 4,
+      "community": 106,
       "norm_label": "collectadopteditems()"
     },
     {
@@ -11187,7 +11187,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L3169",
       "id": "client_render_seedstreamidcounter",
-      "community": 4,
+      "community": 106,
       "norm_label": "seedstreamidcounter()"
     },
     {
@@ -11196,7 +11196,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L3187",
       "id": "client_render_findmatchingend",
-      "community": 4,
+      "community": 106,
       "norm_label": "findmatchingend()"
     },
     {
@@ -11205,7 +11205,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L3213",
       "id": "client_render_describenode",
-      "community": 4,
+      "community": 106,
       "norm_label": "describenode()"
     },
     {
@@ -11214,7 +11214,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L3229",
       "id": "client_render_mismatch",
-      "community": 4,
+      "community": 106,
       "norm_label": "mismatch()"
     },
     {
@@ -11565,7 +11565,7 @@
       "source_file": "packages/dom/src/client/suspense.test.ts",
       "source_location": "L13",
       "id": "client_suspense_test_rendertostringhydratable",
-      "community": 134,
+      "community": 133,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -11763,7 +11763,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L1",
       "id": "src_data",
-      "community": 240,
+      "community": 26,
       "norm_label": "data.ts"
     },
     {
@@ -11772,7 +11772,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L10",
       "id": "src_data_unsupportednodetypeerror",
-      "community": 240,
+      "community": 26,
       "norm_label": "unsupportednodetypeerror"
     },
     {
@@ -11781,7 +11781,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L18",
       "id": "src_data_streamsubscriptionerror",
-      "community": 240,
+      "community": 26,
       "norm_label": "streamsubscriptionerror"
     },
     {
@@ -11790,7 +11790,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L26",
       "id": "src_data_rendererror",
-      "community": 240,
+      "community": 26,
       "norm_label": "rendererror"
     },
     {
@@ -11799,7 +11799,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L36",
       "id": "src_data_hydrationmismatcherror",
-      "community": 240,
+      "community": 26,
       "norm_label": "hydrationmismatcherror"
     },
     {
@@ -11808,7 +11808,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L49",
       "id": "src_data_boundarycontext",
-      "community": 240,
+      "community": 26,
       "norm_label": "boundarycontext"
     },
     {
@@ -11817,7 +11817,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L69",
       "id": "src_data_suspensecontext",
-      "community": 240,
+      "community": 26,
       "norm_label": "suspensecontext"
     },
     {
@@ -11826,7 +11826,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L86",
       "id": "src_data_renderresult",
-      "community": 240,
+      "community": 26,
       "norm_label": "renderresult"
     },
     {
@@ -11835,7 +11835,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L105",
       "id": "src_data_hydrationready",
-      "community": 240,
+      "community": 26,
       "norm_label": "hydrationready"
     },
     {
@@ -11844,7 +11844,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L118",
       "id": "src_data_rendercontext",
-      "community": 240,
+      "community": 26,
       "norm_label": "rendercontext"
     },
     {
@@ -11853,7 +11853,7 @@
       "source_file": "packages/dom/src/index.ts",
       "source_location": "L1",
       "id": "packages_dom_src_index_ts_src_index",
-      "community": 240,
+      "community": 26,
       "norm_label": "index.ts"
     },
     {
@@ -11862,7 +11862,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L1",
       "id": "server_boundary_ssr_test",
-      "community": 27,
+      "community": 159,
       "norm_label": "boundary-ssr.test.ts"
     },
     {
@@ -11871,7 +11871,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L16",
       "id": "server_boundary_ssr_test_rendertostream",
-      "community": 27,
+      "community": 159,
       "norm_label": "rendertostream()"
     },
     {
@@ -11880,7 +11880,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L17",
       "id": "server_boundary_ssr_test_rendertostreamhydratable",
-      "community": 27,
+      "community": 159,
       "norm_label": "rendertostreamhydratable()"
     },
     {
@@ -11889,7 +11889,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L19",
       "id": "server_boundary_ssr_test_rendertostring",
-      "community": 27,
+      "community": 159,
       "norm_label": "rendertostring()"
     },
     {
@@ -11898,7 +11898,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L23",
       "id": "server_boundary_ssr_test_run",
-      "community": 27,
+      "community": 159,
       "norm_label": "run()"
     },
     {
@@ -11907,7 +11907,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L25",
       "id": "server_boundary_ssr_test_runhydratable",
-      "community": 27,
+      "community": 159,
       "norm_label": "runhydratable()"
     },
     {
@@ -11916,7 +11916,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L28",
       "id": "server_boundary_ssr_test_runstring",
-      "community": 27,
+      "community": 159,
       "norm_label": "runstring()"
     },
     {
@@ -11925,7 +11925,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L32",
       "id": "server_boundary_ssr_test_fooerror",
-      "community": 27,
+      "community": 159,
       "norm_label": "fooerror"
     },
     {
@@ -11997,7 +11997,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L1",
       "id": "server_render_to_stream",
-      "community": 3,
+      "community": 90,
       "norm_label": "render-to-stream.ts"
     },
     {
@@ -12006,7 +12006,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L52",
       "id": "server_render_to_stream_regioncounter",
-      "community": 3,
+      "community": 90,
       "norm_label": "regioncounter"
     },
     {
@@ -12015,7 +12015,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L61",
       "id": "server_render_to_stream_serversuspensectx",
-      "community": 3,
+      "community": 90,
       "norm_label": "serversuspensectx"
     },
     {
@@ -12024,7 +12024,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L93",
       "id": "server_render_to_stream_serverboundaryfailure",
-      "community": 3,
+      "community": 90,
       "norm_label": "serverboundaryfailure"
     },
     {
@@ -12033,7 +12033,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L101",
       "id": "server_render_to_stream_failurecollector",
-      "community": 3,
+      "community": 90,
       "norm_label": "failurecollector"
     },
     {
@@ -12042,7 +12042,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L109",
       "id": "server_render_to_stream_listssrprops",
-      "community": 3,
+      "community": 90,
       "norm_label": "listssrprops"
     },
     {
@@ -12069,7 +12069,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L292",
       "id": "server_render_to_stream_renderboundaryssr",
-      "community": 3,
+      "community": 134,
       "norm_label": "renderboundaryssr()"
     },
     {
@@ -12078,7 +12078,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L348",
       "id": "server_render_to_stream_serverboundaryssrprops",
-      "community": 3,
+      "community": 90,
       "norm_label": "serverboundaryssrprops"
     },
     {
@@ -12087,7 +12087,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L366",
       "id": "server_render_to_stream_stashserverboundaryfailure",
-      "community": 3,
+      "community": 90,
       "norm_label": "stashserverboundaryfailure()"
     },
     {
@@ -12096,7 +12096,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L397",
       "id": "server_render_to_stream_staticresource",
-      "community": 3,
+      "community": 134,
       "norm_label": "staticresource()"
     },
     {
@@ -12105,7 +12105,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L426",
       "id": "server_render_to_stream_renderserverboundaryssr",
-      "community": 3,
+      "community": 134,
       "norm_label": "renderserverboundaryssr()"
     },
     {
@@ -12114,7 +12114,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L468",
       "id": "server_render_to_stream_firstlistemission",
-      "community": 3,
+      "community": 90,
       "norm_label": "firstlistemission()"
     },
     {
@@ -12123,7 +12123,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L489",
       "id": "server_render_to_stream_renderssrnode",
-      "community": 3,
+      "community": 134,
       "norm_label": "renderssrnode()"
     },
     {
@@ -12132,7 +12132,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L600",
       "id": "server_render_to_stream_listtossr",
-      "community": 3,
+      "community": 90,
       "norm_label": "listtossr()"
     },
     {
@@ -12141,7 +12141,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L616",
       "id": "server_render_to_stream_fragmenttossr",
-      "community": 3,
+      "community": 134,
       "norm_label": "fragmenttossr()"
     },
     {
@@ -12168,7 +12168,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L786",
       "id": "server_render_to_stream_fragmenttohydratablessr",
-      "community": 3,
+      "community": 90,
       "norm_label": "fragmenttohydratablessr()"
     },
     {
@@ -12186,7 +12186,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L824",
       "id": "server_render_to_stream_rendertostream",
-      "community": 27,
+      "community": 159,
       "norm_label": "rendertostream()"
     },
     {
@@ -12195,7 +12195,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L864",
       "id": "server_render_to_stream_patchstream",
-      "community": 27,
+      "community": 159,
       "norm_label": "patchstream()"
     },
     {
@@ -12267,7 +12267,7 @@
       "source_file": "packages/dom/src/server/render-to-string.ts",
       "source_location": "L30",
       "id": "server_render_to_string_rendertostringhydratable",
-      "community": 134,
+      "community": 133,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -12276,7 +12276,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L1",
       "id": "server_serialize",
-      "community": 3,
+      "community": 134,
       "norm_label": "serialize.ts"
     },
     {
@@ -12285,7 +12285,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L8",
       "id": "server_serialize_iseventhandler",
-      "community": 3,
+      "community": 134,
       "norm_label": "iseventhandler()"
     },
     {
@@ -12294,7 +12294,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L20",
       "id": "server_serialize_void_elements",
-      "community": 3,
+      "community": 134,
       "norm_label": "void_elements"
     },
     {
@@ -12303,7 +12303,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L37",
       "id": "server_serialize_escape_map",
-      "community": 3,
+      "community": 134,
       "norm_label": "escape_map"
     },
     {
@@ -12312,7 +12312,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L50",
       "id": "server_serialize_escapehtml",
-      "community": 3,
+      "community": 134,
       "norm_label": "escapehtml()"
     },
     {
@@ -12321,7 +12321,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L64",
       "id": "server_serialize_script_json_unsafe_codes",
-      "community": 3,
+      "community": 134,
       "norm_label": "script_json_unsafe_codes"
     },
     {
@@ -12330,7 +12330,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L78",
       "id": "server_serialize_serializejsonforscript",
-      "community": 3,
+      "community": 134,
       "norm_label": "serializejsonforscript()"
     },
     {
@@ -12339,7 +12339,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L95",
       "id": "server_serialize_cameltokebab",
-      "community": 3,
+      "community": 134,
       "norm_label": "cameltokebab()"
     },
     {
@@ -12348,7 +12348,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L106",
       "id": "server_serialize_serializeprops",
-      "community": 3,
+      "community": 134,
       "norm_label": "serializeprops()"
     },
     {
@@ -12357,7 +12357,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L134",
       "id": "server_serialize_resolvevalue",
-      "community": 25,
+      "community": 134,
       "norm_label": "resolvevalue()"
     },
     {
@@ -12366,7 +12366,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L147",
       "id": "server_serialize_serializeattribute",
-      "community": 3,
+      "community": 134,
       "norm_label": "serializeattribute()"
     },
     {
@@ -12375,7 +12375,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L169",
       "id": "server_serialize_serializestyle",
-      "community": 3,
+      "community": 134,
       "norm_label": "serializestyle()"
     },
     {
@@ -12663,7 +12663,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L91",
       "id": "src_shared_parsesuspensemarker",
-      "community": 4,
+      "community": 106,
       "norm_label": "parsesuspensemarker()"
     },
     {
@@ -12690,7 +12690,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L136",
       "id": "src_shared_parsestreammarker",
-      "community": 4,
+      "community": 106,
       "norm_label": "parsestreammarker()"
     },
     {
@@ -12726,7 +12726,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L193",
       "id": "src_shared_parselistitemmarker",
-      "community": 4,
+      "community": 106,
       "norm_label": "parselistitemmarker()"
     },
     {
@@ -12735,7 +12735,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
       "id": "src_utilities",
-      "community": 240,
+      "community": 26,
       "norm_label": "utilities.ts"
     },
     {
@@ -12744,7 +12744,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
       "id": "src_utilities_nextstreamid",
-      "community": 240,
+      "community": 3,
       "norm_label": "nextstreamid()"
     },
     {
@@ -15925,6 +15925,24 @@
       "norm_label": "config"
     },
     {
+      "label": "build-version.ts",
+      "file_type": "code",
+      "source_file": "website/build-version.ts",
+      "source_location": "L1",
+      "id": "website_build_version",
+      "community": 64,
+      "norm_label": "build-version.ts"
+    },
+    {
+      "label": "latestReleaseTag()",
+      "file_type": "code",
+      "source_file": "website/build-version.ts",
+      "source_location": "L8",
+      "id": "website_build_version_latestreleasetag",
+      "community": 64,
+      "norm_label": "latestreleasetag()"
+    },
+    {
       "label": "package.json",
       "file_type": "code",
       "source_file": "website/package.json",
@@ -16839,7 +16857,7 @@
       "source_file": "website/src/lib/__type-tests__/render-hast.test-d.ts",
       "source_location": "L1",
       "id": "type_tests_render_hast_test_d",
-      "community": 24,
+      "community": 28,
       "norm_label": "render-hast.test-d.ts"
     },
     {
@@ -16848,7 +16866,7 @@
       "source_file": "website/src/lib/__type-tests__/render-hast.test-d.ts",
       "source_location": "L12",
       "id": "type_tests_render_hast_test_d_result",
-      "community": 24,
+      "community": 28,
       "norm_label": "_result"
     },
     {
@@ -17082,7 +17100,7 @@
       "source_file": "website/src/lib/markdown-loader.ts",
       "source_location": "L33",
       "id": "lib_markdown_loader_hastproperties",
-      "community": 21,
+      "community": 28,
       "norm_label": "hastproperties"
     },
     {
@@ -17100,7 +17118,7 @@
       "source_file": "website/src/lib/markdown-loader.ts",
       "source_location": "L44",
       "id": "lib_markdown_loader_hasttext",
-      "community": 21,
+      "community": 28,
       "norm_label": "hasttext"
     },
     {
@@ -17118,7 +17136,7 @@
       "source_file": "website/src/lib/markdown-loader.ts",
       "source_location": "L56",
       "id": "lib_markdown_loader_hastnode",
-      "community": 24,
+      "community": 28,
       "norm_label": "hastnode"
     },
     {
@@ -17424,7 +17442,7 @@
       "source_file": "website/src/lib/render-hast.test.ts",
       "source_location": "L1",
       "id": "lib_render_hast_test",
-      "community": 21,
+      "community": 28,
       "norm_label": "render-hast.test.ts"
     },
     {
@@ -17433,7 +17451,7 @@
       "source_file": "website/src/lib/render-hast.test.ts",
       "source_location": "L15",
       "id": "lib_render_hast_test_text",
-      "community": 21,
+      "community": 28,
       "norm_label": "text()"
     },
     {
@@ -17442,7 +17460,7 @@
       "source_file": "website/src/lib/render-hast.test.ts",
       "source_location": "L16",
       "id": "lib_render_hast_test_el",
-      "community": 21,
+      "community": 28,
       "norm_label": "el()"
     },
     {
@@ -17451,7 +17469,7 @@
       "source_file": "website/src/lib/render-hast.test.ts",
       "source_location": "L21",
       "id": "lib_render_hast_test_root",
-      "community": 21,
+      "community": 28,
       "norm_label": "root()"
     },
     {
@@ -17788,6 +17806,15 @@
       "norm_label": "virtual-weft-docs.d.ts"
     },
     {
+      "label": "vite-env.d.ts",
+      "file_type": "code",
+      "source_file": "website/src/vite-env.d.ts",
+      "source_location": "L1",
+      "id": "src_vite_env_d",
+      "community": 240,
+      "norm_label": "vite-env.d.ts"
+    },
+    {
       "label": "tsconfig.json",
       "file_type": "code",
       "source_file": "website/tsconfig.json",
@@ -17872,7 +17899,7 @@
       "label": "weftPacks",
       "file_type": "code",
       "source_file": "website/vite.config.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "id": "website_vite_config_weftpacks",
       "community": 64,
       "norm_label": "weftpacks"
@@ -17881,7 +17908,7 @@
       "label": "docsRoot",
       "file_type": "code",
       "source_file": "website/vite.config.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "id": "website_vite_config_docsroot",
       "community": 64,
       "norm_label": "docsroot"
@@ -17899,7 +17926,7 @@
       "label": "docsRoot",
       "file_type": "code",
       "source_file": "website/vite.ssr.config.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "id": "website_vite_ssr_config_docsroot",
       "community": 64,
       "norm_label": "docsroot"
@@ -26350,7 +26377,7 @@
       "label": "Behaviour",
       "file_type": "document",
       "source_file": "website/src/layouts/docs-shell.specs.md",
-      "source_location": "L28",
+      "source_location": "L29",
       "id": "layouts_docs_shell_specs_behaviour",
       "community": 126,
       "norm_label": "behaviour"
@@ -26359,7 +26386,7 @@
       "label": "Acceptance criteria",
       "file_type": "document",
       "source_file": "website/src/layouts/docs-shell.specs.md",
-      "source_location": "L35",
+      "source_location": "L36",
       "id": "layouts_docs_shell_specs_acceptance_criteria",
       "community": 126,
       "norm_label": "acceptance criteria"
@@ -26368,7 +26395,7 @@
       "label": "Edge cases",
       "file_type": "document",
       "source_file": "website/src/layouts/docs-shell.specs.md",
-      "source_location": "L45",
+      "source_location": "L46",
       "id": "layouts_docs_shell_specs_edge_cases",
       "community": 126,
       "norm_label": "edge cases"
@@ -26377,7 +26404,7 @@
       "label": "Styling & test hooks",
       "file_type": "document",
       "source_file": "website/src/layouts/docs-shell.specs.md",
-      "source_location": "L51",
+      "source_location": "L52",
       "id": "layouts_docs_shell_specs_styling_test_hooks",
       "community": 126,
       "norm_label": "styling & test hooks"
@@ -59069,6 +59096,60 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "website/build-version.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "website_build_version",
+      "target": "website_build_version_latestreleasetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/vite.config.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "website_vite_config",
+      "target": "website_build_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/vite.ssr.config.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "website_vite_ssr_config",
+      "target": "website_build_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/vite.config.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "website_vite_config",
+      "target": "website_build_version_latestreleasetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/vite.ssr.config.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "website_vite_ssr_config",
+      "target": "website_build_version_latestreleasetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "website/package.json",
       "source_location": "L6",
       "weight": 1.0,
@@ -72133,5 +72214,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "75131be7141b5a7f3ab2509ec21af1fad79bf9cc"
+  "built_at_commit": "5b9ff833193ecef35984115aa9a6dd3aac79d6da"
 }

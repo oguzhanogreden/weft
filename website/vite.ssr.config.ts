@@ -12,11 +12,15 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite-plus";
 import { weftDocs } from "./src/lib/docs-plugin";
+import { latestReleaseTag } from "./build-version";
 
 // Same baked doc model as the client build, so server and client trees stay identical.
 const docsRoot = fileURLToPath(new URL("../docs", import.meta.url));
 
 export default defineConfig({
+  define: {
+    __WEFT_VERSION__: JSON.stringify(latestReleaseTag()),
+  },
   // `tailwindcss` must run in the SSR build too: `app.ts` imports `app.css`, whose
   // `@import "tailwindcss"` the plugin intercepts (otherwise postcss-import tries to
   // resolve it as a file and fails).

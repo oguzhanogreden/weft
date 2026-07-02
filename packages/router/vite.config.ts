@@ -14,7 +14,6 @@ export default defineConfig({
     outDir: "dist",
     dts: true,
     platform: "neutral",
-    minify: true,
     deps: {
       neverBundle: ["effect", /^@weftui\//, /^@effect\/platform/],
     },

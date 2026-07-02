@@ -15,8 +15,9 @@ export const DocsShell: LayoutNode; // Router.layout(...) wrapping doc routes
 
 ## Regions
 
-- **Top bar**: Weft wordmark (link to `/`), version label, GitHub link, search
-  placeholder (inert in v1).
+- **Top bar**: Weft wordmark (link to `/`), version label (latest git release tag,
+  injected at build time via Vite `define` — see `website/build-version.ts`), GitHub
+  link, search placeholder (inert in v1).
 - **Sidebar (left)**: grouped nav from `navGroups` (`src/lib/nav.ts`). Current page
   highlighted (derived from current route). Groups labelled (Guides, Concepts,
   API Reference).

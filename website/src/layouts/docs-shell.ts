@@ -23,8 +23,8 @@ import type { NavGroup, NavNeighbours } from "../lib/nav";
 
 /** Repo URL for the top-bar GitHub link. */
 const REPO_URL = "https://github.com/stefvw93/weft";
-/** Version label shown in the top bar. */
-const VERSION = "v0.0.0";
+/** Version label shown in the top bar — latest release tag, injected at build time. */
+const VERSION = __WEFT_VERSION__;
 
 /** Strips the query string from a normalized request URL, yielding the pathname. */
 function pathnameOf(url: string): string {
@@ -44,37 +44,43 @@ function pathnameOf(url: string): string {
  * toggles the mobile sidebar drawer; it is hidden at `md`+ where the sidebar is inline.
  */
 export function TopBar(nav?: { open: Stream.Stream<boolean>; onToggle: () => void }): Renderable {
-  return h.header({ class: "sticky top-0 z-10 border-b border-slate-6 bg-slate-1" }, [
-    h.div({ class: "mx-auto flex h-[3.25rem] w-full max-w-[84rem] items-center gap-4 px-5" }, [
-      nav
-        ? h.button(
-            {
-              type: "button",
-              class: "btn btn-ghost btn-sm text-xl leading-none md:hidden",
-              "aria-label": "Toggle navigation",
-              "aria-controls": "docs-drawer",
-              "aria-expanded": Stream.map(nav.open, (o) => (o ? "true" : "false")),
-              onclick: nav.onToggle,
-            },
-            "≡",
-          )
-        : null,
-      h.a({ href: "/", class: "text-lg font-bold text-slate-12 no-underline" }, "Weft"),
-      h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
-      h.div({ class: "flex-1" }),
-      // h.input({
-      //   type: "search",
-      //   class: "input input-bordered input-sm w-56 max-w-[40vw]",
-      //   placeholder: "Search (coming soon)",
-      //   disabled: true,
-      //   "aria-label": "Search (coming soon)",
-      // }),
-      h.a(
-        { href: REPO_URL, class: "btn btn-ghost btn-sm", target: "_blank", rel: "noreferrer" },
-        "GitHub",
-      ),
-    ]),
-  ]);
+  return h.header(
+    {
+      class: "sticky top-0 z-10 border-b border-slate-6 bg-slate-1",
+      style: { height: "var(--top-bar-height)" },
+    },
+    [
+      h.div({ class: "mx-auto flex h-[3.25rem] w-full max-w-[84rem] items-center gap-4 px-5" }, [
+        nav
+          ? h.button(
+              {
+                type: "button",
+                class: "btn btn-ghost btn-sm md:hidden",
+                "aria-label": "Toggle navigation",
+                "aria-controls": "docs-drawer",
+                "aria-expanded": Stream.map(nav.open, (o) => (o ? "true" : "false")),
+                onclick: nav.onToggle,
+              },
+              "≡",
+            )
+          : null,
+        h.a({ href: "/", class: "text-lg font-bold text-slate-12 no-underline" }, "Weft"),
+        h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
+        h.div({ class: "flex-1" }),
+        // h.input({
+        //   type: "search",
+        //   class: "input input-bordered input-sm w-56 max-w-[40vw]",
+        //   placeholder: "Search (coming soon)",
+        //   disabled: true,
+        //   "aria-label": "Search (coming soon)",
+        // }),
+        h.a(
+          { href: REPO_URL, class: "btn btn-ghost btn-sm", target: "_blank", rel: "noreferrer" },
+          "GitHub",
+        ),
+      ]),
+    ],
+  );
 }
 
 /** Base utilities shared by every sidebar link (`docs-nav-link` is the test hook). */
@@ -163,7 +169,7 @@ export function renderPrevNext(neighbours: NavNeighbours): Renderable {
     },
     [
       prev === undefined
-        ? h.span({ class: PREVNEXT_SLOT })
+        ? h.span({ class: `${PREVNEXT_SLOT} hidden` })
         : h.a({ href: prev.path, class: `prevnext-prev ${PREVNEXT_SLOT}` }, [
             h.span({ class: "text-xs text-slate-11" }, "Previous"),
             h.span({ class: "font-semibold text-indigo-11" }, prev.title),
@@ -217,7 +223,9 @@ export const DocsShell = Component.gen(function* () {
   return yield* h.div({ class: "docs-shell" }, [
     TopBar({ open: open.changes, onToggle: toggle }),
     h.div(
-      { class: "drawer md:drawer-open mx-auto w-full max-w-[84rem] px-5 pb-16 pt-6 md:gap-8" },
+      {
+        class: ["drawer md:drawer-open", "mx-auto w-full max-w-[84rem] md:gap-8"].join(" "),
+      },
       [
         h.input({
           id: "docs-drawer",
@@ -227,7 +235,7 @@ export const DocsShell = Component.gen(function* () {
           "aria-hidden": "true",
           tabindex: -1,
         }),
-        h.div({ class: "drawer-content min-w-0" }, [
+        h.div({ class: "drawer-content min-w-0 p-4" }, [
           h.div({ class: "grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_14rem]" }, [
             h.main({ class: "min-w-0 xl:px-20" }, [
               h.article(
@@ -249,17 +257,20 @@ export const DocsShell = Component.gen(function* () {
         ]),
         h.aside(
           {
-            class: [
-              "drawer-side z-20",
-              "md:z-auto md:sticky md:top-[4.75rem] md:max-h-[calc(100vh-5.5rem)] md:overflow-y-auto",
-            ].join(" "),
+            class: ["drawer-side"].join(" "),
+            style: {
+              maxHeight: "calc(100vh - var(--top-bar-height))",
+              top: "var(--top-bar-height)",
+            },
           },
           [
             h.div({ class: "drawer-overlay", onclick: close }),
             h.div(
               {
-                class:
-                  "min-h-full w-72 bg-slate-1 p-5 md:min-h-0 md:w-56 md:bg-transparent md:p-0 xl:w-52",
+                class: [
+                  "w-72 bg-slate-1 p-5 md:min-h-0 md:w-56 md:bg-transparent xl:w-52 p-4",
+                  "max-h-full overflow-y-auto",
+                ].join(" "),
               },
               [Stream.map(path, (current) => renderSidebar(docs.nav.groups, current, close))],
             ),
