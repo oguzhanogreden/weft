@@ -8,3 +8,4 @@ export { back, forward, navigate, patchQuery, push, replace, setQuery } from "./
 // for callers placing their own not-found handling.
 export { RouterApp, outletNode, outletNode as RouterOutlet } from "../outlet";
 export { Router } from "../router-service";
+export type { NavState } from "../router-service";

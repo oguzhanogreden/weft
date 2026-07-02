@@ -36,6 +36,10 @@ const routerFor = (m: RouteMatch): Router["Type"] =>
         calls.push({ to, options });
       }),
     httpApiClient: Option.none(),
+    navigating: Subscribable.make({
+      get: Effect.succeed({ _tag: "Idle" } as const),
+      changes: Stream.make({ _tag: "Idle" } as const),
+    }),
   });
 
 /** Runs `eff` against the recording `Router` positioned at `url`. */

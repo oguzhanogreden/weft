@@ -1,6 +1,6 @@
 import { AppRpcClientTag } from "@weftui/core";
 import { FetchHttpClient, HttpApiClient } from "@effect/platform";
-import { type RpcGroup, RpcClient, RpcSerialization } from "@effect/rpc";
+import type { RpcGroup } from "@effect/rpc";
 import {
   Context,
   Effect,
@@ -13,11 +13,42 @@ import {
 } from "effect";
 import type { RouterDef } from "../compile";
 import { match, type RouteMatch } from "../matcher";
-import { type NavigateOptions, Router, type RouterHttpApiClient } from "../router-service";
+import { getPreload } from "../route-tree";
+import {
+  type NavigateOptions,
+  type NavState,
+  Router,
+  type RouterHttpApiClient,
+} from "../router-service";
 import { installLinkInterceptor } from "./link";
 
 /** Path the client rpc protocol posts to; mirrors `RouterServer`'s server route. */
 const RPC_PATH = "/_eui/rpc";
+
+/**
+ * The residual app services a caller must still provide through the {@link RouterLiveOptions.context}
+ * seam — a def's aggregate `R` minus the services `RouterLive` already threads
+ * (`Router`, `Router.Outlet`, `AppRpcClientTag`). The client mirror of
+ * `RouterServer.AppServices`; resolves to `never` for an app with no app-wide service.
+ */
+export type AppServices<R> = Exclude<R, Router | Router.Outlet | AppRpcClientTag>;
+
+/** True only for the exact `any` type — a loosely-typed `RouterDef<any, any>`. */
+// oxlint-disable-next-line typescript/no-explicit-any
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+/**
+ * Conditionally shapes the `context` field: **required** when the def has statically
+ * known residual {@link AppServices}, **absent** when it has none, and **optional**
+ * for a loosely-typed `RouterDef<any, any>`. Client parity with the server seam (AC4)
+ * is thus a compile-time guarantee, and no-service / loosely-typed apps stay unchanged (AC3).
+ */
+export type ContextOption<R> = [AppServices<R>] extends [never]
+  ? { readonly context?: undefined }
+  : IsAny<AppServices<R>> extends true
+    ? // oxlint-disable-next-line typescript/no-explicit-any
+      { readonly context?: Layer.Layer<any, never, never> }
+    : { readonly context: Layer.Layer<AppServices<R>, never, never> };
 
 /** Options for {@link RouterLive}. */
 export interface RouterLiveOptions {
@@ -71,13 +102,16 @@ function normalizeTo(to: string): string {
  * refetch and client-first mount) without depending on this package or
  * `@effect/rpc`.
  */
-export function RouterLive(
-  def: RouterDef,
-  options: RouterLiveOptions = {},
-): Layer.Layer<Router | AppRpcClientTag> {
-  return Layer.scopedContext(
+export function RouterLive<R>(
+  def: RouterDef<any, R>,
+  options: RouterLiveOptions & ContextOption<R> = {} as RouterLiveOptions & ContextOption<R>,
+): Layer.Layer<Router | AppRpcClientTag | AppServices<R>> {
+  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.scopedContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
+      // Reactive navigation state (`pending-navigation.specs.md`): `Navigating{to}`
+      // while a deferred-commit navigation resolves its lazy chunk(s), else `Idle`.
+      const navRef = yield* SubscriptionRef.make<NavState>({ _tag: "Idle" });
       const runtime = yield* Effect.runtime<never>();
 
       // The authoritative HttpApi is typed `HttpApi.Any` (runtime-assembled), so
@@ -93,30 +127,86 @@ export function RouterLive(
       ) as unknown as Effect.Effect<RouterHttpApiClient>;
       const httpApiClient = yield* makeClient;
 
-      // popstate (back/forward) → resync the ref from the live location.
+      // A monotonic token; only the newest navigation may commit or reset
+      // `navigating` (latest-wins across in-flight lazy preloads — AC-N7).
+      let latest = 0;
+
+      // The `Router.lazy` preloads for a matched branch (leaf component + each
+      // layout in its chain); empty for an eager branch or a no-match, which take
+      // the synchronous fast path.
+      const collectPreloads = (m: RouteMatch): ReadonlyArray<() => Promise<unknown>> =>
+        m._tag !== "Matched"
+          ? []
+          : [m.leaf.component, ...m.leaf.layoutChain.map((l) => l.component)]
+              .map(getPreload)
+              .filter((p): p is () => Promise<unknown> => p !== undefined);
+
+      const commitUrl = (normalized: string, replace: boolean): Effect.Effect<void> =>
+        Effect.sync(() => {
+          // `replaceState` swaps the current entry (no new history step); `pushState`
+          // adds one. Neither fires `popstate`, so the url ref is set explicitly to
+          // drive the reactive re-render.
+          if (replace) {
+            window.history.replaceState(null, "", normalized);
+          } else {
+            window.history.pushState(null, "", normalized);
+          }
+        });
+
+      // Deferred-commit navigation core (`pending-navigation.specs.md`): resolve the
+      // matched branch's lazy chunk(s) **before** committing the url + match, so the
+      // previous outlet stays mounted during the fetch and the swap is a single tick
+      // (the lazy slot then renders synchronously). `pushUrl` distinguishes an app
+      // navigation (History push/replace) from a popstate resync (browser already
+      // moved the url — set the ref only).
+      const commitTo = (
+        normalized: string,
+        pushUrl: boolean,
+        replace: boolean,
+      ): Effect.Effect<void> =>
+        Effect.gen(function* () {
+          const preloads = collectPreloads(match(def, normalized));
+
+          // Fast path: no lazy nodes → synchronous commit, `navigating` stays Idle
+          // (AC-N3), byte-for-byte the pre-feature behavior for eager routes.
+          if (preloads.length === 0) {
+            if (pushUrl) yield* commitUrl(normalized, replace);
+            yield* SubscriptionRef.set(urlRef, normalized);
+            return;
+          }
+
+          // Pending path: keep the old outlet mounted while the chunk(s) resolve.
+          const token = ++latest;
+          yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
+          yield* Effect.promise(() => Promise.all(preloads.map((p) => p()))).pipe(
+            // A rejected chunk load is a defect (AC-E1); reset `navigating` (if this
+            // is still the latest nav) before the defect propagates, so no stuck
+            // pending state remains.
+            Effect.onError(() =>
+              token === latest ? SubscriptionRef.set(navRef, { _tag: "Idle" }) : Effect.void,
+            ),
+          );
+          // Superseded by a newer navigation → do not commit or reset; the newer nav
+          // owns both. This fetch still populated the shared per-slot memo (AC-N7).
+          if (token !== latest) return;
+          if (pushUrl) yield* commitUrl(normalized, replace);
+          yield* SubscriptionRef.set(urlRef, normalized);
+          yield* SubscriptionRef.set(navRef, { _tag: "Idle" });
+        });
+
+      const navigate = (to: string, options?: NavigateOptions): Effect.Effect<void> =>
+        commitTo(normalizeTo(to), true, options?.replace === true);
+
+      // popstate (back/forward): the browser already moved the url, so only resync
+      // the ref — but resolve the target branch's lazy chunk(s) first so back-nav is
+      // also blank-free (AC-N8).
       const onPopState = (): void => {
-        Runtime.runFork(runtime)(SubscriptionRef.set(urlRef, locationUrl()));
+        Runtime.runFork(runtime)(commitTo(locationUrl(), false, false));
       };
       yield* Effect.acquireRelease(
         Effect.sync(() => window.addEventListener("popstate", onPopState)),
         () => Effect.sync(() => window.removeEventListener("popstate", onPopState)),
       );
-
-      const navigate = (to: string, options?: NavigateOptions): Effect.Effect<void> =>
-        Effect.gen(function* () {
-          const normalized = normalizeTo(to);
-          yield* Effect.sync(() => {
-            // `replaceState` swaps the current entry (no new history step);
-            // `pushState` adds one. Neither fires `popstate`, so the ref is set
-            // explicitly below to drive the reactive re-render.
-            if (options?.replace === true) {
-              window.history.replaceState(null, "", normalized);
-            } else {
-              window.history.pushState(null, "", normalized);
-            }
-          });
-          yield* SubscriptionRef.set(urlRef, normalized);
-        });
 
       yield* installLinkInterceptor(def, navigate);
 
@@ -143,6 +233,11 @@ export function RouterLive(
             ),
         });
       } else {
+        // `@effect/rpc` (and its `msgpackr` serialization dependency) is loaded
+        // lazily so it stays out of the base client bundle: an app with no
+        // `Boundary.rpc` never passes `rpc`, so this branch — and the async
+        // chunk it pulls — never runs. Only rpc-enabled apps pay the cost.
+        const { RpcClient, RpcSerialization } = yield* Effect.promise(() => import("@effect/rpc"));
         const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
         const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
           Effect.provide(
@@ -163,9 +258,22 @@ export function RouterLive(
         currentMatch,
         navigate,
         httpApiClient: Option.some(httpApiClient),
+        navigating: navRef,
       });
 
       return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));
     }),
   );
+
+  // The render-time provide seam (AC4): the app-wide `context` Layer is merged into
+  // the router layer, so the `ManagedRuntime` the client mounts under carries the
+  // app services and every hydrated route/layout leaf reads them via `yield* Service`.
+  // No context ⇒ the bare `core` layer, unchanged for `rpc`-only / no-service apps.
+  const context = (options as { readonly context?: Layer.Layer<AppServices<R>, never, never> })
+    .context;
+  // When no context is provided the residual `AppServices<R>` is empty, so widening
+  // `core` to the declared return type is sound (nothing extra is actually promised).
+  return (context === undefined ? core : Layer.merge(core, context)) as Layer.Layer<
+    Router | AppRpcClientTag | AppServices<R>
+  >;
 }

@@ -93,6 +93,13 @@ describe("router-ssr shop — navigation", () => {
     expect(container.querySelector("#shell-header")).toBe(headerEl);
   });
 
+  it("renders the Router.navigating progress bar (idle by default)", async () => {
+    await mountAt("/");
+    await vi.waitFor(() => expect(container.querySelector("#nav-progress")).not.toBeNull());
+    // Eager routes → the bar stays idle (no `is-navigating`).
+    expect(container.querySelector("#nav-progress")?.className).toBe("nav-progress");
+  });
+
   it("renders a dynamic 404 for an unknown product id", async () => {
     await mountAt("/products/999");
     await vi.waitFor(() => expect(container.textContent).toContain("404 — page not found"));

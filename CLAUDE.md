@@ -169,7 +169,7 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 
 ### Testing
 
-- Follow Test-Driven Development workflow: spec → mock → test → implement
+- Follow Test-Driven Development workflow: spec → mock → type-tests → unit test → implement -> e2e test
 - Co-locate test files (`*.test.ts`) next to source code
 - `__tests__/` directory allowed for compound/integration tests and shared fixtures/helpers
 - `__type-tests__/` directory for compile-time type tests (see Type Tests section below)

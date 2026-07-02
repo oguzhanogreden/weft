@@ -1,4 +1,5 @@
 import type { Component, Node } from "@weftui/core";
+import { Effect } from "effect";
 import type { Schema } from "effect";
 import type { Router } from "./router-service";
 
@@ -226,4 +227,98 @@ export function makeLayout<C extends readonly TreeNode[], S extends ComponentSlo
     component: config.component,
     children,
   };
+}
+
+/**
+ * Brand key marking a {@link ComponentSlot} as **preloadable** — a lazy slot
+ * ({@link lazyComponent}) carries a `preload()` under this key. Internal to
+ * `@weftui/router` (read by the client `navigate` to resolve a matched branch's
+ * chunks before commit; see `pending-navigation.specs.md`); not public API.
+ *
+ * Declared `unique symbol` so it is usable as a computed interface key.
+ */
+export const PreloadSlot: unique symbol = Symbol.for("@weftui/router/preload");
+
+/** A {@link ComponentSlot} that carries a chunk-{@link PreloadSlot | preload} capability. */
+export interface Preloadable {
+  /** Triggers (and shares) the slot's memoized load; resolves when the chunk is in memory. */
+  readonly [PreloadSlot]: () => Promise<unknown>;
+}
+
+/**
+ * Reads the {@link PreloadSlot | preload} capability off a slot, or `undefined` for an
+ * eager slot. Lets `navigate` await a matched branch's lazy chunks without knowing
+ * which slots are lazy.
+ */
+export function getPreload(slot: ComponentSlot): (() => Promise<unknown>) | undefined {
+  return (slot as Partial<Preloadable>)[PreloadSlot];
+}
+
+/**
+ * Wraps a dynamic-import `load` as a lazy {@link ComponentSlot}: the route's descriptor
+ * (`segment`, `path`/`query`) stays eager and matchable, while the component — the render
+ * body and its module's deps — is split into the chunk `load` resolves. The router invokes
+ * the returned slot at render time; it awaits `load` then renders the resolved component,
+ * adopting the server DOM in place on hydration (flash-free) and fetching the chunk on
+ * client navigation. Exposed as {@link Router.lazy}. See `lazy-component.specs.md`.
+ *
+ * The resolved value is a component slot (`Component.gen` / `Component.make`, or a
+ * `() => Node` thunk) — the shape `component:` already accepts — so its `E`/`R` channels
+ * are recovered via {@link SlotNode} and propagate up the tree exactly as an eager
+ * component's do.
+ *
+ * @example
+ * ```ts
+ * Router.route("docs/:category/:slug", {
+ *   path: { category: Schema.String, slug: Schema.String },
+ *   component: Router.lazy(() => import("./doc-page").then((m) => m.DocPage)),
+ * });
+ * ```
+ */
+export function lazyComponent<S extends ComponentSlot>(
+  load: () => Promise<S>,
+): () => Node<Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>> {
+  // The return is a **zero-arg thunk** `() => Node`, not `(props) => Node`: it is the one
+  // slot shape `SlotNode` can destructure (its `() => infer N` arm), so the resolved
+  // component's `E`/`R` channels propagate through both `makeRoute` **and** `makeLayout`
+  // (a lazy layout would otherwise lose them, as `makeLayout` has no direct-inference
+  // overload). A zero-arg thunk is still a valid `ComponentSlot`; the router ignores props.
+  //
+  // The node is an `Effect.gen` that awaits `load` (the chunk import) then delegates to the
+  // resolved component — the same async-component body that already renders flash-free
+  // under SSR + hydrate (see `lazy-component.specs.md`). `Effect.promise` means a rejected
+  // load is a defect (AC-E1). The cast recovers the channels `SlotNode` proved above but
+  // that the value path — through the wide `ComponentSlot` — erases to `any`.
+  //
+  // The load `Promise` is memoized per slot: the first render triggers the import; every
+  // later render — and back-navigation to this route — reuses the resolved module, so a
+  // revisit is synchronous (AC-C2) and a single render never double-loads even if the
+  // renderer evaluates the slot more than once.
+  //
+  // A synchronous `resolved` memo lets the slot return the component's node
+  // **synchronously** once its chunk is in memory, so the deferred-commit swap is atomic:
+  // the DOM renderer's sync probe (`Effect.runSyncExit`) succeeds and the new content
+  // renders inline in the same tick the old is removed — no blank (`pending-navigation.specs.md`
+  // AC-N2). Crucially, only the branded `preload()` populates `resolved`; the async render
+  // body does **not**. Client navigation always `preload()`s the matched branch before it
+  // commits (so the post-commit render is the sync path), whereas SSR and **hydration**
+  // render through the async body — where `resolved` stays undefined — preserving the
+  // flash-free adopt-in-place hydration property (AC-H1). Populating `resolved` from the
+  // render body would make a server-then-client render over the *same slot instance* hydrate
+  // synchronously and mismatch the adopted DOM.
+  let cached: Promise<S> | undefined;
+  let resolved: S | undefined;
+  const preload = (): Promise<S> =>
+    (cached ??= load()).then((component) => {
+      resolved = component;
+      return component;
+    });
+  const slot = (): Node<Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>> =>
+    (resolved !== undefined
+      ? resolved({})
+      : Effect.gen(function* () {
+          const component = yield* Effect.promise(() => (cached ??= load()));
+          return yield* component({});
+        })) as unknown as Node<Node.Error<SlotNode<S>>, Node.Context<SlotNode<S>>>;
+  return Object.assign(slot, { [PreloadSlot]: preload });
 }

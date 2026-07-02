@@ -5,7 +5,7 @@ import { makeRouter } from "./compile";
 import { RouterParamsError } from "./errors";
 import type { RouteMatch } from "./matcher";
 import type { Fields, FieldsType } from "./route-tree";
-import { makeLayout, makeRoute } from "./route-tree";
+import { lazyComponent, makeLayout, makeRoute } from "./route-tree";
 
 /**
  * The universal router service. Provided per render — by `RouterLive` on the
@@ -27,6 +27,17 @@ import { makeLayout, makeRoute } from "./route-tree";
  * (`RouterLive`), absent (`Option.none`) on the server, which is itself the origin.
  */
 export type RouterHttpApiClient = HttpApiClient.Client<any, any, never>;
+
+/**
+ * The client navigation state exposed reactively as {@link Router.navigating}. A
+ * navigation to a `Router.lazy` route is **deferred-commit** (see
+ * `pending-navigation.specs.md`): while its chunk resolves the state is
+ * `Navigating` (carrying the target `to`), returning to `Idle` on commit. An
+ * eager-route navigation stays `Idle`. Always `Idle` on the server (buffered render).
+ */
+export type NavState =
+  | { readonly _tag: "Idle" }
+  | { readonly _tag: "Navigating"; readonly to: string };
 
 /** Options for a router {@link Router} `navigate` call. */
 export interface NavigateOptions {
@@ -56,6 +67,13 @@ export class Router extends Context.Tag("@weftui/router/Router")<
      * it stays local via the shared matcher (see the refactor _Feasibility constraint_).
      */
     readonly httpApiClient: Option.Option<RouterHttpApiClient>;
+    /**
+     * Reactive client navigation state (see {@link NavState}). `Navigating{to}` while
+     * a deferred-commit navigation resolves its lazy chunk(s), `Idle` otherwise. An
+     * app reads it via {@link Router.navigatingStream} to render pending UI (e.g. a
+     * top progress bar). Constant `Idle` on the server.
+     */
+    readonly navigating: Subscribable.Subscribable<NavState>;
   }
 >() {}
 
@@ -173,12 +191,26 @@ function subscribeQuery<F extends Fields>(
   return Effect.map(Router, (router) => selectStream(router.currentMatch, fields, "query"));
 }
 
+/**
+ * Reactive {@link Subscribable} of the client {@link NavState}. A component reads
+ * `[(yield* Router.navigatingStream).changes]` to render pending UI during a
+ * deferred-commit navigation (`pending-navigation.specs.md`). Re-exported as
+ * `Router.navigatingStream`.
+ */
+const subscribeNavigating: Effect.Effect<
+  Subscribable.Subscribable<NavState>,
+  never,
+  Router
+> = Effect.map(Router, (router) => router.navigating);
+
 // oxlint-disable-next-line no-namespace -- declaration merge: authoring combinators on the Router Tag
 export namespace Router {
   /** Declares a leaf page. See {@link makeRoute}. */
   export const route = makeRoute;
   /** Declares a layout wrapping an injected outlet. See {@link makeLayout}. */
   export const layout = makeLayout;
+  /** Wraps a dynamic-import loader as a lazy component slot. See {@link lazyComponent}. */
+  export const lazy = lazyComponent;
   /** Seals a route tree into a `RouterDef`. See {@link makeRouter}. */
   export const router = makeRouter;
   /** The injected outlet service value (yieldable Tag). See {@link OutletTag}. */
@@ -193,4 +225,6 @@ export namespace Router {
   export const paramsStream = subscribeParams;
   /** Reactive {@link Subscribable} of the live match's query. See {@link subscribeQuery}. */
   export const queryStream = subscribeQuery;
+  /** Reactive {@link Subscribable} of the client navigation state. See {@link subscribeNavigating}. */
+  export const navigatingStream = subscribeNavigating;
 }

@@ -1,52 +1,59 @@
 # Weft Documentation
 
-Frontend at scale is hard. Real applications need robust API orchestration, error handling, retries, and telemetry. [Effect](https://effect.website) solves these problems elegantly; Weft brings the same patterns to the UI layer — in the browser and on the server.
+**Reactive UI, woven from Effect.**
 
-Weft is an Effect-native reactive DOM library — reactive UI, woven from Effect. `Node<E, R>` is `Effect.Effect<DOMNode, E, R>` — every element in the tree is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply directly to nodes, and services flow from mount through handlers. Your component tree is the **warp** (structure); streams are the **weft** (the live thread drawn across it). Streams drive all updates; there is no virtual DOM. The same component tree renders to an HTML string or streaming response on the server, and `hydrate()` resumes reactivity in place on the client without re-rendering.
+Weft is an Effect-native reactive DOM library — in the browser and on the server. `Node<E, R>` is `Effect.Effect<DOMNode, E, R>`: every element is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply to nodes directly, and services flow from mount through the whole app. Streams drive every update — there is no virtual DOM — and the same tree renders to HTML on the server and `hydrate()`s in place on the client, flash-free. No JSX.
 
----
+The docs follow the [Diátaxis](https://diataxis.fr) model. Pick your entry point by what you are trying to do:
 
-**Evaluating?** Start with Getting Started to see the model in motion, then read the concept docs to understand why it works the way it does.
+## Start here
 
-**Building?** Jump to the guides for authoring patterns and server integration, or go straight to the API reference.
+**[→ Tutorial](tutorial/01-your-first-app.md)** — a four-step guided path from a static component to a server-rendered, error-handled app. Start here if you are new to Weft:
 
----
+1. [Your First App](tutorial/01-your-first-app.md) — `h` and `mount`
+2. [Reactivity](tutorial/02-reactivity.md) — `SubscriptionRef` and streams
+3. [Services and Async](tutorial/03-services-and-async.md) — handlers, services, async loading
+4. [Errors and Server Rendering](tutorial/04-errors-and-server.md) — boundaries and SSR
 
-## Learning order
+## The four quadrants
 
-1. **[Getting Started](guides/getting-started.md)** — install, first component, reactive state, services, async, error boundaries, SSR teaser.
+|                                                   |                                                                                                                                                                                     |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Tutorial](tutorial/01-your-first-app.md)**     | Learning-oriented. One guided path, start to finish.                                                                                                                                |
+| **[How-to guides](how-to/author-components.md)**  | Task-oriented. Author components, render on the server, load data with rpc, add routing — plus recipes for forms, async data, keyed lists, reactive styles, refs, and lazy routing. |
+| **[Explanation](explanation/rendering-model.md)** | Understanding-oriented. The rendering model, the combinator API, reactive primitives, boundaries, and services & context.                                                           |
+| **[Reference](reference/core.md)**                | Information-oriented. Full API: [`@weftui/core`](reference/core.md), [`@weftui/dom`](reference/dom.md), [`@weftui/router`](reference/router.md).                                    |
 
-2. **[The Combinator API](concepts/combinator-api.md)** — how `h`, `h.fragment`, and `Component.gen` / `Component.make` work; why `Node` is an `Effect`; how `E` and `R` accumulate through a tree.
+New to the model itself? Read [The Rendering Model](explanation/rendering-model.md) — why there is no virtual DOM, and what "streams are the weft" means.
 
-3. **[Reactive Primitives](concepts/reactive-primitives.md)** — the `Source<A, E, R>` vocabulary; `Stream`, `Effect`, and `Subscribable` as prop values and children; derived streams, reactive styles, and `NoPropValue`.
+## Packages
 
-4. **[Component Authoring](guides/component-authoring.md)** — plain functions vs. `Component.gen` / `Component.make`; instance scope and `Effect.forkScoped`; fragments, render-prop children, and service requirements.
+Three published packages make up Weft's public API, plus one build-time plugin:
 
-5. **[Server-Side Rendering](guides/server-side-rendering.md)** — `renderToString` / `renderToStringHydratable` / streaming variants; `hydrate`; the server/client split.
+- **`@weftui/core`** — element builders (`h`), components, sources/streams, and boundaries. Start here.
+- **`@weftui/dom`** — the renderer: `./client` (`mount`/`hydrate`) and `./server` (`renderToString*`).
+- **`@weftui/router`** — universal nested routing, `Router.lazy`, and the rpc seam.
+- **`@weftui/vite`** — a build-time Vite plugin (tooling, not a runtime API).
 
-6. **[RPC Data Boundaries](guides/rpc-data-boundaries.md)** — `Boundary.rpc`: server-resolved, client-refreshable data; the contract/handler split; the `Resource` handle and its four lifecycles.
-
-7. **[Routing](guides/routing.md)** — `@weftui/router`: universal nested routing, `Router.route` / `Router.layout` / `Router.router`, type-safe `href`, layouts, programmatic navigation.
-
-8. **[`@weftui/core` API Reference](api/core.md)** and **[`@weftui/router` API Reference](api/router.md)** — full API surface for both packages.
-
----
+`@weftui/base` is an internal, currently-empty stub — it has no public primitives; ignore it.
 
 ## Examples
 
 The [`examples/`](../examples/) directory contains standalone runnable apps. Each covers a specific pattern and ships with a browser test:
 
-| Example                      | What it shows                                                         |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `async-data-loading`         | Loading states, retry, error boundaries with Stream and Effect        |
-| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive handlers         |
-| `element-ref`                | DOM refs with `SubscriptionRef<Option<HTMLElement>>`                  |
-| `error-boundary`             | All six `Boundary.*` variants                                         |
-| `form-handling`              | Reactive inputs, Schema validation, Effect submit handlers            |
-| `keyed-list`                 | Keyed list rendering                                                  |
-| `list-rendering`             | Static and stream-based lists, fragments, nested iterables            |
-| `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions          |
-| `router-ssr`                 | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc` |
-| `ssr-hydration`              | SSR + hydration without server data loading                           |
-| `subscription-ref`           | Local state, derived streams, coordinating multiple refs              |
-| `suspense`                   | Suspense boundaries for streaming SSR and client coordination         |
+| Example                      | What it shows                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| `async-data-loading`         | Loading states, retry, error boundaries with Stream and Effect                       |
+| `declarative-event-handlers` | Plain, Effect-returning, service-aware, and reactive handlers                        |
+| `element-ref`                | DOM refs with `SubscriptionRef<Option<HTMLElement>>`                                 |
+| `error-boundary`             | All six failure-catch `Boundary.*` variants                                          |
+| `form-handling`              | Reactive inputs, Schema validation, Effect submit handlers                           |
+| `keyed-list`                 | Keyed list rendering with `List.each`                                                |
+| `list-rendering`             | Static and stream-based lists, fragments, nested iterables                           |
+| `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions                         |
+| `router-ssr`                 | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc`, `Router.lazy` |
+| `server-boundary`            | `Boundary.rpc` client-first mount + refetch, router-less                             |
+| `ssr-hydration`              | SSR + hydration without server data loading                                          |
+| `subscription-ref`           | Local state, derived streams, coordinating multiple refs                             |
+| `suspense`                   | Suspense boundaries for streaming SSR and client coordination                        |
+| `type-augmentation`          | Typed custom elements on `h` via the `CustomElements` interface                      |
