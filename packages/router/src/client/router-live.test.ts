@@ -263,3 +263,29 @@ describe("RouterLive — pending navigation (deferred commit)", () => {
     assert.equal(dom.window.location.pathname, "/");
   });
 });
+
+describe("RouterLive — base path (base.specs.md)", () => {
+  test("AC: seeds the initial match from location with the base stripped", async () => {
+    setupDom("http://localhost/weft/about");
+    const service = await readService({ base: "/weft" });
+    const m = await readMatch(service);
+    assert.equal(m._tag, "Matched");
+    assert.equal(m.url, "/about");
+  });
+
+  test("AC: navigate('/users/42') pushes '/weft/users/42' while match.url stays canonical", async () => {
+    setupDom("http://localhost/weft/about");
+    const service = await readService({ base: "/weft" });
+    await Effect.runPromise(service.navigate("/users/42"));
+    assert.equal(dom.window.location.pathname, "/weft/users/42");
+    const m = await readMatch(service);
+    assert.equal(m._tag, "Matched");
+    assert.equal(m.url, "/users/42");
+  });
+
+  test("AC: a location outside the base yields a no-match (404) rather than a crash", async () => {
+    setupDom("http://localhost/other");
+    const service = await readService({ base: "/weft" });
+    assert.equal((await readMatch(service))._tag, "NotFound");
+  });
+});
