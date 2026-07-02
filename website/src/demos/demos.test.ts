@@ -40,11 +40,11 @@ describe("demo registry", () => {
 
   it("AC5: demos render under SSR without error (interactivity covered by browser test)", async () => {
     const counter = await renderString(getDemo("reactive-counter")!());
-    assert.match(counter, /demo-counter__value/);
+    assert.match(counter, /counter-value/);
     assert.match(counter, />0</);
 
     const input = await renderString(getDemo("reactive-input")!());
-    assert.match(input, /demo-input__field/);
+    assert.match(input, /demo-input-field/);
     assert.match(input, /Type something…/);
   });
 });

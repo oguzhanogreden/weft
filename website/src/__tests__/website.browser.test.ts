@@ -86,7 +86,7 @@ describe("website DocPage + live demo (browser)", () => {
     expect(container.textContent).toContain("Click to increment.");
 
     // 3. The live demo's preview is server-rendered at its initial value.
-    const value = () => container.querySelector(".demo-counter__value");
+    const value = () => container.querySelector(".counter-value");
     expect(value()?.textContent).toContain("0");
 
     // 4. Hydrate over the server markup; the demo becomes interactive in place.

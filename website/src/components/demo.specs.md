@@ -40,3 +40,14 @@ export const Demo: (props: {
 
 - Multiple demos on one page → each gets an independent instance (registry returns
   a fresh `Node` per call).
+
+## Styling & test hooks
+
+- Styled with Tailwind utilities; no bespoke CSS. The two panes share one bordered
+  container — the code pane flush-overrides the nested `CodeBlock` via
+  `[&>.code-block]:*` variants. The warning tint uses the imported Radix amber vars
+  (`bg-[var(--amber-3)]` …) since amber isn't exposed as a color utility.
+- Semantic (non-styling) hooks for tests: `demo-block` (root), `demo-preview`
+  (preview pane), `demo-code` (code pane). The warning is selected via its
+  `role="alert"`. Demo previews expose their own hooks — `counter-value`
+  (reactive-counter), `demo-input-field` (reactive-input).

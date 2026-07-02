@@ -11,9 +11,9 @@ describe("Demo (SSR)", () => {
     const html = await renderString(
       Demo({ id: "reactive-counter", tokens, lang: "ts", raw: "Counter();" }),
     );
-    assert.match(html, /demo-block__preview/);
-    assert.match(html, /demo-counter__value/); // the real registry component
-    assert.match(html, /demo-block__code/);
+    assert.match(html, /demo-preview/);
+    assert.match(html, /counter-value/); // the real registry component
+    assert.match(html, /demo-code/);
     assert.match(html, /code-block/);
   });
 
@@ -21,9 +21,9 @@ describe("Demo (SSR)", () => {
     const html = await renderString(
       Demo({ id: "no-such-demo", tokens, lang: "ts", raw: "Counter();" }),
     );
-    assert.match(html, /demo-block__warning/);
+    assert.match(html, /role="alert"/); // the warning pane
     assert.match(html, /Unknown demo: &quot;no-such-demo&quot;|Unknown demo: "no-such-demo"/);
     assert.match(html, /code-block/);
-    assert.equal(html.includes("demo-block__preview"), false);
+    assert.equal(html.includes("demo-preview"), false);
   });
 });

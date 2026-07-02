@@ -19,7 +19,7 @@ describe("Home landing page (SSR)", () => {
   it("AC1: renders the live demo (the real reactive-counter)", async () => {
     const html = await renderHome();
     assert.match(html, /home-demo/);
-    assert.match(html, /demo-counter__value/);
+    assert.match(html, /counter-value/);
     assert.match(html, />0</); // initial counter value
   });
 

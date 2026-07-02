@@ -35,15 +35,33 @@ export type DemoProps = {
 export const Demo = Component.gen(function* (props: DemoProps) {
   const factory = getDemo(props.id);
 
+  // Amber isn't exposed as a Tailwind color utility (only slate/indigo are), so
+  // the warning tint references the imported Radix amber vars directly.
   const preview =
     factory === undefined
-      ? h.div({ class: "demo-block__warning", role: "alert" }, `Unknown demo: "${props.id}"`)
-      : h.div({ class: "demo-block__preview" }, [factory()]);
+      ? h.div(
+          {
+            class:
+              "border-b border-[var(--amber-7)] bg-[var(--amber-3)] px-4 py-3 text-[0.85rem] text-[var(--amber-11)]",
+            role: "alert",
+          },
+          `Unknown demo: "${props.id}"`,
+        )
+      : h.div({ class: "demo-preview border-b border-slate-7 bg-slate-2 p-5" }, [factory()]);
 
-  return yield* h.div({ class: "demo-block" }, [
-    preview,
-    h.div({ class: "demo-block__code" }, [
-      CodeBlock({ tokens: props.tokens, lang: props.lang, raw: props.raw }),
-    ]),
-  ]);
+  // `demo-block` is a semantic test hook. The code pane flush-overrides the nested
+  // CodeBlock's own margin/border/radius so the two panes read as one container.
+  return yield* h.div(
+    { class: "demo-block my-5 overflow-hidden rounded-lg border border-slate-7" },
+    [
+      preview,
+      h.div(
+        {
+          class:
+            "demo-code [&>.code-block]:my-0 [&>.code-block]:rounded-none [&>.code-block]:border-0",
+        },
+        [CodeBlock({ tokens: props.tokens, lang: props.lang, raw: props.raw })],
+      ),
+    ],
+  );
 });

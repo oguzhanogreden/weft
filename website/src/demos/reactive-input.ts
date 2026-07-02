@@ -30,20 +30,24 @@ export const ReactiveInput = (): Node =>
     );
     const isValid = Stream.map(value.changes, (text) => text.length >= MIN_LENGTH);
 
-    return yield* h.div({ class: "demo demo-input" }, [
-      h.input({
-        type: "text",
-        class: "demo-input__field",
-        placeholder: "Type here…",
-        value: value.changes,
-        oninput: onInput,
-      }),
-      h.p(
-        {
-          class: "demo-input__msg",
-          style: { color: Stream.map(isValid, (ok) => (ok ? "#3fb950" : "#8b949e")) },
-        },
-        [message],
-      ),
-    ]);
+    return yield* h.div(
+      { class: "flex flex-col gap-2 rounded-lg border border-slate-7 bg-slate-2 p-4" },
+      [
+        h.input({
+          type: "text",
+          // `demo-input-field` is a semantic test hook.
+          class: "demo-input-field rounded-md border border-slate-6 px-2.5 py-2 text-[0.95rem]",
+          placeholder: "Type here…",
+          value: value.changes,
+          oninput: onInput,
+        }),
+        h.p(
+          {
+            class: "m-0 text-[0.85rem]",
+            style: { color: Stream.map(isValid, (ok) => (ok ? "#3fb950" : "#8b949e")) },
+          },
+          [message],
+        ),
+      ],
+    );
   });

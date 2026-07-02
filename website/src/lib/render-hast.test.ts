@@ -73,7 +73,7 @@ describe("renderHast", () => {
     ]);
     const out = await html(pre);
     assert.match(out, /demo-block/);
-    assert.match(out, /demo-counter__value/); // the real registry preview
+    assert.match(out, /counter-value/); // the real registry preview
     assert.match(out, /code-block/); // and the code pane
   });
 

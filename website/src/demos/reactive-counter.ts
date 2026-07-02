@@ -18,25 +18,25 @@ export const ReactiveCounter = (): Node =>
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 
-    return yield* h.div({ class: "demo demo-counter" }, [
-      h.button(
-        {
-          type: "button",
-          class: "demo-counter__btn",
-          "aria-label": "Decrement",
-          onclick: () => decrement(),
-        },
-        "−",
-      ),
-      h.span({ class: "demo-counter__value" }, [Stream.map(count.changes, (n) => String(n))]),
-      h.button(
-        {
-          type: "button",
-          class: "demo-counter__btn",
-          "aria-label": "Increment",
-          onclick: () => increment(),
-        },
-        "+",
-      ),
-    ]);
+    const btn =
+      "h-8 w-8 rounded-md border border-slate-6 bg-slate-3 text-lg leading-none hover:bg-slate-4";
+
+    return yield* h.div(
+      { class: "flex items-center gap-3 rounded-lg border border-slate-7 bg-slate-2 p-4" },
+      [
+        h.button(
+          { type: "button", class: btn, "aria-label": "Decrement", onclick: () => decrement() },
+          "−",
+        ),
+        // `counter-value` is a semantic test hook; layout comes from utilities.
+        h.span(
+          { class: "counter-value min-w-10 text-center text-[1.4rem] font-semibold tabular-nums" },
+          [Stream.map(count.changes, (n) => String(n))],
+        ),
+        h.button(
+          { type: "button", class: btn, "aria-label": "Increment", onclick: () => increment() },
+          "+",
+        ),
+      ],
+    );
   });

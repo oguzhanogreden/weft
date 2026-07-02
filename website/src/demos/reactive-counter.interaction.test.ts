@@ -29,7 +29,7 @@ describe("reactive-counter (jsdom interaction)", () => {
 
     handle = await Effect.runPromise(mount(ReactiveCounter(), container));
 
-    const value = () => container.querySelector(".demo-counter__value");
+    const value = () => container.querySelector(".counter-value");
     // The mounted tree is appended a tick after `mount` resolves.
     await vi.waitFor(() => assert.equal(value()?.textContent, "0"));
 
