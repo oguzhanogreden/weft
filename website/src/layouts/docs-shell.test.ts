@@ -39,9 +39,11 @@ describe("docs-shell render helpers", () => {
 
   it("AC2: the link matching the current route is marked active", async () => {
     const out = await html(renderSidebar(groups, "/docs/how-to/add-routing"));
-    assert.match(out, /class="docs-nav__link is-active"[^>]*aria-current="page"[^>]*>Routing</);
-    // The non-active link is plain.
-    assert.match(out, /class="docs-nav__link"[^>]*>Getting Started</);
+    // Active state is asserted via aria-current="page" (the stable hook), not a class.
+    assert.match(out, /aria-current="page"[^>]*>Routing</);
+    // Exactly one link is active, and the non-active link carries no aria-current.
+    assert.equal((out.match(/aria-current="page"/g) ?? []).length, 1);
+    assert.match(out, /docs-nav-link[^>]*>Getting Started</);
   });
 
   it("AC3: the TOC lists h2–h3 headings with working anchor links", async () => {
@@ -75,7 +77,7 @@ describe("docs-shell render helpers", () => {
     const out = await html(renderPrevNext(neighbours));
     assert.match(
       out,
-      /docs-prevnext__prev[^>]*href="\/docs\/tutorial\/getting-started"|href="\/docs\/tutorial\/getting-started"[^>]*docs-prevnext__prev/,
+      /prevnext-prev[^>]*href="\/docs\/tutorial\/getting-started"|href="\/docs\/tutorial\/getting-started"[^>]*prevnext-prev/,
     );
     assert.match(out, /Getting Started/);
     assert.match(out, /Next/);
@@ -88,14 +90,14 @@ describe("docs-shell render helpers", () => {
         next: { title: "Routing", path: "/docs/how-to/add-routing", section: "how-to" },
       }),
     );
-    assert.equal(out.includes("docs-prevnext__prev"), false);
-    assert.match(out, /docs-prevnext__next/);
+    assert.equal(out.includes("prevnext-prev"), false);
+    assert.match(out, /prevnext-next/);
   });
 
   it("top bar links to home and GitHub", async () => {
     const out = await html(TopBar());
-    assert.match(out, /docs-topbar__brand"[^>]*href="\/"|href="\/"[^>]*docs-topbar__brand/);
+    // Brand is asserted via its home link + text, not a class.
+    assert.match(out, /href="\/"[^>]*>Weft</);
     assert.match(out, /href="https:\/\/github.com\/stefvw93\/weft"/);
-    assert.match(out, /Weft/);
   });
 });

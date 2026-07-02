@@ -35,7 +35,8 @@ describe("website routes (SSR integration)", () => {
     const { html, status } = await render("/docs/how-to/add-routing");
     assert.equal(status, 200);
     assert.match(html, /<h1[^>]*>.*Routing.*<\/h1>/s);
-    assert.match(html, /docs-nav__link is-active/);
+    // The active sidebar link for the current route carries aria-current="page".
+    assert.match(html, /href="\/docs\/how-to\/add-routing"[^>]*aria-current="page"/);
   });
 
   it("AC6: the meta title reflects the doc frontmatter", async () => {

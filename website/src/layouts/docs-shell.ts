@@ -32,47 +32,59 @@ function pathnameOf(url: string): string {
   return q === -1 ? url : url.slice(0, q);
 }
 
-/** The static top bar: wordmark, version, GitHub link, and an inert search placeholder. */
+/**
+ * The static top bar: wordmark, version, GitHub link, and an inert search placeholder.
+ *
+ * The `<header>` is full-bleed (background + bottom border) and sticky; its inner
+ * row is capped at the body's `max-w-[84rem]` and shares the body's `px-5`, so the
+ * brand lines up with the content column's left edge. The row is exactly `3.25rem`
+ * tall — the value the sidebar/TOC sticky offset (`top-[4.75rem]`) is computed from.
+ */
 export function TopBar(): Renderable {
-  return h.header({ class: "docs-topbar navbar" }, [
-    h.a({ href: "/", class: "docs-topbar__brand" }, "Weft"),
-    h.span({ class: "docs-topbar__version" }, VERSION),
-    h.div({ class: "docs-topbar__spacer" }),
-    h.input({
-      type: "search",
-      class: "docs-topbar__search input input-bordered input-sm",
-      placeholder: "Search (coming soon)",
-      disabled: true,
-      "aria-label": "Search (coming soon)",
-    }),
-    h.a(
-      {
-        href: REPO_URL,
-        class: "docs-topbar__github btn btn-ghost btn-sm",
-        target: "_blank",
-        rel: "noreferrer",
-      },
-      "GitHub",
-    ),
+  return h.header({ class: "sticky top-0 z-10 border-b border-slate-6 bg-slate-1" }, [
+    h.div({ class: "mx-auto flex h-[3.25rem] w-full max-w-[84rem] items-center gap-4 px-5" }, [
+      h.a({ href: "/", class: "text-lg font-bold text-slate-12 no-underline" }, "Weft"),
+      h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
+      h.div({ class: "flex-1" }),
+      h.input({
+        type: "search",
+        class: "input input-bordered input-sm w-56 max-w-[40vw]",
+        placeholder: "Search (coming soon)",
+        disabled: true,
+        "aria-label": "Search (coming soon)",
+      }),
+      h.a(
+        { href: REPO_URL, class: "btn btn-ghost btn-sm", target: "_blank", rel: "noreferrer" },
+        "GitHub",
+      ),
+    ]),
   ]);
 }
+
+/** Base utilities shared by every sidebar link (`docs-nav-link` is the test hook). */
+const NAV_LINK_BASE = "docs-nav-link block rounded-md px-2.5 py-1 text-[0.88rem] no-underline";
 
 /** Renders the grouped sidebar nav, marking the link that matches `activePath`. */
 export function renderSidebar(groups: readonly NavGroup[], activePath: string): Renderable {
   return h.nav(
-    { class: "docs-nav", "aria-label": "Documentation" },
+    { "aria-label": "Documentation" },
     groups.map((group) =>
-      h.div({ class: "docs-nav__group" }, [
-        h.h3({ class: "docs-nav__label" }, group.label),
+      h.div({ class: "mb-5" }, [
+        h.h3({ class: "mb-1.5 text-xs uppercase tracking-wider text-slate-11" }, group.label),
         h.ul(
-          { class: "docs-nav__list" },
+          { class: "m-0 list-none p-0" },
           group.links.map((link) => {
             const active = link.path === activePath;
+            // Active state is carried by `aria-current="page"` (the test hook) plus
+            // indigo utilities; inactive links get the muted slate hover treatment.
+            const cls = active
+              ? `${NAV_LINK_BASE} bg-indigo-4 font-semibold text-indigo-11`
+              : `${NAV_LINK_BASE} text-slate-11 hover:bg-slate-3 hover:text-slate-12`;
             return h.li([
               h.a(
                 {
                   href: link.path,
-                  class: active ? "docs-nav__link is-active" : "docs-nav__link",
+                  class: cls,
                   ...(active ? { "aria-current": "page" as const } : {}),
                 },
                 link.title,
@@ -89,39 +101,54 @@ export function renderSidebar(groups: readonly NavGroup[], activePath: string): 
 export function renderToc(headings: readonly DocHeading[]): Renderable {
   const items = headings.filter((heading) => heading.depth <= 3);
   if (items.length === 0) return null;
-  return h.nav({ class: "docs-toc", "aria-label": "On this page" }, [
-    h.div({ class: "docs-toc__label" }, "On this page"),
+  return h.nav({ "aria-label": "On this page" }, [
+    h.div({ class: "mb-1.5 text-xs uppercase tracking-wider text-slate-11" }, "On this page"),
     h.ul(
-      { class: "docs-toc__list" },
-      items.map((item) =>
-        h.li([
+      { class: "m-0 list-none border-l border-slate-6 p-0" },
+      items.map((item) => {
+        // The BEM depth modifier (`--h3`) becomes a computed indent utility.
+        const indent = item.depth === 3 ? "pl-6 text-[0.95em]" : "pl-3";
+        return h.li([
           h.a(
-            { href: `#${item.id}`, class: `docs-toc__link docs-toc__link--h${item.depth}` },
+            {
+              href: `#${item.id}`,
+              class: `block py-0.5 pr-3 text-slate-11 no-underline hover:text-indigo-11 ${indent}`,
+            },
             item.text,
           ),
-        ]),
-      ),
+        ]);
+      }),
     ),
   ]);
 }
 
+/** Shared layout for one prev/next slot (`docs-prevnext` root is the test hook). */
+const PREVNEXT_SLOT =
+  "flex min-w-0 flex-col gap-0.5 rounded-lg border border-slate-6 px-3.5 py-2.5 no-underline";
+
 /** Renders the prev/next footer; each side is omitted at the ends of the doc list. */
 export function renderPrevNext(neighbours: NavNeighbours): Renderable {
   const { prev, next } = neighbours;
-  return h.nav({ class: "docs-prevnext", "aria-label": "Pagination" }, [
-    prev === undefined
-      ? h.span({ class: "docs-prevnext__slot" })
-      : h.a({ href: prev.path, class: "docs-prevnext__slot docs-prevnext__prev" }, [
-          h.span({ class: "docs-prevnext__dir" }, "Previous"),
-          h.span({ class: "docs-prevnext__title" }, prev.title),
-        ]),
-    next === undefined
-      ? h.span({ class: "docs-prevnext__slot" })
-      : h.a({ href: next.path, class: "docs-prevnext__slot docs-prevnext__next" }, [
-          h.span({ class: "docs-prevnext__dir" }, "Next"),
-          h.span({ class: "docs-prevnext__title" }, next.title),
-        ]),
-  ]);
+  return h.nav(
+    {
+      class: "docs-prevnext mt-12 flex justify-between gap-4 border-t border-slate-6 pt-6",
+      "aria-label": "Pagination",
+    },
+    [
+      prev === undefined
+        ? h.span({ class: PREVNEXT_SLOT })
+        : h.a({ href: prev.path, class: `prevnext-prev ${PREVNEXT_SLOT}` }, [
+            h.span({ class: "text-xs text-slate-11" }, "Previous"),
+            h.span({ class: "font-semibold text-indigo-11" }, prev.title),
+          ]),
+      next === undefined
+        ? h.span({ class: PREVNEXT_SLOT })
+        : h.a({ href: next.path, class: `prevnext-next ml-auto text-right ${PREVNEXT_SLOT}` }, [
+            h.span({ class: "text-xs text-slate-11" }, "Next"),
+            h.span({ class: "font-semibold text-indigo-11" }, next.title),
+          ]),
+    ],
+  );
 }
 
 /** Headings for the doc at a route pathname (empty if none/unknown). */
@@ -146,19 +173,38 @@ export const DocsShell = Component.gen(function* () {
   const outlet = yield* Router.Outlet;
   const path = Stream.map(router.currentMatch.changes, (match) => pathnameOf(match.url));
 
+  // Grid collapses to a single column below `lg`; the sidebar/TOC drop their
+  // sticky/scroll behaviour there, and the TOC hides entirely. The `top-[4.75rem]`
+  // offset = 3.25rem topbar + 1.5rem body top padding, so nothing jumps on scroll.
   return yield* h.div({ class: "docs-shell" }, [
     TopBar(),
-    h.div({ class: "docs-shell__body" }, [
-      h.aside({ class: "docs-shell__sidebar" }, [
-        Stream.map(path, (current) => renderSidebar(docs.nav.groups, current)),
-      ]),
-      h.main({ class: "docs-shell__content" }, [
-        h.article({ class: "docs-content" }, [outlet]),
-        Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
-      ]),
-      h.aside({ class: "docs-shell__toc" }, [
-        Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get))),
-      ]),
-    ]),
+    h.div(
+      {
+        class:
+          "mx-auto grid max-w-[84rem] grid-cols-1 gap-8 px-5 pb-16 pt-6 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]",
+      },
+      [
+        h.aside(
+          {
+            class:
+              "self-start lg:sticky lg:top-[4.75rem] lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto",
+          },
+          [Stream.map(path, (current) => renderSidebar(docs.nav.groups, current))],
+        ),
+        h.main({ class: "min-w-0" }, [
+          h.article(
+            {
+              class:
+                "docs-content prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-indigo-11",
+            },
+            [outlet],
+          ),
+          Stream.map(path, (current) => renderPrevNext(docs.nav.findNav(current))),
+        ]),
+        h.aside({ class: "self-start text-[0.82rem] max-lg:hidden lg:sticky lg:top-[4.75rem]" }, [
+          Stream.map(path, (current) => renderToc(headingsForPath(current, docs.get))),
+        ]),
+      ],
+    ),
   ]);
 });
