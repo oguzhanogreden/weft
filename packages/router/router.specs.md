@@ -306,13 +306,24 @@ persists, per `render-to-stream.specs.md` AC-ST8).
   the path is claimed by the rpc web handler exactly as in `toWebHandler`;
   without `rpc` it falls through to page dispatch.
 
-**Hydration note / open question (implementation session):** the client
-`hydrate` contract over patched regions is the existing
-`renderToStream`/`suspense-ssr.specs.md` contract (patches have executed
-before `hydrate()` runs). The streamed not-found patch content is **not**
-hydrated as the notFound route — the client router resolves the URL itself on
-hydrate, so the shell-said-"page"/patch-said-"not-found" case is a potential
-hydration mismatch to be resolved during implementation.
+- **SW8 (soft-404 hydration)** Hydrating a streamed soft-404 document
+  (`hydrate(RouterApp(def), root)` after the late-404 patch has executed)
+  yields the `notFound` page via `RouterApp`'s internal
+  `Boundary.catchTag("RouterNotFound")` — the same semantics as client-side
+  navigation (N3). The late-404 substitute carries
+  `failureReplay: Schema.encodeSync(RouterNotFound)(failure)`, so its patch is
+  the failure-replay variant (`streaming-shell.specs.md` AC-FH7): retained
+  suspense markers plus a `data-weft-suspense-failure` sentinel. On hydrate
+  the sentinel is replayed to the boundary (`hydrate.specs.md` AC-H14): no
+  `HydrationMismatchError` is raised, the failed loader is **not** re-run,
+  and after the interactivity barrier the boundary extent is swapped to the
+  client-rendered `notFound` page. The swap is a single, deterministic
+  visible transition: the server soft-404 DOM (page layout chrome with the
+  notFound UI inside the suspense region) is replaced by the canonical client
+  shape (the notFound page as the whole outlet), so the layout chrome from
+  the server snapshot disappears — flash-free in-place adoption is impossible
+  by construction since the two shapes differ. The `noindex` robots meta
+  lives in `document.head` and is untouched by the swap.
 
 Out of scope for this feature: progressive shell flushing (the shell is
 atomic), streaming for `RouterServer.render` (string API stays buffered), and

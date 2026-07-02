@@ -60,6 +60,7 @@ import {
   parseSuspenseMarker,
   streamEndText,
   streamStartText,
+  SUSPENSE_FAILURE_ATTR,
   suspenseEndText,
   suspenseStartText,
 } from "~/shared";
@@ -440,6 +441,62 @@ function setEventHandler(
 // ============================================================================
 
 /**
+ * Recovery body shared by {@link renderBoundary} (mount) and
+ * {@link hydrateFailureBoundary} (hydrate, AC-H13): awaits the boundary's error
+ * deferred, closes the subtree scope, and swaps the nodes between the boundary
+ * markers for the fallback returned by `props.match`. A `match` returning
+ * `null` propagates the cause to the nearest parent boundary (spec AC15); with
+ * no parent the cause is logged as an unhandled boundary failure.
+ */
+function boundaryRecoveryEffect(
+  props: Boundary.FailureProps,
+  errorDeferred: Deferred.Deferred<void, Cause.Cause<unknown>>,
+  subtreeScope: Scope.CloseableScope,
+  parentBoundary: Option.Option<BoundaryContext["Type"]>,
+  startMarker: Comment,
+  endMarker: Comment,
+): Effect.Effect<
+  void,
+  UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
+  RenderContext
+> {
+  return Effect.gen(function* () {
+    // The deferred is only ever failed (via reportError), never succeeded, so
+    // flip's residual success-as-error path is dead — discharge it.
+    const cause = yield* Deferred.await(errorDeferred).pipe(
+      Effect.flip,
+      Effect.catchAll(() => Effect.interrupt),
+    );
+    const fallbackNode = props.match(cause);
+    yield* Scope.close(subtreeScope, Exit.void);
+
+    if (fallbackNode === null) {
+      if (Option.isSome(parentBoundary)) {
+        // Propagate to the nearest parent boundary (spec AC15).
+        return yield* parentBoundary.value.reportError(cause);
+      }
+      // No parent boundary: surface as an unhandled boundary failure.
+      return yield* Effect.logError("Unhandled error escaped the outermost Boundary", cause);
+    }
+
+    removeNodesBetweenMarkers(startMarker, endMarker);
+    const fallbackNodes = yield* renderNode(fallbackNode as Renderable);
+    const parent = endMarker.parentNode;
+    if (parent !== null) {
+      if (fallbackNodes !== null) {
+        if (Array.isArray(fallbackNodes)) {
+          for (const n of fallbackNodes as Node[]) {
+            parent.insertBefore(n, endMarker);
+          }
+        } else {
+          parent.insertBefore(fallbackNodes as Node, endMarker);
+        }
+      }
+    }
+  });
+}
+
+/**
  * Implements a `Boundary.*` error boundary for the DOM renderer.
  *
  * Renders the children in a forked subtree scope. Construction-time errors are
@@ -489,37 +546,17 @@ function renderBoundary(
     );
 
     // Recovery fiber: awaits error deferred, swaps DOM on trigger
-    const recoveryEffect = Effect.gen(function* () {
-      const cause = yield* Deferred.await(errorDeferred).pipe(Effect.flip);
-      const fallbackNode = props.match(cause);
-      yield* Scope.close(subtreeScope, Exit.void);
-
-      if (fallbackNode === null) {
-        if (Option.isSome(parentBoundary)) {
-          // Propagate to the nearest parent boundary (spec AC15).
-          return yield* parentBoundary.value.reportError(cause);
-        }
-        // No parent boundary: surface as an unhandled boundary failure.
-        return yield* Effect.logError("Unhandled error escaped the outermost Boundary", cause);
-      }
-
-      removeNodesBetweenMarkers(startMarker, endMarker);
-      const fallbackNodes = yield* renderNode(fallbackNode as Renderable);
-      const parent = endMarker.parentNode;
-      if (parent !== null) {
-        if (fallbackNodes !== null) {
-          if (Array.isArray(fallbackNodes)) {
-            for (const n of fallbackNodes as Node[]) {
-              parent.insertBefore(n, endMarker);
-            }
-          } else {
-            parent.insertBefore(fallbackNodes as Node, endMarker);
-          }
-        }
-      }
-    });
-
-    yield* Effect.forkIn(recoveryEffect, context.scope);
+    yield* Effect.forkIn(
+      boundaryRecoveryEffect(
+        props,
+        errorDeferred,
+        subtreeScope,
+        parentBoundary,
+        startMarker,
+        endMarker,
+      ),
+      context.scope,
+    );
 
     return [startMarker, ...childNodes, endMarker] as readonly Node[];
   });
@@ -2052,10 +2089,19 @@ function hydrateNode(
       }
 
       if (type === SUSPENSE_BOUNDARY) {
-        // By the time `hydrate` runs, the SSR patch script has already resolved
-        // the boundary: the fallback is gone and the children are inline in the
-        // DOM. Hydrate the children directly from the current cursor — the
-        // Suspense wrapper is transparent to the DOM walk.
+        // A retained suspense-start marker at the cursor is the server's
+        // failure-replay patch (AC-FH7): the region resolved to a handled
+        // failure and was substituted. Replay it instead of walking (AC-H14).
+        if (cursor !== null && cursor.nodeType === COMMENT_NODE) {
+          const marker = parseSuspenseMarker(cursor as Comment);
+          if (marker !== null && marker.kind === "start") {
+            return yield* hydrateSubstitutedSuspense(cursor as Comment, path);
+          }
+        }
+        // Standard case: the SSR patch script has already resolved the
+        // boundary — the fallback and markers are gone and the children are
+        // inline in the DOM. Hydrate the children directly from the current
+        // cursor; the Suspense wrapper is transparent to the DOM walk.
         return yield* hydrateChildren(props, cursor, path);
       }
 
@@ -2242,7 +2288,23 @@ function hydrateReactive(
     if (context.hydrationReady !== undefined) {
       yield* context.hydrationReady.register;
     }
-    yield* Effect.forkIn(effect, context.scope);
+    const streamFiber = yield* Effect.forkIn(effect, context.scope);
+
+    // Route stream failures to the nearest BoundaryContext; swallow if none
+    // (AC-H15, parity with handleStreamChild). Covers post-hydrate live
+    // failures such as a page failing after client-side navigation.
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
+    yield* pipe(
+      Fiber.await(streamFiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit)
+          ? Option.isSome(boundaryCtx)
+            ? boundaryCtx.value.reportError(exit.cause)
+            : Effect.void
+          : Effect.void,
+      ),
+      Effect.forkIn(context.scope),
+    );
 
     return endMarker.nextSibling;
   });
@@ -2288,11 +2350,125 @@ function hydrateFirstEmission(
 }
 
 /**
+ * Hydrates a **substituted** Suspense region (AC-H14): the server's
+ * failure-replay patch (`streaming-shell.specs.md` AC-FH7) retained the
+ * `suspense-start`/`suspense-end` markers and prepended a
+ * `data-weft-suspense-failure` sentinel script carrying the Schema-encoded
+ * failure. The region's static DOM is **not** hydrated or mutated: the parsed
+ * `error` payload is replayed as a `Cause.fail` to the nearest
+ * {@link BoundaryContext} (whose recovery then swaps the whole boundary extent
+ * — the canonical fallback replaces this snapshot anyway), and the cursor
+ * resumes after the end marker.
+ *
+ * Graceful degradations (never a hard hydrate failure): a missing/unparsable
+ * sentinel, or no enclosing `BoundaryContext`, logs a `console.error` and
+ * leaves the substituted static DOM standing. The replayed value is the raw
+ * encoded object (matched structurally by `_tag`), not a class instance.
+ */
+function hydrateSubstitutedSuspense(
+  startMarker: Comment,
+  path: string,
+): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
+  return Effect.gen(function* () {
+    const endMarker = findMatchingSuspenseEnd(startMarker);
+    if (endMarker === null) {
+      return yield* mismatch(
+        "substituted suspense end marker",
+        `unterminated region starting at ${JSON.stringify(startMarker.data)}`,
+        path,
+      );
+    }
+
+    // The sentinel is the first substituted child — scan the region's direct
+    // siblings for it.
+    let sentinel: HTMLScriptElement | null = null;
+    for (
+      let node: ChildNode | null = startMarker.nextSibling;
+      node !== null && node !== endMarker;
+      node = node.nextSibling
+    ) {
+      if (
+        node.nodeType === ELEMENT_NODE &&
+        (node as Element).tagName === "SCRIPT" &&
+        (node as Element).getAttribute("type") === "application/json" &&
+        (node as Element).hasAttribute(SUSPENSE_FAILURE_ATTR)
+      ) {
+        sentinel = node as HTMLScriptElement;
+        break;
+      }
+    }
+
+    let payload: unknown = null;
+    if (sentinel !== null) {
+      const raw = sentinel.textContent ?? "";
+      payload = yield* Effect.try({
+        try: () => JSON.parse(raw) as unknown,
+        catch: (cause) => cause,
+      }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+    }
+
+    if (payload === null || typeof payload !== "object" || !("error" in payload)) {
+      console.error(
+        `[weft] hydrate: substituted suspense region at ${path} has no decodable failure sentinel; leaving its static content.`,
+      );
+      return endMarker.nextSibling;
+    }
+
+    const boundary = yield* Effect.serviceOption(BoundaryContext);
+    if (Option.isNone(boundary)) {
+      console.error(
+        `[weft] hydrate: substituted suspense region at ${path} has no enclosing Boundary to replay its failure to; leaving its static content.`,
+        payload.error,
+      );
+      return endMarker.nextSibling;
+    }
+
+    yield* boundary.value.reportError(Cause.fail(payload.error));
+    return endMarker.nextSibling;
+  });
+}
+
+/**
+ * Walks forward from a suspense start marker to its depth-matched suspense end
+ * marker (nested substituted regions tracked by depth). Returns `null` if no
+ * matching end is found.
+ */
+function findMatchingSuspenseEnd(startMarker: Comment): Comment | null {
+  let depth = 0;
+  let current: ChildNode | null = startMarker.nextSibling;
+
+  while (current !== null) {
+    if (current.nodeType === COMMENT_NODE) {
+      const marker = parseSuspenseMarker(current as Comment);
+      if (marker !== null) {
+        if (marker.kind === "start") {
+          depth++;
+        } else if (depth === 0) {
+          return current as Comment;
+        } else {
+          depth--;
+        }
+      }
+    }
+    current = current.nextSibling;
+  }
+
+  return null;
+}
+
+/**
  * Hydrates a failure `Boundary` region. Two cases, distinguished by the cursor:
  *
  * - **Success (no failure marker):** the server rendered the boundary's children
- *   inline. The boundary is transparent to the DOM walk — hydrate the children
- *   directly from the cursor (unchanged v1 behaviour).
+ *   inline. The children are hydrated from the cursor, and the boundary's
+ *   **live machinery** is installed (AC-H13, parity with `renderBoundary`): a
+ *   `BoundaryContext` (error deferred) is provided to the walk, invisible
+ *   `boundary-start`/`boundary-end` comment markers are inserted around the
+ *   adopted extent, and a recovery fiber swaps the extent to `props.match`'s
+ *   fallback when a live failure is reported (including an AC-H14 sentinel
+ *   replay). Construction-time `HydrateError`s are **not** routed through
+ *   `match` — static mismatches keep hard-failing (AC-H8). An empty extent
+ *   skips the recovery install (nothing to swap) with a `console.error`.
  * - **Typed-failure replay:** the cursor is the
  *   `<script type="application/json" data-weft-boundary-failure>` the server
  *   emitted (carrying `{ index, error }`). The client does **not** run `load`: it
@@ -2313,7 +2489,8 @@ function hydrateFailureBoundary(
 ): Effect.Effect<ChildNode | null, HydrateError, RenderContext> {
   return Effect.gen(function* () {
     // Success path: anything other than a failure-marked payload script means the
-    // boundary rendered its children inline — walk them transparently.
+    // boundary rendered its children inline — walk them with the live
+    // failure-boundary machinery installed (AC-H13).
     if (
       cursor === null ||
       cursor.nodeType !== ELEMENT_NODE ||
@@ -2321,7 +2498,59 @@ function hydrateFailureBoundary(
       (cursor as Element).getAttribute("type") !== "application/json" ||
       !(cursor as Element).hasAttribute(BOUNDARY_FAILURE_ATTR)
     ) {
-      return yield* hydrateChildren(props, cursor, path);
+      const context = yield* RenderContext;
+      const parentBoundary = yield* Effect.serviceOption(BoundaryContext);
+
+      const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const subtreeContext = { ...context, scope: subtreeScope };
+
+      const errorDeferred = yield* Deferred.make<void, Cause.Cause<unknown>>();
+      const boundaryService: BoundaryContext["Type"] = {
+        reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
+      };
+
+      // No construction-time catch (unlike renderBoundary): a HydrateError here
+      // hard-fails per AC-H8 — only deferred live failures route to the boundary.
+      const next = yield* hydrateChildren(props, cursor, path).pipe(
+        Effect.provideService(BoundaryContext, boundaryService),
+        Effect.provideService(RenderContext, subtreeContext),
+        Effect.provideService(Scope.Scope, subtreeScope),
+      );
+
+      // Bracket the adopted extent [cursor, next) with boundary markers so the
+      // recovery swap has a target — the only success-path DOM mutation
+      // (AC-H11 note). An empty extent has nothing to swap: skip the install.
+      const extentParent = cursor?.parentNode ?? null;
+      if (cursor === null || cursor === next || extentParent === null) {
+        console.error(
+          `[weft] hydrate: boundary at ${path} adopted an empty extent; live failure recovery is not installed for it.`,
+        );
+        return next;
+      }
+
+      const id = nextBoundaryId();
+      const startMarker = document.createComment(boundaryStartText(id));
+      const endMarker = document.createComment(boundaryEndText(id));
+      extentParent.insertBefore(startMarker, cursor);
+      if (next === null) {
+        extentParent.appendChild(endMarker);
+      } else {
+        extentParent.insertBefore(endMarker, next);
+      }
+
+      yield* Effect.forkIn(
+        boundaryRecoveryEffect(
+          props,
+          errorDeferred,
+          subtreeScope,
+          parentBoundary,
+          startMarker,
+          endMarker,
+        ),
+        context.scope,
+      );
+
+      return next;
     }
 
     const script = cursor as HTMLScriptElement;

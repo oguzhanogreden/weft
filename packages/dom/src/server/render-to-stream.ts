@@ -26,6 +26,7 @@ import {
 import {
   listItemEndText,
   listItemStartText,
+  SUSPENSE_FAILURE_ATTR,
   suspenseEndText,
   suspenseStartText,
   streamEndText,
@@ -123,15 +124,36 @@ interface ListSSRProps {
  * soft-404 pattern, AC-FH3) the script first appends
  * `<meta name="robots" content="noindex">` to `document.head` — the head has
  * long been flushed, so DOM injection is the only route.
+ *
+ * With `failureReplay` (AC-FH7) the patch switches to the **failure-replay
+ * variant**: the suspense markers are retained (the marker `removeChild` calls
+ * are skipped) and an inert
+ * `<script type="application/json" data-weft-suspense-failure>` sentinel
+ * carrying `{"error":<encoded>}` is prepended to the swapped-in content, so the
+ * client `hydrate` can locate the substituted region and replay the failure to
+ * its nearest boundary (`hydrate.specs.md` AC-H14).
  */
-function buildPatch(id: number, html: string, markNoindex = false): string {
+function buildPatch(
+  id: number,
+  html: string,
+  markNoindex = false,
+  failureReplay?: unknown,
+): string {
   const startText = suspenseStartText(id);
   const endText = suspenseEndText(id);
   const noindex = markNoindex
     ? `var m=document.createElement("meta");m.setAttribute("name","robots");m.setAttribute("content","noindex");document.head.appendChild(m);`
     : "";
+  const hasReplay = failureReplay !== undefined;
+  const content = hasReplay
+    ? `<script type="application/json" ${SUSPENSE_FAILURE_ATTR}>` +
+      serializeJsonForScript({ error: failureReplay }) +
+      `</script>` +
+      html
+    : html;
+  const removeMarkers = hasReplay ? "" : `p.removeChild(s);p.removeChild(e);`;
   return (
-    `<template id="ef-s-${id}">${html}</template>` +
+    `<template id="ef-s-${id}">${content}</template>` +
     `<script>(function(){` +
     noindex +
     `var w=document.createTreeWalker(document,128),s,e;` +
@@ -143,7 +165,7 @@ function buildPatch(id: number, html: string, markNoindex = false): string {
     `while(c&&c!==e){n=c.nextSibling;p.removeChild(c);c=n;}` +
     `var t=document.getElementById("ef-s-${id}");` +
     `p.insertBefore(t.content,e);` +
-    `p.removeChild(s);p.removeChild(e);` +
+    removeMarkers +
     `t.remove();document.currentScript.remove();` +
     `})();</script>`
   );
@@ -205,7 +227,14 @@ function renderSuspenseSSRInline(
                 const html = yield* Stream.mkString(renderFn(substitute.value.content));
                 yield* Queue.offer(
                   ctx.patchQueue,
-                  Option.some(buildPatch(id, html, substitute.value.markNoindex)),
+                  Option.some(
+                    buildPatch(
+                      id,
+                      html,
+                      substitute.value.markNoindex,
+                      substitute.value.failureReplay,
+                    ),
+                  ),
                 );
               }),
         ),

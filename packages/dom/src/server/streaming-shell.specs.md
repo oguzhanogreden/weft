@@ -92,6 +92,10 @@ interface SuspenseFailureHandler {
      * `<meta name="robots" content="noindex">` into `document.head`
      * before performing the swap. */
     readonly markNoindex: boolean;
+    /** Optional already-Schema-encoded, JSON-serializable failure value. When
+     * present, the patch switches to the failure-replay variant (AC-FH7) so the
+     * client hydrate can replay the failure to its nearest boundary. */
+    readonly failureReplay?: unknown;
   }>;
 }
 ```
@@ -172,6 +176,21 @@ interface SuspenseFailureHandler {
   itself fails, the behaviour degrades to AC-FH4 (swallow, decrement,
   terminate) — a failing handler never crashes the outer scope or hangs the
   stream.
+- **AC-FH7 (failure-replay patch):** When the substitute carries a
+  `failureReplay` value, the boundary's patch is emitted in the
+  **failure-replay variant**:
+  - The swap **retains** the boundary's `<!-- suspense-start-N -->` /
+    `<!-- suspense-end-N -->` comment markers in the document (the standard
+    patch removes them), so the client hydrate can locate the substituted
+    region's extent.
+  - The swapped-in content is **prepended** with a sentinel
+    `<script type="application/json" data-weft-suspense-failure>{"error":<encoded failureReplay>}</script>`
+    (JSON embedded with the same `</`-escaping as the boundary-failure
+    payload), giving hydrate the machine-readable failure to replay.
+  - `markNoindex` behaviour (AC-FH3) is unchanged and composes with this
+    variant.
+  - A substitute **without** `failureReplay` keeps today's patch format
+    exactly (AC-FH2/AC-FH3 — markers removed, no sentinel).
 
 ## Out of scope
 

@@ -113,7 +113,43 @@ until the fallback patch supersedes them; they are cleaned up at unmount.
 - **AC-H11:** Flash-free resume — when a reactive region's first emission matches
   the adopted server DOM, that DOM node's identity is preserved across the first
   emission (it is hydrated in place, not re-rendered; verified by node-identity /
-  expando sentinel).
+  expando sentinel). _Note:_ the only success-path DOM mutation hydrate performs
+  is inserting invisible failure-boundary comment markers around each adopted
+  boundary extent (AC-H13); adopted element/text identity is still preserved.
 - **AC-H12:** Graceful divergence — when a reactive region's first emission does
   not match the adopted DOM, the region is patched to the correct value (the effect
   does **not** fail with `HydrationMismatchError`) and a `console.error` is emitted.
+- **AC-H13:** Failure-boundary live machinery — hydrating a failure `Boundary`'s
+  success path installs the same live machinery `mount`'s `renderBoundary` has:
+  a `BoundaryContext` (error deferred) is provided to the children walk, the
+  adopted extent is bracketed with invisible `boundary-start`/`boundary-end`
+  comment markers, and a recovery fiber awaits the deferred. A live failure
+  reported after hydration swaps the extent to `props.match`'s fallback,
+  closing the boundary's subtree scope first; a `match` returning `null`
+  propagates to the parent boundary, and with no parent the cause is logged
+  (parity with mount propagation, `boundary.specs.md` AC15). Construction-time
+  `HydrateError`s are **not** routed through `props.match` — static mismatches
+  keep hard-failing per AC-H8. If the adopted extent is empty or its parent
+  cannot be determined, the recovery install is skipped and logged.
+- **AC-H14:** Substituted-suspense failure replay — when the cursor at a
+  `Boundary.suspend` is a **retained** `suspense-start` marker (the server's
+  failure-replay patch, `streaming-shell.specs.md` AC-FH7), hydrate reads the
+  `data-weft-suspense-failure` sentinel script inside the region, replays the
+  parsed `error` payload as a `Cause.fail` to the nearest `BoundaryContext`,
+  consumes the whole region (cursor resumes after the end marker) without
+  hydrating or mutating its static DOM, and never raises a
+  `HydrationMismatchError` for it. The boundary's recovery then swaps the
+  boundary extent to the fallback (e.g. the router's notFound page). The
+  replayed value is the raw Schema-encoded object matched structurally by
+  `_tag` — a generic `Boundary.catchAll` receives that object, not a class
+  instance. With **no** enclosing `BoundaryContext`, the failure is logged via
+  `console.error` and the substituted static DOM is left standing. A sentinel
+  that fails to parse is logged and the region skipped (static DOM stands) —
+  never a hard hydrate failure. A suspense boundary whose markers were removed
+  by the standard patch keeps today's transparent walk.
+- **AC-H15:** Reactive-region failure routing — a reactive region whose stream
+  fails (at or after the first emission) reports its failure cause to the
+  nearest `BoundaryContext` (parity with mount's `handleStreamChild`); with no
+  boundary the failure is swallowed as today. This covers post-hydrate live
+  failures such as a page raising `RouterNotFound` after client-side
+  navigation on a hydrated app.

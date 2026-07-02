@@ -163,6 +163,26 @@ Each patch consists of a `<template>` + inline `<script>` pair:
 - The script is self-contained: no globals, no dependencies on any client-side
   Weft runtime.
 
+### Substituted-patch (failure-replay) variant
+
+When a `SuspenseFailureHandler` substitute carries a `failureReplay` value
+(`streaming-shell.specs.md` AC-FH7), the patch differs from the standard script
+in exactly two ways:
+
+1. The `<!-- suspense-start-N -->` / `<!-- suspense-end-N -->` comment markers
+   are **retained** in the document — the script skips the two
+   `removeChild(s)`/`removeChild(e)` calls. The markers signal to the client
+   `hydrate` walk that the region resolved to a handled failure and delimit
+   the substituted content's extent.
+2. The template content is prepended with a sentinel
+   `<script type="application/json" data-weft-suspense-failure>{"error":<encoded>}</script>`
+   carrying the Schema-encoded failure, which hydrate parses and replays to the
+   nearest failure boundary (`hydrate.specs.md` AC-H14). The sentinel is inert
+   (`type="application/json"` never executes).
+
+A substitute **without** `failureReplay`, and every ordinarily-resolved
+boundary, keeps the standard script above byte-for-byte.
+
 ## Internal Architecture
 
 ### `ServerSuspenseCtx`
