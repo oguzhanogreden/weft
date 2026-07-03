@@ -268,8 +268,14 @@ Stashing the `Exit` (not just the node) is what makes the component body
   handling — `notFound()` still yields the 404 page (AC-R7).
 - **AC8** popstate is blank-free including data, with no double-push (AC-R8).
 - **AC9** Server render and hydration are unchanged (AC-R13).
-- **AC10** The website's doc→doc navigation, unmodified, no longer empties the
-  content region on first visit to a doc (validation target — see Test plan).
+- **AC10** The website's doc→doc navigation, unmodified, never **paints** an
+  empty content region on first visit to a doc (validation target — see Test
+  plan). Assessed per animation frame, not per DOM mutation: the renderer's
+  region swap (`updateStreamChild` SP4) may interleave Effect microtask yields
+  between removing the old nodes and inserting the new ones, so a
+  `MutationObserver` can record a transiently empty region within a single
+  macrotask even though no frame is ever painted blank. The user-facing
+  invariant — and what this AC pins — is the painted frame.
 
 ## Test plan (spec → mock → type-tests → unit → e2e)
 
@@ -300,10 +306,13 @@ Stashing the `Exit` (not just the node) is what makes the component body
   emptied across the transition; the pending indicator is visible during the
   window; revisit is synchronous (AC1/AC3/AC5). Examples rule: co-located
   `*.browser.test.ts`, `vite-plus/test` globals.
-- **Browser e2e — `website/src/__tests__/website.browser.test.ts`:** add the AC10
-  assertion — navigate between two docs with a `MutationObserver` on `main`,
-  assert no mutation record leaves the article empty (this encodes the measured
-  318 ms regression as a permanent test).
+- **Browser e2e — `website/src/__tests__/doc-navigation.browser.test.ts`:** the
+  AC10 assertion — mount the real `App` (real routes, real `DocsLive` over the
+  per-doc `import()` chunks), navigate between two docs, and sample the article
+  on every `requestAnimationFrame` from click to commit: no sampled frame may
+  see it empty (this encodes the measured 318 ms regression as a permanent
+  test). Per-frame, not per-mutation — see AC10 for why a `MutationObserver`
+  is over-strict here.
 
 ## Documentation updates (part of this feature's definition of done)
 
