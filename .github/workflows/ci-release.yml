@@ -158,7 +158,13 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: website/dist/static
+          # Unique per attempt: artifacts persist across re-runs of the same
+          # run, and deploy-pages hard-fails when it finds more than one
+          # artifact with its name (actions/deploy-pages#276).
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
