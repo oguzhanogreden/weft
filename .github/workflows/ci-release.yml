@@ -108,22 +108,59 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Build
-        run: vp run pack
-
+      # No build step here: commit analysis needs no dist. `vp run pack` runs
+      # inside semantic-release's prepareCmd (.releaserc.json), so packages are
+      # built only when a release is actually being published.
       - name: Release
         id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: vpx semantic-release
 
+  website-changes:
+    name: Website Changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v6
+        with:
+          # The push range's `before` commit can be arbitrarily old.
+          fetch-depth: 0
+
+      # The website bakes repo `docs/**` at build time (website/vite.config.ts),
+      # so content changes in either tree warrant a redeploy.
+      - name: Detect website/docs changes in the push range
+        id: diff
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            # New branch or force-push with an unreachable `before`: assume changed.
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BEFORE" "${{ github.sha }}" -- website/ docs/ | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy-website:
     name: Deploy Website
     runs-on: ubuntu-latest
-    needs: release
-    # Runs when a release was published, or on manual dispatch (release job is
-    # skipped then — hence !cancelled() instead of the default success() gate).
-    if: ${{ !cancelled() && (needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch') }}
+    needs: [release, website-changes]
+    # Runs when a release was published, when the push touched website/docs
+    # content, or on manual dispatch (both needed jobs are skipped then — hence
+    # !cancelled() instead of the default success() gate). Never after a failure
+    # in either needed job.
+    if: >-
+      ${{ !cancelled() &&
+          needs.release.result != 'failure' &&
+          needs.website-changes.result != 'failure' &&
+          (needs.release.outputs.released == 'true' ||
+           needs.website-changes.outputs.changed == 'true' ||
+           github.event_name == 'workflow_dispatch') }}
     permissions:
       contents: read
       pages: write
