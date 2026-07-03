@@ -156,7 +156,11 @@ namespace Router {
 
 - **In scope (this pass): code / chunk preload only.** The `Router.lazy` route chunk
   (and any lazy layout chunk) in the matched branch.
-- **Out of scope (deferred): data preload.** A component body may await its own data
+- **Out of scope (deferred): data preload.** **Superseded by
+  `resolve-before-commit.specs.md`** — the leaf's component effect (its data
+  included) now resolves pre-commit, so neither follow-up option sketched below
+  should be implemented independently. Kept for the record:
+  A component body may await its own data
   after its chunk loads (e.g. the website's `docs.load` → `Effect.promise(loadTree)`,
   itself a lazy chunk). Chunk-only preload does not cover that, so a **shorter**
   data-fetch blank can remain on first visit to a data route. Covering it is a

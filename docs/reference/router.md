@@ -88,7 +88,7 @@ Router.lazy<S extends ComponentSlot>(
 Wraps a dynamic-import loader as a component slot, so a route's **component** is code-split into its own chunk while the **descriptor** (segment + param schemas) stays eager. `load` returns a `Promise` resolving the component — typically `() => import("./page").then((m) => m.Page)`. Drops directly into `Router.route({ component })` and `Router.layout({ component })`.
 
 - **Channels preserved.** The returned slot's `E`/`R` equal the resolved component's, so a lazy route has the identical type to declaring it eagerly (an unmet requirement is still a compile error at `Router.router`).
-- **Only the matched branch loads**, on the server during render and on the client on navigation. Client navigation is **deferred-commit** (see [`Router.navigating`](#routernavigating)): the chunk resolves _before_ the URL commits, so the previous page stays mounted and the swap is blank-free. The load `Promise` is memoized per slot, so revisits are synchronous.
+- **Only the matched branch loads**, on the server during render and on the client on navigation. Client navigation is **deferred-commit**: the chunk **and the leaf component's own effect** resolve _before_ the URL commits (see [`Router.navigating`](#routernavigating) and [Blocking vs streaming data](#blocking-vs-streaming-data)), so the previous page stays mounted through both the fetch and any data the leaf awaits, and the swap is blank-free. The load `Promise` is memoized per slot, so revisits are synchronous.
 - **A rejected `load` is a defect** (`Effect.promise` dies) — a deploy-skew/offline condition surfaced through normal defect handling, kept off the `E` channel; the rejection is memoized (no silent retry).
 - The resolved value should be a `Component` (`Component.make`/`Component.gen`); a bare `() => Node` thunk loses its channels through the loader `Promise` — wrap it in `Component.make`.
 
@@ -130,13 +130,52 @@ readonly navigating: Subscribable.Subscribable<NavState>;
 Router.navigatingStream: Effect<Subscribable<NavState>, never, Router>;
 ```
 
-The reactive navigation-state signal, for rendering pending UI (a top progress bar, dimmed outlet) during a **deferred-commit** navigation. It transitions `Idle → Navigating{ to }` while the router resolves a [`Router.lazy`](#routerlazy) chunk in the target branch, and back to `Idle` on commit. `NavState` is exported from `@weftui/router` and `@weftui/router/client`.
+The reactive navigation-state signal, for rendering pending UI (a top progress bar, dimmed outlet) during a **deferred-commit** navigation. It transitions `Idle → Navigating{ to }` while the router resolves the target branch's [`Router.lazy`](#routerlazy) chunk **and** the matched leaf's own component effect, and back to `Idle` on commit — one signal covering both the code and data windows. `NavState` is exported from `@weftui/router` and `@weftui/router/client`.
 
-- **Eager navigations never flip it** — a branch with no lazy node commits synchronously and `navigating` stays `Idle`, so reading it costs nothing in an eager app.
-- **Latest-wins** across rapid navigations (a superseded navigation never resets it); **popstate** (back/forward) into a lazy route also reports; a **rejected chunk load** resets it to `Idle` before the defect surfaces.
+- **Eager navigations never flip it** — a branch with no lazy node and a synchronously-resolving leaf commits synchronously and `navigating` stays `Idle`, so reading it costs nothing in an eager app.
+- **Synchronous resolutions never emit `Navigating`** — a revisit with both the chunk and the leaf's effect memoized (or an eager leaf with no async work) still commits in the same tick; the signal only flips when a resolution is genuinely async.
+- **Latest-wins** across rapid navigations (a superseded navigation never resets it and its pre-run is interrupted); **popstate** (back/forward) into a lazy or data-fetching route also reports; a **rejected chunk load or a failing leaf pre-run** (typed error or defect) resets it to `Idle` before the failure surfaces through the normal render error path.
 - **Server-side it is a constant `Idle`** (server render is buffered), so a component reading it type-checks and renders on both sides.
 
-See the [Show Navigation Progress](../how-to/show-navigation-progress.md) how-to and `packages/router/src/pending-navigation.specs.md`.
+See the [Show Navigation Progress](../how-to/show-navigation-progress.md) how-to, the [Blocking vs streaming data](#blocking-vs-streaming-data) section below, and `packages/router/src/resolve-before-commit.specs.md`.
+
+### Blocking vs streaming data
+
+A leaf `component` is already an `Effect` — there is no separate loader — so where you put an await decides whether it blocks the navigation commit or streams in afterward:
+
+- **`yield*` in the component body** → commit-blocking. The pre-run executes the leaf's effect to completion before the URL commits; the previous page stays mounted for the whole window, and `Router.navigating` reports `Navigating{ to }` for its duration.
+- **An `Effect`/`Stream` placed as a child node** → streaming. The commit is not delayed; the leaf mounts immediately and the child region fills in place once its own effect resolves.
+
+```typescript
+// Blocking — the await is in the leaf's own body; navigation waits for it.
+const DocPage = Component.gen(function* () {
+  const { category, slug } = yield* Router.params({ category: Schema.String, slug: Schema.String });
+  const docs = yield* Docs;
+  const doc = yield* docs.load(category, slug);
+  return yield* h.article([h.h1(doc.title), h.div({ innerHTML: doc.html })]);
+});
+
+// Streaming — the await lives on a child; the leaf commits immediately.
+const DocPage = Component.gen(function* () {
+  const { category, slug } = yield* Router.params({ category: Schema.String, slug: Schema.String });
+  const docs = yield* Docs;
+  return yield* h.article([
+    h.h1("Docs"),
+    Stream.concat(
+      Stream.make(h.p({ class: "loading" }, "Loading…")),
+      Stream.fromEffect(
+        Effect.map(docs.load(category, slug), (doc) => h.div({ innerHTML: doc.html })),
+      ),
+    ),
+  ]);
+});
+```
+
+Choose blocking for primary content the page is meaningless without (an article body, a product's price) — the old page stays visible with no blank or skeleton. Choose streaming for secondary or slow regions where partial content is still useful (a comments panel, a "related" rail) — the commit isn't held hostage by one slow fetch.
+
+Only the matched **leaf** is pre-run this way; layout components in the branch get their chunks preloaded but their bodies still run at render, post-commit (unchanged layouts don't re-render across navigations, so this rarely matters in practice). Pre-run failures — `notFound()`, a typed error, or a defect — still commit the URL and replay through the normal render error path (the nearest `Boundary`, or the router's 404 boundary) without re-running the component.
+
+See [Load Async Data](../how-to/load-async-data.md#blocking-on-navigation-vs-streaming-in-place) and [RPC Data Boundaries](../how-to/load-data-with-rpc.md) for the streaming patterns in full.
 
 ## `href`
 

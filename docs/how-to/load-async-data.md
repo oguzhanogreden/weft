@@ -51,8 +51,20 @@ const UserCard = ({ id }: { id: number }) =>
 
 This is the raw, per-region pattern. When you need **one fallback for several async siblings** (all-or-nothing), use [`Boundary.suspend`](../explanation/boundaries-and-suspense.md). When the data must be resolved on the **server** and replayed on hydrate without a second request, use [`Boundary.rpc`](./load-data-with-rpc.md) instead — this recipe is purely client-side.
 
+## Blocking on navigation vs streaming in place
+
+The `Stream.concat` placeholder above lives on a **child** node, so it always streams in after mount — it never delays a navigation commit. If the component above is a route's leaf, moving the `fetchUser` call into the **body** instead changes that:
+
+- **Await in the leaf's own body** — commit-blocking. Navigating to the route pre-runs its component effect to completion before the URL commits: the previous page stays mounted for the fetch, and [`Router.navigating`](../reference/router.md#routernavigating) reports the window.
+- **The `Stream.concat` placeholder pattern above, kept as a child** — streaming. The leaf commits immediately and the region fills in place once the effect resolves.
+
+Choose blocking for **primary route content the page is meaningless without** (an article body, a user's profile) — the old page stays visible with no blank or skeleton. Choose streaming for **secondary or slow regions** where partial content is still useful (a comments panel, a "related" rail) — the commit isn't held hostage by one slow fetch.
+
+See [Show Navigation Progress](./show-navigation-progress.md) for rendering pending UI during the blocking window, and the router reference's [Blocking vs streaming data](../reference/router.md#blocking-vs-streaming-data) for the full model.
+
 ## See also
 
 - [Boundaries and Suspense](../explanation/boundaries-and-suspense.md) — coordinating multiple async regions
 - [Reactive Primitives](../explanation/reactive-primitives.md) — `Stream`/`Effect` as node-producing children
+- [Show Navigation Progress](./show-navigation-progress.md) — the pending signal for the commit-blocking window
 - [examples/async-data-loading](../../examples/async-data-loading) — loading states, retry, parallel and sequential loads with error boundaries

@@ -45,7 +45,7 @@ A descriptor file that still `import`s the impl statically gains nothing — the
 ## What you get for free
 
 - **Flash-free hydration.** On a directly-loaded lazy route, the client re-invokes the same slot, awaits the chunk, and adopts the server DOM in place — the first production matches, so nothing is mutated.
-- **Blank-free navigation.** Client navigation is **deferred-commit**: the router resolves the target branch's chunk _before_ committing the URL, so the previous page stays mounted during the fetch and the swap is a single tick. See [Show Navigation Progress](./show-navigation-progress.md) for the `Router.navigating` signal this exposes.
+- **Blank-free navigation.** Client navigation is **deferred-commit**: the router resolves the target branch's chunk **and the matched leaf's own component effect** _before_ committing the URL, so the previous page stays mounted through both the fetch and any data the leaf awaits, and the swap is a single tick. See [Show Navigation Progress](./show-navigation-progress.md) for the `Router.navigating` signal this exposes.
 - **Synchronous revisits.** `Router.lazy` memoizes its load per slot, so a second visit to a loaded route commits immediately.
 
 ## Edge cases
