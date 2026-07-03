@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "website/src/app.ts": {
-    "mtime": 1783059987.3666258,
-    "ast_hash": "3a788341f7db32f0fd554c9dc2b81064",
+    "mtime": 1783108870.385742,
+    "ast_hash": "28c046a686ae43f93263d6b9a21b7736",
     "semantic_hash": ""
   },
   "website/src/assets.d.ts": {
@@ -1917,6 +1917,16 @@
   "website/public/logo.svg": {
     "mtime": 1783103128.8632326,
     "ast_hash": "82b1e99a300ed94dab6183c98c304d43",
+    "semantic_hash": ""
+  },
+  "website/src/__tests__/nav-progress.browser.test.ts": {
+    "mtime": 1783108726.6780465,
+    "ast_hash": "c2b38e3f4813242f52e53b947286635d",
+    "semantic_hash": ""
+  },
+  "website/src/nav-progress.specs.md": {
+    "mtime": 1783108881.8706005,
+    "ast_hash": "1f1b9274397a8b0570e430daffdbce6b",
     "semantic_hash": ""
   }
 }
