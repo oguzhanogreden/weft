@@ -15,13 +15,13 @@ Mature data routers (React Router data mode, TanStack Router, SvelteKit) await
 route data **before** committing the navigation, keeping the old view mounted, with
 an opt-in streaming escape hatch per value. Weft adopts the same model — but
 **without a route-level loader**. The package's route model is
-*component-as-handler* (`router.specs.md`): there is no per-route data schema or
+_component-as-handler_ (`router.specs.md`): there is no per-route data schema or
 loader, and this spec does not add one. Instead it uses the property loaders were
 invented to work around not having: **a Weft component is already an `Effect`**.
 
 **Design:** on client navigation, after the existing chunk preloads, `navigate`
 **runs the matched leaf's component effect to completion pre-commit** — under the
-live runtime context, with the *target* match staged — stashes the resulting
+live runtime context, with the _target_ match staged — stashes the resulting
 `Exit`, and only then commits the URL. The outlet's leaf emission consumes the
 stashed, already-resolved node **synchronously**, so the swap is atomic: the old
 content is removed and the new content inserted in the same tick, with no blank
@@ -35,7 +35,7 @@ The dual model falls out with zero new authoring API:
   and fills in place after mount (`docs/how-to/load-async-data.md` pattern,
   `Boundary.rpc` client-first mount, `Boundary.suspend`).
 
-Where the author puts the await *is* the blocking/streaming choice — the exact
+Where the author puts the await _is_ the blocking/streaming choice — the exact
 split React Router expresses as "await in loader vs return a promise", relocated
 into the render tree where Weft wants data to live.
 
@@ -61,13 +61,13 @@ post-commit render would have used.
 Playwright against the prerendered website (`dist/static`, 300 ms emulated
 latency), navigating `/docs/tutorial/01-your-first-app` → `02-reactivity`:
 
-| Case                      | Outlet blank window                  |
-| ------------------------- | ------------------------------------ |
-| First visit (tree fetch)  | **318 ms** (≈ the full network RTT)  |
-| Revisit (memoized tree)   | ~6 ms blank + ~25 ms progressive pop-in |
+| Case                     | Outlet blank window                     |
+| ------------------------ | --------------------------------------- |
+| First visit (tree fetch) | **318 ms** (≈ the full network RTT)     |
+| Revisit (memoized tree)  | ~6 ms blank + ~25 ms progressive pop-in |
 
 The first row is the data gap this spec closes. The second row (teardown-then-
-async-fill for an *already-synchronous* leaf) is also fixed as a side effect: the
+async-fill for an _already-synchronous_ leaf) is also fixed as a side effect: the
 stashed node is a plain resolved descriptor, so the leaf swap renders inline
 (`updateStreamChild` SP4 removes and inserts in one tick — no painted blank).
 
@@ -86,7 +86,7 @@ stashed node is a plain resolved descriptor, so the leaf swap renders inline
    `@weftui/dom` render paths are unchanged**.
 3. **Chunk preload composes, not duplicates.** The existing preload stage
    (`pending-navigation.specs.md` AC-N1) still runs first — it is what loads
-   *layout* chunks (layouts are not pre-run, see AC-R9) and populates the lazy
+   _layout_ chunks (layouts are not pre-run, see AC-R9) and populates the lazy
    slot's `resolved` memo, so the leaf pre-run enters the slot's synchronous path
    rather than re-awaiting the import.
 
@@ -164,7 +164,7 @@ Stashing the `Exit` (not just the node) is what makes the component body
 - **AC-R4 (staged params).** During the pre-run, handler-arg props and one-shot
   `Router.params` / `Router.query` reads decode the **target** match. Reactive
   subscriptions made after mount observe the committed match. (A body that
-  *subscribes and reads* mid-pre-run sees snapshot semantics: the staged `get`,
+  _subscribes and reads_ mid-pre-run sees snapshot semantics: the staged `get`,
   the live `changes` — documented, not prevented.)
 - **AC-R5 (`navigating` covers the whole window).** `Router.navigating`
   transitions `Idle → Navigating{ to }` when an async resolve window opens
@@ -199,7 +199,7 @@ Stashing the `Exit` (not just the node) is what makes the component body
   (`keyOf` dedupe) so the common case has no layout work at all; newly-mounted
   layouts are typically synchronous chrome once their chunk is loaded; and
   pre-running layouts would couple `navigate` to the outlet's per-level dedupe
-  logic. A branch whose *new* layout does real async work in its body may still
+  logic. A branch whose _new_ layout does real async work in its body may still
   fill late — follow-up if it bites in practice.
 - **AC-R10 (not-found fast path).** A navigation matching no route pre-runs
   nothing (there is no leaf) and commits synchronously; the 404 page renders as
@@ -207,7 +207,7 @@ Stashing the `Exit` (not just the node) is what makes the component body
 - **AC-R11 (streaming children unaffected).** Pre-run resolution awaits the
   component's **own** effect only. `Effect`/`Stream` children inside the returned
   node, `Boundary.rpc` regions, and `Boundary.suspend` fallbacks render and fill
-  post-commit exactly as today — that *is* the opt-in streaming half of the model.
+  post-commit exactly as today — that _is_ the opt-in streaming half of the model.
 
 ### Pre-run lifetime (scope ownership)
 
@@ -237,7 +237,7 @@ Stashing the `Exit` (not just the node) is what makes the component body
 - **Out of scope / non-goals:**
   - **Layout effect pre-run** (AC-R9 rationale; revisit on evidence).
   - **Whole-subtree settle** (await nested streaming children before commit) —
-    that is renderer territory and intentionally *not* wanted: children are the
+    that is renderer territory and intentionally _not_ wanted: children are the
     streaming escape hatch.
   - **Pending-UI thresholds** (TanStack `pendingMs`-style anti-flash delay) —
     expressible in userland over `Router.navigating` (e.g. CSS
@@ -307,13 +307,13 @@ Stashing the `Exit` (not just the node) is what makes the component body
 
 ## Documentation updates (part of this feature's definition of done)
 
-1. **`packages/router/router.specs.md`** — *Route model — component-as-handler*
+1. **`packages/router/router.specs.md`** — _Route model — component-as-handler_
    section: add that on client navigation the leaf's component effect resolves
    **before** the commit (component-as-loader corollary), and state the dual
    model: body `yield*` = commit-blocking, child `Effect`/`Stream` = streaming.
    Reiterate: still no per-route loader/schema.
-2. **`packages/router/src/pending-navigation.specs.md`** — *Scope → Out of scope
-   (deferred): data preload*: mark as **superseded by this spec** with a pointer
+2. **`packages/router/src/pending-navigation.specs.md`** — _Scope → Out of scope
+   (deferred): data preload_: mark as **superseded by this spec** with a pointer
    (`resolve-before-commit.specs.md`), so the follow-up options listed there are
    not implemented independently.
 3. **`docs/reference/router.md`** —
