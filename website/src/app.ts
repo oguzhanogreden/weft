@@ -6,10 +6,11 @@
  * navigation. No `mount`/`hydrate`/`handler` here, so the module is importable by
  * tests and by both build targets without running anything.
  *
- * Route tree: a passthrough root layout holds the landing page (full-width, no
- * sidebar) alongside the `DocsShell` layout, which wraps the doc routes so the
- * chrome persists across doc-to-doc navigation. Every section — tutorial, how-to,
- * explanation, reference — routes uniformly through `/docs/:category/:slug`.
+ * Route tree: the root layout (outlet plus the global navigation progress bar)
+ * holds the landing page (full-width, no sidebar) alongside the `DocsShell`
+ * layout, which wraps the doc routes so the chrome persists across doc-to-doc
+ * navigation. Every section — tutorial, how-to, explanation, reference — routes
+ * uniformly through `/docs/:category/:slug`.
  */
 
 import { Component, h } from "@weftui/core";
