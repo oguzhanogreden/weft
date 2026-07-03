@@ -44,7 +44,7 @@ function fetchCard(id: number): Effect.Effect<CardData> {
 // ============================================================================
 
 /**
- * Async card — returns an `Effect<DOMNode>` so it triggers Suspense.
+ * Async card — returns an `Effect<ElementDescriptor>` so it triggers Suspense.
  * The delay is proportional to `id` so the three cards resolve at different
  * times (but the shared fallback waits for all of them).
  */

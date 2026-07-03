@@ -50,13 +50,14 @@ export const documentShell = (clientEntry: string, styles: readonly string[] = [
     const match = yield* router.currentMatch.get;
     const meta = metaFor(pathnameOf(match.url), docs.get);
     const outlet = yield* Router.Outlet;
-    console.log(process.env.NODE_ENV);
+
     // `class="dark"` resolves the Radix dark-scale vars (scoped to `.dark, .dark-theme`)
     // and `data-theme="weft-dark"` selects the DaisyUI theme. See design-system.specs.md.
     return yield* h.html({ lang: "en", class: "dark", "data-theme": "weft-dark" }, [
       h.head([
         h.meta({ charset: "utf-8" }),
         h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
+        h.link({ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }),
         h.title(meta.title),
         ...(meta.description === undefined
           ? []
