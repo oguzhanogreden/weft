@@ -14,10 +14,11 @@
  * through to the ordinary slot invocation everywhere else (AC-R13).
  */
 
+import { getElementDescriptor } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
-import type { Effect, Exit } from "effect";
+import { Effect, Exit, Subscribable } from "effect";
 import type { RouteMatch } from "./matcher";
-import type { Router } from "./router-service";
+import { Router } from "./router-service";
 
 /**
  * Brand key under which the client `Router` service instance carries its
@@ -58,7 +59,9 @@ export interface ResolvedCommitSlot {
  * Overwrites any stale entry — latest-wins already guarantees only the newest
  * navigation reaches the commit step (AC-R6).
  */
-export declare function setResolvedCommit(router: Router["Type"], entry: ResolvedCommitEntry): void;
+export function setResolvedCommit(router: Router["Type"], entry: ResolvedCommitEntry): void {
+  (router as Router["Type"] & ResolvedCommitSlot)[ResolvedCommit] = entry;
+}
 
 /**
  * Consumes the stash: returns the entry when its `url` equals the emission's
@@ -67,10 +70,18 @@ export declare function setResolvedCommit(router: Router["Type"], entry: Resolve
  * hydration, non-navigation re-emission) falls through to the ordinary slot
  * invocation in `renderLevel`.
  */
-export declare function takeResolvedCommit(
+export function takeResolvedCommit(
   router: Router["Type"],
   url: string,
-): ResolvedCommitEntry | undefined;
+): ResolvedCommitEntry | undefined {
+  const slot = router as Router["Type"] & ResolvedCommitSlot;
+  const entry = slot[ResolvedCommit];
+  if (entry === undefined || entry.url !== url) {
+    return undefined;
+  }
+  slot[ResolvedCommit] = undefined;
+  return entry;
+}
 
 /**
  * The staged `Router` view the pre-run executes under (AC-R4): identical to
@@ -82,7 +93,15 @@ export declare function takeResolvedCommit(
  * service, so reactive subscriptions — which occur at render/mount time,
  * post-commit — observe the committed match onward.
  */
-export declare function stageMatch(router: Router["Type"], target: RouteMatch): Router["Type"];
+export function stageMatch(router: Router["Type"], target: RouteMatch): Router["Type"] {
+  return {
+    ...router,
+    currentMatch: Subscribable.make({
+      get: Effect.succeed(target),
+      changes: router.currentMatch.changes,
+    }),
+  };
+}
 
 /**
  * Pre-runs a matched leaf's component effect: invokes the slot with the
@@ -95,7 +114,30 @@ export declare function stageMatch(router: Router["Type"], target: RouteMatch): 
  * layer's — `Router`, `AppRpcClientTag`, app services), which is what makes
  * the pre-run possible at all (Feasibility §1).
  */
-export declare function preRunLeaf(
+export function preRunLeaf(
   router: Router["Type"],
   target: RouteMatch,
-): Effect.Effect<Exit.Exit<Renderable, unknown>>;
+): Effect.Effect<Exit.Exit<Renderable, unknown>> {
+  return Effect.suspend(() => {
+    if (target._tag !== "Matched") {
+      return Effect.succeed(Exit.succeed<Renderable>(null));
+    }
+    const node = target.leaf.component({ path: target.path, query: target.query });
+    // Static markup carries its descriptor and is never executed by the renderer —
+    // mirror that: nothing to resolve, succeed with the node itself. Likewise a
+    // non-Effect renderable (plain descriptor, primitive) is already resolved.
+    if (!Effect.isEffect(node) || getElementDescriptor(node) !== undefined) {
+      return Effect.succeed(Exit.succeed(node as Renderable));
+    }
+    // A genuinely effectful body: run it under the staged view so one-shot param
+    // reads decode the target (AC-R4). `Effect.exit` folds typed failures and
+    // defects into the Exit (AC-R7) but lets interruption pass through (AC-R6).
+    return Effect.exit(
+      Effect.provideService(
+        node as Effect.Effect<Renderable, unknown, Router>,
+        Router,
+        stageMatch(router, target),
+      ),
+    );
+  });
+}

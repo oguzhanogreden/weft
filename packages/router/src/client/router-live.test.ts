@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Component, h } from "@weftui/core";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Context, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect";
+import { Context, Effect, Exit, Fiber, Layer, Option, Schema, Scope, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test } from "vite-plus/test";
 import { notFound, Router } from "~/index";
@@ -427,24 +427,33 @@ describe("RouterLive — resolve-before-commit (leaf effect pre-run)", () => {
       ]),
       { notFound: () => h.h1({}, "404") },
     );
-    const service = await readServiceFor(def);
-
-    // Simulate the browser's back/forward: the url moves first, then popstate fires.
-    dom.window.history.pushState(null, "", "/data");
-    dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"));
-    await tick();
-
-    // Mid-flight: the browser already moved the url, but the match lags until resolve.
-    assert.equal(dom.window.location.pathname, "/data");
-    assert.equal((await readMatch(service))._tag, "NotFound");
-    assert.deepEqual(await readNav(service), { _tag: "Navigating", to: "/data" });
-
-    g.release();
-    // The popstate handler runs in a background fiber; poll until it commits.
-    for (let i = 0; i < 20 && (await readMatch(service))._tag !== "Matched"; i++) {
+    // Keep the layer scope open for the test's duration: the popstate listener
+    // is released with the scope, so `readServiceFor` (which closes it) won't do.
+    const scope = await Effect.runPromise(Scope.make());
+    const ctx = await Effect.runPromise(
+      Layer.buildWithScope(RouterLive(def, { rpc: { group: NoopRpcs } }), scope),
+    );
+    const service = Context.get(ctx, Router);
+    try {
+      // Simulate the browser's back/forward: the url moves first, then popstate fires.
+      dom.window.history.pushState(null, "", "/data");
+      dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"));
       await tick();
+
+      // Mid-flight: the browser already moved the url, but the match lags until resolve.
+      assert.equal(dom.window.location.pathname, "/data");
+      assert.equal((await readMatch(service))._tag, "NotFound");
+      assert.deepEqual(await readNav(service), { _tag: "Navigating", to: "/data" });
+
+      g.release();
+      // The popstate handler runs in a background fiber; poll until it commits.
+      for (let i = 0; i < 20 && (await readMatch(service))._tag !== "Matched"; i++) {
+        await tick();
+      }
+      assert.equal((await readMatch(service))._tag, "Matched");
+      assert.equal((await readNav(service))._tag, "Idle");
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
     }
-    assert.equal((await readMatch(service))._tag, "Matched");
-    assert.equal((await readNav(service))._tag, "Idle");
   });
 });
