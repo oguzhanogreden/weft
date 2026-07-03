@@ -22,7 +22,7 @@ import { Docs, type DocsService } from "../lib/docs-service";
 /** Default landing meta for non-doc routes. */
 const DEFAULT_META = {
   title: "Weft — Reactive UI, woven from Effect",
-  description: "An Effect-native reactive DOM library: flash-free SSR, no virtual DOM, no JSX.",
+  description: "An Effect-native reactive DOM library.",
 } as const;
 
 /** Strips the query string from a normalized request URL. */
