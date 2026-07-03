@@ -16,11 +16,11 @@
  * Build prod with `vp run build` (client + server), then `NODE_ENV=production tsx server.ts`.
  */
 
-import { createReadStream } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createServer as createHttpServer } from "node:http";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 // `vite-plus` re-exports Vite's API; the lint rule
@@ -185,6 +185,21 @@ async function startProd(): Promise<void> {
           // stylesheets need `text/css` — Node's http server sets neither by default.
           res.setHeader("Content-Type", contentTypeFor(filePath));
           createReadStream(filePath).pipe(res);
+          return;
+        }
+        // `public/` files (e.g. /logo.svg) are copied to the `dist/client` root by
+        // the build. Their names aren't hashed, so no immutable cache header. The
+        // `startsWith` guard rejects `..` traversal after `join` normalizes it.
+        const pathname = url.split("?")[0]!;
+        const publicFile = join(clientDir, pathname);
+        if (
+          extname(pathname) !== "" &&
+          publicFile.startsWith(clientDir) &&
+          existsSync(publicFile)
+        ) {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", contentTypeFor(publicFile));
+          createReadStream(publicFile).pipe(res);
           return;
         }
         await writeWebResponse(res, await handler(await toWebRequest(req, url)));

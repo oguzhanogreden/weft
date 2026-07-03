@@ -42,15 +42,13 @@ const DIFFERENTIATORS: ReadonlyArray<{ title: string; body: string }> = [
 
 /** Hero: tagline, value prop, primary + GitHub CTAs. */
 function Hero(): Renderable {
-  return h.section({ class: "mb-12 text-center" }, [
-    h.h1(
-      { class: "mb-4 text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight" },
-      "Reactive UI, woven from Effect.",
-    ),
-    h.p(
-      { class: "mx-auto mb-7 max-w-[40rem] text-[1.1rem] leading-relaxed text-slate-11" },
-      "Weft is an Effect-native reactive DOM library — streams drive every update, on the server and in the browser, with no virtual DOM and no JSX.",
-    ),
+  return h.section({ class: "mb-10 text-center flex flex-col gap-6" }, [
+    h.img({ src: "/logo.svg", alt: "Weft logo", class: "mx-auto h-10 w-auto" }),
+    h.div({ class: "flex flex-col gap-1" }, [
+      h.h1({ class: "text-6xl leading-[1.1] tracking-tight" }, "Weft"),
+      h.h2({ class: "text-xl leading-[1.1] tracking-tight" }, "Reactive UI, woven from Effect"),
+    ]),
+
     h.div({ class: "flex justify-center gap-3" }, [
       h.a({ href: GETTING_STARTED, class: "btn btn-primary" }, "Get started"),
       h.a(
@@ -67,6 +65,17 @@ function LiveDemo(): Renderable {
   return h.section(
     { class: "home-demo mx-auto mb-14 flex w-fit flex-col items-center gap-3 p-7" },
     [
+      h.p(
+        {
+          class:
+            "mx-automax-w-[40rem] text-[1.1rem] leading-relaxed text-slate-11 whitespace-pre text-center",
+        },
+        [
+          "Weft is an ",
+          h.a({ href: "https://effect.website", target: "_blank", class: "underline" }, "Effect"),
+          "-native reactive DOM library.\nStreams drive every update, on the server and in the browser.",
+        ],
+      ),
       h.div(
         { class: "text-[0.78rem] uppercase tracking-wider text-slate-11" },
         "Live — click to increment",
