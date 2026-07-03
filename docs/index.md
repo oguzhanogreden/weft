@@ -2,7 +2,7 @@
 
 **Reactive UI, woven from Effect.**
 
-Weft is an Effect-native reactive DOM library — in the browser and on the server. `Node<E, R>` is `Effect.Effect<DOMNode, E, R>`: every element is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply to nodes directly, and services flow from mount through the whole app. Streams drive every update — there is no virtual DOM — and the same tree renders to HTML on the server and `hydrate()`s in place on the client, flash-free. No JSX.
+Weft is an Effect-native reactive DOM library — in the browser and on the server. `Node<E, R>` is `Effect.Effect<ElementDescriptor, E, R>`: every element is an Effect, so error and requirement channels accumulate through the tree, all Effect combinators apply to nodes directly, and services flow from mount through the whole app. Streams drive every update — there is no virtual DOM — and the same tree renders to HTML on the server and `hydrate()`s in place on the client, flash-free. No JSX.
 
 The docs follow the [Diátaxis](https://diataxis.fr) model. Pick your entry point by what you are trying to do:
 
