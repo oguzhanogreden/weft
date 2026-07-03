@@ -17,6 +17,7 @@ import { RouterApp, RouterLive } from "@weftui/router/client";
 import { ManagedRuntime } from "effect";
 import { App } from "./app";
 import { DocsLive } from "./lib/docs-live";
+import { trackPageviews } from "./lib/goatcounter";
 
 const root = document.getElementById("root");
 if (root === null) {
@@ -28,3 +29,6 @@ if (root === null) {
 // for the page's lifetime; `hydrate` captures the `Router` service from it.
 const runtime = ManagedRuntime.make(RouterLive(App, { context: DocsLive }));
 void runtime.runPromise(hydrate(RouterApp(App), root));
+
+// GoatCounter only counts full page loads; report SPA navigations manually.
+runtime.runFork(trackPageviews);
