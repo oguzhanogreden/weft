@@ -62,27 +62,24 @@ function Hero(): Renderable {
 /** Live hero demo: the real reactive-counter, interactive after hydrate. */
 function LiveDemo(): Renderable {
   // `home-demo` is a semantic test hook.
-  return h.section(
-    { class: "home-demo mx-auto mb-14 flex w-fit flex-col items-center gap-3 p-7" },
-    [
-      h.p(
-        {
-          class:
-            "mx-automax-w-[40rem] text-[1.1rem] leading-relaxed text-slate-11 whitespace-pre text-center",
-        },
-        [
-          "Weft is an ",
-          h.a({ href: "https://effect.website", target: "_blank", class: "underline" }, "Effect"),
-          "-native reactive DOM library.\nStreams drive every update, on the server and in the browser.",
-        ],
-      ),
-      h.div(
-        { class: "text-[0.78rem] uppercase tracking-wider text-slate-11" },
-        "Live — click to increment",
-      ),
-      ReactiveCounter(),
-    ],
-  );
+  return h.section({ class: "home-demo mx-auto mb-14 flex flex-col items-center gap-3 p-7" }, [
+    h.p(
+      {
+        class:
+          "text-base md:text-[1.1rem] leading-relaxed text-slate-11 whitespace-pre-line md:whitespace-pre text-center",
+      },
+      [
+        "Weft is an ",
+        h.a({ href: "https://effect.website", target: "_blank", class: "underline" }, "Effect"),
+        "-native reactive DOM library.\nStreams drive every update, on the server and in the browser.",
+      ],
+    ),
+    h.div(
+      { class: "text-[0.78rem] uppercase tracking-wider text-slate-11" },
+      "Live — click to increment",
+    ),
+    ReactiveCounter(),
+  ]);
 }
 
 /** Differentiators row. */
