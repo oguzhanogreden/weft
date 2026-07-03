@@ -21,6 +21,14 @@ import { docsIndexRoute, docsRoute } from "./routes/docs";
 import { Home } from "./routes/home";
 import "./app.css";
 
+/**
+ * Kill switch for the navigation progress bar. Disabled for now — the bar is
+ * visually rough and flickers on some navigations; flip back to `true` once
+ * fixed. While `false` the bar renders permanently idle (invisible) and the
+ * co-located browser test is skipped (`__tests__/nav-progress.browser.test.ts`).
+ */
+const NAV_PROGRESS_ENABLED: boolean = false;
+
 /** Utilities shared by both bar states (`nav-progress` is the test hook). */
 const NAV_PROGRESS_BASE =
   "nav-progress pointer-events-none fixed inset-x-0 top-(--top-bar-height) z-30 h-0.5 overflow-hidden";
@@ -43,7 +51,7 @@ const RootLayout = Component.gen(function* () {
         id: "nav-progress",
         "aria-hidden": "true",
         class: Stream.map(nav.changes, (s) =>
-          s._tag === "Navigating"
+          NAV_PROGRESS_ENABLED && s._tag === "Navigating"
             ? `${NAV_PROGRESS_BASE} is-navigating opacity-100 transition-opacity delay-150 duration-0`
             : `${NAV_PROGRESS_BASE} opacity-0`,
         ),

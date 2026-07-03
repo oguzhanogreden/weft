@@ -41,7 +41,9 @@ afterEach(async () => {
   window.history.replaceState(null, "", "/");
 });
 
-describe("navigation progress bar (AC1/AC2)", () => {
+// Skipped while the bar is disabled via `NAV_PROGRESS_ENABLED` in `src/app.ts`
+// (visual polish pending). Restore to `describe` when the flag flips back on.
+describe.skip("navigation progress bar (AC1/AC2)", () => {
   it("shows is-navigating during a first doc navigation and settles back to idle", async () => {
     const rt = ManagedRuntime.make(RouterLive(App, { context: DocsLive }));
     runtime = rt as unknown as ManagedRuntime.ManagedRuntime<never, never>;

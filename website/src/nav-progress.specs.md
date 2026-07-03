@@ -1,5 +1,10 @@
 # Navigation Progress Bar
 
+> **Status: disabled.** The bar is currently switched off via the
+> `NAV_PROGRESS_ENABLED` flag in `src/app.ts` (visual polish pending) and its
+> browser test is skipped. The spec below describes the intended behaviour once
+> re-enabled.
+
 ## Overview
 
 A global navigation progress indicator for the docs website: a thin fixed bar that
