@@ -39,4 +39,27 @@ describe("reactive-styles example", () => {
     const first = box.style.backgroundColor;
     await vi.waitFor(() => expect(box.style.backgroundColor).not.toBe(first), { timeout: 2000 });
   });
+
+  it("applies a whole-object style stream while preserving a static property", async () => {
+    handle = await Effect.runPromise(mount(App(), container));
+
+    // Third .demo-box is StyleSwitcher, whose entire style object is a stream.
+    // Each emit replaces all properties, so the static `transition` must survive
+    // via Stream.map folding — regression guard against spreading the Stream.
+    const box = await vi.waitFor(() => {
+      const boxes = container.querySelectorAll<HTMLElement>(".demo-box");
+      expect(boxes.length).toBeGreaterThanOrEqual(3);
+      return boxes[2]!;
+    });
+
+    // StyleSwitcher's stream is spaced 1s, so the first emit lands after the
+    // default 1s waitFor window — allow headroom.
+    await vi.waitFor(
+      () => {
+        expect(box.style.backgroundColor).not.toBe("");
+        expect(box.style.transition).not.toBe("");
+      },
+      { timeout: 3000 },
+    );
+  });
 });

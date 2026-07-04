@@ -71,10 +71,13 @@ const StyleSwitcher = () => {
   return h.div(
     {
       class: "demo-box",
-      style: {
-        ...styleStream,
+      // Whole-object style streams replace every property on each emit, so the
+      // static `transition` must be folded into each emitted object rather than
+      // spread alongside the stream (spreading a Stream copies its internals).
+      style: Stream.map(styleStream, (s) => ({
+        ...s,
         transition: "all 0.3s ease",
-      },
+      })),
     },
     "Switch",
   );
