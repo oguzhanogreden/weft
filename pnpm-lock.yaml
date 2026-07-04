@@ -124,7 +124,7 @@ importers:
     dependencies:
       '@effect-atom/atom':
         specifier: ^0.5.3
-        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.1(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -136,14 +136,14 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.3
+        version: 3.21.4
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
         version: '@voidzero-dev/vite-plus-core@0.2.2(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0)'
       vite-plus:
         specifier: 'catalog:'
-        version: 0.2.2(@types/node@25.9.2)(@vitest/browser-playwright@4.1.9(@voidzero-dev/vite-plus-core@0.2.2(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0))(playwright@1.60.0)(vitest@4.1.9))(@voidzero-dev/vite-plus-core@0.2.2(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0))(esbuild@0.28.0)(jiti@2.7.0)(jsdom@29.1.1)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0)
+        version: 0.2.2(@types/node@25.9.2)(@vitest/browser-playwright@4.1.9(@voidzero-dev/vite-plus-core@0.2.2(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0))(playwright@1.61.1)(vitest@4.1.9))(@voidzero-dev/vite-plus-core@0.2.2(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0))(esbuild@0.28.0)(jiti@2.7.0)(jsdom@29.1.1)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0)
 
   examples/element-ref:
     dependencies:
@@ -3620,17 +3620,17 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.0': {}
 
-  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)':
+  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.1(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
-      '@effect/experimental': 0.58.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
-      '@effect/platform': 0.96.1(effect@3.21.3)
-      '@effect/rpc': 0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
-      effect: 3.21.3
+      '@effect/experimental': 0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+      '@effect/platform': 0.96.1(effect@3.21.4)
+      '@effect/rpc': 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+      effect: 3.21.4
 
-  '@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)':
+  '@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)':
     dependencies:
-      '@effect/platform': 0.96.1(effect@3.21.3)
-      effect: 3.21.3
+      '@effect/platform': 0.96.1(effect@3.21.4)
+      effect: 3.21.4
       uuid: 11.1.1
 
   '@effect/language-service@0.86.2': {}

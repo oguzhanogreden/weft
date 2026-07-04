@@ -36,11 +36,48 @@ without re-creating elements. The `node` must produce a tree structurally identi
 to what the server rendered; a divergence fails with `HydrationMismatchError`. This
 is the flash-free path: no second render, the existing nodes simply become live.
 
+### `mountScoped`
+
+```ts
+mountScoped(app: Renderable, root: HTMLElement): Effect<MountHandle, UnsupportedNodeTypeError | StreamSubscriptionError | RenderError, Scope.Scope>
+```
+
+Scope-aware `mount`: identical behavior, but requires an ambient `Scope.Scope` in
+`R` and registers `unmount` as a finalizer on it, so the mount lives until that
+scope closes rather than only until the mount effect resolves. Provide any scoped
+layer **outside** a long-lived scoped region so it outlives initial render — see
+[Provide Services](../how-to/provide-services.md) for the composition and
+[Layer lifetime at the mount](../explanation/services-and-context.md#layer-lifetime-at-the-mount)
+for why.
+
+### `hydrateScoped`
+
+```ts
+hydrateScoped(app: Renderable, root: HTMLElement): Effect<MountHandle, UnsupportedNodeTypeError | StreamSubscriptionError | RenderError | HydrationMismatchError, Scope.Scope>
+```
+
+Scope-aware `hydrate` — same relationship as `mountScoped` to `mount`, with
+`hydrate`'s error union (`HydrationMismatchError` added) and the same client-only
+compile-time guard: a server-only requirement left in `app`'s `R` degrades the
+return type to `ServerOnlyLeak` via `AssertNoServerOnly`.
+
 ### `MountHandle`
 
-The handle returned by `mount`/`hydrate`. Its lifetime is tied to the surrounding
-scope (e.g. a `ManagedRuntime`); keep it alive for as long as the UI should stay
-interactive.
+The handle returned by `mount`, `hydrate`, `mountScoped`, and `hydrateScoped`. Its
+`unmount()` interrupts every subscription and event handler and disposes the
+mount's `ManagedRuntime`; it does **not** remove the mounted DOM nodes from `root`.
+`unmount` is idempotent — safe to call more than once, including once
+automatically and once explicitly.
+
+The runtime backing the handle lives until `unmount` runs, not until the
+`mount`/`hydrate` effect resolves — that effect completes right after initial
+render, while streams and handlers keep running in the background. If `mount` or
+`hydrate` runs inside a region that supplies an ambient `Scope.Scope` (e.g. under
+`Effect.scoped`), `unmount` is auto-registered on that scope as a finalizer, so the
+mount tears down when the scope closes; with no ambient scope, behavior is
+unchanged and `unmount` must be called explicitly. `mountScoped`/`hydrateScoped`
+register the same finalizer explicitly, so the typed variant does not silently
+depend on this auto-registration.
 
 ## `@weftui/dom/server`
 
@@ -99,5 +136,7 @@ Re-exports the renderer error types:
 ## See also
 
 - [Render on the Server](../how-to/render-on-the-server.md) — a narrative walkthrough of the server/client split
+- [Provide Services](../how-to/provide-services.md) — recipes for value layers, `mountScoped`, and `ManagedRuntime`
 - [The Rendering Model](../explanation/rendering-model.md) — hydrate-in-place and why there is no virtual DOM
+- [Services and Context](../explanation/services-and-context.md#layer-lifetime-at-the-mount) — why scoped layers need the mount to outlive initial render
 - [`@weftui/core` reference](./core.md) · [`@weftui/router` reference](./router.md)
