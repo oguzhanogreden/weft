@@ -167,83 +167,25 @@ The `examples/` folder contains standalone workspace packages demonstrating spec
 - TODOs and FIXMEs are acceptable
 - Effect Schemas should include descriptions/annotations when not self-explanatory
 
-### Testing
+### TDD Workflow
 
-- Follow Test-Driven Development workflow: spec → mock → type-tests → unit test → implement -> e2e test
-- Co-locate test files (`*.test.ts`) next to source code
-- `__tests__/` directory allowed for compound/integration tests and shared fixtures/helpers
-- `__type-tests__/` directory for compile-time type tests (see Type Tests section below)
-- Write thorough tests against the API surface and specifications in co-located `specs.md` files
-- Test naming conventions:
-  - Use `describe` for test grouping, `it` or `test` for individual test cases
-  - Test case names should match or reference acceptance criteria from specs.md
-- Coverage requirements:
-  - All acceptance criteria from specs.md must be covered
-  - Cover both happy paths and error paths
-  - Test all possible error types defined in the Effect error union (expected errors)
-  - Include edge cases defined in specifications
-- Use Effect testing utilities for testing Effect code
-- Real-browser end-to-end tests live in `*.browser.test.{ts,tsx}` files, run via
-  `vp run test:browser` (Vitest browser mode + Playwright), and are excluded from
-  the default `vp test` run. Every `examples/*` app must have one — see the
-  Examples section above and `e2e/specs.md`.
+Every feature follows this 8-step cycle. Each step is a project skill (detail lives in `.claude/skills/<name>/SKILL.md`):
 
-### Type Tests
+`/spec → /mock → /type-tests → /unit-test → /implement → /e2e → /review-step → /document`
 
-Type tests verify compile-time behavior for complex type-level features. They use `@ts-expect-error` comments to assert that certain code should NOT compile.
+1. `/spec` — interactive Q&A (one question at a time), then co-located `specs.md` (Overview & Purpose + Acceptance Criteria required). User approves before moving on.
+2. `/mock` — `declare`-based full API surface in the real source file, JSDoc included. Refuses to run without `specs.md`.
+3. `/type-tests` — `src/**/__type-tests__/*.test-d.ts` with `@ts-expect-error` assertions, or explicit `type-tests: not applicable — <reason>` recorded in `specs.md`.
+4. `/unit-test` — co-located `*.test.ts` covering every acceptance criterion, happy + error paths (full Effect error union), edge cases. **Red phase:** new tests must fail against the mocks before implementation.
+5. `/implement` — replace mocks in-place with signature parity, loop `vp check --fix` → `vp run check` → `vp run test` until green, then `graphify update .`.
+6. `/e2e` — `*.browser.test.ts` via `vp run test:browser`. Mandatory for every touched `examples/*` app; conditional for package features (explicit skip recorded otherwise).
+7. `/review-step` — code-review pass (medium effort; high when `packages/core` or `packages/dom` public API is touched) plus spec-conformance check; every finding fixed or explicitly rejected with reason; loop until clean. **Hard gate: no commit until clean.**
+8. `/document` — full docs sweep (JSDoc, `specs.md` sync, `docs/`, READMEs, example readmes) via the `weft-docs-author` agent + main thread. **Hard gate: no commit until complete.** Then branch + PR — never push `main`.
 
-**Location:** `src/**/__type-tests__/*.test-d.ts`
+Invariants:
 
-**Running type tests:**
-
-```bash
-vp run check
-```
-
-**Rules:**
-
-- Type test files use the `.test-d.ts` extension (convention from `tsd` and similar tools)
-- Use `@ts-expect-error` to assert code that should fail to compile
-- Type tests are type-checked as part of `vp run check`: both `packages/core` and `packages/dom` include `src` (and therefore `src/**/__type-tests__`) in their tsconfig, so the `@ts-expect-error` assertions are enforced by the main typecheck
-- Each type test file should be self-contained and test a specific feature
-
-**Example pattern:**
-
-```typescript
-// Should compile - valid usage
-const _valid: SomeType = validValue;
-
-// @ts-expect-error - Should NOT compile - invalid usage
-const _invalid: SomeType = invalidValue;
-```
-
-### Specification Files
-
-- Every new feature must have a co-located `specs.md` file (e.g., `dom/feature.ts`, `dom/feature.test.ts`, `dom/feature.specs.md`)
-- Existing features without specs should get them retroactively when modified
-- Every planning session must start with extensive specification discussion:
-  - Ask questions to understand requirements, edge cases, and constraints
-  - Draft specifications interactively with the user
-  - Iterate on the spec until complete before writing implementation code
-- Use "mock first, implement later" approach:
-  - Before implementation, create comprehensive mocks using TypeScript's type system and `declare` keyword
-  - Define complete API surface: classes/methods, function signatures, constants/variables, exports, type definitions
-  - Review mocks to ensure they match specifications and types are complete
-- Implementation rules:
-  - Only begin actual implementation after mocks and tests are complete
-  - Replace type-system level mocks (e.g., `declare` statements) with real code
-  - Ensure implementation matches mock signatures exactly
-  - Ensure implementation matches co-located specs.md files
-  - If implementation reveals mocks/specs need changes: pause implementation and update specs/mocks first (maintain strict spec → mock → test → implement cycle)
-  - After implementation: auto-fix with `vp check --fix`, then validate with `vp run check` and `vp run test` (which pack first)
-- Specs MUST include:
-  - Feature overview and purpose
-  - Detailed acceptance criteria
-- Specs COULD include:
-  - Technical requirements and constraints
-  - Dependencies and integrations
-  - Expected behavior and edge cases
-- Follow a common structure with standard headings, but allow flexibility between specs
+- Strict cycle — no phase skips; a step skipped as not-applicable must be recorded in `specs.md` with a reason.
+- Pause rule — if any step reveals the spec or mock surface is wrong, stop, update spec + mocks (and affected tests) first, then resume.
 
 ### Error Handling
 
