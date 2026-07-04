@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".releaserc.json": {
-    "mtime": 1783111401.7558296,
-    "ast_hash": "8c2af139ab42d7bec897613aeab6f83f",
+    "mtime": 1783194049.7477517,
+    "ast_hash": "ae4524379f5bf6700bbd9763f2cb4637",
     "semantic_hash": ""
   },
   ".vite-hooks/_/applypatch-msg": {
@@ -290,12 +290,12 @@
     "semantic_hash": ""
   },
   "examples/reactive-styles/app.browser.test.ts": {
-    "mtime": 1783192641.0905218,
+    "mtime": 1783194573.7212942,
     "ast_hash": "cedd3522ca9edbcb9b2d02518b4d148a",
     "semantic_hash": ""
   },
   "examples/reactive-styles/app.ts": {
-    "mtime": 1783192538.9101253,
+    "mtime": 1783194573.721417,
     "ast_hash": "9bdf37244e6c2b9ee14d69a74f12c052",
     "semantic_hash": ""
   },
@@ -605,8 +605,8 @@
     "semantic_hash": ""
   },
   "packages/core/package.json": {
-    "mtime": 1783019597.0478127,
-    "ast_hash": "d8ea34f688963c5292bddf1a5f6da2c2",
+    "mtime": 1783194173.5225523,
+    "ast_hash": "b763a5f6984f47508f54dc1eea3abf70",
     "semantic_hash": ""
   },
   "packages/core/src/boundary/__type-tests__/boundary.test-d.ts": {
@@ -785,8 +785,8 @@
     "semantic_hash": ""
   },
   "packages/dom/package.json": {
-    "mtime": 1783019597.0410805,
-    "ast_hash": "de7ea5aebda715eb8aaabe749c8a5147",
+    "mtime": 1783194173.5017478,
+    "ast_hash": "3732507c0b6f54b9c3b159ae82ac62a9",
     "semantic_hash": ""
   },
   "packages/dom/src/__tests__/rpc-stub.ts": {
@@ -965,8 +965,8 @@
     "semantic_hash": ""
   },
   "packages/router/package.json": {
-    "mtime": 1783019597.0354288,
-    "ast_hash": "0cc7df9651773b788a53248b7d921fea",
+    "mtime": 1783194173.3681762,
+    "ast_hash": "666a8c944cb966cd6ec0bf08959def74",
     "semantic_hash": ""
   },
   "packages/router/src/__type-tests__/lazy.test-d.ts": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "vite.config.ts": {
-    "mtime": 1783020319.7824624,
-    "ast_hash": "ca6bd8c564af0019acb18be28be7f433",
+    "mtime": 1783194050.8965771,
+    "ast_hash": "e244a16d871a1ce66e55aa1a0c683834",
     "semantic_hash": ""
   },
   "vitest.browser.config.ts": {
@@ -1160,8 +1160,8 @@
     "semantic_hash": ""
   },
   "website/server.ts": {
-    "mtime": 1783103128.8633926,
-    "ast_hash": "381a60fce16240ed8995b1161bfc0218",
+    "mtime": 1783194138.016734,
+    "ast_hash": "f88d9014426b78251ce821d243e8fba5",
     "semantic_hash": ""
   },
   "website/src/__tests__/ssr.ts": {
@@ -1260,8 +1260,8 @@
     "semantic_hash": ""
   },
   "website/src/lib/docs-plugin.ts": {
-    "mtime": 1783014948.6262207,
-    "ast_hash": "16f5673f7ee4f43721e9320e2bccad70",
+    "mtime": 1783194173.684914,
+    "ast_hash": "8353c48f9f6cbf52f7e2ebed7a9a61cb",
     "semantic_hash": ""
   },
   "website/src/lib/docs-service.test.ts": {
@@ -1400,7 +1400,7 @@
     "semantic_hash": ""
   },
   "docs/explanation/reactive-primitives.md": {
-    "mtime": 1783192564.6035802,
+    "mtime": 1783194573.721157,
     "ast_hash": "8334fbc0f84dac66d8258a7454cc2cba",
     "semantic_hash": ""
   },
@@ -1590,7 +1590,7 @@
     "semantic_hash": ""
   },
   "examples/reactive-styles/readme.md": {
-    "mtime": 1783192575.8134909,
+    "mtime": 1783194573.7215254,
     "ast_hash": "b8e1f40d38c8f4a05030f834e020e066",
     "semantic_hash": ""
   },
@@ -2047,6 +2047,31 @@
   "packages/dom/src/client/mount-scoped.specs.md": {
     "mtime": 1783190306.8570676,
     "ast_hash": "07e79f1567b44955bfd0e2c8377a5e1c",
+    "semantic_hash": ""
+  },
+  "scripts/bundle-package-docs.mjs": {
+    "mtime": 1783194173.5277693,
+    "ast_hash": "af48274aa5af7190f08a5ad7ba2a23f2",
+    "semantic_hash": ""
+  },
+  "website/src/lib/llms-txt.ts": {
+    "mtime": 1783194173.68592,
+    "ast_hash": "ebfeedb23b81887a3689de541add89ef",
+    "semantic_hash": ""
+  },
+  "packages/core/README.md": {
+    "mtime": 1783194173.56847,
+    "ast_hash": "168a10b13f5740e54bb689ac54c85861",
+    "semantic_hash": ""
+  },
+  "packages/dom/README.md": {
+    "mtime": 1783194173.515112,
+    "ast_hash": "f298cd2fcc9467340776f03708e2d400",
+    "semantic_hash": ""
+  },
+  "packages/router/README.md": {
+    "mtime": 1783194173.4597995,
+    "ast_hash": "464b09504a5f9a33960ded1d7f48187f",
     "semantic_hash": ""
   }
 }
