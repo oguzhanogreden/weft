@@ -27,12 +27,14 @@ h.div({
 // Entire style object as stream
 h.div({ style: styleObjectStream });
 
-// Mixed static and reactive (spread a stream into the style object)
+// Whole-object stream plus a static property: a whole-object stream replaces
+// every property on each emit, so fold the static value into each emitted
+// object with Stream.map (you cannot spread the Stream itself).
 h.div({
-  style: {
-    ...styleObjectStream,
-    transition: "all 0.3s", // static
-  },
+  style: Stream.map(styleObjectStream, (s) => ({
+    ...s,
+    transition: "all 0.3s", // static, applied on every emit
+  })),
 });
 ```
 
@@ -40,7 +42,7 @@ h.div({
 
 1. Individual CSS properties can be streams that emit new string/number values
 2. The entire style object can be a stream for coordinated, multi-property changes
-3. Spread syntax (`...stream`) inside a style object merges each emitted object with the static properties
+3. A whole-object stream replaces every property on each emit; fold static properties into each emitted object with `Stream.map` (spreading the Stream itself does not work)
 4. CSS transitions work naturally — stream updates trigger transitions just like direct style mutations
 5. Multiple stream properties on one element are subscribed independently
 
