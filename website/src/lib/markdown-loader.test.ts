@@ -153,6 +153,44 @@ Hello.
     assert.ok(hrefs.includes("https://effect.website"));
   });
 
+  it("rewrites links escaping the docs tree to absolute GitHub URLs (dir → /tree, file → /blob)", async () => {
+    const doc = await parseDoc(
+      `---\ntitle: T\n---\n\n[example](../../examples/keyed-list) and [specs](../../packages/router/router.specs.md)\n`,
+      GUIDE_PATH,
+      DOCS_ROOT,
+    );
+    const hrefs = findAll(doc.tree, "a").map((a) => a.properties["href"]);
+    assert.ok(hrefs.includes("https://github.com/stefvw93/weft/tree/main/examples/keyed-list"));
+    assert.ok(
+      hrefs.includes("https://github.com/stefvw93/weft/blob/main/packages/router/router.specs.md"),
+    );
+  });
+
+  it("rewrites a trailing-slash directory link escaping the docs tree", async () => {
+    // From docs/index.md the file dir IS the docs root, so `../examples/` escapes by one level.
+    const doc = await parseDoc(
+      `---\ntitle: T\n---\n\n[all](../examples/)\n`,
+      "/repo/docs/index.md",
+      DOCS_ROOT,
+    );
+    assert.equal(
+      find(doc.tree, "a")?.properties["href"],
+      "https://github.com/stefvw93/weft/tree/main/examples",
+    );
+  });
+
+  it("preserves a hash on a link rewritten to an absolute GitHub URL", async () => {
+    const doc = await parseDoc(
+      `---\ntitle: T\n---\n\n[specs](../../packages/router/router.specs.md#routing)\n`,
+      GUIDE_PATH,
+      DOCS_ROOT,
+    );
+    assert.equal(
+      find(doc.tree, "a")?.properties["href"],
+      "https://github.com/stefvw93/weft/blob/main/packages/router/router.specs.md#routing",
+    );
+  });
+
   it("preserves a hash on a rewritten inter-doc link", async () => {
     const doc = await parseDoc(
       `---\ntitle: T\n---\n\n[rpc](../reference/core.md#boundaryrpc)\n`,

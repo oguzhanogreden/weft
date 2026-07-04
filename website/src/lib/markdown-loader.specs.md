@@ -80,6 +80,11 @@ type DocModel = {
 - Duplicate `(category, slug)` across files → build error (ambiguous route).
 - Relative markdown links between docs (e.g. `./add-routing.md`) → rewritten to site
   routes (`/docs/how-to/add-routing`); external links left untouched.
+- Relative links that **escape** the docs tree (e.g. `../../examples/keyed-list`,
+  `../../packages/router/router.specs.md`) → rewritten to an absolute GitHub URL on the
+  `main` branch (`https://github.com/stefvw93/weft/tree/main/examples/keyed-list` for a
+  directory, `/blob/main/...` for a file). Relative resolution works on GitHub but 404s on
+  the deployed site, so these must become absolute. A trailing `#hash` is preserved.
 - Code block with no language → rendered as plain (un-highlighted) code, no error.
 
 ## Dependencies
