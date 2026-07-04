@@ -26,10 +26,20 @@ import { fileURLToPath } from "node:url";
 // `vite-plus` re-exports Vite's API; the lint rule
 // `vite-plus/prefer-vite-plus-imports` forbids importing from "vite" directly.
 import { createServer as createViteServer } from "vite-plus";
+import { loadAllDocs } from "./src/lib/docs-plugin";
+import { SITE_BASE, buildLlmsTxt } from "./src/lib/llms-txt";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 3000);
 const isProd = process.env.NODE_ENV === "production";
+// Repo `docs/` sits one level above `website/` — the source for the on-the-fly dev `/llms.txt`.
+const docsRoot = join(__dirname, "..", "docs");
+
+/** Builds the `/llms.txt` body from the live docs tree (dev only; prod serves the emitted asset). */
+async function renderLlmsTxt(): Promise<string> {
+  const metas = (await loadAllDocs(docsRoot)).map(({ tree: _tree, ...meta }) => meta);
+  return buildLlmsTxt(metas, SITE_BASE);
+}
 
 /** Maps a static asset's extension to its `Content-Type` (browsers block JS modules and CSS without one). */
 function contentTypeFor(filePath: string): string {
@@ -43,6 +53,8 @@ function contentTypeFor(filePath: string): string {
     case ".json":
     case ".map":
       return "application/json; charset=utf-8";
+    case ".txt":
+      return "text/plain; charset=utf-8";
     case ".svg":
       return "image/svg+xml";
     case ".woff2":
@@ -121,6 +133,12 @@ async function startDev(): Promise<void> {
     vite.middlewares(req, res, async () => {
       try {
         const url = (req as { originalUrl?: string }).originalUrl ?? req.url ?? "/";
+        if ((url.split("?")[0] ?? url) === "/llms.txt") {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "text/plain; charset=utf-8");
+          res.end(await renderLlmsTxt());
+          return;
+        }
         const { makeHandler } = await vite.ssrLoadModule("/src/entry-server.ts");
         const handler = makeHandler("/src/entry-client.ts");
         const response: Response = await handler(await toWebRequest(req, url));
