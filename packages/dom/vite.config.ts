@@ -22,4 +22,10 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // Browser e2e tests (`*.browser.test.*`) are excluded from the default
+  // node/jsdom `vp test` run and executed via the root `vitest.browser.config.ts`
+  // instead (same convention as the website package).
+  test: {
+    exclude: ["**/*.browser.test.{ts,tsx}"],
+  },
 });

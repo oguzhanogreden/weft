@@ -1,5 +1,6 @@
 import {
   Cause,
+  Context,
   Deferred,
   Effect,
   ExecutionStrategy,
@@ -1803,7 +1804,12 @@ function longestIncreasingSubsequence(seq: readonly number[]): Set<number> {
 // ============================================================================
 
 /**
- * Cleanup handle returned from mount that allows unmounting
+ * Cleanup handle returned from {@link mount} / {@link hydrate}.
+ *
+ * The handle owns the mount's lifetime: its runtime, forked subscriptions, and
+ * event handlers stay live until `unmount`. `unmount` interrupts subscriptions,
+ * removes listeners, and disposes the runtime — it does **not** remove the DOM
+ * nodes from the root.
  */
 export interface MountHandle {
   /**
@@ -1815,24 +1821,45 @@ export interface MountHandle {
 }
 
 /**
- * Mounts a JSX tree to a DOM element with full reactive support.
+ * Mounts a Weft node tree to a DOM element with full reactive support.
  *
  * - Clears the root element's existing children
- * - Renders the JSX tree to DOM nodes
+ * - Renders the node tree to DOM nodes
  * - Sets up reactive subscriptions for Stream/Effect values
- * - Returns Effect that completes after initial render (streams run in background)
- * - Creates a fresh ManagedRuntime per mount
- * - Returns a cleanup handle to unmount and dispose resources
+ * - Returns an Effect that completes after initial render (streams run in background)
+ * - Creates a fresh `ManagedRuntime` per mount
+ * - Returns a {@link MountHandle} to unmount and dispose resources
  *
- * @param app - JSX tree to render
+ * ## Lifetime
+ *
+ * The mount's runtime (streams, event handlers, forked work) lives until
+ * `unmount`, **not** until the mount Effect resolves — the Effect completes right
+ * after initial render. Because of this, providing a **scoped** layer the obvious
+ * way disposes it too early:
+ *
+ * ```ts
+ * // ❌ the layer is released the moment runPromise settles, while the app runs on
+ * Effect.runPromise(mount(App(), root).pipe(Effect.provide(SomeScopedLayer)));
+ * ```
+ *
+ * Provide scoped layers via a {@link ManagedRuntime} that outlives the mount, or
+ * use {@link mountScoped} to bind the mount lifetime to an ambient `Scope`.
+ *
+ * **Ambient scope:** if `mount` runs inside a region that supplies a `Scope.Scope`
+ * (e.g. under `Effect.scoped`), `unmount` is auto-registered on that scope, so the
+ * mount is torn down when the scope closes. With no ambient scope, behavior is
+ * unchanged. Scoped work forked from event handlers (`Effect.forkScoped`,
+ * `acquireRelease`) attaches to the mount's internal scope, so `unmount` owns it.
+ *
+ * @param app - node tree to render (built with `h.*`; components are plain
+ *   functions that are called, e.g. `App()`)
  * @param root - HTMLElement to mount to
- * @returns Effect that yields MountHandle for cleanup
+ * @returns Effect that yields a {@link MountHandle} for cleanup
  *
  * @example
- * ```tsx
- * const app = <div>Hello World</div>;
+ * ```ts
  * const root = document.getElementById("root")!;
- * const handle = await Effect.runPromise(mount(app, root));
+ * const handle = await Effect.runPromise(mount(App(), root));
  * // Later: cleanup
  * await Effect.runPromise(handle.unmount());
  * ```
@@ -1842,13 +1869,26 @@ export function mount(
   root: HTMLElement,
 ): Effect.Effect<MountHandle, UnsupportedNodeTypeError | StreamSubscriptionError | RenderError> {
   return Effect.gen(function* () {
-    // Capture current Effect context (includes any provided services)
-    // This allows event handlers to access services provided via Effect.provide(layer)
+    // Capture current Effect context (includes any provided services) so event
+    // handlers can access services provided via Effect.provide(layer).
     const effectContext = yield* Effect.context<never>();
 
-    // AC24: Create fresh ManagedRuntime per mount with captured context
-    const runtime = ManagedRuntime.make(Layer.succeedContext(effectContext));
+    // Hardening: if the caller supplies an ambient `Scope.Scope`, `unmount` is
+    // auto-registered on it below so the mount is torn down at scope close. No
+    // ambient scope → behavior is unchanged.
+    const ambientScope = yield* Effect.serviceOption(Scope.Scope);
+
     const scope = yield* Scope.make();
+
+    // AC24: Create fresh ManagedRuntime per mount. Override `Scope.Scope` in the
+    // captured context with the mount's internal `scope`: this runtime backs the
+    // event-handler fibers (`context.runtime.runFork`), so any scoped work a
+    // handler forks (`Effect.forkScoped`, `acquireRelease`, …) attaches to the
+    // internal scope — which `unmount` closes — instead of to a caller's ambient
+    // scope, which would leak that work past `unmount`.
+    const runtime = ManagedRuntime.make(
+      Layer.succeedContext(Context.add(effectContext, Scope.Scope, scope)),
+    );
 
     // Create the RenderContext service implementation
     const context = {
@@ -1892,7 +1932,7 @@ export function mount(
     // Track if already unmounted for idempotency
     let unmounted = false;
 
-    return {
+    const handle = {
       unmount: () =>
         Effect.gen(function* () {
           // AC27: Make unmount idempotent
@@ -1910,6 +1950,15 @@ export function mount(
           yield* Effect.promise(() => runtime.dispose());
         }),
     } satisfies MountHandle;
+
+    // Hardening: auto-register unmount on the caller's ambient scope when present.
+    // `unmount` is idempotent, so a later explicit `handle.unmount()` (or the
+    // `mountScoped` finalizer) makes this a no-op the second time.
+    if (Option.isSome(ambientScope)) {
+      yield* Scope.addFinalizer(ambientScope.value, handle.unmount());
+    }
+
+    return handle;
   });
 }
 
@@ -1931,8 +1980,13 @@ export function mount(
  * preserved); only subsequent emissions patch the region — see
  * `hydrate.specs.md`.
  *
- * Shares {@link mount}'s lifecycle: a fresh `ManagedRuntime` per call, a `Scope`
- * owning all forked subscriptions, and a {@link MountHandle} for teardown.
+ * Shares {@link mount}'s lifecycle and lifetime rules: a fresh `ManagedRuntime`
+ * per call, a `Scope` owning all forked subscriptions, and a {@link MountHandle}
+ * for teardown. Like `mount`, the runtime lives until `unmount` (not until the
+ * Effect resolves); it auto-registers `unmount` on an ambient `Scope.Scope` when
+ * present; and scoped work forked from handlers is owned by the internal scope.
+ * Use {@link hydrateScoped} to bind the hydrated mount's lifetime to an ambient
+ * `Scope`, or a {@link ManagedRuntime} for scoped layers (see `mount`).
  *
  * Hydration is a **client-only** operation: the app's requirement channel `R`
  * must be free of server-only dependencies. A {@link Boundary.server} discharges
@@ -1941,15 +1995,15 @@ export function mount(
  * stays in `R`, and {@link AssertNoServerOnly} turns that into a compile error
  * (the return type degrades to the {@link ServerOnlyLeak} sentinel).
  *
- * @param app - JSX tree to hydrate (must match the tree rendered on the server)
+ * @param app - node tree to hydrate (must match the tree rendered on the server)
  * @param root - HTMLElement whose children were produced by the server renderer
  * @returns Effect that yields a MountHandle for cleanup
  *
  * @example
- * ```tsx
+ * ```ts
  * const root = document.getElementById("root")!;
  * // root.innerHTML already contains server output
- * const handle = await Effect.runPromise(hydrate(<App />, root));
+ * const handle = await Effect.runPromise(hydrate(App(), root));
  * ```
  */
 export function hydrate<A extends Renderable>(
@@ -1972,8 +2026,18 @@ export function hydrate(
     // Capture current Effect context so event handlers can access provided services.
     const effectContext = yield* Effect.context<never>();
 
-    const runtime = ManagedRuntime.make(Layer.succeedContext(effectContext));
+    // Hardening: auto-register unmount on the caller's ambient scope when present
+    // (see `mount`). No ambient scope → behavior unchanged.
+    const ambientScope = yield* Effect.serviceOption(Scope.Scope);
+
     const scope = yield* Scope.make();
+
+    // Override `Scope.Scope` in the captured context with the mount's internal
+    // `scope` so handler-forked scoped work attaches to it and is torn down by
+    // `unmount` (see `mount` for the full rationale).
+    const runtime = ManagedRuntime.make(
+      Layer.succeedContext(Context.add(effectContext, Scope.Scope, scope)),
+    );
 
     // Interactivity barrier: each forked first-emission region registers before
     // its fork and settles once its first emission has hydrated; `hydrate` awaits
@@ -2017,7 +2081,7 @@ export function hydrate(
 
     let unmounted = false;
 
-    return {
+    const handle = {
       unmount: () =>
         Effect.gen(function* () {
           if (unmounted) {
@@ -2028,6 +2092,14 @@ export function hydrate(
           yield* Effect.promise(() => runtime.dispose());
         }),
     } satisfies MountHandle;
+
+    // Hardening: auto-register unmount on the caller's ambient scope when present.
+    // Idempotent unmount makes any later explicit teardown a no-op the second time.
+    if (Option.isSome(ambientScope)) {
+      yield* Scope.addFinalizer(ambientScope.value, handle.unmount());
+    }
+
+    return handle;
   });
 }
 
