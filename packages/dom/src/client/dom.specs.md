@@ -281,6 +281,18 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - The cleanup function can be called to properly dispose resources
   - Calling unmount multiple times is safe (idempotent)
 
+### AC26/AC27 amendment: ambient-scope auto-unmount
+
+- **Given** `mount`/`hydrate` is invoked inside an Effect region that supplies an
+  ambient `Scope.Scope` in context (e.g. under `Effect.scoped`)
+- **When** the mount Effect completes
+- **Then** `unmount` is auto-registered as a finalizer on that ambient scope, so
+  the mount is torn down when the scope closes. This reuses the same idempotent
+  `handle.unmount()` (AC26) and does not change the `MountHandle` contract (AC27).
+- **And** with no ambient `Scope.Scope` in context, behavior is unchanged.
+- See `mount-scoped.specs.md` (AC-S8, AC-S9) and the scope-aware variants
+  `mountScoped` / `hydrateScoped` for the typed, explicit form.
+
 ## Technical Requirements
 
 ### Dependencies

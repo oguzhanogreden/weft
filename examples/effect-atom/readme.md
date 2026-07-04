@@ -35,24 +35,35 @@ const Counter = () =>
 3. `Atom.update(atom, fn)` and `Atom.refresh(atom)` return Effects requiring `AtomRegistry`. An `onclick` handler that returns one of these Effects is run on the mount runtime, which carries whatever services were provided around `mount(...)` — no manual `Effect.runPromise` inside the handler.
 4. Async atoms wrap an Effect (e.g. `Atom.make(Effect.gen(...))`) and expose their state as a `Result`. `Result.match` maps `onInitial` / `onFailure` / `onSuccess` to renderable values; the `waiting` flag on a `Success` result distinguishes an already-loaded value from one currently being refreshed via `Atom.refresh`, so the UI can show "Reloading…" instead of flashing back to a loading state.
 
-**Gotcha — the registry must outlive the mount effect.** Atom subscriptions are fibers forked for the lifetime of the app, not the lifetime of `mount(...)`. `Registry.layer` is a `Layer.scoped`: providing it directly to the mount effect disposes the registry the instant `mount` resolves, and every subscription then dies — silently, unless a `Boundary` happens to catch it — because the registry is disposed. `main.ts` avoids this by creating the registry manually and providing it as a plain service value instead of a layer:
+**Gotcha — the registry must outlive the mount effect.** Atom subscriptions are fibers forked for the lifetime of the app, not the lifetime of `mount(...)`. `Registry.layer` is a `Layer.scoped`, and `mount`'s effect resolves right after initial render — not when the app stops running — so providing the layer directly around `mount` releases the registry the instant that effect settles, while every subscription keeps reading from it:
+
+```typescript
+// ❌ the registry is disposed the moment mount resolves — every atom
+// subscription then reads from a released registry
+Effect.runPromise(mount(App(), root).pipe(Effect.provide(Registry.layer)));
+```
+
+`main.ts` avoids this with the composable-mount-lifetime pattern: provide `Registry.layer` **outside** a long-lived scoped region, and mount inside that region with `mountScoped`, which registers `unmount` as a finalizer on the region's scope instead of tying the registry's lifetime to the mount effect's resolution. `Effect.never` keeps the region — and therefore the registry — open for the app's lifetime, and `runFork` drives it since the program never settles on its own:
 
 ```typescript
 import { Registry } from "@effect-atom/atom";
-import { mount } from "@weftui/dom/client";
+import { mountScoped } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
-const registry = Registry.make();
+const program = Effect.scoped(
+  Effect.gen(function* () {
+    yield* mountScoped(App(), document.getElementById("root")!);
+    yield* Effect.never;
+  }),
+).pipe(Effect.provide(Registry.layer));
 
-void Effect.runPromise(
-  mount(App(), document.getElementById("root")!).pipe(
-    Effect.provideService(Registry.AtomRegistry, registry),
-  ),
-);
+Effect.runFork(program);
 ```
 
-The co-located `app.browser.test.ts` follows the same pattern per test: a fresh `Registry.make()` before mounting, isolating atom state between test cases, with `registry.dispose()` called in `afterEach` alongside `handle.unmount()`.
+The co-located `app.browser.test.ts` follows the same composition per test, swapping `Effect.never` for `Deferred.await(shutdown)` so each test can request teardown explicitly: `afterEach` succeeds the `shutdown` deferred and joins the fiber, which closes the scoped region (running `mountScoped`'s `unmount` finalizer) and only then releases `Registry.layer` — isolating atom state between test cases without a manual `Registry.make()`/`dispose()` pair.
+
+See [Provide Services](../../docs/how-to/provide-services.md) for this composition as a general recipe, and [Layer lifetime at the mount](../../docs/explanation/services-and-context.md#layer-lifetime-at-the-mount) for why the mount effect resolving early matters here.
 
 ## When to Use
 
