@@ -44,6 +44,9 @@ function setupDom(url = "http://localhost/"): void {
   global.Element = dom.window.Element;
   global.MouseEvent = dom.window.MouseEvent;
   global.HTMLAnchorElement = dom.window.HTMLAnchorElement;
+  // JSDOM leaves `scrollTo` unimplemented (logs to stderr on call); a no-op stub
+  // silences that for navigations that reset scroll. `spyScrollTo` overrides it.
+  dom.window.scrollTo = (() => {}) as typeof dom.window.scrollTo;
 }
 
 afterEach(() => {
@@ -262,6 +265,71 @@ describe("RouterLive — pending navigation (deferred commit)", () => {
     assert.equal((await readNav(service))._tag, "Idle");
     assert.equal((await readMatch(service))._tag, "NotFound");
     assert.equal(dom.window.location.pathname, "/");
+  });
+});
+
+// ── Scroll reset on navigation (`scroll-reset.specs.md`) ────────────────────────
+
+/** Installs a spy over the current JSDOM `window.scrollTo`, recording call args. */
+function spyScrollTo(): { readonly calls: Array<readonly [number, number]> } {
+  const calls: Array<readonly [number, number]> = [];
+  dom.window.scrollTo = ((x: number, y: number) => {
+    calls.push([x, y]);
+  }) as typeof dom.window.scrollTo;
+  return { calls };
+}
+
+describe("RouterLive — scroll reset (scroll-reset.specs.md)", () => {
+  test("AC-S1: a path-changing push navigation scrolls the window to top", async () => {
+    setupDom();
+    const service = await readService();
+    const spy = spyScrollTo();
+    await Effect.runPromise(service.navigate("/about"));
+    assert.equal(dom.window.location.pathname, "/about");
+    assert.deepEqual(spy.calls, [[0, 0]]);
+  });
+
+  test("AC-S2: a query-only navigation on the same path does NOT scroll", async () => {
+    setupDom("http://localhost/about");
+    const service = await readService();
+    const spy = spyScrollTo();
+    // Same path, only the query changes — scroll is preserved.
+    await Effect.runPromise(service.navigate("/about?tab=posts"));
+    assert.equal(dom.window.location.pathname, "/about");
+    assert.equal(dom.window.location.search, "?tab=posts");
+    assert.deepEqual(spy.calls, []);
+  });
+
+  test("AC-S1: navigating to the identical URL does NOT scroll (no path change)", async () => {
+    setupDom("http://localhost/about");
+    const service = await readService();
+    const spy = spyScrollTo();
+    await Effect.runPromise(service.navigate("/about"));
+    assert.deepEqual(spy.calls, []);
+  });
+
+  test("AC-S3: popstate (back/forward) never resets scroll (left to the browser)", async () => {
+    setupDom();
+    // Keep the layer scope open so the popstate listener stays registered.
+    const scope = await Effect.runPromise(Scope.make());
+    const ctx = await Effect.runPromise(
+      Layer.buildWithScope(RouterLive(fixture(), { rpc: { group: NoopRpcs } }), scope),
+    );
+    const service = Context.get(ctx, Router);
+    const spy = spyScrollTo();
+    try {
+      // Browser back/forward: url moves first, then popstate fires.
+      dom.window.history.pushState(null, "", "/about");
+      dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"));
+      // The popstate handler commits in a background fiber; poll until it lands.
+      for (let i = 0; i < 20 && (await readMatch(service))._tag !== "Matched"; i++) {
+        await tick();
+      }
+      assert.equal((await readMatch(service))._tag, "Matched");
+      assert.deepEqual(spy.calls, []);
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
+    }
   });
 });
 

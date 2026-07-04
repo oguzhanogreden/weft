@@ -158,6 +158,13 @@ export function RouterLive<R>(
               .map(getPreload)
               .filter((p): p is () => Promise<unknown> => p !== undefined);
 
+      // The path portion (before `?`) of a canonical url — the granularity at which
+      // scroll is reset (`scroll-reset.specs.md`): a query-only change keeps the path.
+      const pathOf = (url: string): string => {
+        const qIndex = url.indexOf("?");
+        return qIndex === -1 ? url : url.slice(0, qIndex);
+      };
+
       const commitUrl = (normalized: string, replace: boolean): Effect.Effect<void> =>
         Effect.sync(() => {
           // `replaceState` swaps the current entry (no new history step); `pushState`
@@ -262,8 +269,20 @@ export function RouterLive<R>(
           if (exit !== undefined) {
             setResolvedCommit(router, { url: normalized, exit });
           }
+          // Capture the outgoing url before it moves — the previous committed path
+          // decides whether scroll resets below (`urlRef` only changes here).
+          const previousUrl = yield* SubscriptionRef.get(urlRef);
           if (pushUrl) yield* commitUrl(normalized, replace);
           yield* SubscriptionRef.set(urlRef, normalized);
+          // Scroll reset (`scroll-reset.specs.md`): a path-changing app navigation
+          // returns to the top of the page, mirroring a full document load. Excludes
+          // popstate (`pushUrl === false`, left to the browser's native
+          // scrollRestoration) and query-only changes (same path — `setQuery` /
+          // `patchQuery`), which preserve scroll. `scrollTo(0, 0)` is height-
+          // independent, so it is safe before the outlet's reactive DOM swap paints.
+          if (pushUrl && pathOf(previousUrl) !== pathOf(normalized)) {
+            yield* Effect.sync(() => window.scrollTo(0, 0));
+          }
           if (emitted) yield* SubscriptionRef.set(navRef, { _tag: "Idle" });
         });
 
