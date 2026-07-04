@@ -1,0 +1,66 @@
+# @weftui/dom
+
+> The DOM renderer for [Weft](https://weftui.dev) — mount and hydrate in the browser, render to string or stream on the server.
+
+Takes a [`@weftui/core`](https://weftui.dev/docs/reference/core) node tree and renders it to real DOM on the client or to HTML on the server. There is no virtual DOM and no diffing — streams patch the tree in place. The same tree renders to HTML with `renderToStringHydratable` and `hydrate()`s flash-free on the client.
+
+Two entry points: `@weftui/dom/client` for the browser, `@weftui/dom/server` for Node.
+
+## Installation
+
+```bash
+npm install @weftui/core @weftui/dom effect
+```
+
+`effect` is a peer dependency; `@weftui/core` is required to author the tree.
+
+## Key exports
+
+### `@weftui/dom/client`
+
+| Export                          | What it does                                                                             |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `mount(node, target)`           | Renders a node into `target` for a fresh (non-SSR) page and starts all streams.          |
+| `hydrate(node, target)`         | Adopts server-rendered DOM **in place** and resumes reactivity — the flash-free path.    |
+| `mountScoped` / `hydrateScoped` | Scope-aware variants that register teardown as a finalizer on an ambient `Scope`.        |
+| `MountHandle`                   | Handle returned by mount/hydrate; `unmount()` tears the reactive tree down (idempotent). |
+
+### `@weftui/dom/server`
+
+| Export                           | What it does                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `renderToString`                 | Renders a node to a complete HTML string (static, non-hydrated).                 |
+| `renderToStringHydratable`       | Same, plus the hydration markers `hydrate` needs. Pair with `hydrate`.           |
+| `renderToStream` / `…Hydratable` | Streaming variants — emit HTML chunks as the tree resolves, for progressive SSR. |
+| `renderToHydratableShell`        | Produces the document scaffold for servers that assemble the shell separately.   |
+
+The package root re-exports the renderer error types: `HydrationMismatchError`, `UnsupportedNodeTypeError`, `RenderError`, `StreamSubscriptionError`.
+
+## Example
+
+```typescript
+import { h } from "@weftui/core";
+import { mount } from "@weftui/dom/client";
+import { Effect, SubscriptionRef } from "effect";
+
+const Counter = () =>
+  Effect.gen(function* () {
+    const count = yield* SubscriptionRef.make(0);
+    return yield* h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, [
+      count.changes,
+    ]);
+  });
+
+void Effect.runPromise(mount(Counter(), document.getElementById("root")!));
+```
+
+## Documentation
+
+- Full docs: **https://weftui.dev**
+- `@weftui/dom` API reference: **https://weftui.dev/docs/reference/dom**
+- Server-side rendering guide: **https://weftui.dev/docs/how-to/render-on-the-server**
+- Bundled with this package: see the [`./docs`](./docs) directory in `node_modules/@weftui/dom/docs` — the complete tutorial, how-to, explanation, and reference tree ships on disk for offline and agent use.
+
+## License
+
+MIT © Stef van Wijchen

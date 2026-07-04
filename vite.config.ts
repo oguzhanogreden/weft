@@ -9,8 +9,12 @@ export default defineConfig({
       dev: {
         command: "vp run -r dev",
       },
+      "bundle-docs": {
+        command: "node scripts/bundle-package-docs.mjs",
+      },
       pack: {
         command: "vp run -r pack",
+        dependsOn: ["bundle-docs"],
       },
       check: {
         command: "vp check",
