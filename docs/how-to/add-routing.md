@@ -231,6 +231,16 @@ yield * patchQuery({ sort: "old" }); // merges into the current query
 - **`navigate(ref, args)`** builds the URL via [`href`](#type-safe-links-with-href) (so it round-trips with the matcher) and pushes — or, with `{ replace: true }`, replaces — the History entry. `args` follows the same requiredness rules as `href`.
 - **`setQuery` / `patchQuery`** keep the path, so the active leaf is never remounted — pair them with `Router.queryStream` for in-place reactive updates. They are a no-op when no route is matched.
 
+### Scroll position on navigation
+
+A client navigation whose **path** changes resets the window scroll to the top at commit — matching what a full page load would do, which a raw History `pushState`/`replaceState` otherwise doesn't. This applies uniformly to `Router.navigate`, clicking a link the [interceptor](#link-interception) handles, and the `push` / `replace` helpers.
+
+- **Query-only navigations preserve scroll.** `setQuery` / `patchQuery` (and any navigation that keeps the same path) don't reset — the leaf stays mounted, so there's nothing to scroll away from.
+- **Back/forward is untouched.** The router never resets scroll on `popstate`; the browser's native `history.scrollRestoration: "auto"` restores the offset the entry had when the user left it.
+- **Hash navigation (`#section`) is unaffected** — it's browser-native, and the link interceptor already lets same-document/hash-only clicks fall through.
+
+There's no opt-out; the behavior is hardwired.
+
 ## Server setup
 
 On the server, `RouterServer` matches a request URL, builds a fixed-match `Router`, renders `RouterApp` to hydratable HTML inside a **document shell**, and reports a status (404 when no route matches or a page raises `RouterNotFound`).

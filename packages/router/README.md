@@ -28,6 +28,8 @@ npm install @weftui/core @weftui/dom @weftui/router effect
 | `RouterLive` (client)            | History-backed `Router` layer; also provides the `AppRpcClientTag` seam.                |
 | `RouterServer` (server)          | `RouterServer.render` / `RouterServer.toWebHandler` for SSR dispatch.                   |
 
+Client-side navigation to a different path resets the window scroll to the top at commit; query-only navigations and browser back/forward preserve it (the latter via the browser's native `history.scrollRestoration`).
+
 ## Example
 
 ```typescript

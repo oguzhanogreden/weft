@@ -258,6 +258,10 @@ yield * push("/users/1/posts?sort=new");
 yield * patchQuery({ sort: "old" }); // keeps the current path + other query fields
 ```
 
+### Scroll reset
+
+Every client-committed navigation whose path differs from the previously committed path — `navigate`, `push`, `replace`, and the link interceptor — resets `window.scrollTo(0, 0)` synchronously at commit. Query-only navigations (`setQuery` / `patchQuery`, or any push/replace to the same path) preserve scroll. `popstate` (`back` / `forward`) never resets; the browser's own `history.scrollRestoration: "auto"` restores the prior offset for those entries. Server rendering is unaffected. Not configurable — there is no `NavigateOptions` field to opt out.
+
 ### `installLinkInterceptor`
 
 ```typescript
