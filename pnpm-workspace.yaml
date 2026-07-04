@@ -10,7 +10,7 @@ allowBuilds:
 onlyBuiltDependencies:
   - esbuild
 catalog:
-  "@effect/platform": ^0.96.1
+  "@effect/platform": ^0.96.2
   "@effect/rpc": ^0.75.1
   "@types/node": ^25.9.2
   effect: ^3.21.4
