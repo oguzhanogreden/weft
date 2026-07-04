@@ -29,6 +29,10 @@ node_modules/
 dist
 *.tsbuildinfo
 
+# Generated docs bundle — /docs copied into each published package at pack time
+# (scripts/bundle-package-docs.mjs); regenerated + published, never committed.
+packages/*/docs/
+
 # os
 .DS_Store
 

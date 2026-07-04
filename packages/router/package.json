@@ -1,15 +1,29 @@
 {
   "name": "@weftui/router",
   "version": "0.0.0",
-  "description": "Universal nested router for Weft",
+  "description": "Universal nested router for Weft — one route tree, server and client, with type-safe params and href",
+  "keywords": [
+    "effect",
+    "nested-routes",
+    "router",
+    "routing",
+    "ssr",
+    "weft"
+  ],
+  "homepage": "https://weftui.dev",
+  "bugs": {
+    "url": "https://github.com/stefvw93/weft/issues"
+  },
   "license": "MIT",
   "author": "Stef van Wijchen",
   "repository": {
     "type": "git",
-    "url": "https://github.com/stefvw93/weft"
+    "url": "https://github.com/stefvw93/weft",
+    "directory": "packages/router"
   },
   "files": [
-    "dist"
+    "dist",
+    "docs"
   ],
   "type": "module",
   "exports": {

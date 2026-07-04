@@ -17,6 +17,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { basename, join } from "node:path";
 import type { Plugin } from "vite-plus";
+import { SITE_BASE, buildLlmsTxt } from "./llms-txt";
 import { type DocModel, parseDoc } from "./markdown-loader";
 
 const VIRTUAL_ID = "virtual:weft-docs";
@@ -73,7 +74,7 @@ function toPosix(path: string): string {
 }
 
 /** Reads every `docs/**\/*.md` (excluding `index.md`) into a deduped `DocModel[]`. */
-async function loadAllDocs(docsRoot: string): Promise<DocModel[]> {
+export async function loadAllDocs(docsRoot: string): Promise<DocModel[]> {
   const entries = await readdir(docsRoot, { recursive: true });
   const docs: DocModel[] = [];
   const seen = new Set<string>();
@@ -130,8 +131,23 @@ export function weftDocs(options: { readonly docsRoot: string }): Plugin {
   // resolved set. Cleared on a dev `.md` change so the next request re-globs (below).
   let cache: Promise<DocModel[]> | undefined;
   const allDocs = (): Promise<DocModel[]> => (cache ??= loadAllDocs(docsRoot));
+  // The SSR build shares this plugin; only the client build emits `llms.txt` (a static
+  // asset served from `dist/client`), so it isn't duplicated into `dist/server`.
+  let isSsrBuild = false;
   return {
     name: "weft-docs",
+    configResolved(config) {
+      isSsrBuild = Boolean(config.build?.ssr);
+    },
+    async generateBundle() {
+      if (isSsrBuild) return;
+      const metas = (await allDocs()).map(({ tree: _tree, ...meta }) => meta);
+      this.emitFile({
+        type: "asset",
+        fileName: "llms.txt",
+        source: buildLlmsTxt(metas, SITE_BASE),
+      });
+    },
     resolveId(id) {
       if (id === VIRTUAL_ID) return RESOLVED_ID;
       if (id === SNIPPET_ID) return SNIPPET_RESOLVED_ID;
