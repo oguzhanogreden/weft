@@ -95,7 +95,7 @@ const Greeting = () => {
 /** Root component. Mount with an `AtomRegistry` provided (see `main.ts`). */
 export const App = () =>
   h.div([
-    h.h1("effect-atom"),
+    h.h1("weft + effect-atom"),
 
     h.section([
       h.h2("1. Counter + Derived Atom"),
