@@ -1,8 +1,10 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Data, Deferred, Effect, Stream } from "effect";
+import { Cause, Data, Deferred, Effect, pipe, Stream } from "effect";
 import { Boundary, h } from "@weftui/core";
+import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
+import { makeErrorLogCapture } from "../__tests__/log-capture";
 import { hydrate } from "./render";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -53,6 +55,18 @@ async function capturingConsoleError<A>(run: () => Promise<A>): Promise<{
   } finally {
     console.error = original;
   }
+}
+
+/**
+ * Runs `hydrate` with a replacement logger that records every `Error`-level
+ * log entry's `Cause` and annotations, so tests can assert that a no-boundary
+ * region failure is reported by the runtime (with its `weft.region`
+ * annotation) rather than silently swallowed.
+ */
+async function runHydrateCapturingErrors(app: Renderable, root: HTMLElement) {
+  const { entries, logger } = makeErrorLogCapture();
+  const handle = await Effect.runPromise(pipe(hydrate(app, root), Effect.provide(logger)));
+  return { handle, entries };
 }
 
 class LateError extends Data.TaggedError("Late")<{ msg: string }> {}
@@ -270,7 +284,7 @@ describe("AC-H15: reactive-region failure routing", () => {
     assert.equal(root.querySelector("#fb")?.textContent, "routed");
   });
 
-  it("with no boundary the failure is swallowed (region keeps its adopted content)", async () => {
+  it("with no boundary the failure is reported by the runtime (region keeps its adopted content)", async () => {
     createTestDOM();
     const root = createRoot();
     root.innerHTML = SERVER_REGION_HTML;
@@ -278,10 +292,22 @@ describe("AC-H15: reactive-region failure routing", () => {
     const trigger = await Effect.runPromise(Deferred.make<void>());
     const app = h.div({}, [failAfterFirst(trigger)]);
 
-    await Effect.runPromise(hydrate(app, root));
+    const { entries } = await runHydrateCapturingErrors(app, root);
     await Effect.runPromise(Deferred.succeed(trigger, void 0));
     await waitFor(50);
 
+    // The adopted static DOM stands — no fallback, no teardown.
     assert.ok(root.textContent?.includes("ok"));
+    // The failure is reported once at Error level, attributed to the region.
+    assert.equal(entries.length, 1, "Exactly one unhandled failure should be reported");
+    assert.ok(
+      Cause.pretty(entries[0]!.cause).includes("Late"),
+      "Logged cause should pretty-print the stream error's tag",
+    );
+    assert.match(
+      String(entries[0]!.annotations["weft.region"]),
+      /^hydrate:stream-1\b/,
+      "Log should carry the weft.region annotation for the hydrated region",
+    );
   });
 });

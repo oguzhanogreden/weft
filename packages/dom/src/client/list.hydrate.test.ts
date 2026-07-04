@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Data, Effect, Stream, SubscriptionRef } from "effect";
+import { Cause, Data, Deferred, Effect, pipe, Stream, SubscriptionRef } from "effect";
 import { h, List } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
 import { JSDOM } from "jsdom";
@@ -9,6 +9,7 @@ import {
   renderToString as _renderToString,
   renderToStringHydratable as _renderToStringHydratable,
 } from "~/server";
+import { makeErrorLogCapture } from "../__tests__/log-capture";
 import { NoRpc } from "../__tests__/rpc-stub";
 
 // These trees contain no `Boundary.rpc`; shadow the SSR fns with the no-op `NoRpc`
@@ -481,5 +482,59 @@ describe("List.each hydration — HY2 source & identity coverage", () => {
     assert.strictEqual(after, input, "the adopted input node was moved, not recreated");
     assert.equal(after.value, "typed text", "uncontrolled value preserved");
     assert.strictEqual(document.activeElement, after, "focus preserved");
+  });
+});
+
+// ============================================================================
+// AC-H15: no boundary — hydrated list source failure reported by the runtime
+// ============================================================================
+
+describe("List.each hydration — AC-H15 no-boundary failure reporting", () => {
+  it("reports a post-hydrate list source failure at Error level with a hydrate:list-<id> region", async () => {
+    createTestDOM();
+
+    // Seed server HTML from a static source with the same first emission.
+    const seedApp = List.each({ of: [p("a")] as readonly Person[], by: (x) => x.id }, (x) =>
+      h.li({ id: x.id }, x.name),
+    );
+    const root = await seedServerHtml(seedApp);
+
+    // The live source matches the snapshot, then fails once `trigger` resolves.
+    const trigger = await Effect.runPromise(Deferred.make<void>());
+    const failingSource: Stream.Stream<readonly Person[], Error> = pipe(
+      Stream.make([p("a")] as readonly Person[]),
+      Stream.concat(
+        Stream.fromEffect(
+          pipe(
+            Deferred.await(trigger),
+            Effect.flatMap(() => Effect.fail(new Error("list-late-boom"))),
+          ),
+        ),
+      ),
+    );
+    const app = List.each({ of: failingSource, by: (x) => x.id }, (x) =>
+      h.li({ id: x.id }, x.name),
+    );
+
+    const { entries, logger } = makeErrorLogCapture();
+    await Effect.runPromise(pipe(hydrate(app, root), Effect.provide(logger)));
+    await waitForStream();
+    assert.deepEqual(itemIds(root), ["a"], "snapshot adopted before the failure");
+
+    await Effect.runPromise(Deferred.succeed(trigger, void 0));
+    await waitForStreamUpdate();
+
+    // Adopted items stand; the failure is reported once, attributed to the region.
+    assert.deepEqual(itemIds(root), ["a"], "adopted items keep standing after the failure");
+    assert.equal(entries.length, 1, "Exactly one unhandled failure should be reported");
+    assert.ok(
+      Cause.pretty(entries[0]!.cause).includes("list-late-boom"),
+      "Logged cause should pretty-print the list source error",
+    );
+    assert.match(
+      String(entries[0]!.annotations["weft.region"]),
+      /^hydrate:list-\d+\b/,
+      "Log should carry the weft.region annotation for the hydrated list region",
+    );
   });
 });

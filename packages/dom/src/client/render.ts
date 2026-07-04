@@ -6,9 +6,11 @@ import {
   ExecutionStrategy,
   Exit,
   Fiber,
+  FiberRef,
   HashMap,
   HashSet,
   Layer,
+  LogLevel,
   ManagedRuntime,
   Option,
   Ref,
@@ -337,33 +339,67 @@ function camelToKebab(str: string): string {
 }
 
 /**
+ * Forks a reactive-subscription effect into `scope` and supervises its exit.
+ *
+ * With an enclosing Boundary, failure causes are routed to
+ * `BoundaryContext.reportError` (unchanged behavior). Without one, the exit is
+ * left unobserved so the Effect runtime reports the failure itself
+ * ("Fiber terminated with an unhandled error") — raised to LogLevel.Error and
+ * annotated with `weft.region` so it is visible and attributable by default.
+ * Interruption (unmount teardown) is never reported.
+ *
+ * @param effect - The subscription effect to fork (e.g. a `Stream.runForEach` pump).
+ * @param scope - The scope owning the forked fiber's lifetime.
+ * @param errorContext - Region/prop identifier used as the `weft.region` log annotation (e.g. `attribute:<name>`, `child:stream-<id>`).
+ */
+function forkSupervised<A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  scope: Scope.Scope,
+  errorContext: string,
+): Effect.Effect<Fiber.RuntimeFiber<A, E>, never, R> {
+  return Effect.gen(function* () {
+    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
+    if (Option.isNone(boundaryCtx)) {
+      // Fork-time fiber refs are inherited by the child and never restored, so
+      // the raised level + annotation survive to the runtime's reportExitValue.
+      // The effect *body* runs with the ambient level restored: fibers the
+      // stream machinery forks internally inherit that ambient (default Debug)
+      // level instead of the raised one, so a failure is reported exactly once
+      // — by the subscription fiber itself, whose body-local ref is restored to
+      // the raised fork-time value before it exits.
+      const ambientLevel = yield* FiberRef.get(FiberRef.unhandledErrorLogLevel);
+      return yield* pipe(
+        Effect.forkIn(Effect.withUnhandledErrorLogLevel(effect, ambientLevel), scope),
+        Effect.withUnhandledErrorLogLevel(Option.some(LogLevel.Error)),
+        Effect.annotateLogs("weft.region", errorContext),
+      );
+    }
+    const fiber = yield* Effect.forkIn(effect, scope);
+    yield* pipe(
+      Fiber.await(fiber),
+      Effect.flatMap((exit) =>
+        Exit.isFailure(exit) ? boundaryCtx.value.reportError(exit.cause) : Effect.void,
+      ),
+      Effect.forkIn(scope),
+    );
+    return fiber;
+  });
+}
+
+/**
  * Subscribes to a stream and runs callback for each emission.
  * If a `BoundaryContext` is present, stream failures are routed to it.
  */
 function subscribeToStream<A>(
   stream: Stream.Stream<A>,
   onValue: (value: A) => void | Promise<void>,
-  _errorContext: string,
+  errorContext: string,
 ): Effect.Effect<void, StreamSubscriptionError, RenderContext> {
   return Effect.gen(function* () {
     const context = yield* RenderContext;
-    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
 
     const effect = Stream.runForEach(stream, (value) => Effect.sync(() => void onValue(value)));
-    const fiber = yield* Effect.forkIn(effect, context.scope);
-
-    // Route stream failures to the nearest BoundaryContext; swallow if none.
-    yield* pipe(
-      Fiber.await(fiber),
-      Effect.flatMap((exit) =>
-        Exit.isFailure(exit)
-          ? Option.isSome(boundaryCtx)
-            ? boundaryCtx.value.reportError(exit.cause)
-            : Effect.void
-          : Effect.void,
-      ),
-      Effect.forkIn(context.scope),
-    );
+    yield* forkSupervised(effect, context.scope, errorContext);
   });
 }
 
@@ -1135,21 +1171,9 @@ function handleStreamChild(
     );
 
     // Subscription fiber lives in the enclosing context.scope (not content scope).
-    const streamFiber = yield* Effect.forkIn(effect, context.scope);
-
-    // Route stream child failures to the nearest BoundaryContext; swallow if none.
-    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
-    yield* pipe(
-      Fiber.await(streamFiber),
-      Effect.flatMap((exit) =>
-        Exit.isFailure(exit)
-          ? Option.isSome(boundaryCtx)
-            ? boundaryCtx.value.reportError(exit.cause)
-            : Effect.void
-          : Effect.void,
-      ),
-      Effect.forkIn(context.scope),
-    );
+    // Failures route to the nearest BoundaryContext, or are reported by the
+    // Effect runtime when no boundary encloses the region (AC8).
+    yield* forkSupervised(effect, context.scope, `child:stream-${streamId}`);
 
     // AC19: Return markers to be inserted.
     // Content will be updated asynchronously by the daemon fiber.
@@ -1510,20 +1534,9 @@ function renderList(
       }),
     );
 
-    // Subscription fiber lives in the region scope; failures route to a boundary.
-    const fiber = yield* Effect.forkIn(effect, regionScope);
-    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
-    yield* pipe(
-      Fiber.await(fiber),
-      Effect.flatMap((exit) =>
-        Exit.isFailure(exit)
-          ? Option.isSome(boundaryCtx)
-            ? boundaryCtx.value.reportError(exit.cause)
-            : Effect.void
-          : Effect.void,
-      ),
-      Effect.forkIn(context.scope),
-    );
+    // Subscription fiber lives in the region scope; failures route to a
+    // boundary, or are reported by the Effect runtime when none encloses (AC8).
+    yield* forkSupervised(effect, regionScope, `list:stream-${streamId}`);
 
     return [startMarker, endMarker] as const;
   });
@@ -2360,23 +2373,11 @@ function hydrateReactive(
     if (context.hydrationReady !== undefined) {
       yield* context.hydrationReady.register;
     }
-    const streamFiber = yield* Effect.forkIn(effect, context.scope);
-
-    // Route stream failures to the nearest BoundaryContext; swallow if none
+    // Route stream failures to the nearest BoundaryContext, or leave the exit
+    // unobserved so the Effect runtime reports it when no boundary encloses
     // (AC-H15, parity with handleStreamChild). Covers post-hydrate live
     // failures such as a page failing after client-side navigation.
-    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
-    yield* pipe(
-      Fiber.await(streamFiber),
-      Effect.flatMap((exit) =>
-        Exit.isFailure(exit)
-          ? Option.isSome(boundaryCtx)
-            ? boundaryCtx.value.reportError(exit.cause)
-            : Effect.void
-          : Effect.void,
-      ),
-      Effect.forkIn(context.scope),
-    );
+    yield* forkSupervised(effect, context.scope, `hydrate:stream-${parsed.id} (${path})`);
 
     return endMarker.nextSibling;
   });
@@ -2996,20 +2997,10 @@ function hydrateList(
     if (context.hydrationReady !== undefined) {
       yield* context.hydrationReady.register;
     }
-    // Subscription fiber lives in the region scope; failures route to a boundary.
-    const fiber = yield* Effect.forkIn(effect, regionScope);
-    const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
-    yield* pipe(
-      Fiber.await(fiber),
-      Effect.flatMap((exit) =>
-        Exit.isFailure(exit)
-          ? Option.isSome(boundaryCtx)
-            ? boundaryCtx.value.reportError(exit.cause)
-            : Effect.void
-          : Effect.void,
-      ),
-      Effect.forkIn(context.scope),
-    );
+    // Subscription fiber lives in the region scope; failures route to a
+    // boundary, or are reported by the Effect runtime when none encloses
+    // (AC-H15).
+    yield* forkSupervised(effect, regionScope, `hydrate:list-${parsed.id} (${path})`);
 
     return endMarker.nextSibling;
   });

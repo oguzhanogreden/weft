@@ -32,7 +32,15 @@ There are six failure-catch variants, mirroring Effect's own error operators so 
 | `catchTag` / `catchTags` | one / several tagged errors by `_tag`      |
 | `catchSome` / `catchIf`  | a selected subset, by `Option` / predicate |
 
-The channel algebra is the whole reason they exist: `catchTag("Foo", …)` removes `Foo` from the children's `E` and adds whatever the fallback needs — so the type of the boundary node reflects exactly which failures are still live and which were handled. An unhandled failure re-raises to the **nearest enclosing** boundary; if none catches it, the mount fails. Boundaries nest, so an inner `catchTag` can handle a specific case while an outer `catchAll` sweeps the rest.
+The channel algebra is the whole reason they exist: `catchTag("Foo", …)` removes `Foo` from the children's `E` and adds whatever the fallback needs — so the type of the boundary node reflects exactly which failures are still live and which were handled. An unhandled failure re-raises to the **nearest enclosing** boundary; if none catches it at **mount time**, mounting fails. Boundaries nest, so an inner `catchTag` can handle a specific case while an outer `catchAll` sweeps the rest.
+
+### Post-mount failures with no enclosing boundary
+
+The routing above describes what happens while a node is being built. Once mounted, a reactive region — an attribute, child, or list stream, or a hydrated equivalent — keeps running for the lifetime of its scope, and it can still fail later: a `Stream` backing a `Boundary.rpc` resource might raise `RouterNotFound` after a client-side navigation, for instance. If a `BoundaryContext` encloses the region, the failure routes to it exactly as above, and the boundary's fallback swaps in.
+
+If no boundary encloses it, there is nothing to swap to. Weft does not synthesize one: the region's DOM keeps its last rendered content, and the subscription fiber's failure exit is left **unobserved**. The Effect runtime itself then reports it — `"Fiber terminated with an unhandled error"` — because Weft raises that fiber's `FiberRef.unhandledErrorLogLevel` from the ambient default (`Debug`) to `LogLevel.Error` and annotates the log with `weft.region`, identifying the failing region by kind and identity (e.g. `attribute:class`, `child:stream-3`, `list:stream-2`, `hydrate:stream-1 (/products/42)`). This fires for typed failures and defects alike, in both dev and prod, exactly once per failing region. Interruption — the ordinary case of unmount tearing down the region's scope — is never reported; only genuine failures are.
+
+This is deliberate: rather than a Weft-specific error-reporting config, visibility is controlled by the same knobs any Effect program uses — `Logger.withMinimumLogLevel` to filter it, `Effect.withUnhandledErrorLogLevel` to change how loudly (or quietly) unhandled fiber exits are reported elsewhere in your program. A stream that can fail and has no enclosing boundary is a stream whose failures you've chosen not to route into the UI — the log is what tells you that decision has consequences at runtime.
 
 ## Suspense boundaries
 
