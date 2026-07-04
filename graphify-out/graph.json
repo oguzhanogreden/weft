@@ -6111,7 +6111,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L1",
       "id": "boundary_boundary_test",
-      "community": 248,
+      "community": 14,
       "norm_label": "boundary.test.ts"
     },
     {
@@ -6120,7 +6120,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L11",
       "id": "boundary_boundary_test_fooerror",
-      "community": 248,
+      "community": 14,
       "norm_label": "fooerror"
     },
     {
@@ -6129,7 +6129,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L12",
       "id": "boundary_boundary_test_barerror",
-      "community": 248,
+      "community": 14,
       "norm_label": "barerror"
     },
     {
@@ -6138,7 +6138,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L14",
       "id": "boundary_boundary_test_fallbacknode",
-      "community": 248,
+      "community": 14,
       "norm_label": "fallbacknode"
     },
     {
@@ -6147,7 +6147,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L16",
       "id": "boundary_boundary_test_extractdescriptor",
-      "community": 248,
+      "community": 14,
       "norm_label": "extractdescriptor()"
     },
     {
@@ -6156,7 +6156,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L309",
       "id": "boundary_boundary_test_stockkey",
-      "community": 248,
+      "community": 14,
       "norm_label": "stockkey"
     },
     {
@@ -6165,7 +6165,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L310",
       "id": "boundary_boundary_test_stock",
-      "community": 248,
+      "community": 14,
       "norm_label": "stock"
     },
     {
@@ -6174,7 +6174,7 @@
       "source_file": "packages/core/src/boundary/boundary.test.ts",
       "source_location": "L311",
       "id": "boundary_boundary_test_getstock",
-      "community": 248,
+      "community": 14,
       "norm_label": "getstock"
     },
     {
@@ -6192,7 +6192,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L13",
       "id": "boundary_index_failure_boundary",
-      "community": 248,
+      "community": 14,
       "norm_label": "failure_boundary"
     },
     {
@@ -6210,7 +6210,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L25",
       "id": "boundary_index_server_boundary",
-      "community": 248,
+      "community": 14,
       "norm_label": "server_boundary"
     },
     {
@@ -6318,7 +6318,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L250",
       "id": "boundary_index_suspend",
-      "community": 14,
+      "community": 103,
       "norm_label": "suspend()"
     },
     {
@@ -6345,7 +6345,7 @@
       "source_file": "packages/core/src/boundary/index.ts",
       "source_location": "L355",
       "id": "boundary_index_rpc",
-      "community": 14,
+      "community": 103,
       "norm_label": "rpc()"
     },
     {
@@ -7299,7 +7299,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L22",
       "id": "combinator_descriptor_elementnode",
-      "community": 14,
+      "community": 103,
       "norm_label": "elementnode()"
     },
     {
@@ -7308,7 +7308,7 @@
       "source_file": "packages/core/src/combinator/descriptor.ts",
       "source_location": "L36",
       "id": "combinator_descriptor_getelementdescriptor",
-      "community": 12,
+      "community": 25,
       "norm_label": "getelementdescriptor()"
     },
     {
@@ -7353,7 +7353,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L46",
       "id": "combinator_element_h",
-      "community": 23,
+      "community": 12,
       "norm_label": "h"
     },
     {
@@ -7362,7 +7362,7 @@
       "source_file": "packages/core/src/combinator/element.ts",
       "source_location": "L66",
       "id": "combinator_element_createelementfn",
-      "community": 14,
+      "community": 103,
       "norm_label": "createelementfn()"
     },
     {
@@ -7407,7 +7407,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L1",
       "id": "combinator_list_test",
-      "community": 23,
+      "community": 12,
       "norm_label": "list.test.ts"
     },
     {
@@ -7416,7 +7416,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L7",
       "id": "combinator_list_test_person",
-      "community": 23,
+      "community": 12,
       "norm_label": "person"
     },
     {
@@ -7425,7 +7425,7 @@
       "source_file": "packages/core/src/combinator/list.test.ts",
       "source_location": "L12",
       "id": "combinator_list_test_people",
-      "community": 23,
+      "community": 12,
       "norm_label": "people"
     },
     {
@@ -7434,7 +7434,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L1",
       "id": "combinator_list",
-      "community": 23,
+      "community": 103,
       "norm_label": "list.ts"
     },
     {
@@ -7443,7 +7443,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L10",
       "id": "combinator_list_list",
-      "community": 23,
+      "community": 12,
       "norm_label": "list"
     },
     {
@@ -7452,7 +7452,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L13",
       "id": "combinator_list_itemof",
-      "community": 23,
+      "community": 103,
       "norm_label": "itemof"
     },
     {
@@ -7461,7 +7461,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L26",
       "id": "combinator_list_options",
-      "community": 23,
+      "community": 103,
       "norm_label": "options"
     },
     {
@@ -7470,7 +7470,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L57",
       "id": "combinator_list_each",
-      "community": 14,
+      "community": 103,
       "norm_label": "each()"
     },
     {
@@ -7479,7 +7479,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L77",
       "id": "combinator_list_error",
-      "community": 23,
+      "community": 103,
       "norm_label": "error"
     },
     {
@@ -7488,7 +7488,7 @@
       "source_file": "packages/core/src/combinator/list.ts",
       "source_location": "L82",
       "id": "combinator_list_context",
-      "community": 23,
+      "community": 103,
       "norm_label": "context"
     },
     {
@@ -7587,7 +7587,7 @@
       "source_file": "packages/core/src/index.ts",
       "source_location": "L1",
       "id": "packages_core_src_index_ts_src_index",
-      "community": 12,
+      "community": 100,
       "norm_label": "index.ts"
     },
     {
@@ -8001,7 +8001,7 @@
       "source_file": "packages/core/src/types/html/aria.ts",
       "source_location": "L1",
       "id": "html_aria",
-      "community": 0,
+      "community": 199,
       "norm_label": "aria.ts"
     },
     {
@@ -8082,7 +8082,7 @@
       "source_file": "packages/core/src/types/html/dom.ts",
       "source_location": "L20",
       "id": "html_dom_domattributes",
-      "community": 0,
+      "community": 44,
       "norm_label": "domattributes"
     },
     {
@@ -8865,7 +8865,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L1",
       "id": "html_svg",
-      "community": 2,
+      "community": 44,
       "norm_label": "svg.ts"
     },
     {
@@ -8874,7 +8874,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L6",
       "id": "html_svg_svgpreserveaspectratio",
-      "community": 2,
+      "community": 44,
       "norm_label": "svgpreserveaspectratio"
     },
     {
@@ -8883,7 +8883,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L35",
       "id": "html_svg_imagepreserveaspectratio",
-      "community": 2,
+      "community": 44,
       "norm_label": "imagepreserveaspectratio"
     },
     {
@@ -8892,7 +8892,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L65",
       "id": "html_svg_svgunits",
-      "community": 2,
+      "community": 44,
       "norm_label": "svgunits"
     },
     {
@@ -8901,7 +8901,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L66",
       "id": "html_svg_svgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "svgattributes"
     },
     {
@@ -8910,7 +8910,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L83",
       "id": "html_svg_stylablesvgattributes",
-      "community": 44,
+      "community": 2,
       "norm_label": "stylablesvgattributes"
     },
     {
@@ -8982,7 +8982,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L127",
       "id": "html_svg_presentationsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "presentationsvgattributes"
     },
     {
@@ -9045,7 +9045,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L271",
       "id": "html_svg_gradientelementsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "gradientelementsvgattributes"
     },
     {
@@ -9063,7 +9063,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L293",
       "id": "html_svg_lightsourceelementsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "lightsourceelementsvgattributes"
     },
     {
@@ -9099,7 +9099,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L352",
       "id": "html_svg_zoomandpansvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "zoomandpansvgattributes"
     },
     {
@@ -9162,7 +9162,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L411",
       "id": "html_svg_descsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "descsvgattributes"
     },
     {
@@ -9243,7 +9243,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L490",
       "id": "html_svg_fedistantlightsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "fedistantlightsvgattributes"
     },
     {
@@ -9261,7 +9261,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L499",
       "id": "html_svg_fefuncsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "fefuncsvgattributes"
     },
     {
@@ -9297,7 +9297,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L524",
       "id": "html_svg_femergenodesvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "femergenodesvgattributes"
     },
     {
@@ -9324,7 +9324,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L541",
       "id": "html_svg_fepointlightsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "fepointlightsvgattributes"
     },
     {
@@ -9342,7 +9342,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L557",
       "id": "html_svg_fespotlightsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "fespotlightsvgattributes"
     },
     {
@@ -9369,7 +9369,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L580",
       "id": "html_svg_filtersvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "filtersvgattributes"
     },
     {
@@ -9414,7 +9414,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L639",
       "id": "html_svg_lineargradientsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "lineargradientsvgattributes"
     },
     {
@@ -9441,7 +9441,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L672",
       "id": "html_svg_metadatasvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "metadatasvgattributes"
     },
     {
@@ -9486,7 +9486,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L723",
       "id": "html_svg_radialgradientsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "radialgradientsvgattributes"
     },
     {
@@ -9504,7 +9504,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L745",
       "id": "html_svg_stopsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "stopsvgattributes"
     },
     {
@@ -9576,7 +9576,7 @@
       "source_file": "packages/core/src/types/html/svg.ts",
       "source_location": "L849",
       "id": "html_svg_viewsvgattributes",
-      "community": 2,
+      "community": 44,
       "norm_label": "viewsvgattributes"
     },
     {
@@ -9594,7 +9594,7 @@
       "source_file": "packages/core/src/types/index.ts",
       "source_location": "L1",
       "id": "types_index",
-      "community": 12,
+      "community": 199,
       "norm_label": "index.ts"
     },
     {
@@ -9603,7 +9603,7 @@
       "source_file": "packages/core/src/types/index.ts",
       "source_location": "L4",
       "id": "types_index_elementtype",
-      "community": 12,
+      "community": 199,
       "norm_label": "elementtype"
     },
     {
@@ -10503,7 +10503,7 @@
       "source_file": "packages/dom/src/client/boundary.test.ts",
       "source_location": "L28",
       "id": "client_boundary_test_runmount",
-      "community": 98,
+      "community": 60,
       "norm_label": "runmount()"
     },
     {
@@ -10962,7 +10962,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L1",
       "id": "client_hydrate_test",
-      "community": 244,
+      "community": 269,
       "norm_label": "hydrate.test.ts"
     },
     {
@@ -10971,7 +10971,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L17",
       "id": "client_hydrate_test_rendertostring",
-      "community": 244,
+      "community": 269,
       "norm_label": "rendertostring()"
     },
     {
@@ -10980,7 +10980,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L18",
       "id": "client_hydrate_test_rendertostringhydratable",
-      "community": 244,
+      "community": 269,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -10989,7 +10989,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L25",
       "id": "client_hydrate_test_createtestdom",
-      "community": 244,
+      "community": 269,
       "norm_label": "createtestdom()"
     },
     {
@@ -10998,7 +10998,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L34",
       "id": "client_hydrate_test_createroot",
-      "community": 244,
+      "community": 269,
       "norm_label": "createroot()"
     },
     {
@@ -11007,7 +11007,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L41",
       "id": "client_hydrate_test_seedserverhtml",
-      "community": 244,
+      "community": 269,
       "norm_label": "seedserverhtml()"
     },
     {
@@ -11016,7 +11016,7 @@
       "source_file": "packages/dom/src/client/hydrate.test.ts",
       "source_location": "L48",
       "id": "client_hydrate_test_waitfor",
-      "community": 244,
+      "community": 269,
       "norm_label": "waitfor()"
     },
     {
@@ -11187,7 +11187,7 @@
       "source_file": "packages/dom/src/client/list.test.ts",
       "source_location": "L28",
       "id": "client_list_test_runmount",
-      "community": 98,
+      "community": 107,
       "norm_label": "runmount()"
     },
     {
@@ -11313,7 +11313,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L1",
       "id": "client_mount_scoped_test",
-      "community": 27,
+      "community": 248,
       "norm_label": "mount-scoped.test.ts"
     },
     {
@@ -11322,7 +11322,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L28",
       "id": "client_mount_scoped_test_createtestdom",
-      "community": 27,
+      "community": 248,
       "norm_label": "createtestdom()"
     },
     {
@@ -11331,7 +11331,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L37",
       "id": "client_mount_scoped_test_createroot",
-      "community": 27,
+      "community": 248,
       "norm_label": "createroot()"
     },
     {
@@ -11340,7 +11340,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L43",
       "id": "client_mount_scoped_test_waitfor",
-      "community": 27,
+      "community": 248,
       "norm_label": "waitfor()"
     },
     {
@@ -11349,7 +11349,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L48",
       "id": "client_mount_scoped_test_tick",
-      "community": 27,
+      "community": 248,
       "norm_label": "tick()"
     },
     {
@@ -11358,7 +11358,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L49",
       "id": "client_mount_scoped_test_ticke",
-      "community": 27,
+      "community": 248,
       "norm_label": "ticke"
     },
     {
@@ -11367,7 +11367,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L51",
       "id": "client_mount_scoped_test_rendertostringhydratable",
-      "community": 244,
+      "community": 248,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -11376,7 +11376,7 @@
       "source_file": "packages/dom/src/client/mount-scoped.test.ts",
       "source_location": "L55",
       "id": "client_mount_scoped_test_probe",
-      "community": 27,
+      "community": 248,
       "norm_label": "probe"
     },
     {
@@ -11484,7 +11484,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L242",
       "id": "client_render_serializeattributevalue",
-      "community": 4,
+      "community": 25,
       "norm_label": "serializeattributevalue()"
     },
     {
@@ -11511,7 +11511,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L337",
       "id": "client_render_cameltokebab",
-      "community": 4,
+      "community": 25,
       "norm_label": "cameltokebab()"
     },
     {
@@ -11565,7 +11565,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L613",
       "id": "client_render_rendersuspenseboundary",
-      "community": 103,
+      "community": 243,
       "norm_label": "rendersuspenseboundary()"
     },
     {
@@ -11646,7 +11646,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1187",
       "id": "client_render_createstreammarkers",
-      "community": 103,
+      "community": 243,
       "norm_label": "createstreammarkers()"
     },
     {
@@ -11745,7 +11745,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1497",
       "id": "client_render_renderlist",
-      "community": 103,
+      "community": 4,
       "norm_label": "renderlist()"
     },
     {
@@ -11772,7 +11772,7 @@
       "source_file": "packages/dom/src/client/render.ts",
       "source_location": "L1680",
       "id": "client_render_renderitem",
-      "community": 103,
+      "community": 243,
       "norm_label": "renderitem()"
     },
     {
@@ -12402,7 +12402,7 @@
       "source_file": "packages/dom/src/client/suspense.test.ts",
       "source_location": "L13",
       "id": "client_suspense_test_rendertostringhydratable",
-      "community": 244,
+      "community": 248,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -12636,7 +12636,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L36",
       "id": "src_data_hydrationmismatcherror",
-      "community": 244,
+      "community": 27,
       "norm_label": "hydrationmismatcherror"
     },
     {
@@ -12681,7 +12681,7 @@
       "source_file": "packages/dom/src/data.ts",
       "source_location": "L118",
       "id": "src_data_rendercontext",
-      "community": 27,
+      "community": 4,
       "norm_label": "rendercontext"
     },
     {
@@ -12699,7 +12699,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L1",
       "id": "server_boundary_ssr_test",
-      "community": 242,
+      "community": 267,
       "norm_label": "boundary-ssr.test.ts"
     },
     {
@@ -12708,7 +12708,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L16",
       "id": "server_boundary_ssr_test_rendertostream",
-      "community": 242,
+      "community": 267,
       "norm_label": "rendertostream()"
     },
     {
@@ -12717,7 +12717,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L17",
       "id": "server_boundary_ssr_test_rendertostreamhydratable",
-      "community": 242,
+      "community": 267,
       "norm_label": "rendertostreamhydratable()"
     },
     {
@@ -12726,7 +12726,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L19",
       "id": "server_boundary_ssr_test_rendertostring",
-      "community": 242,
+      "community": 267,
       "norm_label": "rendertostring()"
     },
     {
@@ -12735,7 +12735,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L23",
       "id": "server_boundary_ssr_test_run",
-      "community": 242,
+      "community": 267,
       "norm_label": "run()"
     },
     {
@@ -12744,7 +12744,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L25",
       "id": "server_boundary_ssr_test_runhydratable",
-      "community": 242,
+      "community": 267,
       "norm_label": "runhydratable()"
     },
     {
@@ -12753,7 +12753,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L28",
       "id": "server_boundary_ssr_test_runstring",
-      "community": 242,
+      "community": 267,
       "norm_label": "runstring()"
     },
     {
@@ -12762,7 +12762,7 @@
       "source_file": "packages/dom/src/server/boundary-ssr.test.ts",
       "source_location": "L32",
       "id": "server_boundary_ssr_test_fooerror",
-      "community": 242,
+      "community": 267,
       "norm_label": "fooerror"
     },
     {
@@ -12888,7 +12888,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L136",
       "id": "server_render_to_stream_buildpatch",
-      "community": 103,
+      "community": 243,
       "norm_label": "buildpatch()"
     },
     {
@@ -12897,7 +12897,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L187",
       "id": "server_render_to_stream_rendersuspensessrinline",
-      "community": 103,
+      "community": 243,
       "norm_label": "rendersuspensessrinline()"
     },
     {
@@ -12960,7 +12960,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L489",
       "id": "server_render_to_stream_renderssrnode",
-      "community": 243,
+      "community": 25,
       "norm_label": "renderssrnode()"
     },
     {
@@ -12987,7 +12987,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L632",
       "id": "server_render_to_stream_renderhydratablessrnode",
-      "community": 103,
+      "community": 243,
       "norm_label": "renderhydratablessrnode()"
     },
     {
@@ -12996,7 +12996,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L760",
       "id": "server_render_to_stream_listtohydratablessr",
-      "community": 103,
+      "community": 243,
       "norm_label": "listtohydratablessr()"
     },
     {
@@ -13005,7 +13005,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L786",
       "id": "server_render_to_stream_fragmenttohydratablessr",
-      "community": 103,
+      "community": 243,
       "norm_label": "fragmenttohydratablessr()"
     },
     {
@@ -13023,7 +13023,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L824",
       "id": "server_render_to_stream_rendertostream",
-      "community": 242,
+      "community": 267,
       "norm_label": "rendertostream()"
     },
     {
@@ -13032,7 +13032,7 @@
       "source_file": "packages/dom/src/server/render-to-stream.ts",
       "source_location": "L864",
       "id": "server_render_to_stream_patchstream",
-      "community": 242,
+      "community": 267,
       "norm_label": "patchstream()"
     },
     {
@@ -13104,7 +13104,7 @@
       "source_file": "packages/dom/src/server/render-to-string.ts",
       "source_location": "L30",
       "id": "server_render_to_string_rendertostringhydratable",
-      "community": 244,
+      "community": 248,
       "norm_label": "rendertostringhydratable()"
     },
     {
@@ -13194,7 +13194,7 @@
       "source_file": "packages/dom/src/server/serialize.ts",
       "source_location": "L134",
       "id": "server_serialize_resolvevalue",
-      "community": 25,
+      "community": 243,
       "norm_label": "resolvevalue()"
     },
     {
@@ -13437,7 +13437,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L1",
       "id": "src_shared",
-      "community": 103,
+      "community": 243,
       "norm_label": "shared.ts"
     },
     {
@@ -13446,7 +13446,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L22",
       "id": "src_shared_streamstarttext",
-      "community": 103,
+      "community": 243,
       "norm_label": "streamstarttext()"
     },
     {
@@ -13455,7 +13455,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L30",
       "id": "src_shared_streamendtext",
-      "community": 103,
+      "community": 243,
       "norm_label": "streamendtext()"
     },
     {
@@ -13464,7 +13464,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L37",
       "id": "src_shared_streammarker",
-      "community": 103,
+      "community": 243,
       "norm_label": "streammarker"
     },
     {
@@ -13473,7 +13473,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L55",
       "id": "src_shared_suspensestarttext",
-      "community": 103,
+      "community": 243,
       "norm_label": "suspensestarttext()"
     },
     {
@@ -13482,7 +13482,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L63",
       "id": "src_shared_suspenseendtext",
-      "community": 103,
+      "community": 243,
       "norm_label": "suspenseendtext()"
     },
     {
@@ -13491,7 +13491,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L80",
       "id": "src_shared_suspensemarker",
-      "community": 103,
+      "community": 243,
       "norm_label": "suspensemarker"
     },
     {
@@ -13536,7 +13536,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L162",
       "id": "src_shared_listitemstarttext",
-      "community": 103,
+      "community": 243,
       "norm_label": "listitemstarttext()"
     },
     {
@@ -13545,7 +13545,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L170",
       "id": "src_shared_listitemendtext",
-      "community": 103,
+      "community": 243,
       "norm_label": "listitemendtext()"
     },
     {
@@ -13554,7 +13554,7 @@
       "source_file": "packages/dom/src/shared.ts",
       "source_location": "L177",
       "id": "src_shared_listitemmarker",
-      "community": 103,
+      "community": 243,
       "norm_label": "listitemmarker"
     },
     {
@@ -13572,7 +13572,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L1",
       "id": "src_utilities",
-      "community": 27,
+      "community": 4,
       "norm_label": "utilities.ts"
     },
     {
@@ -13581,7 +13581,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L7",
       "id": "src_utilities_nextstreamid",
-      "community": 103,
+      "community": 4,
       "norm_label": "nextstreamid()"
     },
     {
@@ -14785,7 +14785,7 @@
       "label": "readService()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L55",
+      "source_location": "L58",
       "id": "client_router_live_test_readservice",
       "community": 17,
       "norm_label": "readservice()"
@@ -14794,7 +14794,7 @@
       "label": "greetingFixture()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L118",
+      "source_location": "L121",
       "id": "client_router_live_test_greetingfixture",
       "community": 17,
       "norm_label": "greetingfixture()"
@@ -14803,7 +14803,7 @@
       "label": "readServiceFor()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L153",
+      "source_location": "L156",
       "id": "client_router_live_test_readservicefor",
       "community": 17,
       "norm_label": "readservicefor()"
@@ -14812,7 +14812,7 @@
       "label": "gateLoader()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L160",
+      "source_location": "L163",
       "id": "client_router_live_test_gateloader",
       "community": 17,
       "norm_label": "gateloader()"
@@ -14821,7 +14821,7 @@
       "label": "tick()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L172",
+      "source_location": "L175",
       "id": "client_router_live_test_tick",
       "community": 17,
       "norm_label": "tick()"
@@ -14830,7 +14830,7 @@
       "label": "readNav()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L174",
+      "source_location": "L177",
       "id": "client_router_live_test_readnav",
       "community": 17,
       "norm_label": "readnav()"
@@ -14839,16 +14839,25 @@
       "label": "readMatch()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L176",
+      "source_location": "L179",
       "id": "client_router_live_test_readmatch",
       "community": 17,
       "norm_label": "readmatch()"
     },
     {
+      "label": "spyScrollTo()",
+      "file_type": "code",
+      "source_file": "packages/router/src/client/router-live.test.ts",
+      "source_location": "L274",
+      "id": "client_router_live_test_spyscrollto",
+      "community": 17,
+      "norm_label": "spyscrollto()"
+    },
+    {
       "label": "gateBody()",
       "file_type": "code",
       "source_file": "packages/router/src/client/router-live.test.ts",
-      "source_location": "L272",
+      "source_location": "L340",
       "id": "client_router_live_test_gatebody",
       "community": 17,
       "norm_label": "gatebody()"
@@ -15147,7 +15156,7 @@
       "source_file": "packages/router/src/errors.test.ts",
       "source_location": "L1",
       "id": "src_errors_test",
-      "community": 50,
+      "community": 46,
       "norm_label": "errors.test.ts"
     },
     {
@@ -15156,7 +15165,7 @@
       "source_file": "packages/router/src/errors.ts",
       "source_location": "L1",
       "id": "src_errors",
-      "community": 50,
+      "community": 46,
       "norm_label": "errors.ts"
     },
     {
@@ -15165,7 +15174,7 @@
       "source_file": "packages/router/src/errors.ts",
       "source_location": "L12",
       "id": "src_errors_routernotfound",
-      "community": 50,
+      "community": 46,
       "norm_label": "routernotfound"
     },
     {
@@ -15174,7 +15183,7 @@
       "source_file": "packages/router/src/errors.ts",
       "source_location": "L25",
       "id": "src_errors_notfound",
-      "community": 50,
+      "community": 46,
       "norm_label": "notfound()"
     },
     {
@@ -15183,7 +15192,7 @@
       "source_file": "packages/router/src/errors.ts",
       "source_location": "L29",
       "id": "src_errors_isrouternotfound",
-      "community": 50,
+      "community": 46,
       "norm_label": "isrouternotfound()"
     },
     {
@@ -15309,7 +15318,7 @@
       "source_file": "packages/router/src/lazy-component.test.ts",
       "source_location": "L1",
       "id": "src_lazy_component_test",
-      "community": 145,
+      "community": 9,
       "norm_label": "lazy-component.test.ts"
     },
     {
@@ -15318,7 +15327,7 @@
       "source_file": "packages/router/src/lazy-component.test.ts",
       "source_location": "L21",
       "id": "src_lazy_component_test_norpc",
-      "community": 145,
+      "community": 9,
       "norm_label": "norpc"
     },
     {
@@ -15327,7 +15336,7 @@
       "source_file": "packages/router/src/lazy-component.test.ts",
       "source_location": "L26",
       "id": "src_lazy_component_test_render",
-      "community": 145,
+      "community": 9,
       "norm_label": "render()"
     },
     {
@@ -15336,7 +15345,7 @@
       "source_file": "packages/router/src/matcher.test.ts",
       "source_location": "L1",
       "id": "src_matcher_test",
-      "community": 145,
+      "community": 38,
       "norm_label": "matcher.test.ts"
     },
     {
@@ -15345,7 +15354,7 @@
       "source_file": "packages/router/src/matcher.test.ts",
       "source_location": "L8",
       "id": "src_matcher_test_page",
-      "community": 145,
+      "community": 38,
       "norm_label": "page()"
     },
     {
@@ -15354,7 +15363,7 @@
       "source_file": "packages/router/src/matcher.test.ts",
       "source_location": "L9",
       "id": "src_matcher_test_notfound",
-      "community": 145,
+      "community": 38,
       "norm_label": "notfound()"
     },
     {
@@ -15363,7 +15372,7 @@
       "source_file": "packages/router/src/matcher.test.ts",
       "source_location": "L12",
       "id": "src_matcher_test_passthrough",
-      "community": 145,
+      "community": 38,
       "norm_label": "passthrough"
     },
     {
@@ -15372,7 +15381,7 @@
       "source_file": "packages/router/src/matcher.test.ts",
       "source_location": "L17",
       "id": "src_matcher_test_fixture",
-      "community": 145,
+      "community": 38,
       "norm_label": "fixture()"
     },
     {
@@ -15390,7 +15399,7 @@
       "source_file": "packages/router/src/matcher.ts",
       "source_location": "L5",
       "id": "src_matcher_routematch",
-      "community": 39,
+      "community": 50,
       "norm_label": "routematch"
     },
     {
@@ -15822,7 +15831,7 @@
       "source_file": "packages/router/src/route-tree.ts",
       "source_location": "L253",
       "id": "src_route_tree_getpreload",
-      "community": 145,
+      "community": 9,
       "norm_label": "getpreload()"
     },
     {
@@ -15939,7 +15948,7 @@
       "source_file": "packages/router/src/router-service.ts",
       "source_location": "L218",
       "id": "src_router_service_router",
-      "community": 145,
+      "community": 50,
       "norm_label": "router"
     },
     {
@@ -16101,7 +16110,7 @@
       "source_file": "packages/router/src/server/router-server.test.ts",
       "source_location": "L18",
       "id": "server_router_server_test_gone",
-      "community": 50,
+      "community": 46,
       "norm_label": "gone()"
     },
     {
@@ -17590,6 +17599,24 @@
       "norm_label": "nav-progress.browser.test.ts"
     },
     {
+      "label": "scroll-reset.browser.test.ts",
+      "file_type": "code",
+      "source_file": "website/src/__tests__/scroll-reset.browser.test.ts",
+      "source_location": "L1",
+      "id": "tests_scroll_reset_browser_test",
+      "community": 55,
+      "norm_label": "scroll-reset.browser.test.ts"
+    },
+    {
+      "label": "nextFrame()",
+      "file_type": "code",
+      "source_file": "website/src/__tests__/scroll-reset.browser.test.ts",
+      "source_location": "L51",
+      "id": "tests_scroll_reset_browser_test_nextframe",
+      "community": 55,
+      "norm_label": "nextframe()"
+    },
+    {
       "label": "ssr.ts",
       "file_type": "code",
       "source_file": "website/src/__tests__/ssr.ts",
@@ -18225,7 +18252,7 @@
       "source_file": "website/src/lib/docs-service.ts",
       "source_location": "L40",
       "id": "lib_docs_service_docs",
-      "community": 24,
+      "community": 34,
       "norm_label": "docs"
     },
     {
@@ -18810,7 +18837,7 @@
       "source_file": "website/src/lib/render-hast.test.ts",
       "source_location": "L24",
       "id": "lib_render_hast_test_html",
-      "community": 28,
+      "community": 21,
       "norm_label": "html()"
     },
     {
@@ -18819,7 +18846,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L1",
       "id": "lib_render_hast",
-      "community": 21,
+      "community": 24,
       "norm_label": "render-hast.ts"
     },
     {
@@ -18828,7 +18855,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L22",
       "id": "lib_render_hast_allowed_tags",
-      "community": 21,
+      "community": 24,
       "norm_label": "allowed_tags"
     },
     {
@@ -18837,7 +18864,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L54",
       "id": "lib_render_hast_passthrough_props",
-      "community": 21,
+      "community": 24,
       "norm_label": "passthrough_props"
     },
     {
@@ -18846,7 +18873,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L57",
       "id": "lib_render_hast_elementbuilder",
-      "community": 21,
+      "community": 24,
       "norm_label": "elementbuilder"
     },
     {
@@ -18855,7 +18882,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L64",
       "id": "lib_render_hast_builders",
-      "community": 21,
+      "community": 24,
       "norm_label": "builders"
     },
     {
@@ -18864,7 +18891,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L67",
       "id": "lib_render_hast_todataattr",
-      "community": 21,
+      "community": 24,
       "norm_label": "todataattr()"
     },
     {
@@ -18873,7 +18900,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L75",
       "id": "lib_render_hast_mapprops",
-      "community": 21,
+      "community": 24,
       "norm_label": "mapprops()"
     },
     {
@@ -18882,7 +18909,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L95",
       "id": "lib_render_hast_codechild",
-      "community": 21,
+      "community": 24,
       "norm_label": "codechild()"
     },
     {
@@ -18891,7 +18918,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L103",
       "id": "lib_render_hast_stringprop",
-      "community": 21,
+      "community": 24,
       "norm_label": "stringprop()"
     },
     {
@@ -18900,7 +18927,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L109",
       "id": "lib_render_hast_rendercodeblock",
-      "community": 21,
+      "community": 24,
       "norm_label": "rendercodeblock()"
     },
     {
@@ -18909,7 +18936,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L121",
       "id": "lib_render_hast_renderelement",
-      "community": 21,
+      "community": 24,
       "norm_label": "renderelement()"
     },
     {
@@ -18918,7 +18945,7 @@
       "source_file": "website/src/lib/render-hast.ts",
       "source_location": "L133",
       "id": "lib_render_hast_renderchildren",
-      "community": 21,
+      "community": 24,
       "norm_label": "renderchildren()"
     },
     {
@@ -18936,7 +18963,7 @@
       "source_file": "website/src/routes/doc-page-impl.ts",
       "source_location": "L1",
       "id": "routes_doc_page_impl",
-      "community": 24,
+      "community": 34,
       "norm_label": "doc-page-impl.ts"
     },
     {
@@ -18945,7 +18972,7 @@
       "source_file": "website/src/routes/doc-page-impl.ts",
       "source_location": "L28",
       "id": "routes_doc_page_impl_docsindexpage",
-      "community": 24,
+      "community": 34,
       "norm_label": "docsindexpage"
     },
     {
@@ -18954,7 +18981,7 @@
       "source_file": "website/src/routes/doc-page-impl.ts",
       "source_location": "L40",
       "id": "routes_doc_page_impl_docspage",
-      "community": 24,
+      "community": 34,
       "norm_label": "docspage"
     },
     {
@@ -20623,10 +20650,19 @@
       "norm_label": "programmatic navigation"
     },
     {
-      "label": "Server setup",
+      "label": "Scroll position on navigation",
       "file_type": "document",
       "source_file": "docs/how-to/add-routing.md",
       "source_location": "L234",
+      "id": "how_to_add_routing_scroll_position_on_navigation",
+      "community": 43,
+      "norm_label": "scroll position on navigation"
+    },
+    {
+      "label": "Server setup",
+      "file_type": "document",
+      "source_file": "docs/how-to/add-routing.md",
+      "source_location": "L244",
       "id": "how_to_add_routing_server_setup",
       "community": 43,
       "norm_label": "server setup"
@@ -20635,7 +20671,7 @@
       "label": "`@effect/platform` is the spine",
       "file_type": "document",
       "source_file": "docs/how-to/add-routing.md",
-      "source_location": "L269",
+      "source_location": "L279",
       "id": "how_to_add_routing_effect_platform_is_the_spine",
       "community": 43,
       "norm_label": "`@effect/platform` is the spine"
@@ -20644,7 +20680,7 @@
       "label": "Errors",
       "file_type": "document",
       "source_file": "docs/how-to/add-routing.md",
-      "source_location": "L276",
+      "source_location": "L286",
       "id": "how_to_add_routing_errors",
       "community": 43,
       "norm_label": "errors"
@@ -20653,7 +20689,7 @@
       "label": "`Boundary.rpc` interplay",
       "file_type": "document",
       "source_file": "docs/how-to/add-routing.md",
-      "source_location": "L285",
+      "source_location": "L295",
       "id": "how_to_add_routing_boundary_rpc_interplay",
       "community": 43,
       "norm_label": "`boundary.rpc` interplay"
@@ -20662,7 +20698,7 @@
       "label": "See also",
       "file_type": "document",
       "source_file": "docs/how-to/add-routing.md",
-      "source_location": "L289",
+      "source_location": "L299",
       "id": "how_to_add_routing_see_also",
       "community": 43,
       "norm_label": "see also"
@@ -22063,10 +22099,19 @@
       "norm_label": "programmatic navigation"
     },
     {
-      "label": "`installLinkInterceptor`",
+      "label": "Scroll reset",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
       "source_location": "L261",
+      "id": "reference_router_scroll_reset",
+      "community": 20,
+      "norm_label": "scroll reset"
+    },
+    {
+      "label": "`installLinkInterceptor`",
+      "file_type": "document",
+      "source_file": "docs/reference/router.md",
+      "source_location": "L265",
       "id": "reference_router_installlinkinterceptor",
       "community": 20,
       "norm_label": "`installlinkinterceptor`"
@@ -22075,7 +22120,7 @@
       "label": "Server \u2014 `@weftui/router/server`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L269",
+      "source_location": "L273",
       "id": "reference_router_server_weftui_router_server",
       "community": 20,
       "norm_label": "server \u2014 `@weftui/router/server`"
@@ -22084,7 +22129,7 @@
       "label": "`RouterServer`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L271",
+      "source_location": "L275",
       "id": "reference_router_routerserver",
       "community": 20,
       "norm_label": "`routerserver`"
@@ -22093,7 +22138,7 @@
       "label": "Errors",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L289",
+      "source_location": "L293",
       "id": "reference_router_errors",
       "community": 20,
       "norm_label": "errors"
@@ -22102,7 +22147,7 @@
       "label": "`RouterNotFound`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L291",
+      "source_location": "L295",
       "id": "reference_router_routernotfound",
       "community": 20,
       "norm_label": "`routernotfound`"
@@ -22111,7 +22156,7 @@
       "label": "`RouterParamsError`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L295",
+      "source_location": "L299",
       "id": "reference_router_routerparamserror",
       "community": 20,
       "norm_label": "`routerparamserror`"
@@ -22120,7 +22165,7 @@
       "label": "`notFound`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L299",
+      "source_location": "L303",
       "id": "reference_router_notfound",
       "community": 20,
       "norm_label": "`notfound`"
@@ -22129,7 +22174,7 @@
       "label": "`isRouterNotFound`",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L307",
+      "source_location": "L311",
       "id": "reference_router_isrouternotfound",
       "community": 20,
       "norm_label": "`isrouternotfound`"
@@ -22138,7 +22183,7 @@
       "label": "Compilation & matching (advanced)",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L315",
+      "source_location": "L319",
       "id": "reference_router_compilation_matching_advanced",
       "community": 20,
       "norm_label": "compilation & matching (advanced)"
@@ -22147,7 +22192,7 @@
       "label": "Types",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L327",
+      "source_location": "L331",
       "id": "reference_router_types",
       "community": 20,
       "norm_label": "types"
@@ -22156,7 +22201,7 @@
       "label": "See also",
       "file_type": "document",
       "source_file": "docs/reference/router.md",
-      "source_location": "L343",
+      "source_location": "L347",
       "id": "reference_router_see_also",
       "community": 20,
       "norm_label": "see also"
@@ -27187,7 +27232,7 @@
       "label": "Example",
       "file_type": "document",
       "source_file": "packages/router/README.md",
-      "source_location": "L31",
+      "source_location": "L33",
       "id": "router_readme_example",
       "community": 266,
       "norm_label": "example"
@@ -27196,7 +27241,7 @@
       "label": "Documentation",
       "file_type": "document",
       "source_file": "packages/router/README.md",
-      "source_location": "L48",
+      "source_location": "L50",
       "id": "router_readme_documentation",
       "community": 266,
       "norm_label": "documentation"
@@ -27205,7 +27250,7 @@
       "label": "License",
       "file_type": "document",
       "source_file": "packages/router/README.md",
-      "source_location": "L55",
+      "source_location": "L57",
       "id": "router_readme_license",
       "community": 266,
       "norm_label": "license"
@@ -27956,6 +28001,87 @@
       "id": "src_resolve_before_commit_specs_documentation_updates_part_of_this_feature_s_definition_of_done",
       "community": 99,
       "norm_label": "documentation updates (part of this feature's definition of done)"
+    },
+    {
+      "label": "scroll-reset.specs.md",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L1",
+      "id": "src_scroll_reset_specs",
+      "community": 268,
+      "norm_label": "scroll-reset.specs.md"
+    },
+    {
+      "label": "Scroll reset on navigation \u2014 Specification",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L1",
+      "id": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "community": 268,
+      "norm_label": "scroll reset on navigation \u2014 specification"
+    },
+    {
+      "label": "Overview & Purpose",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L3",
+      "id": "src_scroll_reset_specs_overview_purpose",
+      "community": 268,
+      "norm_label": "overview & purpose"
+    },
+    {
+      "label": "Behavior",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L21",
+      "id": "src_scroll_reset_specs_behavior",
+      "community": 268,
+      "norm_label": "behavior"
+    },
+    {
+      "label": "Scroll reset",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L23",
+      "id": "src_scroll_reset_specs_scroll_reset",
+      "community": 268,
+      "norm_label": "scroll reset"
+    },
+    {
+      "label": "Scope",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L45",
+      "id": "src_scroll_reset_specs_scope",
+      "community": 268,
+      "norm_label": "scope"
+    },
+    {
+      "label": "TDD step records",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L62",
+      "id": "src_scroll_reset_specs_tdd_step_records",
+      "community": 268,
+      "norm_label": "tdd step records"
+    },
+    {
+      "label": "Acceptance criteria (summary)",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L69",
+      "id": "src_scroll_reset_specs_acceptance_criteria_summary",
+      "community": 268,
+      "norm_label": "acceptance criteria (summary)"
+    },
+    {
+      "label": "Test plan (spec \u2192 mock \u2192 type-tests \u2192 unit \u2192 e2e)",
+      "file_type": "document",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L78",
+      "id": "src_scroll_reset_specs_test_plan_spec_mock_type_tests_unit_e2e",
+      "community": 268,
+      "norm_label": "test plan (spec \u2192 mock \u2192 type-tests \u2192 unit \u2192 e2e)"
     },
     {
       "label": "prerender.specs.md",
@@ -29007,7 +29133,7 @@
       "source_file": "packages/dom/src/utilities.ts",
       "source_location": "L20",
       "id": "src_utilities_nextsuspenseid",
-      "community": 103,
+      "community": 243,
       "norm_label": "nextsuspenseid"
     },
     {
@@ -36222,9 +36348,9 @@
       "source_file": "packages/core/package.json",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_package",
-      "target": "core_package_bugs",
-      "confidence_score": 1.0
+      "target": "core_package_bugs"
     },
     {
       "relation": "contains",
@@ -36272,9 +36398,9 @@
       "source_file": "packages/core/package.json",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_package",
-      "target": "core_package_homepage",
-      "confidence_score": 1.0
+      "target": "core_package_homepage"
     },
     {
       "relation": "contains",
@@ -36282,9 +36408,9 @@
       "source_file": "packages/core/package.json",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_package",
-      "target": "core_package_keywords",
-      "confidence_score": 1.0
+      "target": "core_package_keywords"
     },
     {
       "relation": "contains",
@@ -36362,9 +36488,9 @@
       "source_file": "packages/core/package.json",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_package_bugs",
-      "target": "core_package_bugs_url",
-      "confidence_score": 1.0
+      "target": "core_package_bugs_url"
     },
     {
       "relation": "contains",
@@ -36372,9 +36498,9 @@
       "source_file": "packages/core/package.json",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_package_repository",
-      "target": "core_package_repository_directory",
-      "confidence_score": 1.0
+      "target": "core_package_repository_directory"
     },
     {
       "relation": "contains",
@@ -48289,9 +48415,9 @@
       "source_file": "packages/dom/package.json",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_package",
-      "target": "dom_package_bugs",
-      "confidence_score": 1.0
+      "target": "dom_package_bugs"
     },
     {
       "relation": "contains",
@@ -48349,9 +48475,9 @@
       "source_file": "packages/dom/package.json",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_package",
-      "target": "dom_package_homepage",
-      "confidence_score": 1.0
+      "target": "dom_package_homepage"
     },
     {
       "relation": "contains",
@@ -48359,9 +48485,9 @@
       "source_file": "packages/dom/package.json",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_package",
-      "target": "dom_package_keywords",
-      "confidence_score": 1.0
+      "target": "dom_package_keywords"
     },
     {
       "relation": "contains",
@@ -48439,9 +48565,9 @@
       "source_file": "packages/dom/package.json",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_package_bugs",
-      "target": "dom_package_bugs_url",
-      "confidence_score": 1.0
+      "target": "dom_package_bugs_url"
     },
     {
       "relation": "contains",
@@ -48449,9 +48575,9 @@
       "source_file": "packages/dom/package.json",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_package_repository",
-      "target": "dom_package_repository_directory",
-      "confidence_score": 1.0
+      "target": "dom_package_repository_directory"
     },
     {
       "relation": "contains",
@@ -57240,9 +57366,9 @@
       "source_file": "packages/router/package.json",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_package",
-      "target": "router_package_bugs",
-      "confidence_score": 1.0
+      "target": "router_package_bugs"
     },
     {
       "relation": "contains",
@@ -57300,9 +57426,9 @@
       "source_file": "packages/router/package.json",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_package",
-      "target": "router_package_homepage",
-      "confidence_score": 1.0
+      "target": "router_package_homepage"
     },
     {
       "relation": "contains",
@@ -57310,9 +57436,9 @@
       "source_file": "packages/router/package.json",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_package",
-      "target": "router_package_keywords",
-      "confidence_score": 1.0
+      "target": "router_package_keywords"
     },
     {
       "relation": "contains",
@@ -57390,9 +57516,9 @@
       "source_file": "packages/router/package.json",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_package_bugs",
-      "target": "router_package_bugs_url",
-      "confidence_score": 1.0
+      "target": "router_package_bugs_url"
     },
     {
       "relation": "contains",
@@ -57400,9 +57526,9 @@
       "source_file": "packages/router/package.json",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_package_repository",
-      "target": "router_package_repository_directory",
-      "confidence_score": 1.0
+      "target": "router_package_repository_directory"
     },
     {
       "relation": "contains",
@@ -59391,6 +59517,16 @@
       "confidence_score": 1.0,
       "source": "client_router_live_test",
       "target": "client_router_live_test_setupdom"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/client/router-live.test.ts",
+      "source_location": "L274",
+      "weight": 1.0,
+      "source": "client_router_live_test",
+      "target": "client_router_live_test_spyscrollto",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -63588,9 +63724,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L111",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_bundleinto",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_bundleinto"
     },
     {
       "relation": "contains",
@@ -63598,9 +63734,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_docsroot",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_docsroot"
     },
     {
       "relation": "contains",
@@ -63608,9 +63744,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_reporoot",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_reporoot"
     },
     {
       "relation": "contains",
@@ -63618,9 +63754,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_rewritehref",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_rewritehref"
     },
     {
       "relation": "contains",
@@ -63628,9 +63764,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L84",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_rewritelinks",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_rewritelinks"
     },
     {
       "relation": "contains",
@@ -63638,9 +63774,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_target_packages",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_target_packages"
     },
     {
       "relation": "contains",
@@ -63648,9 +63784,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs",
-      "target": "scripts_bundle_package_docs_toposix",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_toposix"
     },
     {
       "relation": "calls",
@@ -63659,9 +63795,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs_rewritehref",
-      "target": "scripts_bundle_package_docs_toposix",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_toposix"
     },
     {
       "relation": "calls",
@@ -63670,9 +63806,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs_rewritelinks",
-      "target": "scripts_bundle_package_docs_toposix",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_toposix"
     },
     {
       "relation": "calls",
@@ -63681,9 +63817,9 @@
       "source_file": "scripts/bundle-package-docs.mjs",
       "source_location": "L129",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_bundle_package_docs_bundleinto",
-      "target": "scripts_bundle_package_docs_rewritelinks",
-      "confidence_score": 1.0
+      "target": "scripts_bundle_package_docs_rewritelinks"
     },
     {
       "relation": "contains",
@@ -64454,9 +64590,9 @@
       "source_file": "website/server.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "lib_docs_plugin",
-      "confidence_score": 1.0
+      "target": "lib_docs_plugin"
     },
     {
       "relation": "imports",
@@ -64465,9 +64601,9 @@
       "source_file": "website/server.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "lib_docs_plugin_loadalldocs",
-      "confidence_score": 1.0
+      "target": "lib_docs_plugin_loadalldocs"
     },
     {
       "relation": "imports_from",
@@ -64476,9 +64612,9 @@
       "source_file": "website/server.ts",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "lib_llms_txt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt"
     },
     {
       "relation": "imports",
@@ -64487,9 +64623,9 @@
       "source_file": "website/server.ts",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "lib_llms_txt_buildllmstxt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_buildllmstxt"
     },
     {
       "relation": "contains",
@@ -64517,9 +64653,9 @@
       "source_file": "website/server.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "website_server_docsroot",
-      "confidence_score": 1.0
+      "target": "website_server_docsroot"
     },
     {
       "relation": "contains",
@@ -64547,9 +64683,9 @@
       "source_file": "website/server.ts",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server",
-      "target": "website_server_renderllmstxt",
-      "confidence_score": 1.0
+      "target": "website_server_renderllmstxt"
     },
     {
       "relation": "contains",
@@ -64598,9 +64734,9 @@
       "source_file": "website/server.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server_renderllmstxt",
-      "target": "lib_docs_plugin_loadalldocs",
-      "confidence_score": 1.0
+      "target": "lib_docs_plugin_loadalldocs"
     },
     {
       "relation": "calls",
@@ -64609,9 +64745,9 @@
       "source_file": "website/server.ts",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "website_server_renderllmstxt",
-      "target": "lib_llms_txt_buildllmstxt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_buildllmstxt"
     },
     {
       "relation": "calls",
@@ -64678,6 +64814,38 @@
       "confidence_score": 1.0,
       "source": "tests_nav_progress_browser_test",
       "target": "lib_docs_live_docslive"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/src/__tests__/scroll-reset.browser.test.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "tests_scroll_reset_browser_test",
+      "target": "lib_docs_live",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "website/src/__tests__/scroll-reset.browser.test.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "tests_scroll_reset_browser_test",
+      "target": "lib_docs_live_docslive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "website/src/__tests__/scroll-reset.browser.test.ts",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "tests_scroll_reset_browser_test",
+      "target": "tests_scroll_reset_browser_test_nextframe",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -66082,9 +66250,9 @@
       "source_file": "website/src/lib/docs-plugin.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_docs_plugin",
-      "target": "lib_llms_txt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt"
     },
     {
       "relation": "imports",
@@ -66093,9 +66261,9 @@
       "source_file": "website/src/lib/docs-plugin.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_docs_plugin",
-      "target": "lib_llms_txt_buildllmstxt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_buildllmstxt"
     },
     {
       "relation": "imports_from",
@@ -66514,9 +66682,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_llms_txt_buildllmstxt",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_buildllmstxt"
     },
     {
       "relation": "contains",
@@ -66524,9 +66692,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_llms_txt_byorder",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_byorder"
     },
     {
       "relation": "contains",
@@ -66534,9 +66702,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_llms_txt_line",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_line"
     },
     {
       "relation": "contains",
@@ -66544,9 +66712,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_llms_txt_section",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_section"
     },
     {
       "relation": "contains",
@@ -66554,9 +66722,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_llms_txt_sections",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_sections"
     },
     {
       "relation": "imports_from",
@@ -66565,9 +66733,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_markdown_loader",
-      "confidence_score": 1.0
+      "target": "lib_markdown_loader"
     },
     {
       "relation": "imports",
@@ -66576,9 +66744,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt",
-      "target": "lib_markdown_loader_docmeta",
-      "confidence_score": 1.0
+      "target": "lib_markdown_loader_docmeta"
     },
     {
       "relation": "calls",
@@ -66587,9 +66755,9 @@
       "source_file": "website/src/lib/llms-txt.ts",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_llms_txt_buildllmstxt",
-      "target": "lib_llms_txt_section",
-      "confidence_score": 1.0
+      "target": "lib_llms_txt_section"
     },
     {
       "relation": "imports_from",
@@ -69624,6 +69792,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/how-to/add-routing.md",
+      "source_location": "L234",
+      "weight": 1.0,
+      "source": "how_to_add_routing_programmatic_navigation",
+      "target": "how_to_add_routing_scroll_position_on_navigation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/how-to/add-routing.md",
       "source_location": "L269",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -71089,6 +71267,16 @@
       "confidence_score": 1.0,
       "source": "reference_router_client_weftui_router_client",
       "target": "reference_router_routerlive"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/reference/router.md",
+      "source_location": "L261",
+      "weight": 1.0,
+      "source": "reference_router_client_weftui_router_client",
+      "target": "reference_router_scroll_reset",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -72966,9 +73154,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme",
-      "target": "core_readme_weftui_core",
-      "confidence_score": 1.0
+      "target": "core_readme_weftui_core"
     },
     {
       "relation": "contains",
@@ -72976,9 +73164,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme_weftui_core",
-      "target": "core_readme_documentation",
-      "confidence_score": 1.0
+      "target": "core_readme_documentation"
     },
     {
       "relation": "contains",
@@ -72986,9 +73174,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme_weftui_core",
-      "target": "core_readme_example",
-      "confidence_score": 1.0
+      "target": "core_readme_example"
     },
     {
       "relation": "contains",
@@ -72996,9 +73184,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme_weftui_core",
-      "target": "core_readme_installation",
-      "confidence_score": 1.0
+      "target": "core_readme_installation"
     },
     {
       "relation": "contains",
@@ -73006,9 +73194,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme_weftui_core",
-      "target": "core_readme_key_exports",
-      "confidence_score": 1.0
+      "target": "core_readme_key_exports"
     },
     {
       "relation": "contains",
@@ -73016,9 +73204,9 @@
       "source_file": "packages/core/README.md",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_readme_weftui_core",
-      "target": "core_readme_license",
-      "confidence_score": 1.0
+      "target": "core_readme_license"
     },
     {
       "relation": "contains",
@@ -73676,9 +73864,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme",
-      "target": "dom_readme_weftui_dom",
-      "confidence_score": 1.0
+      "target": "dom_readme_weftui_dom"
     },
     {
       "relation": "contains",
@@ -73686,9 +73874,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_weftui_dom",
-      "target": "dom_readme_documentation",
-      "confidence_score": 1.0
+      "target": "dom_readme_documentation"
     },
     {
       "relation": "contains",
@@ -73696,9 +73884,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_weftui_dom",
-      "target": "dom_readme_example",
-      "confidence_score": 1.0
+      "target": "dom_readme_example"
     },
     {
       "relation": "contains",
@@ -73706,9 +73894,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_weftui_dom",
-      "target": "dom_readme_installation",
-      "confidence_score": 1.0
+      "target": "dom_readme_installation"
     },
     {
       "relation": "contains",
@@ -73716,9 +73904,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_weftui_dom",
-      "target": "dom_readme_key_exports",
-      "confidence_score": 1.0
+      "target": "dom_readme_key_exports"
     },
     {
       "relation": "contains",
@@ -73726,9 +73914,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_weftui_dom",
-      "target": "dom_readme_license",
-      "confidence_score": 1.0
+      "target": "dom_readme_license"
     },
     {
       "relation": "contains",
@@ -73736,9 +73924,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_key_exports",
-      "target": "dom_readme_weftui_dom_client",
-      "confidence_score": 1.0
+      "target": "dom_readme_weftui_dom_client"
     },
     {
       "relation": "contains",
@@ -73746,9 +73934,9 @@
       "source_file": "packages/dom/README.md",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dom_readme_key_exports",
-      "target": "dom_readme_weftui_dom_server",
-      "confidence_score": 1.0
+      "target": "dom_readme_weftui_dom_server"
     },
     {
       "relation": "contains",
@@ -76276,9 +76464,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme",
-      "target": "router_readme_weftui_router",
-      "confidence_score": 1.0
+      "target": "router_readme_weftui_router"
     },
     {
       "relation": "contains",
@@ -76286,9 +76474,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme_weftui_router",
-      "target": "router_readme_documentation",
-      "confidence_score": 1.0
+      "target": "router_readme_documentation"
     },
     {
       "relation": "contains",
@@ -76296,9 +76484,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme_weftui_router",
-      "target": "router_readme_example",
-      "confidence_score": 1.0
+      "target": "router_readme_example"
     },
     {
       "relation": "contains",
@@ -76306,9 +76494,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme_weftui_router",
-      "target": "router_readme_installation",
-      "confidence_score": 1.0
+      "target": "router_readme_installation"
     },
     {
       "relation": "contains",
@@ -76316,9 +76504,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme_weftui_router",
-      "target": "router_readme_key_exports",
-      "confidence_score": 1.0
+      "target": "router_readme_key_exports"
     },
     {
       "relation": "contains",
@@ -76326,9 +76514,9 @@
       "source_file": "packages/router/README.md",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "router_readme_weftui_router",
-      "target": "router_readme_license",
-      "confidence_score": 1.0
+      "target": "router_readme_license"
     },
     {
       "relation": "contains",
@@ -77109,6 +77297,86 @@
       "confidence_score": 1.0,
       "source": "src_resolve_before_commit_specs_behavior",
       "target": "src_resolve_before_commit_specs_server_hydrate"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs",
+      "target": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_acceptance_criteria_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_behavior",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_overview_purpose",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_scope",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_tdd_step_records",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_scroll_reset_on_navigation_specification",
+      "target": "src_scroll_reset_specs_test_plan_spec_mock_type_tests_unit_e2e",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/router/src/scroll-reset.specs.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "src_scroll_reset_specs_behavior",
+      "target": "src_scroll_reset_specs_scroll_reset",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -78602,5 +78870,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5ed341acef2d6aadf3755c8dc7b5a83f1daf786d"
+  "built_at_commit": "7f4e7bb023d943b74b592051417310f72b5648e8"
 }
