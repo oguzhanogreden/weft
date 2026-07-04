@@ -600,8 +600,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1783167746.2946951,
-    "ast_hash": "bca990f392d7c3e76b12c89d09702915",
+    "mtime": 1783189132.8750226,
+    "ast_hash": "5a4aa48944fe66d56cb39c7e9ea4e816",
     "semantic_hash": ""
   },
   "packages/core/package.json": {
@@ -810,8 +810,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/boundary.test.ts": {
-    "mtime": 1783168820.4164705,
-    "ast_hash": "3bea48d48c136e4886234671e3f46f08",
+    "mtime": 1783189128.5550237,
+    "ast_hash": "5f9098692c1948f34844fad9d1397fe1",
     "semantic_hash": ""
   },
   "packages/dom/src/client/dom.events.test.ts": {
@@ -825,8 +825,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-failure.test.ts": {
-    "mtime": 1783168833.0406098,
-    "ast_hash": "106245cf9eec7d2455fe7ce51b70e8de",
+    "mtime": 1783189128.5556126,
+    "ast_hash": "71b3f4879801b0f3502882fc2018a66b",
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-ready.test.ts": {
@@ -840,13 +840,13 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/index.ts": {
-    "mtime": 1779651086.2234907,
-    "ast_hash": "bc6da7e8bdf65bd1861985e04a558454",
+    "mtime": 1783189132.876835,
+    "ast_hash": "eff56272098d0b0951a576563dba3186",
     "semantic_hash": ""
   },
   "packages/dom/src/client/list.hydrate.test.ts": {
-    "mtime": 1783168838.163285,
-    "ast_hash": "801224efca69f1201db1fe84ca348351",
+    "mtime": 1783189128.556351,
+    "ast_hash": "d167205dc31bf9cf9b9ea2fafe044976",
     "semantic_hash": ""
   },
   "packages/dom/src/client/list.test.ts": {
@@ -855,8 +855,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/render.ts": {
-    "mtime": 1783168756.9120152,
-    "ast_hash": "57c560c3c4ec57c9c024fe85f1fb82b6",
+    "mtime": 1783189132.8780134,
+    "ast_hash": "6d7416a117d69f2543dbd748ccf1b45f",
     "semantic_hash": ""
   },
   "packages/dom/src/client/server-boundary-hydrate.test.ts": {
@@ -960,8 +960,8 @@
     "semantic_hash": ""
   },
   "packages/dom/vite.config.ts": {
-    "mtime": 1780918894.3461943,
-    "ast_hash": "dc6b21b1324c555cc66e679a912ae62f",
+    "mtime": 1783189132.8783216,
+    "ast_hash": "d0bc53f94b9e3583d834141416cf8120",
     "semantic_hash": ""
   },
   "packages/router/package.json": {
@@ -1390,8 +1390,8 @@
     "semantic_hash": ""
   },
   "docs/explanation/boundaries-and-suspense.md": {
-    "mtime": 1783014948.6002932,
-    "ast_hash": "1c633f3d4473ad318d01b6ef20272075",
+    "mtime": 1783189128.5439305,
+    "ast_hash": "89c791b40da17ac7c6669f451c7ed2be",
     "semantic_hash": ""
   },
   "docs/explanation/combinator-api.md": {
@@ -1410,8 +1410,8 @@
     "semantic_hash": ""
   },
   "docs/explanation/services-and-context.md": {
-    "mtime": 1783014948.600622,
-    "ast_hash": "0172e9cab8d6a148f2b0810ac05ffde4",
+    "mtime": 1783189132.8651898,
+    "ast_hash": "1cc804355e16ad22a210f7e2a2ca1c57",
     "semantic_hash": ""
   },
   "docs/how-to/add-routing.md": {
@@ -1480,8 +1480,8 @@
     "semantic_hash": ""
   },
   "docs/reference/dom.md": {
-    "mtime": 1783014948.602153,
-    "ast_hash": "db097d7a16fd91ef2280e8a5a8c620d8",
+    "mtime": 1783189132.8656886,
+    "ast_hash": "7c8db7ee001ba686507b9030beb4d5d9",
     "semantic_hash": ""
   },
   "docs/reference/router.md": {
@@ -1680,8 +1680,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/boundary.specs.md": {
-    "mtime": 1783168120.220988,
-    "ast_hash": "e760cbe467673e7841eafa99e16129e3",
+    "mtime": 1783189128.5547316,
+    "ast_hash": "d5e0a72421d8779317d45a512770add9",
     "semantic_hash": ""
   },
   "packages/dom/src/client/diffing-model.checklist.md": {
@@ -1700,8 +1700,8 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/dom.specs.md": {
-    "mtime": 1780338022.5390873,
-    "ast_hash": "ebedf1ece58aaa606c1b2ad88d479a85",
+    "mtime": 1783189132.8765962,
+    "ast_hash": "0853edc12c540279c51686a2fe3f8082",
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate-ready.specs.md": {
@@ -1710,7 +1710,7 @@
     "semantic_hash": ""
   },
   "packages/dom/src/client/hydrate.specs.md": {
-    "mtime": 1783167964.5334918,
+    "mtime": 1783189128.555898,
     "ast_hash": "b5ac36468257f87059dc40cdfb05ddfe",
     "semantic_hash": ""
   },
@@ -1972,6 +1972,81 @@
   ".claude/skills/unit-test/SKILL.md": {
     "mtime": 1783167746.2932026,
     "ast_hash": "7b3bbf7544ba8c84478e472f97c9022c",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/app.browser.test.ts": {
+    "mtime": 1783189132.8658555,
+    "ast_hash": "efc6ccc7f306e3fa2dfd38f9c6f814d4",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/app.ts": {
+    "mtime": 1783189132.8660665,
+    "ast_hash": "9c25203ecb0c10002bdfeaab5d53c58f",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/main.ts": {
+    "mtime": 1783189132.8664653,
+    "ast_hash": "dc3b4d9d04003b96d59233903589e93d",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/package.json": {
+    "mtime": 1783189132.86661,
+    "ast_hash": "b27d1fa29c0ae4ebced8f5bf37af8975",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/tsconfig.json": {
+    "mtime": 1783189132.8668227,
+    "ast_hash": "153034a58320aa67822e5815bf6b6e8a",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/vite.config.ts": {
+    "mtime": 1783189132.86687,
+    "ast_hash": "54670c56643febd26ad59161ca9cad9d",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/__tests__/log-capture.ts": {
+    "mtime": 1783189128.5544708,
+    "ast_hash": "435383821d89bd76bd45f4876895434f",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/__type-tests__/mount-scoped.test-d.ts": {
+    "mtime": 1783189132.8762686,
+    "ast_hash": "ecebca230283873fa6713e6298294588",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/mount-scoped.browser.test.ts": {
+    "mtime": 1783189132.877063,
+    "ast_hash": "3510d47518a93f6e68ecede35b7c23c1",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/mount-scoped.test.ts": {
+    "mtime": 1783189132.8775527,
+    "ast_hash": "49228c037b7e230445161a1c8dbeeed0",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/mount-scoped.ts": {
+    "mtime": 1783189132.8777268,
+    "ast_hash": "3ade00cb88a40dcd3904f86e9f086c8e",
+    "semantic_hash": ""
+  },
+  "docs/how-to/provide-services.md": {
+    "mtime": 1783189132.8654425,
+    "ast_hash": "260fdd33eebfc29abdc9589fd0fdf8bf",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/index.html": {
+    "mtime": 1783189132.866253,
+    "ast_hash": "38965ffa58704fb19b93a875a645ad55",
+    "semantic_hash": ""
+  },
+  "examples/effect-atom/readme.md": {
+    "mtime": 1783189132.8667693,
+    "ast_hash": "4798c5b4c8af151984cb5c5c8b5811cc",
+    "semantic_hash": ""
+  },
+  "packages/dom/src/client/mount-scoped.specs.md": {
+    "mtime": 1783189132.8773253,
+    "ast_hash": "07e79f1567b44955bfd0e2c8377a5e1c",
     "semantic_hash": ""
   }
 }
