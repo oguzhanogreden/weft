@@ -26,6 +26,9 @@ import { parse as parseYaml } from "yaml";
 /** The Shiki theme for every highlighted code block — configured in exactly one place. */
 export const SHIKI_THEME = "github-dark";
 
+/** GitHub base for doc links that escape the docs tree (e.g. `examples/`, `packages/`). */
+export const GITHUB_REPO_BASE = "https://github.com/stefvw93/weft";
+
 /** A serialized hast property value (JSON-safe subset). */
 export type HastPropertyValue = string | number | boolean | (string | number)[];
 
@@ -190,16 +193,32 @@ async function highlight(raw: string, lang: string): Promise<AnyNode> {
   };
 }
 
-/** Rewrites a relative inter-doc `.md` link to its site route; leaves other hrefs untouched. */
+/**
+ * Rewrites a relative doc link:
+ * - inside the docs tree, `.md` → its site route (`/docs/<section>/<slug>`);
+ * - escaping the docs tree (e.g. `examples/`, `packages/`) → an absolute GitHub URL on
+ *   `main`, so it resolves on the deployed site instead of 404-ing (relative resolution
+ *   only works on GitHub);
+ * - anything else (protocol, `#anchor`, root-absolute, in-docs non-`.md`) is untouched.
+ */
 function rewriteHref(href: string, fileDir: string, docsRoot: string): string {
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("#") || href.startsWith("/"))
     return href;
   const hashAt = href.indexOf("#");
   const pathPart = hashAt === -1 ? href : href.slice(0, hashAt);
   const hash = hashAt === -1 ? "" : href.slice(hashAt);
-  if (!pathPart.endsWith(".md")) return href;
   const targetAbs = resolvePosix(fileDir, pathPart);
   const relToDocs = relative(docsRoot, targetAbs);
+
+  // Escapes the docs tree → absolute GitHub link (tree for dirs, blob for files).
+  if (relToDocs.startsWith("..")) {
+    const relToRepo = relative(dirname(docsRoot), targetAbs);
+    const kind = extname(pathPart) === "" ? "tree" : "blob";
+    return `${GITHUB_REPO_BASE}/${kind}/main/${relToRepo}${hash}`;
+  }
+
+  // Inside docs: only `.md` maps to a site route; other relatives are left alone.
+  if (!pathPart.endsWith(".md")) return href;
   const section = dirname(relToDocs);
   const slug = basename(relToDocs, ".md");
   return `/docs/${section}/${slug}${hash}`;
