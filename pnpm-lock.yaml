@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@effect/platform':
-      specifier: ^0.96.1
-      version: 0.96.1
+      specifier: ^0.96.2
+      version: 0.96.2
     '@effect/rpc':
       specifier: ^0.75.1
       version: 0.75.1
@@ -124,7 +124,7 @@ importers:
     dependencies:
       '@effect-atom/atom':
         specifier: ^0.5.3
-        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.1(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -281,10 +281,10 @@ importers:
     dependencies:
       '@effect/platform':
         specifier: 'catalog:'
-        version: 0.96.1(effect@3.21.4)
+        version: 0.96.2(effect@3.21.4)
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -315,7 +315,7 @@ importers:
     dependencies:
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -434,7 +434,7 @@ importers:
     devDependencies:
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -465,7 +465,7 @@ importers:
     devDependencies:
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/jsdom':
         specifier: ^28.0.3
         version: 28.0.3
@@ -495,10 +495,10 @@ importers:
     dependencies:
       '@effect/platform':
         specifier: 'catalog:'
-        version: 0.96.1(effect@3.21.4)
+        version: 0.96.2(effect@3.21.4)
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../core
@@ -557,7 +557,7 @@ importers:
     dependencies:
       '@effect/rpc':
         specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -759,10 +759,10 @@ packages:
     resolution: {integrity: sha512-SaPln+8srOqDJDUwNTDmP5e+IYpEDr9+1epGznnsLqu8xvo6VnxyWARdeLpqvZJlb0Pgy9ca7ppqvvdWbHPXAg==}
     hasBin: true
 
-  '@effect/platform@0.96.1':
-    resolution: {integrity: sha512-cjB1QZZYEP8JXCFNGvBLVi0T6YUBQTmOVEUA3SDbiQ6RUO+p6CE3eyD2vMWmrz5nE8yY5QSAuOV9v0boEcUv+A==}
+  '@effect/platform@0.96.2':
+    resolution: {integrity: sha512-oJm3UztdzZvK7BXkFSV3IdyGuqQrhLmViG/hMDZh99ski7aADesNuv19z4R0heH3bAXnSt/Nb8O9KJQ886C0Tg==}
     peerDependencies:
-      effect: ^3.21.2
+      effect: ^3.21.4
 
   '@effect/rpc@0.75.1':
     resolution: {integrity: sha512-8yxF8+mMGGEbF8BUCp34HjdJj7CvTpGeZxBcpsDF6v7zPiGbJL1UDLzA8ZqYjmcngBHhPecbmeONTk/LiLAaEg==}
@@ -3620,31 +3620,31 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.0': {}
 
-  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.1(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
-      '@effect/experimental': 0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
-      '@effect/platform': 0.96.1(effect@3.21.4)
-      '@effect/rpc': 0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)
+      '@effect/experimental': 0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      '@effect/platform': 0.96.2(effect@3.21.4)
+      '@effect/rpc': 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       effect: 3.21.4
 
-  '@effect/experimental@0.58.0(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)':
+  '@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
     dependencies:
-      '@effect/platform': 0.96.1(effect@3.21.4)
+      '@effect/platform': 0.96.2(effect@3.21.4)
       effect: 3.21.4
       uuid: 11.1.1
 
   '@effect/language-service@0.86.2': {}
 
-  '@effect/platform@0.96.1(effect@3.21.4)':
+  '@effect/platform@0.96.2(effect@3.21.4)':
     dependencies:
       effect: 3.21.4
       find-my-way-ts: 0.1.6
       msgpackr: 1.11.12
       multipasta: 0.2.7
 
-  '@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.4))(effect@3.21.4)':
+  '@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
     dependencies:
-      '@effect/platform': 0.96.1(effect@3.21.4)
+      '@effect/platform': 0.96.2(effect@3.21.4)
       effect: 3.21.4
       msgpackr: 1.11.12
 
