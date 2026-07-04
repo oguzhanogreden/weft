@@ -36,11 +36,6 @@ function pathnameOf(url: string): string {
 /**
  * The static top bar: wordmark, version, GitHub link, and an inert search placeholder.
  *
- * The `<header>` is full-bleed (background + bottom border) and sticky; its inner
- * row is capped at the body's `max-w-[84rem]` and shares the body's `px-5`, so the
- * brand lines up with the content column's left edge. The row is exactly `3.25rem`
- * tall — the value the sidebar/TOC sticky offset (`top-[4.75rem]`) is computed from.
- *
  * When passed the optional `nav` control, the row leads with a hamburger button that
  * toggles the mobile sidebar drawer; it is hidden at `md`+ where the sidebar is inline.
  */
@@ -51,7 +46,7 @@ export function TopBar(nav?: { open: Stream.Stream<boolean>; onToggle: () => voi
       style: { height: "var(--top-bar-height)" },
     },
     [
-      h.div({ class: "mx-auto flex h-[3.25rem] w-full max-w-[84rem] items-center gap-4 px-5" }, [
+      h.div({ class: "mx-auto flex h-13 w-full max-w-336 items-center gap-4 px-5" }, [
         nav
           ? h.button(
               {
@@ -65,9 +60,15 @@ export function TopBar(nav?: { open: Stream.Stream<boolean>; onToggle: () => voi
               "≡",
             )
           : null,
-        h.a({ href: withBase("/"), class: "text-lg font-bold text-slate-12 no-underline" }, "Weft"),
-        h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
+        h.a(
+          {
+            href: withBase("/"),
+            class: "flex items-center gap-2 text-lg font-bold text-slate-12 no-underline",
+          },
+          [h.img({ src: withBase("/logo.svg"), alt: "", class: "h-4 w-auto" }), "Weft"],
+        ),
         h.div({ class: "flex-1" }),
+        h.span({ class: "text-xs tabular-nums text-slate-11" }, VERSION),
         // h.input({
         //   type: "search",
         //   class: "input input-bordered input-sm w-56 max-w-[40vw]",

@@ -299,8 +299,10 @@ export function lazyComponent<S extends ComponentSlot>(
   // **synchronously** once its chunk is in memory, so the deferred-commit swap is atomic:
   // the DOM renderer's sync probe (`Effect.runSyncExit`) succeeds and the new content
   // renders inline in the same tick the old is removed — no blank (`pending-navigation.specs.md`
-  // AC-N2). Crucially, only the branded `preload()` populates `resolved`; the async render
-  // body does **not**. Client navigation always `preload()`s the matched branch before it
+  // AC-N2). It also gives the leaf **pre-run** (`resolve-before-commit.specs.md` —
+  // `navigate` runs the leaf's component effect to completion before committing) its
+  // synchronous entry into the resolved component. Crucially, only the branded
+  // `preload()` populates `resolved`; the async render body does **not**. Client navigation always `preload()`s the matched branch before it
   // commits (so the post-commit render is the sync path), whereas SSR and **hydration**
   // render through the async body — where `resolved` stays undefined — preserving the
   // flash-free adopt-in-place hydration property (AC-H1). Populating `resolved` from the

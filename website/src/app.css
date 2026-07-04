@@ -97,6 +97,22 @@
   --top-bar-height: 3.5rem;
 }
 
+/* Indeterminate slide for the navigation progress bar (src/nav-progress.specs.md).
+ * Registered in @theme so `animate-nav-progress` exists as a utility; all other
+ * bar styling is inline Tailwind classes in app.ts. */
+@theme {
+  --animate-nav-progress: nav-progress-slide 1.2s ease-in-out infinite;
+
+  @keyframes nav-progress-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(350%);
+    }
+  }
+}
+
 .prose {
   & h1,
   h2,

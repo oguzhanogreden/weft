@@ -1,12 +1,13 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Component, h } from "@weftui/core";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Context, Effect, Exit, Fiber, Layer, Option, Schema } from "effect";
+import { Context, Effect, Exit, Fiber, Layer, Option, Schema, Scope, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test } from "vite-plus/test";
-import { Router } from "~/index";
+import { notFound, Router } from "~/index";
 import { RouterLive, type RouterLiveOptions } from "~/client/router-live";
 import type { RouterDef } from "~/compile";
+import { takeResolvedCommit } from "~/resolved-commit";
 import type { ComponentSlot } from "~/route-tree";
 
 /** Minimal rpc group: the fixture has no `Boundary.rpc`, but `rpc` is required. */
@@ -287,5 +288,198 @@ describe("RouterLive — base path (base.specs.md)", () => {
     setupDom("http://localhost/other");
     const service = await readService({ base: "/weft" });
     assert.equal((await readMatch(service))._tag, "NotFound");
+  });
+});
+
+// ── Resolve-before-commit (component-effect deferred commit) ────────────────────
+// Spec: `resolve-before-commit.specs.md`.
+
+/** An eager component whose body blocks on a gate, counting its executions. */
+function gateBody(label: string): {
+  readonly component: ComponentSlot;
+  readonly release: () => void;
+  readonly runs: () => number;
+  readonly interrupted: () => boolean;
+} {
+  let release!: () => void;
+  const gate = new Promise<void>((r) => {
+    release = r;
+  });
+  let runs = 0;
+  let interrupted = false;
+  const component = Component.gen(function* () {
+    runs++;
+    yield* Effect.promise(() => gate).pipe(
+      Effect.onInterrupt(() => Effect.sync(() => (interrupted = true))),
+    );
+    return yield* h.div({}, label);
+  }) as unknown as ComponentSlot;
+  return {
+    component,
+    release: () => release(),
+    runs: () => runs,
+    interrupted: () => interrupted,
+  };
+}
+
+describe("RouterLive — resolve-before-commit (leaf effect pre-run)", () => {
+  test("AC-R1/AC-R5: an async-body nav holds match + url until the body resolves; navigating Idle→Navigating→Idle", async () => {
+    setupDom();
+    const g = gateBody("data");
+    const def = Router.router(
+      Router.layout({ component: passthrough }, [Router.route("data", { component: g.component })]),
+      { notFound: () => h.h1({}, "404") },
+    );
+    const service = await readServiceFor(def);
+
+    const fiber = Effect.runFork(service.navigate("/data"));
+    await tick();
+    // Mid-flight: the body is running, but url + match have NOT moved.
+    assert.equal(g.runs(), 1);
+    assert.deepEqual(await readNav(service), { _tag: "Navigating", to: "/data" });
+    assert.equal((await readMatch(service))._tag, "NotFound");
+    assert.equal(dom.window.location.pathname, "/");
+
+    g.release();
+    await Effect.runPromise(Fiber.join(fiber));
+    assert.equal(dom.window.location.pathname, "/data");
+    assert.equal((await readMatch(service))._tag, "Matched");
+    assert.equal((await readNav(service))._tag, "Idle");
+  });
+
+  test("AC-R2: the body runs exactly once per navigation and its exit is stashed for the outlet", async () => {
+    setupDom();
+    const g = gateBody("data");
+    const def = Router.router(
+      Router.layout({ component: passthrough }, [Router.route("data", { component: g.component })]),
+      { notFound: () => h.h1({}, "404") },
+    );
+    const service = await readServiceFor(def);
+    const fiber = Effect.runFork(service.navigate("/data"));
+    await tick();
+    g.release();
+    await Effect.runPromise(Fiber.join(fiber));
+
+    assert.equal(g.runs(), 1);
+    // The pre-run's outcome awaits the outlet under the committed url.
+    const entry = takeResolvedCommit(service, "/data");
+    assert.notEqual(entry, undefined);
+    assert.equal(entry?.url, "/data");
+    assert.equal(entry !== undefined && Exit.isSuccess(entry.exit), true);
+  });
+
+  test("AC-R3: a sync-body nav commits without ever emitting Navigating", async () => {
+    setupDom();
+    const service = await readServiceFor(fixture());
+    const emissions: string[] = [];
+    const collector = Effect.runFork(
+      Stream.runForEach(service.navigating.changes, (s) =>
+        Effect.sync(() => {
+          emissions.push(s._tag);
+        }),
+      ),
+    );
+    await tick();
+    await Effect.runPromise(service.navigate("/about"));
+    await tick();
+    await Effect.runPromise(Fiber.interrupt(collector));
+
+    assert.equal(dom.window.location.pathname, "/about");
+    assert.equal((await readMatch(service))._tag, "Matched");
+    assert.equal(emissions.includes("Navigating"), false);
+  });
+
+  test("AC-R6: a superseded pre-run is interrupted and never commits; the newest wins", async () => {
+    setupDom();
+    const a = gateBody("a");
+    const b = gateBody("b");
+    const def = Router.router(
+      Router.layout({ component: passthrough }, [
+        Router.route("a", { component: a.component }),
+        Router.route("b", { component: b.component }),
+      ]),
+      { notFound: () => h.h1({}, "404") },
+    );
+    const service = await readServiceFor(def);
+
+    const fiberA = Effect.runFork(service.navigate("/a"));
+    await tick();
+    const fiberB = Effect.runFork(service.navigate("/b"));
+    await tick();
+
+    // Superseding interrupts the in-flight pre-run (AC-R6) — no need to release a.
+    assert.equal(a.interrupted(), true);
+    assert.deepEqual(await readNav(service), { _tag: "Navigating", to: "/b" });
+    assert.equal(dom.window.location.pathname, "/");
+
+    b.release();
+    await Effect.runPromise(Fiber.join(fiberB));
+    await Effect.runPromise(Effect.exit(Fiber.await(fiberA)));
+    assert.equal(dom.window.location.pathname, "/b");
+    assert.equal((await readNav(service))._tag, "Idle");
+  });
+
+  test("AC-R7: a failing body still commits the url; the failure exit is stashed, navigating resets", async () => {
+    setupDom();
+    const def = Router.router(
+      Router.layout({ component: passthrough }, [
+        Router.route("gone", {
+          component: Component.gen(function* () {
+            yield* Effect.promise(() => Promise.resolve());
+            return yield* notFound();
+          }),
+        }),
+      ]),
+      { notFound: () => h.h1({}, "404") },
+    );
+    const service = await readServiceFor(def);
+    // The navigate fiber itself does not fail from a component pre-run.
+    await Effect.runPromise(service.navigate("/gone"));
+
+    assert.equal(dom.window.location.pathname, "/gone");
+    assert.equal((await readMatch(service))._tag, "Matched");
+    assert.equal((await readNav(service))._tag, "Idle");
+    const entry = takeResolvedCommit(service, "/gone");
+    assert.equal(entry !== undefined && Exit.isFailure(entry.exit), true);
+  });
+
+  test("AC-R8: popstate pre-runs the target leaf before the ref moves (url already moved by the browser)", async () => {
+    setupDom();
+    const g = gateBody("data");
+    const def = Router.router(
+      Router.layout({ component: passthrough }, [
+        Router.route("about", { component: Page("about") }),
+        Router.route("data", { component: g.component }),
+      ]),
+      { notFound: () => h.h1({}, "404") },
+    );
+    // Keep the layer scope open for the test's duration: the popstate listener
+    // is released with the scope, so `readServiceFor` (which closes it) won't do.
+    const scope = await Effect.runPromise(Scope.make());
+    const ctx = await Effect.runPromise(
+      Layer.buildWithScope(RouterLive(def, { rpc: { group: NoopRpcs } }), scope),
+    );
+    const service = Context.get(ctx, Router);
+    try {
+      // Simulate the browser's back/forward: the url moves first, then popstate fires.
+      dom.window.history.pushState(null, "", "/data");
+      dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"));
+      await tick();
+
+      // Mid-flight: the browser already moved the url, but the match lags until resolve.
+      assert.equal(dom.window.location.pathname, "/data");
+      assert.equal((await readMatch(service))._tag, "NotFound");
+      assert.deepEqual(await readNav(service), { _tag: "Navigating", to: "/data" });
+
+      g.release();
+      // The popstate handler runs in a background fiber; poll until it commits.
+      for (let i = 0; i < 20 && (await readMatch(service))._tag !== "Matched"; i++) {
+        await tick();
+      }
+      assert.equal((await readMatch(service))._tag, "Matched");
+      assert.equal((await readNav(service))._tag, "Idle");
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
+    }
   });
 });

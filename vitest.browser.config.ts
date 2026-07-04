@@ -1,5 +1,7 @@
+import { fileURLToPath } from "node:url";
 import { playwright } from "vite-plus/test/browser-playwright";
 import type { ViteUserConfig } from "vite-plus/test/config";
+import { weftDocs } from "./website/src/lib/docs-plugin";
 
 /**
  * Vitest browser-mode configuration for end-to-end / real-browser tests.
@@ -17,6 +19,14 @@ import type { ViteUserConfig } from "vite-plus/test/config";
  * Vite+ accepts a default-exported config object directly.
  */
 const config: ViteUserConfig = {
+  // The website's browser tests import the real `App` → `virtual:weft-docs`;
+  // this flat config does not inherit per-package plugins, so the docs loader
+  // plugin is registered here too (inert for tests that never import the module).
+  plugins: [weftDocs({ docsRoot: fileURLToPath(new URL("./docs", import.meta.url)) })],
+  // The website shell renders the release tag via this build-time define.
+  define: {
+    __WEFT_VERSION__: JSON.stringify("browser-test"),
+  },
   test: {
     include: ["**/*.browser.test.{ts,tsx}"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],

@@ -22,7 +22,7 @@ import { Docs, type DocsService } from "../lib/docs-service";
 /** Default landing meta for non-doc routes. */
 const DEFAULT_META = {
   title: "Weft — Reactive UI, woven from Effect",
-  description: "An Effect-native reactive DOM library: flash-free SSR, no virtual DOM, no JSX.",
+  description: "An Effect-native reactive DOM library.",
 } as const;
 
 /** Strips the query string from a normalized request URL. */
@@ -50,13 +50,14 @@ export const documentShell = (clientEntry: string, styles: readonly string[] = [
     const match = yield* router.currentMatch.get;
     const meta = metaFor(pathnameOf(match.url), docs.get);
     const outlet = yield* Router.Outlet;
-    console.log(process.env.NODE_ENV);
+
     // `class="dark"` resolves the Radix dark-scale vars (scoped to `.dark, .dark-theme`)
     // and `data-theme="weft-dark"` selects the DaisyUI theme. See design-system.specs.md.
     return yield* h.html({ lang: "en", class: "dark", "data-theme": "weft-dark" }, [
       h.head([
         h.meta({ charset: "utf-8" }),
         h.meta({ name: "viewport", content: "width=device-width, initial-scale=1" }),
+        h.link({ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }),
         h.title(meta.title),
         ...(meta.description === undefined
           ? []

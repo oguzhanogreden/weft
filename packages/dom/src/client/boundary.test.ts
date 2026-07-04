@@ -1,9 +1,10 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Deferred, Effect, Logger, LogLevel, Option, Stream } from "effect";
-import { Boundary, h } from "@weftui/core";
+import { Cause, Data, Deferred, Effect, Option, pipe, Stream } from "effect";
+import { Boundary, h, List } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
+import { makeErrorLogCapture } from "../__tests__/log-capture";
 import { mount } from "./render";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -45,22 +46,15 @@ function getBoundaryComments(el: Element): Comment[] {
 
 /**
  * Runs `mount` with a replacement logger that records every `Error`-level log
- * entry's `Cause`, so tests can assert that an unhandled boundary failure was
- * surfaced (rather than silently swallowed). Returns the mount handle and the
- * captured causes (populated asynchronously as post-mount failures occur).
+ * entry — its `Cause`, message, and log annotations — so tests can assert that
+ * an unhandled failure was surfaced (rather than silently swallowed) and
+ * attributed via the `weft.region` annotation. Returns the mount handle and the
+ * captured entries (populated asynchronously as post-mount failures occur).
  */
 async function runMountCapturingErrors(app: Renderable, root: HTMLElement) {
-  const causes: Cause.Cause<unknown>[] = [];
-  const capturing = Logger.replace(
-    Logger.defaultLogger,
-    Logger.make(({ logLevel, cause }) => {
-      if (logLevel === LogLevel.Error && Cause.isCause(cause) && !Cause.isEmpty(cause)) {
-        causes.push(cause);
-      }
-    }),
-  );
-  const handle = await Effect.runPromise(mount(app, root).pipe(Effect.provide(capturing)));
-  return { handle, causes };
+  const { entries, logger } = makeErrorLogCapture();
+  const handle = await Effect.runPromise(pipe(mount(app, root), Effect.provide(logger)));
+  return { handle, entries };
 }
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -185,16 +179,16 @@ describe("AC15: unhandled post-mount error is surfaced, not swallowed", () => {
       Stream.die(new Error("async-defect")),
     );
 
-    const { handle, causes } = await runMountCapturingErrors(
+    const { handle, entries } = await runMountCapturingErrors(
       Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [dyingStream]),
       root,
     );
 
     await waitFor(80);
 
-    assert.equal(causes.length, 1, "Exactly one unhandled boundary failure should be surfaced");
+    assert.equal(entries.length, 1, "Exactly one unhandled boundary failure should be surfaced");
     assert.ok(
-      Cause.pretty(causes[0]!).includes("async-defect"),
+      Cause.pretty(entries[0]!.cause).includes("async-defect"),
       "Logged cause should be the escaped defect",
     );
     assert.equal(
@@ -556,6 +550,146 @@ describe("nested: inner re-raises, outer catches", () => {
 
     assert.ok(root.querySelector(".outer-fb"), "Outer should catch re-raised FooError");
     assert.equal(root.querySelector(".inner-fb"), null, "Inner fallback should not render");
+
+    await Effect.runPromise(handle.unmount());
+  });
+});
+
+// ── AC8: no boundary — failure exit left unobserved, runtime reports it ───────
+// With no enclosing Boundary the subscription fiber's failure exit is left
+// unobserved; the Effect runtime logs "Fiber terminated with an unhandled
+// error" at LogLevel.Error (raised from the default Debug), annotated with
+// `weft.region` identifying the failing region/prop. Interruption stays silent.
+
+describe("AC8: no boundary — runtime reports unhandled subscription failure", () => {
+  it("logs exactly one Error entry with the cause and a child:stream-<id> region for a failing stream child", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const failing = Stream.concat(
+      Stream.make(h.span({ class: "live" }, "live")),
+      Stream.fail(new Error("child-boom")),
+    );
+
+    const { handle, entries } = await runMountCapturingErrors(h.div({}, [failing]), root);
+
+    await waitFor(80);
+
+    assert.equal(entries.length, 1, "Exactly one unhandled failure should be reported");
+    assert.ok(
+      Cause.pretty(entries[0]!.cause).includes("child-boom"),
+      "Logged cause should pretty-print the stream error",
+    );
+    assert.match(
+      String(entries[0]!.annotations["weft.region"]),
+      /^child:stream-\d+$/,
+      "Log should carry the weft.region annotation for the stream child region",
+    );
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("annotates a failing attribute stream with attribute:<name>", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const failing = Stream.concat(Stream.make("v1"), Stream.fail(new Error("attr-boom")));
+
+    const { handle, entries } = await runMountCapturingErrors(
+      h.div({ "data-x": failing }, "content"),
+      root,
+    );
+
+    await waitFor(80);
+
+    assert.equal(entries.length, 1, "Exactly one unhandled failure should be reported");
+    assert.ok(Cause.pretty(entries[0]!.cause).includes("attr-boom"));
+    assert.equal(entries[0]!.annotations["weft.region"], "attribute:data-x");
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("annotates a failing List.each source with list:stream-<id>", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const failingSource = Stream.concat(
+      Stream.make(["a", "b"]),
+      Stream.fail(new Error("list-boom")),
+    );
+
+    const { handle, entries } = await runMountCapturingErrors(
+      h.ul({}, [List.each({ of: failingSource, by: (x) => x }, (x) => h.li({ id: x }, x))]),
+      root,
+    );
+
+    await waitFor(80);
+
+    assert.equal(entries.length, 1, "Exactly one unhandled failure should be reported");
+    assert.ok(Cause.pretty(entries[0]!.cause).includes("list-boom"));
+    assert.match(
+      String(entries[0]!.annotations["weft.region"]),
+      /^list:stream-\d+$/,
+      "Log should carry the weft.region annotation for the list region",
+    );
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("reports a defect (die) in a stream child, not just typed failures", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const dying = Stream.concat(
+      Stream.make(h.span({ class: "live" }, "live")),
+      Stream.die(new Error("defect-boom")),
+    );
+
+    const { handle, entries } = await runMountCapturingErrors(h.div({}, [dying]), root);
+
+    await waitFor(80);
+
+    assert.equal(entries.length, 1, "The defect should be reported");
+    assert.ok(Cause.pretty(entries[0]!.cause).includes("defect-boom"));
+    assert.match(String(entries[0]!.annotations["weft.region"]), /^child:stream-\d+$/);
+
+    await Effect.runPromise(handle.unmount());
+  });
+
+  it("stays silent on unmount interruption (no Error logs for teardown)", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // A never-completing stream child: unmount interrupts its subscription fiber.
+    const pending = Stream.concat(Stream.make(h.span({ class: "live" }, "live")), Stream.never);
+
+    const { handle, entries } = await runMountCapturingErrors(h.div({}, [pending]), root);
+
+    await waitFor(30);
+    await Effect.runPromise(handle.unmount());
+    await waitFor(50);
+
+    assert.equal(entries.length, 0, "Interruption during unmount must not be reported");
+  });
+
+  it("emits no runtime Error log when an enclosing Boundary handles the failure", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    const failing = Stream.concat(
+      Stream.make(h.span({ class: "live" }, "live")),
+      Stream.fail(new FooError({ msg: "handled-boom" })),
+    );
+
+    const { handle, entries } = await runMountCapturingErrors(
+      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failing]),
+      root,
+    );
+
+    await waitFor(80);
+
+    assert.ok(root.querySelector(".fallback"), "Boundary should swap to the fallback");
+    assert.equal(entries.length, 0, "Boundary-handled failures must not produce a runtime log");
 
     await Effect.runPromise(handle.unmount());
   });

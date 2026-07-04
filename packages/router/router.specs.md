@@ -21,6 +21,14 @@ contract (path-param schema + query schema). There is no per-route success-data
 schema / loader — server-only data stays with `Boundary.rpc` (backed by the app's
 merged `RpcGroup`), and client-side async with `Boundary.suspend`.
 
+The component is also its **loader**: on client navigation the matched leaf's
+component effect resolves **before** the commit
+(`src/resolve-before-commit.specs.md`), so the previous page stays mounted
+through both the chunk and the data window and the swap is atomic. That yields a
+dual model with no extra API — a `yield*` in the component body is
+commit-blocking, while an `Effect`/`Stream` placed as a child node streams in
+after the commit. Still no per-route loader/schema.
+
 ### Authoring surface — explicit nested route tree
 
 The tree is authored with the namespaced `Router.layout(...)` and

@@ -150,6 +150,10 @@ until the fallback patch supersedes them; they are cleaned up at unmount.
 - **AC-H15:** Reactive-region failure routing — a reactive region whose stream
   fails (at or after the first emission) reports its failure cause to the
   nearest `BoundaryContext` (parity with mount's `handleStreamChild`); with no
-  boundary the failure is swallowed as today. This covers post-hydrate live
+  boundary the failure exit is left unobserved so the Effect runtime reports it
+  (`"Fiber terminated with an unhandled error"`) at `LogLevel.Error`, annotated
+  with a `weft.region` log annotation identifying the hydrated region (e.g.
+  `hydrate:stream-<id> (<path>)`, `hydrate:list-<id> (<path>)`);
+  interruption-only causes stay silent. This covers post-hydrate live
   failures such as a page raising `RouterNotFound` after client-side
   navigation on a hydrated app.

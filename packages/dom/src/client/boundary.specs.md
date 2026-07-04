@@ -25,7 +25,7 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
 ### `subscribeToStream` modification
 
 7. After forking the stream subscription fiber via `Effect.forkIn`, errors/defects from the fiber are caught with `Effect.catchAllCause`.
-8. On caught cause: check for `BoundaryContext` via `Effect.serviceOption`. If present, call `ctx.reportError(cause)`. If absent, swallow the error (preserving current behavior for streams outside any boundary).
+8. On caught cause: check for `BoundaryContext` via `Effect.serviceOption`. If present, call `ctx.reportError(cause)`. If absent, the failure exit is left **unobserved** and the Effect runtime reports it itself (`"Fiber terminated with an unhandled error"`): the subscription fiber is forked with `FiberRef.unhandledErrorLogLevel` raised to `LogLevel.Error` and a `weft.region` log annotation identifying the region/prop (e.g. `attribute:<name>`, `child:stream-<id>`, `list:stream-<id>`), so both typed failures and defects surface exactly once at Error level with the pretty-printed cause. Interruption-only causes (unmount teardown) stay silent (runtime `isInterruptedOnly` guard).
 9. This modification applies only to the subscription fiber — not to the synchronous stream setup path.
 
 ### `renderBoundary` — construction-time path
@@ -123,3 +123,9 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
     never a defect.
 33. **Replay, never retry**: as with success replay, the client does not re-call the
     rpc; it reproduces the server-rendered fallback DOM flash-free.
+
+---
+
+type-tests: not applicable — `forkSupervised` (AC8 unobserved-exit supervision) is a non-exported module-internal helper in `render.ts`, unreachable from `__type-tests__`; its generics are plain pass-through with no overloads or conditional types, fully enforced by the main typecheck at its call sites.
+
+e2e: not applicable — AC8 no-boundary failure reporting is a pure Effect-runtime logging path (`reportExitValue` + `FiberRef.unhandledErrorLogLevel`), not browser-observable behavior beyond what jsdom reproduces faithfully; DOM effects (markers, adopted content standing) are covered by the jsdom unit tests, and the existing browser suite was run green as a renderer regression check.

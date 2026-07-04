@@ -1,12 +1,16 @@
 import { AppRpcClientTag } from "@weftui/core";
 import { FetchHttpClient, HttpApiClient } from "@effect/platform";
 import type { RpcGroup } from "@effect/rpc";
+import type { Renderable } from "@weftui/core";
 import {
   Context,
   Effect,
+  Exit,
+  Fiber,
   Layer,
   Option,
   Runtime,
+  Scope,
   Stream,
   Subscribable,
   SubscriptionRef,
@@ -14,6 +18,7 @@ import {
 import { canonicalize, normalizeBase } from "../base";
 import type { RouterDef } from "../compile";
 import { match, type RouteMatch } from "../matcher";
+import { preRunLeaf, setResolvedCommit } from "../resolved-commit";
 import { getPreload } from "../route-tree";
 import {
   type NavigateOptions,
@@ -144,8 +149,20 @@ export function RouterLive<R>(
       const httpApiClient = yield* makeClient;
 
       // A monotonic token; only the newest navigation may commit or reset
-      // `navigating` (latest-wins across in-flight lazy preloads — AC-N7).
+      // `navigating` (latest-wins across in-flight lazy preloads — AC-N7 — and
+      // leaf pre-runs — `resolve-before-commit.specs.md` AC-R6).
       let latest = 0;
+
+      // The in-flight leaf pre-run fiber, interrupted by a superseding
+      // navigation (AC-R6), and the committed pre-run's scope, retained until a
+      // later navigation replaces the leaf emission (AC-R12).
+      let inflightPreRun: Fiber.RuntimeFiber<Exit.Exit<Renderable, unknown>> | undefined;
+      let committedScope: Scope.CloseableScope | undefined;
+
+      // Forward reference to the service instance built below: the pre-run needs
+      // it for the staged view and the resolved-commit stash. `commitTo` only
+      // runs after the layer is built, when the instance exists.
+      let router!: Router["Type"];
 
       // The `Router.lazy` preloads for a matched branch (leaf component + each
       // layout in its chain); empty for an eager branch or a no-match, which take
@@ -169,45 +186,101 @@ export function RouterLive<R>(
           }
         });
 
-      // Deferred-commit navigation core (`pending-navigation.specs.md`): resolve the
-      // matched branch's lazy chunk(s) **before** committing the url + match, so the
-      // previous outlet stays mounted during the fetch and the swap is a single tick
-      // (the lazy slot then renders synchronously). `pushUrl` distinguishes an app
-      // navigation (History push/replace) from a popstate resync (browser already
-      // moved the url — set the ref only).
+      // Deferred-commit navigation core (`pending-navigation.specs.md` +
+      // `resolve-before-commit.specs.md`): resolve the matched branch's lazy
+      // chunk(s) **and** the target leaf's component effect before committing the
+      // url + match, so the previous outlet stays mounted during both the chunk
+      // and the data fetch, and the swap is a single tick (the outlet consumes
+      // the stashed, already-resolved node synchronously). `pushUrl`
+      // distinguishes an app navigation (History push/replace) from a popstate
+      // resync (browser already moved the url — set the ref only).
       const commitTo = (
         normalized: string,
         pushUrl: boolean,
         replace: boolean,
       ): Effect.Effect<void> =>
         Effect.gen(function* () {
-          const preloads = collectPreloads(match(def, normalized));
+          const target = match(def, normalized);
+          const token = ++latest;
+          // Whether this navigation flipped `navigating` (reset on commit only then).
+          let emitted = false;
 
-          // Fast path: no lazy nodes → synchronous commit, `navigating` stays Idle
-          // (AC-N3), byte-for-byte the pre-feature behavior for eager routes.
-          if (preloads.length === 0) {
-            if (pushUrl) yield* commitUrl(normalized, replace);
-            yield* SubscriptionRef.set(urlRef, normalized);
-            return;
+          // A superseding navigation interrupts the in-flight pre-run (AC-R6);
+          // the superseded navigation's join observes the interruption and bails.
+          const stale = inflightPreRun;
+          inflightPreRun = undefined;
+          if (stale !== undefined) {
+            yield* Fiber.interrupt(stale);
           }
 
-          // Pending path: keep the old outlet mounted while the chunk(s) resolve.
-          const token = ++latest;
-          yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
-          yield* Effect.promise(() => Promise.all(preloads.map((p) => p()))).pipe(
-            // A rejected chunk load is a defect (AC-E1); reset `navigating` (if this
-            // is still the latest nav) before the defect propagates, so no stuck
-            // pending state remains.
-            Effect.onError(() =>
-              token === latest ? SubscriptionRef.set(navRef, { _tag: "Idle" }) : Effect.void,
-            ),
-          );
-          // Superseded by a newer navigation → do not commit or reset; the newer nav
-          // owns both. This fetch still populated the shared per-slot memo (AC-N7).
-          if (token !== latest) return;
+          // Stage 1 — lazy chunk(s) (AC-N1). Keeps the old outlet mounted while
+          // the chunk(s) resolve; also populates the lazy slot's `resolved` memo
+          // so the leaf pre-run below enters the synchronous slot path.
+          const preloads = collectPreloads(target);
+          if (preloads.length > 0) {
+            emitted = true;
+            yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
+            yield* Effect.promise(() => Promise.all(preloads.map((p) => p()))).pipe(
+              // A rejected chunk load is a defect (AC-E1); reset `navigating` (if
+              // this is still the latest nav) before the defect propagates, so no
+              // stuck pending state remains (AC-N9).
+              Effect.onError(() =>
+                token === latest ? SubscriptionRef.set(navRef, { _tag: "Idle" }) : Effect.void,
+              ),
+            );
+            // Superseded → do not commit or reset; the newer nav owns both. The
+            // fetch still populated the shared per-slot memo (AC-N7).
+            if (token !== latest) return;
+          }
+
+          // Stage 2 — leaf pre-run (AC-R1): run the target leaf's component
+          // effect to completion pre-commit and stash its Exit for the outlet.
+          let exit: Exit.Exit<Renderable, unknown> | undefined;
+          if (target._tag === "Matched") {
+            const scope = yield* Scope.make();
+            const fiber = yield* Effect.fork(
+              Effect.provideService(preRunLeaf(router, target), Scope.Scope, scope),
+            );
+            inflightPreRun = fiber;
+            // Flip `navigating` only if the pre-run actually suspends: this fiber
+            // is forked *after* the pre-run fiber, so a synchronous body has
+            // already completed when the poll runs and no emission happens (AC-R3).
+            if (!emitted) {
+              yield* Effect.fork(
+                Effect.gen(function* () {
+                  const done = yield* Fiber.poll(fiber);
+                  if (Option.isNone(done) && token === latest) {
+                    emitted = true;
+                    yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
+                  }
+                }),
+              );
+            }
+            const joined = yield* Effect.exit(Fiber.join(fiber));
+            if (inflightPreRun === fiber) inflightPreRun = undefined;
+            if (token !== latest || Exit.isFailure(joined)) {
+              // Superseded (the join surfaced the interruption) — the newer nav
+              // owns the url, the stash, and `navigating` (AC-R6).
+              yield* Scope.close(scope, Exit.void);
+              return;
+            }
+            exit = joined.value;
+            // Retain the committed pre-run's scope; close the one it replaces (AC-R12).
+            const previous = committedScope;
+            committedScope = scope;
+            if (previous !== undefined) {
+              yield* Scope.close(previous, Exit.void);
+            }
+          }
+
+          // Commit (AC-R2): stash the pre-run outcome under the exact committed
+          // url, move the url + ref together, and settle `navigating`.
+          if (exit !== undefined) {
+            setResolvedCommit(router, { url: normalized, exit });
+          }
           if (pushUrl) yield* commitUrl(normalized, replace);
           yield* SubscriptionRef.set(urlRef, normalized);
-          yield* SubscriptionRef.set(navRef, { _tag: "Idle" });
+          if (emitted) yield* SubscriptionRef.set(navRef, { _tag: "Idle" });
         });
 
       const navigate = (to: string, options?: NavigateOptions): Effect.Effect<void> =>
@@ -270,7 +343,7 @@ export function RouterLive<R>(
         });
       }
 
-      const router = Router.of({
+      router = Router.of({
         currentMatch,
         navigate,
         httpApiClient: Option.some(httpApiClient),
@@ -287,9 +360,14 @@ export function RouterLive<R>(
   // No context ⇒ the bare `core` layer, unchanged for `rpc`-only / no-service apps.
   const context = (options as { readonly context?: Layer.Layer<AppServices<R>, never, never> })
     .context;
+  // The context is additionally **provided into** `core` (not only merged): the
+  // runtimes captured during the layer build (the link interceptor's and the
+  // popstate handler's) execute leaf pre-runs (`resolve-before-commit.specs.md`),
+  // whose component bodies read app services. Layers are memoized by reference,
+  // so `context` builds once and serves both roles.
   // When no context is provided the residual `AppServices<R>` is empty, so widening
   // `core` to the declared return type is sound (nothing extra is actually promised).
-  return (context === undefined ? core : Layer.merge(core, context)) as Layer.Layer<
-    Router | AppRpcClientTag | AppServices<R>
-  >;
+  return (
+    context === undefined ? core : Layer.merge(Layer.provide(core, context), context)
+  ) as Layer.Layer<Router | AppRpcClientTag | AppServices<R>>;
 }

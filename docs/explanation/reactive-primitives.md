@@ -115,11 +115,24 @@ h.div({
 // Entire style object as a stream
 h.div({ style: styleObjectStream });
 
-// Spread a stream into a style object (static props win over emitted props)
+// Combine a whole-object stream with a static property.
+// A whole-object stream replaces every property on each emit, so fold the
+// static value into each emitted object with Stream.map — you cannot spread the
+// Stream itself into a style object (that copies the Stream's internals, not
+// its emitted style keys).
+h.div({
+  style: Stream.map(styleObjectStream, (s) => ({
+    ...s, // reactive properties
+    transition: "all 0.3s", // static, applied on every emit
+  })),
+});
+
+// For a mix of static and per-property reactive values, use per-property
+// streams alongside static siblings instead:
 h.div({
   style: {
-    ...styleObjectStream, // reactive
-    transition: "all 0.3s", // static, always applied
+    transform: transformStream, // reactive, per-property
+    transition: "all 0.3s", // static
   },
 });
 ```
@@ -129,9 +142,8 @@ h.div({
 When a `Stream` prop ends before emitting, the renderer raises a `NoPropValue` tagged error. This carries an optional `key` field identifying which prop triggered it:
 
 ```typescript
-import { NoPropValue } from "@weftui/core";
-
-// Handle at the mount boundary if needed
+// Handle at the mount boundary if needed. `Effect.catchTag` matches the error
+// by its string tag, so no `NoPropValue` import is required here.
 pipe(
   mount(App(), root),
   Effect.catchTag("NoPropValue", (e) =>
