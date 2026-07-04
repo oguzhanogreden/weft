@@ -1,11 +1,11 @@
 # Graph Report - weft  (2026-07-04)
 
 ## Corpus Check
-- 393 files · ~281,983 words
+- 388 files · ~279,703 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3290 nodes · 4715 edges · 257 communities (236 shown, 21 thin omitted)
+- 3237 nodes · 4653 edges · 258 communities (237 shown, 21 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 54 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -118,11 +118,11 @@
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 101|Community 101]]
 - [[_COMMUNITY_Community 102|Community 102]]
-- [[_COMMUNITY_Community 103|Community 103]]
 - [[_COMMUNITY_Community 104|Community 104]]
 - [[_COMMUNITY_Community 105|Community 105]]
 - [[_COMMUNITY_Community 106|Community 106]]
 - [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
 - [[_COMMUNITY_Community 110|Community 110]]
 - [[_COMMUNITY_Community 111|Community 111]]
@@ -133,6 +133,7 @@
 - [[_COMMUNITY_Community 116|Community 116]]
 - [[_COMMUNITY_Community 117|Community 117]]
 - [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
 - [[_COMMUNITY_Community 120|Community 120]]
 - [[_COMMUNITY_Community 121|Community 121]]
 - [[_COMMUNITY_Community 122|Community 122]]
@@ -146,7 +147,6 @@
 - [[_COMMUNITY_Community 130|Community 130]]
 - [[_COMMUNITY_Community 131|Community 131]]
 - [[_COMMUNITY_Community 132|Community 132]]
-- [[_COMMUNITY_Community 133|Community 133]]
 - [[_COMMUNITY_Community 135|Community 135]]
 - [[_COMMUNITY_Community 136|Community 136]]
 - [[_COMMUNITY_Community 137|Community 137]]
@@ -230,6 +230,7 @@
 - [[_COMMUNITY_Community 241|Community 241]]
 - [[_COMMUNITY_Community 242|Community 242]]
 - [[_COMMUNITY_Community 243|Community 243]]
+- [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
 - [[_COMMUNITY_Community 247|Community 247]]
@@ -272,7 +273,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (257 total, 21 thin omitted)
+## Communities (258 total, 21 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
@@ -291,8 +292,8 @@ Cohesion: 0.14
 Nodes (13): Acceptance criteria, Deliverables, Edge cases, Out of scope, Output correctness, Overview, Prerender script, Progress (TDD phases) (+5 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (72): AdoptedItem, appendRenderedChildren(), boundaryRecoveryEffect(), camelToKebab(), collectAdoptedItems(), collectItemRange(), describeKey(), describeNode() (+64 more)
+Cohesion: 0.10
+Nodes (51): AdoptedItem, boundaryRecoveryEffect(), collectAdoptedItems(), collectItemRange(), describeKey(), describeNode(), findMatchingEnd(), findMatchingSuspenseEnd() (+43 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
@@ -320,15 +321,15 @@ Nodes (37): `AppRpcClientTag`, `Boundary.catchAll`, `Boundary.catchAllCause`, `B
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
-Nodes (42): author, bugs, url, import, types, dependencies, @effect/platform, @effect/rpc (+34 more)
+Nodes (37): author, import, types, dependencies, @effect/platform, @effect/rpc, @weftui/core, @weftui/dom (+29 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.12
 Nodes (25): FailureProps, h, Children, Component, Context, Error, ELEMENT_DESCRIPTOR, CustomElements (+17 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.05
-Nodes (40): author, bugs, url, import, types, dependencies, @weftui/core, description (+32 more)
+Cohesion: 0.06
+Nodes (35): author, import, types, dependencies, @weftui/core, description, devDependencies, effect (+27 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.09
@@ -348,7 +349,7 @@ Nodes (19): installLinkInterceptor(), fixture(), install(), Page(), passthrough,
 
 ### Community 18 - "Community 18"
 Cohesion: 0.06
-Nodes (35): author, bugs, url, description, devDependencies, csstype, effect, @effect/rpc (+27 more)
+Nodes (30): author, description, devDependencies, csstype, effect, @effect/rpc, tsx, @types/node (+22 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.07
@@ -360,7 +361,7 @@ Nodes (29): Blocking vs streaming data, Client — `@weftui/router/client`, Comp
 
 ### Community 21 - "Community 21"
 Cohesion: 0.11
-Nodes (14): CodeBlock, CodeBlockProps, tokens, DemoProps, tokens, DOCS_ROOT, demos, getDemo() (+6 more)
+Nodes (23): CodeBlock, CodeBlockProps, tokens, Demo, DemoProps, tokens, DOCS_ROOT, demos (+15 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.07
@@ -371,24 +372,24 @@ Cohesion: 0.09
 Nodes (25): H, Context, Error, ItemOf, LIST, Options, people, Person (+17 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.13
-Nodes (23): Demo, Docs, HastNode, ALLOWED_TAGS, builders, codeChild(), ElementBuilder, mapProps() (+15 more)
+Cohesion: 0.26
+Nodes (9): Docs, renderHast(), DocPage(), DocsIndexPage, DocsPage, startsWithH1(), DemoDocPage(), NoRpc (+1 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.22
-Nodes (8): Documentation, Example, Installation, Key exports, License, @weftui/dom, `@weftui/dom/client`, `@weftui/dom/server`
+Cohesion: 0.18
+Nodes (23): appendRenderedChildren(), camelToKebab(), flattenChildren(), handleStreamChild(), handleStyle(), isEventHandler(), isProperty(), renderChildren() (+15 more)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.16
 Nodes (10): createRoot(), Failing, fromValue(), GetProduct, LoadError, Product, ProductBoundary(), ProductShape (+2 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.07
-Nodes (35): HydrateErrors, hydrateScoped(), MountErrors, mountScoped(), Probe, renderToStringHydratable(), tick(), tickE (+27 more)
+Cohesion: 0.08
+Nodes (34): HydrateErrors, hydrateScoped(), MountErrors, mountScoped(), Probe, tick(), tickE, waitFor() (+26 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.12
-Nodes (18): snippetModuleSource(), AnyNode, buildFrontmatter(), DocFrontmatter, DROPPED_TAGS, HastElement, HastPropertyValue, HEADING_DEPTH (+10 more)
+Cohesion: 0.09
+Nodes (23): snippetModuleSource(), AnyNode, buildFrontmatter(), DocFrontmatter, DROPPED_TAGS, HastElement, HastNode, HastProperties (+15 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.14
@@ -515,24 +516,24 @@ Cohesion: 0.12
 Nodes (14): Acceptance Criteria, Boundary — DOM Renderer Spec, `BoundaryContext` service, DOM structure, Hydration, Hydration — `Boundary.rpc` typed-failure replay, Overview, `renderBoundary` — construction-time path (+6 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.06
-Nodes (20): BarError, FooError, runMount(), runMountCapturingErrors(), LateError, MissingError, neverChild, NopeError (+12 more)
+Cohesion: 0.15
+Nodes (7): BarError, FooError, runMount(), runMountCapturingErrors(), runHydrateCapturingErrors(), CapturedErrorLog, makeErrorLogCapture()
 
 ### Community 61 - "Community 61"
 Cohesion: 0.13
 Nodes (14): API (core), Context, Critical semantic to document, Decisions (confirmed), Diffing Model — Spec & Plan, Files, Hydration (spec now, impl phased), Non-goals (v1) (+6 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.07
-Nodes (16): CounterService, runMount(), waitFor(), waitForStream(), runMount(), waitFor(), waitForStream(), waitForStreamUpdate() (+8 more)
+Cohesion: 0.14
+Nodes (4): runMount(), waitFor(), waitForStream(), waitForStreamUpdate()
 
 ### Community 63 - "Community 63"
 Cohesion: 0.13
 Nodes (14): catchAll — simplest form, catchAllCause — defects and interruptions, catchIf — predicate-gated, catchSome — conditional catch, catchTag — handle one specific error type, catchTags — multiple handlers, error-boundary, How it works (+6 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.09
-Nodes (21): loadAllDocs(), toDocModuleSource(), toIndexModuleSource(), toLiteral(), toPosix(), weftDocs(), buildLlmsTxt(), section() (+13 more)
+Cohesion: 0.17
+Nodes (12): loadAllDocs(), toDocModuleSource(), toIndexModuleSource(), toLiteral(), toPosix(), weftDocs(), docsRoot, config (+4 more)
 
 ### Community 65 - "Community 65"
 Cohesion: 0.13
@@ -547,8 +548,8 @@ Cohesion: 0.14
 Nodes (13): Acceptance Criteria, API shape, `AppRpcClient` seam (AC-9), Boundary.rpc — Core API Spec, Deferred / roadmap, Descriptor, Edge cases, Migration from `Boundary.server` (+5 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.36
-Nodes (7): bundleInto(), docsRoot, repoRoot, rewriteHref(), rewriteLinks(), TARGET_PACKAGES, toPosix()
+Cohesion: 0.19
+Nodes (9): createRoot(), Person, PersonData, renderToString(), renderToStringHydratable(), seedServerHtml(), waitFor(), waitForStream() (+1 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.14
@@ -635,8 +636,8 @@ Cohesion: 0.15
 Nodes (12): dependencies, effect, @types/node, @weftui/core, @weftui/dom, devDependencies, vite, vite-plus (+4 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.29
-Nodes (6): Documentation, Example, Installation, Key exports, License, @weftui/core
+Cohesion: 0.18
+Nodes (4): LateError, MissingError, neverChild, NopeError
 
 ### Community 91 - "Community 91"
 Cohesion: 0.15
@@ -647,7 +648,7 @@ Cohesion: 0.15
 Nodes (12): dependencies, effect, @types/node, @weftui/core, @weftui/dom, devDependencies, vite, vite-plus (+4 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (12): Benefits, Combined Static and Reactive, How It Works, Individual Property Stream, Opacity Pulse, Overview, Problem, Reactive Styles (+4 more)
 
 ### Community 94 - "Community 94"
@@ -667,8 +668,8 @@ Cohesion: 0.15
 Nodes (12): dependencies, effect, @types/node, @weftui/core, @weftui/dom, devDependencies, vite, vite-plus (+4 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.29
-Nodes (6): Documentation, Example, Installation, Key exports, License, @weftui/router
+Cohesion: 0.28
+Nodes (6): CounterService, runMount(), waitFor(), waitForStream(), mount(), runMount()
 
 ### Community 99 - "Community 99"
 Cohesion: 0.12
@@ -686,10 +687,6 @@ Nodes (11): Constraint 1 — Client-first SPA mount of a `Boundary.server` is un
 Cohesion: 0.17
 Nodes (11): Acceptance criteria, Attributes, Design notes (divergence from React), Elements, Overview, Reactive attributes, renderToString — Specification, Scope of this spec (+3 more)
 
-### Community 103 - "Community 103"
-Cohesion: 0.17
-Nodes (11): clientResult, ClientService, CtxOf, Database, dbLoad, discharged, GetProduct, leaky (+3 more)
-
 ### Community 104 - "Community 104"
 Cohesion: 0.33
 Nodes (8): App(), Dashboard(), DelayedGreeting(), fetchUser(), LoadingThenData(), SequentialLoad(), User, UserCard()
@@ -705,6 +702,10 @@ Nodes (13): dependencies, effect, @effect-atom/atom, @types/node, @weftui/core, 
 ### Community 107 - "Community 107"
 Cohesion: 0.20
 Nodes (6): Person, PersonData, runMount(), waitFor(), waitForStream(), waitForStreamUpdate()
+
+### Community 108 - "Community 108"
+Cohesion: 0.20
+Nodes (6): GetProduct, Product, ProductShape, StockKey, waitFor(), waitForEl()
 
 ### Community 109 - "Community 109"
 Cohesion: 0.29
@@ -745,6 +746,10 @@ Nodes (9): Acceptance criteria, Consumers, Data model, `Docs` service, Key facts
 ### Community 118 - "Community 118"
 Cohesion: 0.20
 Nodes (9): A minimal app, Development, Documentation, Examples, Features, Installation, License, Packages (+1 more)
+
+### Community 119 - "Community 119"
+Cohesion: 0.22
+Nodes (6): makeHandler(), __dirname, PORT, readBody(), startProd(), toWebRequest()
 
 ### Community 120 - "Community 120"
 Cohesion: 0.20
@@ -797,10 +802,6 @@ Nodes (8): Acceptance criteria, Design notes (divergence from React), Function c
 ### Community 132 - "Community 132"
 Cohesion: 0.22
 Nodes (6): def, homeRoute, mountAt(), NoopRpcs, searchRoute, tabQuery
-
-### Community 133 - "Community 133"
-Cohesion: 0.18
-Nodes (7): createRoot(), GetProduct, Product, ProductShape, seedLayer, seedServerHtml(), StockKey
 
 ### Community 135 - "Community 135"
 Cohesion: 0.25
@@ -895,8 +896,8 @@ Cohesion: 0.29
 Nodes (6): Acceptance Criteria, Consumption Vocabulary (guidance), Overview, Public API, Purpose, `@weftui/core` — Stream Normalization (`toStream`)
 
 ### Community 159 - "Community 159"
-Cohesion: 0.19
-Nodes (10): outputFileFor(), prerenderPathsFor(), OUT_DIR, handler, makeHandler(), clientDir, __dirname, outDir (+2 more)
+Cohesion: 0.23
+Nodes (8): outputFileFor(), prerenderPathsFor(), OUT_DIR, handler, clientDir, __dirname, outDir, prerender()
 
 ### Community 160 - "Community 160"
 Cohesion: 0.33
@@ -1039,20 +1040,24 @@ Cohesion: 0.50
 Nodes (3): Design system (DaisyUI + Radix Colors) — see `src/design-system.specs.md`, Notes, Website build progress (Ralph ledger)
 
 ### Community 208 - "Community 208"
-Cohesion: 0.22
-Nodes (8): App(), mountApp(), countAtom, Counter(), doubleAtom, Greeting(), greetingAtom, program
+Cohesion: 0.09
+Nodes (19): App(), mountApp(), countAtom, Counter(), doubleAtom, Greeting(), greetingAtom, program (+11 more)
 
 ### Community 241 - "Community 241"
 Cohesion: 0.18
 Nodes (13): ReactiveCounter(), DocsShell, docsIndexRoute, docsRoute, CodeTeaser(), DIFFERENTIATORS, Footer(), Hero() (+5 more)
 
 ### Community 242 - "Community 242"
-Cohesion: 0.08
-Nodes (36): createRoot(), renderToStringHydratable(), seedServerHtml(), createRoot(), renderToString(), renderToStringHydratable(), seedServerHtml(), renderToStringHydratable() (+28 more)
+Cohesion: 0.12
+Nodes (27): FooError, renderToStream(), renderToStreamHydratable(), renderToString(), run(), runHydratable(), runString(), makeHydratableSSR() (+19 more)
 
 ### Community 243 - "Community 243"
 Cohesion: 0.09
-Nodes (43): createStreamMarkers(), renderItem(), renderSuspenseBoundary(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR(), fragmentToSSR() (+35 more)
+Nodes (41): createStreamMarkers(), renderItem(), renderSuspenseBoundary(), buildPatch(), FailureCollector, firstListEmission(), fragmentToHydratableSSR(), fragmentToSSR() (+33 more)
+
+### Community 244 - "Community 244"
+Cohesion: 0.09
+Nodes (17): createRoot(), renderToStringHydratable(), seedServerHtml(), createRoot(), renderToString(), renderToStringHydratable(), seedServerHtml(), renderToStringHydratable() (+9 more)
 
 ### Community 245 - "Community 245"
 Cohesion: 0.25
@@ -1107,21 +1112,21 @@ Cohesion: 0.40
 Nodes (4): Procedure, Rules, /unit-test — Unit tests + red phase (TDD step 4), When to run
 
 ## Knowledge Gaps
-- **1776 isolated node(s):** `PreToolUse`, `branches`, `tagFormat`, `initialVersion`, `plugins` (+1771 more)
+- **1743 isolated node(s):** `PreToolUse`, `branches`, `tagFormat`, `initialVersion`, `plugins` (+1738 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `walk()` connect `Community 109` to `Community 9`, `Community 28`, `Community 4`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `getElementDescriptor()` connect `Community 109` to `Community 4`, `Community 12`, `Community 14`, `Community 243`, `Community 23`?**
+- **Why does `walk()` connect `Community 109` to `Community 25`, `Community 28`, `Community 9`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `getElementDescriptor()` connect `Community 109` to `Community 4`, `Community 12`, `Community 14`, `Community 243`, `Community 23`, `Community 25`?**
   _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Why does `findAll()` connect `Community 28` to `Community 109`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `PreToolUse`, `branches`, `tagFormat` to the rest of the system?**
-  _1776 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1743 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.06665074056378405 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
