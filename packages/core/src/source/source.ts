@@ -4,13 +4,13 @@ import {
   Effect,
   Scope,
   Stream,
-  Subscribable,
   Deferred,
   SubscriptionRef,
   Option,
   Data,
   identity,
 } from "effect";
+import * as Subscribable from "~/subscribable";
 import { isStream } from "~/stream";
 
 /**

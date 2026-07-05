@@ -1,4 +1,5 @@
-import { Cause, type Effect, Option, type Subscribable } from "effect";
+import { Cause, type Effect, Option } from "effect";
+import type * as Subscribable from "~/subscribable";
 import type { Rpc } from "@effect/rpc";
 import { elementNode } from "~/combinator/descriptor";
 import type { Renderable, ChildrenE, ChildrenR, Node } from "~/combinator/types";

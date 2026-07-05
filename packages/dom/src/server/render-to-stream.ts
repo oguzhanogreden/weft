@@ -7,6 +7,7 @@ import {
   NoPropValue,
   SERVER_BOUNDARY,
   Source,
+  Subscribable,
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@weftui/core";
@@ -21,7 +22,6 @@ import {
   Schema,
   Scope,
   Stream,
-  Subscribable,
 } from "effect";
 import {
   listItemEndText,

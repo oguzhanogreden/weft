@@ -17,7 +17,6 @@ import {
   Schema,
   Scope,
   Stream,
-  Subscribable,
   SubscriptionRef,
   pipe,
 } from "effect";
@@ -30,6 +29,7 @@ import {
   LIST,
   SERVER_BOUNDARY,
   Source,
+  Subscribable,
   SUSPENSE_BOUNDARY,
   toStream,
 } from "@weftui/core";
