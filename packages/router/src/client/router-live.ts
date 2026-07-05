@@ -304,7 +304,7 @@ export function RouterLive<R>(
 
       const currentMatch = Subscribable.make({
         get: Effect.map(SubscriptionRef.get(urlRef), (url): RouteMatch => match(def, url)),
-        changes: Stream.map(urlRef.changes, (url): RouteMatch => match(def, url)),
+        changes: Stream.map(SubscriptionRef.changes(urlRef), (url): RouteMatch => match(def, url)),
       });
 
       // The {@link AppRpcClientTag} seam: a **network** flat rpc client over the
