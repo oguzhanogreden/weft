@@ -2,6 +2,7 @@ import {
   pipe,
   Cause,
   Effect,
+  Filter,
   Scope,
   Stream,
   Deferred,
@@ -155,7 +156,7 @@ export namespace Source {
         // concurrent `merge`, which would fork it a hop later).
         const changes = pipe(
           SubscriptionRef.changes(ref),
-          Stream.filterMap(identity),
+          Stream.filterMap(Filter.fromPredicateOption(identity)),
           Stream.interruptWhen(Deferred.await(failure)),
         ) as Stream.Stream<A, NoPropValue>;
 
