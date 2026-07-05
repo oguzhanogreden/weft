@@ -165,13 +165,15 @@ Router.route("users/:id", {
   path: idParam,
   component: Component.gen(function* () {
     const { id } = yield* Router.params(idParam);
-    if (id < 0) return yield* notFound();
+    if (!Number.isFinite(id) || id < 0) return yield* notFound();
     return yield* h.div(`User ${id}`);
   }),
 });
 ```
 
 `RouterNotFound` is exported, so a `Boundary.catchTag("RouterNotFound", …)` placed inside a subtree overrides the app-level fallback for that subtree (the router's internal boundary is outermost, so a nearer user boundary wins).
+
+> **`Schema.NumberFromString` gotcha.** Decoding no longer fails on a non-numeric segment — `/users/abc` decodes `id` to `NaN` instead of missing the route. A leaf that guards a numeric param must check `Number.isFinite(id)` itself (as above); relying on the schema alone to 404 non-numeric input no longer works.
 
 ## Client setup
 
@@ -276,9 +278,9 @@ export const handler = RouterServer.toWebHandler(App, { document: documentShell 
 
 `render` provides both `Router.Outlet` (the app, per request) and `Router` (so the shell may read params), and renders through `renderToStringHydratable` so the client can `hydrate` in place.
 
-### `@effect/platform` is the spine
+### `effect/unstable/httpapi` is the spine
 
-The tree is the authoring surface, but `@effect/platform`'s `HttpApi` is the **single source of truth** for paths and schemas. Sealing the tree with `Router.router(...)` builds it once (`buildHttpApi`) and stamps it onto `def.httpApi`: a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `setPath(pathSchema)`, `setUrlParams(querySchema)`, and a `RouterNotFound → 404` error. Both sides read that one definition, so they always agree:
+The tree is the authoring surface, but `effect/unstable/httpapi`'s `HttpApi` is the **single source of truth** for paths and schemas. Sealing the tree with `Router.router(...)` builds it once (`buildHttpApi`) and stamps it onto `def.httpApi`: a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `setPath(pathSchema)`, `setUrlParams(querySchema)`, and a `RouterNotFound → 404` error. Both sides read that one definition, so they always agree:
 
 - **Server** — `RouterServer` dispatches through `HttpApiBuilder` (platform owns request→leaf matching, path/query decode, and the 404 status).
 - **Client** — `RouterLive` derives a real `HttpApiClient` from the same `def.httpApi` (exposed as `Router.httpApiClient`) for network work. SPA URL→leaf resolution stays **local** (there is no public client-side "match this URL against my `HttpApi`" utility in platform), fed from the same endpoint definitions so it never drifts from the server.
@@ -299,7 +301,7 @@ Initial SSR navigation works end to end: the server resolves the rpc and inlines
 ## See also
 
 - [`@weftui/router` API reference](../reference/router.md)
-- [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `@effect/platform` spine
+- [examples/router-ssr](../../examples/router-ssr) — a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `effect/unstable/httpapi` spine
 - [Component Authoring](./author-components.md) — `Component.make` / `Component.gen`, the idiomatic way to write route components
 - [Server-Side Rendering](./render-on-the-server.md) — `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
 - [RPC Data Boundaries](./load-data-with-rpc.md) — `Boundary.rpc`, the `Resource` handle, and the four lifecycles

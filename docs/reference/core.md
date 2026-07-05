@@ -144,7 +144,7 @@ Boundary.suspend(
 
 #### `Boundary.rpc`
 
-A universal server/client render boundary backed by one `Rpc` from the app's merged `RpcGroup` ([`@effect/rpc`](https://github.com/Effect-TS/effect/tree/main/packages/rpc)). The rpc **`_tag`** is the boundary's stable identity and its **payload schema** the typed input; the handler lives in the server-only rpc Layer (`group.toLayer(...)`), which the client never imports — tree-shaking does the client/server split structurally. Unlike the catch variants it takes a `render` function — not a children array — and that `render` receives a reactive [`Resource`](#resourcea), not a bare value.
+A universal server/client render boundary backed by one `Rpc` from the app's merged `RpcGroup` ([`effect/unstable/rpc`](https://github.com/Effect-TS/effect)). The rpc **`_tag`** is the boundary's stable identity and its **payload schema** the typed input; the handler lives in the server-only rpc Layer (`group.toLayer(...)`), which the client never imports — tree-shaking does the client/server split structurally. Unlike the catch variants it takes a `render` function — not a children array — and that `render` receives a reactive [`Resource`](#resourcea), not a bare value.
 
 ```typescript
 Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(
@@ -201,22 +201,21 @@ The descriptor `type` every `Boundary.rpc` carries (`{ type: SERVER_BOUNDARY, pr
 interface AppRpcClient {
   readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
 }
-class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
-  AppRpcClientTag,
-  AppRpcClient
->() {}
+class AppRpcClientTag extends Context.Service<AppRpcClientTag, AppRpcClient>()(
+  "@weftui/core/AppRpcClient",
+) {}
 ```
 
-The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@weftui/dom` resolve a boundary without importing `@effect/rpc` or `@weftui/router`. `@weftui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@weftui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
+The ambient, package-neutral seam the renderer resolves a `Boundary.rpc` through — a **flat, untyped** caller `(tag, payload) => Effect<success>`. It lets `@weftui/dom` resolve a boundary without importing `effect/unstable/rpc` or `@weftui/router`. `@weftui/router` provides it: a **network** `RpcClient` (POST `/_eui/rpc`) in the browser, an **in-process** client over the handler Layer on the server. `call` returns the already-decoded success; the renderer owns `successSchema`/`errorSchema` decoding of the inline SSR payload only. Both `AppRpcClientTag` and the `AppRpcClient` type are re-exported from `@weftui/core`. Absent in a router-less mount, where a `Boundary.rpc` resolves to a descriptive "needs router/rpc" error (not a defect).
 
 See the [rpc data boundaries guide](../how-to/load-data-with-rpc.md) and [examples/router-ssr](../../examples/router-ssr).
 
-#### `Boundary.catchAll`
+#### `Boundary.catch`
 
-Catches all typed failures (`Cause.fail`). Defects (`Cause.die`) are not caught and re-raise.
+Catches all typed failures (`Cause.fail`). Defects (`Cause.die`) are not caught and re-raise. Mirrors Effect 4's `Effect.catch` (renamed from `catchAll` in v3).
 
 ```typescript
-Boundary.catchAll<C, FE, FR>(
+Boundary.catch<C, FE, FR>(
   props: { fallback: (e: ChildrenE<C>) => Node<FE, FR> },
   children: C,
 ): Node<FE, ChildrenR<C> | FR>
@@ -224,12 +223,12 @@ Boundary.catchAll<C, FE, FR>(
 
 The children's `E` is fully consumed. The output `E` is only the fallback's own error channel.
 
-#### `Boundary.catchAllCause`
+#### `Boundary.catchCause`
 
-Catches every `Cause` including defects and interruptions.
+Catches every `Cause` including defects and interruptions. Mirrors Effect 4's `Effect.catchCause` (renamed from `catchAllCause` in v3).
 
 ```typescript
-Boundary.catchAllCause<C, FE, FR>(
+Boundary.catchCause<C, FE, FR>(
   props: { fallback: (cause: Cause.Cause<ChildrenE<C>>) => Node<FE, FR> },
   children: C,
 ): Node<FE, ChildrenR<C> | FR>
@@ -266,18 +265,30 @@ Boundary.catchTags<C, Handlers>(
 ): Node<UnhandledE | HandlersE, ChildrenR<C> | HandlersR>
 ```
 
-#### `Boundary.catchSome`
+#### `Boundary.catchFilter`
 
-The fallback returns `Option<Node>`. `Option.none()` re-raises the error; `Option.some(node)` catches it.
+Conditionally catches using a `Filter`, run on each typed failure: a `Result.succeed` (pass) recovers via `fallback`, receiving the possibly-narrowed pass value; a `Result.fail` re-raises the error (its `Fail` channel `X` is preserved in the output `E`, since the boundary may not handle any given error). Takes the `Filter` and `fallback` as **positional** arguments — no wrapping props object. Mirrors Effect 4's `Effect.catchFilter` (renamed from `catchSome`, which took an `Option`-returning function in v3).
 
 ```typescript
-Boundary.catchSome<C, FE, FR>(
-  props: { fallback: (e: ChildrenE<C>) => Option.Option<Node<FE, FR>> },
+Boundary.catchFilter<C, EB, X, FE, FR>(
+  filter: Filter.Filter<ChildrenE<C>, EB, X>,
+  fallback: (matched: EB) => Node<FE, FR>,
   children: C,
-): Node<ChildrenE<C> | FE, ChildrenR<C> | FR>
+): Node<X | FE, ChildrenR<C> | FR>
 ```
 
-The children's `E` is preserved in the output because the boundary may or may not handle any given error.
+```typescript
+import { Boundary } from "@weftui/core";
+import { Filter, Result } from "effect";
+
+Boundary.catchFilter(
+  Filter.make((e: AppError) => (e._tag === "Net" ? Result.succeed(e) : Result.fail(e))),
+  (matched) => h.div({}, matched.message),
+  [Widget()],
+);
+```
+
+The children's `E` is narrowed to the filter's `Fail` channel `X` in the output, because the boundary may or may not handle any given error.
 
 #### `Boundary.catchIf`
 
@@ -301,7 +312,7 @@ Inner boundaries shadow outer ones for their subtree — the innermost boundary 
 
 ```typescript
 // Inner catches FooError; BarError propagates to outer
-Boundary.catchAll({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
+Boundary.catch({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
   Boundary.catchTag({ tag: "Foo", fallback: (e) => h.span(`Foo: ${e.msg}`) }, [
     ChildWithFooOrBarError(),
   ]),
@@ -312,7 +323,7 @@ Boundary.catchAll({ fallback: (e) => h.div(`Outer: ${e.message}`) }, [
 
 ## ServerTag
 
-A `Context.Tag` whose identifier is branded server-only. Use it exactly like `Context.Tag` for services that must only ever be provided on the server — e.g. a database handle read inside an rpc handler Layer. The brand also guards [`Boundary.rpc`](#boundaryrpc): a server-only tag accidentally referenced in `render` stays in the requirement channel, where `hydrate`'s `AssertNoServerOnly` rejects it at compile time.
+A `Context.Service` key whose identifier is branded server-only. Use it exactly like `Context.Service` for services that must only ever be provided on the server — e.g. a database handle read inside an rpc handler Layer. The brand also guards [`Boundary.rpc`](#boundaryrpc): a server-only tag accidentally referenced in `render` stays in the requirement channel, where `hydrate`'s `AssertNoServerOnly` rejects it at compile time.
 
 ```typescript
 import { ServerTag } from "@weftui/core";

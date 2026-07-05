@@ -20,7 +20,7 @@ type Node<E = never, R = never> = Effect.Effect<ElementDescriptor, E, R>;
 Every element in a Weft tree **is an Effect**. `h.div(...)`, a component's return value, a boundary — each is an `Effect` that, when run, produces an element descriptor. Two consequences follow immediately, and they shape everything else:
 
 1. **The error (`E`) and requirement (`R`) channels accumulate through the tree.** A child that reads a service, or a prop backed by a failible stream, contributes its `R` and `E` to its parent, which contributes to _its_ parent, up to the mount boundary. The type of your app node is the exact union of everything it needs and everything it can fail with — visible to the type checker, satisfiable exactly once, at `mount`/`hydrate`. See [The Combinator API](./combinator-api.md) for how the accumulation works mechanically.
-2. **Every Effect combinator applies to a node directly.** `Effect.provide`, `Effect.flatMap`, `Effect.gen`, `Effect.catchAll` — none of them are special-cased for UI. A node is an ordinary Effect, so the entire Effect ecosystem composes with your view for free.
+2. **Every Effect combinator applies to a node directly.** `Effect.provide`, `Effect.flatMap`, `Effect.gen`, `Effect.catch` — none of them are special-cased for UI. A node is an ordinary Effect, so the entire Effect ecosystem composes with your view for free.
 
 JSX collapses every component to an opaque `JSX.Element`, erasing both channels. Weft keeps them, and that is the point of the whole design. (There is [no JSX](./combinator-api.md) here — components are plain functions you _call_.)
 

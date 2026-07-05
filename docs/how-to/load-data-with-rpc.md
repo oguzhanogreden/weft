@@ -39,7 +39,7 @@ The rpc **contract** (pure Schema) is shared with the client. The rpc **handler*
 
 ```typescript
 // data/inventory.ts
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup } from "effect/unstable/rpc";
 import { Context, Effect, Layer, Schema } from "effect";
 
 // --- Contract (shareable with the client) ---
@@ -53,10 +53,10 @@ export const GetStock = Rpc.make("GetStock", { payload: StockKey, success: Stock
 export const StockRpcs = RpcGroup.make(GetStock);
 
 // --- Handler (server-only; the client never imports this) ---
-class Inventory extends Context.Tag("Inventory")<
+class Inventory extends Context.Service<
   Inventory,
   { readonly stockFor: (id: number) => Effect.Effect<typeof Stock.Type> }
->() {}
+>()("Inventory") {}
 
 const InventoryLive = Layer.succeed(Inventory, {
   stockFor: (id) => Effect.succeed({ units: 7 + (id % 5) }),
@@ -68,7 +68,7 @@ export const StockLive = StockRpcs.toLayer({
 }).pipe(Layer.provide(InventoryLive));
 ```
 
-Declare server-only services with [`ServerTag`](../reference/core.md#servertag) (not `Context.Tag`) when they might be referenced from universal code: the brand makes a leak into `render` a compile error at the `hydrate` call site rather than a runtime surprise.
+Declare server-only services with [`ServerTag`](../reference/core.md#servertag) (not `Context.Service`) when they might be referenced from universal code: the brand makes a leak into `render` a compile error at the `hydrate` call site rather than a runtime surprise.
 
 ## Wiring the router
 
@@ -157,7 +157,7 @@ Boundary.catchTag({ tag: "OutOfStock", fallback: (e) => h.p({ class: "error" }, 
 ]);
 ```
 
-A transport **defect** (no `Cause.failureOption`), or an rpc with no `error` schema, is **not** replayed; it propagates — a server-side fallback and a client mismatch.
+A transport **defect** (no `Cause.findErrorOption`), or an rpc with no `error` schema, is **not** replayed; it propagates — a server-side fallback and a client mismatch.
 
 ## When to use
 

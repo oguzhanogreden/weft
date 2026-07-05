@@ -43,7 +43,7 @@ const Counter = () =>
     const count = yield* SubscriptionRef.make(0);
 
     return yield* h.div([
-      h.span([count.changes]),
+      h.span([SubscriptionRef.changes(count)]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
     ]);
   });
@@ -82,7 +82,7 @@ const AutoFocusInput = () =>
     const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
-      inputRef.changes,
+      SubscriptionRef.changes(inputRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((el) => Effect.sync(() => el.value.focus())),

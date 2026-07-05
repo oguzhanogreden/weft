@@ -17,10 +17,10 @@ SSR machinery around it.
 
 ## Solution
 
-`AppRpcClientTag` is a plain `Context.Tag` exported from `@weftui/core`, so a router-less
-client app can **provide the seam directly**. Here `AppRpcClientLive` is an in-process
-`AppRpcClient` whose `call` returns a product after a short delay. Mounting the boundary
-under that layer exercises the client-first mount end to end.
+`AppRpcClientTag` is a plain `Context.Service` key exported from `@weftui/core`, so a
+router-less client app can **provide the seam directly**. Here `AppRpcClientLive` is an
+in-process `AppRpcClient` whose `call` returns a product after a short delay. Mounting the
+boundary under that layer exercises the client-first mount end to end.
 
 ## How it works
 

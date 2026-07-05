@@ -23,19 +23,19 @@ Then open <http://localhost:5173> (or the port shown in the terminal).
 
 | Section | Variant           | What triggers it                                             |
 | ------- | ----------------- | ------------------------------------------------------------ |
-| 1       | `catchAll`        | `NetworkError` after 800 ms                                  |
+| 1       | `catch`           | `NetworkError` after 800 ms                                  |
 | 2       | `catchTag`        | `AuthError` — only this tag is caught                        |
 | 3       | `catchTags`       | Two children, two tags, two handlers                         |
-| 4       | `catchSome`       | 503 caught; non-503 would re-raise to outer                  |
+| 4       | `catchFilter`     | 503 caught; non-503 would re-raise to outer                  |
 | 5       | `catchIf`         | 5xx predicate; 4xx would re-raise                            |
 | 6       | Nested            | Inner catches `AuthError`; `NetworkError` re-raises to outer |
 | 7       | Post-mount stream | Stream shows live data for 2 s, then fails → DOM swap        |
-| 8       | `catchAllCause`   | Component throws synchronously → defect caught               |
+| 8       | `catchCause`      | Component throws synchronously → defect caught               |
 | 9       | Remount           | Toggle off/on to see boundary reset each mount               |
 
 ## Usage
 
-### catchAll — simplest form
+### catch — simplest form
 
 ```typescript
 import { Boundary, h } from "@weftui/core";
@@ -44,7 +44,7 @@ import { Data, Effect } from "effect";
 class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
 
 const SafeWidget = () =>
-  Boundary.catchAll({ fallback: (e) => h.div({ class: "error" }, `Error ${e.status}`) }, [
+  Boundary.catch({ fallback: (e) => h.div({ class: "error" }, `Error ${e.status}`) }, [
     Effect.fail(new ApiError({ status: 503 })),
   ]);
 ```
@@ -73,13 +73,16 @@ Boundary.catchTags(
 );
 ```
 
-### catchSome — conditional catch
+### catchFilter — conditional catch
+
+`catchFilter` takes a `Filter` and a `fallback` as **positional** arguments (no wrapping props object) — a `Result.succeed` recovers via `fallback`, a `Result.fail` re-raises:
 
 ```typescript
-Boundary.catchSome(
-  {
-    fallback: (e) => (e.status === 503 ? Option.some(h.div("Service unavailable")) : Option.none()), // re-raise anything else
-  },
+import { Filter, Result } from "effect";
+
+Boundary.catchFilter(
+  Filter.make((e: NetworkError) => (e.status === 503 ? Result.succeed(e) : Result.fail(e))),
+  (e) => h.div("Service unavailable"), // only reached for a 503
   [ChildComponent()],
 );
 ```
@@ -96,10 +99,10 @@ Boundary.catchIf(
 );
 ```
 
-### catchAllCause — defects and interruptions
+### catchCause — defects and interruptions
 
 ```typescript
-Boundary.catchAllCause(
+Boundary.catchCause(
   {
     fallback: (cause) => h.div(`Unexpected: ${String(cause)}`),
   },
@@ -111,7 +114,7 @@ Boundary.catchAllCause(
 
 ```typescript
 // Inner catches AuthError; NetworkError re-raises to outer
-Boundary.catchAll({ fallback: (e) => h.div({ class: "outer-error" }, `Outer: ${e._tag}`) }, [
+Boundary.catch({ fallback: (e) => h.div({ class: "outer-error" }, `Outer: ${e._tag}`) }, [
   Boundary.catchTag({ tag: "AuthError", fallback: (e) => h.div(`Auth: ${e.reason}`) }, [
     ComponentWithMixedErrors(),
   ]),

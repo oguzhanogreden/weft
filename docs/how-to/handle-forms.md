@@ -9,15 +9,15 @@ description: Build a controlled form with SubscriptionRef field state, reactive 
 
 **Goal:** a controlled form whose inputs drive `SubscriptionRef` state, whose errors update reactively as the user types, and whose submit runs an Effect.
 
-Each field is a `SubscriptionRef`. Bind it with `oninput`, derive validation from its `.changes` stream, and return an `Effect` from `onsubmit` (after `preventDefault`).
+Each field is a `SubscriptionRef`. Bind it with `oninput`, derive validation from its `SubscriptionRef.changes(ref)` stream, and return an `Effect` from `onsubmit` (after `preventDefault`).
 
 ```typescript
 import { h } from "@weftui/core";
-import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
+import { Effect, Result, Schema, Stream, SubscriptionRef } from "effect";
 
 const Email = Schema.String.pipe(
-  Schema.filter((s) => s.includes("@"), { message: () => "Must contain @" }),
-  Schema.filter((s) => s.includes("."), { message: () => "Must contain a domain" }),
+  Schema.check(Schema.makeFilter((s) => (s.includes("@") ? undefined : "Must contain @"))),
+  Schema.check(Schema.makeFilter((s) => (s.includes(".") ? undefined : "Must contain a domain"))),
 );
 
 const LoginForm = () =>
@@ -26,11 +26,11 @@ const LoginForm = () =>
     const status = yield* SubscriptionRef.make<string | null>(null);
 
     // Validation is a stream derived from the field — it re-runs as the user types.
-    const error = Stream.map(email.changes, (value) => {
+    const error = Stream.map(SubscriptionRef.changes(email), (value) => {
       if (value.length === 0) return null; // don't nag an empty field
-      return Either.match(Schema.decodeUnknownEither(Email)(value), {
-        onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-        onRight: () => null,
+      return Result.match(Schema.decodeUnknownResult(Email)(value), {
+        onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+        onSuccess: () => null,
       });
     });
 
@@ -52,7 +52,7 @@ const LoginForm = () =>
         }),
         Stream.map(error, (err) => (err ? h.span({ class: "error-text" }, err) : null)),
         h.button({ type: "submit" }, "Login"),
-        h.div([Stream.map(status.changes, (s) => (s ? h.span(s) : null))]),
+        h.div([Stream.map(SubscriptionRef.changes(status), (s) => (s ? h.span(s) : null))]),
       ],
     );
   });
@@ -61,7 +61,7 @@ const LoginForm = () =>
 ## How it works
 
 - **Field state** is a `SubscriptionRef.make("")`; `oninput` writes the current value with `SubscriptionRef.set`. Because the input is driven by the ref, it is a controlled input.
-- **Validation is reactive**, not on-blur or on-submit only: `Stream.map(email.changes, …)` produces an error string (or `null`) on every keystroke. Use [`Schema`](https://effect.website/docs/schema/introduction) to decode — `Schema.decodeUnknownEither(schema)(value)` returns an `Either`, and `Either.match` turns it into UI. A node or `null` in a child slot renders the error or nothing.
+- **Validation is reactive**, not on-blur or on-submit only: `Stream.map(SubscriptionRef.changes(email), …)` produces an error string (or `null`) on every keystroke. Use [`Schema`](https://effect.website/docs/schema/introduction) to decode — `Schema.decodeUnknownResult(schema)(value)` returns a `Result`, and `Result.match` turns it into UI. A node or `null` in a child slot renders the error or nothing.
 - **Submit returns an Effect.** `onsubmit` calls `e.preventDefault()` and then **returns** an `Effect` (it is not `yield*`-ed inline) — the renderer runs it in a detached fiber, so it can `SubscriptionRef.set`, `Effect.sleep`, read fields with `SubscriptionRef.get`, or call a service.
 
 ## Variations

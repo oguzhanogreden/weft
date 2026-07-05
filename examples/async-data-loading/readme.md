@@ -23,7 +23,7 @@ const AsyncComponent = () =>
     Stream.fromEffect(
       fetchData().pipe(
         Effect.flatMap((data) => h.div(data.value)),
-        Effect.catchAll((err) => h.div({ class: "error" }, err.message)),
+        Effect.catch((err) => h.div({ class: "error" }, err.message)),
       ),
     ),
   );
@@ -41,7 +41,7 @@ const DelayedComponent = () =>
 1. Components return `Effect<Node>` or `Stream<Node>` — both are rendered reactively
 2. `Stream.concat` sequences multiple outputs (loading → data)
 3. `Stream.fromEffect` converts an Effect to a single-element Stream
-4. `Effect.catchAll` converts errors to fallback nodes
+4. `Effect.catch` converts errors to fallback nodes
 5. Multiple async components render in parallel by default
 
 ## Benefits
@@ -73,7 +73,7 @@ const SafeData = () =>
     Stream.fromEffect(
       fetchData().pipe(
         Effect.flatMap((data) => h.div({ class: "success" }, data.value)),
-        Effect.catchAll((error) => h.div({ class: "error" }, error.message)),
+        Effect.catch((error) => h.div({ class: "error" }, error.message)),
       ),
     ),
   );
