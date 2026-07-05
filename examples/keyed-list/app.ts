@@ -84,7 +84,7 @@ const program = Effect.gen(function* () {
       h.button({ onclick: () => update((c) => c.slice(1)) }, "Remove first"),
     ]),
 
-    h.ul([List.each({ of: rows.changes, by: (row: Row) => row.id }, renderRow)]),
+    h.ul([List.each({ of: SubscriptionRef.changes(rows), by: (row: Row) => row.id }, renderRow)]),
   ]);
 });
 

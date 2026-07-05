@@ -323,7 +323,7 @@ function ToggleSection() {
     "Toggle demo",
   );
 
-  const demo = show.changes.pipe(
+  const demo = SubscriptionRef.changes(show).pipe(
     Stream.flatMap((visible: boolean) => {
       if (!visible) return Stream.fromEffect(h.span({ class: "muted" }, "(unmounted)"));
       return Stream.fromEffect(

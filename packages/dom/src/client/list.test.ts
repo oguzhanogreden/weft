@@ -124,7 +124,9 @@ describe("List.each — Mount (MR)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([]));
 
     await runMount(
-      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, x.name),
+      ),
       root,
     );
     await waitForStream();
@@ -253,7 +255,9 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     );
 
     await runMount(
-      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, x.name),
+      ),
       root,
     );
     await waitForStream();

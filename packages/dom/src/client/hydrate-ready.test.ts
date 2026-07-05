@@ -217,7 +217,7 @@ describe("AC-R6: infinite stream does not deadlock", () => {
   it("resolves after the first emission of a never-completing region", async () => {
     createTestDOM();
     const ref = await Effect.runPromise(SubscriptionRef.make(h.span({}, "live")));
-    const app = h.div({}, [ref.changes]);
+    const app = h.div({}, [SubscriptionRef.changes(ref)]);
     const root = await seedServerHtml(app);
 
     await withTimeout(Effect.runPromise(hydrate(app, root)), 1000, "infinite hydrate");

@@ -53,7 +53,7 @@ describe("renderToStream - serialization parity", () => {
 
   it("AC-R4: a non-terminating reactive attribute resolves to its current value without hanging", async () => {
     const ref = await Effect.runPromise(SubscriptionRef.make("live"));
-    assert.equal(await run(h.div({ id: ref.changes })), '<div id="live"></div>');
+    assert.equal(await run(h.div({ id: SubscriptionRef.changes(ref) })), '<div id="live"></div>');
   });
 
   it("renders void elements without a closing tag", async () => {

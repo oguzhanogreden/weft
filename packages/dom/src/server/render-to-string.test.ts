@@ -86,7 +86,7 @@ describe("renderToString - reactive attributes", () => {
 
   it("AC-R4: resolves a non-terminating Stream attribute to its current value without hanging", async () => {
     const ref = await Effect.runPromise(SubscriptionRef.make("live"));
-    const html = await run(h.div({ id: ref.changes }));
+    const html = await run(h.div({ id: SubscriptionRef.changes(ref) }));
     assert.equal(html, '<div id="live"></div>');
   });
 });
