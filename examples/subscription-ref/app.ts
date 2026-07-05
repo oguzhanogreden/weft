@@ -170,7 +170,10 @@ const TodoList = () =>
         list.map((todo) => (todo.id === id ? { ...todo, done: !todo.done } : todo)),
       );
 
-    const completedCount = Stream.map(SubscriptionRef.changes(todos), (list) => list.filter((t) => t.done).length);
+    const completedCount = Stream.map(
+      SubscriptionRef.changes(todos),
+      (list) => list.filter((t) => t.done).length,
+    );
     const totalCount = Stream.map(SubscriptionRef.changes(todos), (list) => list.length);
 
     return yield* h.div([
@@ -207,10 +210,14 @@ const CoordinatedRefs = () =>
     const firstName = yield* SubscriptionRef.make("");
     const lastName = yield* SubscriptionRef.make("");
 
-    const fullName = Stream.zipLatestWith(SubscriptionRef.changes(firstName), SubscriptionRef.changes(lastName), (first, last) => {
-      if (!first && !last) return "(empty)";
-      return `${first} ${last}`.trim();
-    });
+    const fullName = Stream.zipLatestWith(
+      SubscriptionRef.changes(firstName),
+      SubscriptionRef.changes(lastName),
+      (first, last) => {
+        if (!first && !last) return "(empty)";
+        return `${first} ${last}`.trim();
+      },
+    );
 
     return yield* h.div([
       h.div({ style: { marginBottom: "0.5rem" } }, [

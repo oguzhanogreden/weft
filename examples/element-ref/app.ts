@@ -94,7 +94,10 @@ const MeasureElement = () =>
         },
         "Measured Box",
       ),
-      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong([SubscriptionRef.changes(dimensions)])]),
+      h.p({ style: { marginTop: "0.5rem" } }, [
+        "Dimensions: ",
+        h.strong([SubscriptionRef.changes(dimensions)]),
+      ]),
     ]);
   });
 

@@ -6,9 +6,7 @@ import { Predicate } from "effect";
  * `get`/`changes` channels are held. Effect 4 dropped its own
  * `Subscribable`/`Readable` modules, so Weft carries this reactivity interface
  * locally; the string brand mirrors Effect 4's `"~effect/*"` TypeId convention
- * (e.g. `SubscriptionRef`), keeping the channels off the public shape so they
- * are read through the {@link get} / {@link changes} accessors, uniformly with
- * `SubscriptionRef.get` / `SubscriptionRef.changes`.
+ * (e.g. `SubscriptionRef`) and backs the {@link isSubscribable} guard.
  */
 export const TypeId = "~@weftui/core/Subscribable";
 
@@ -18,20 +16,22 @@ export const TypeId = "~@weftui/core/Subscribable";
 export type TypeId = typeof TypeId;
 
 /**
- * A hot, await-first reactive value. Read the current value with {@link get}
- * (an `Effect`) and the stream of every value (starting with the current one)
- * with {@link changes} (a `Stream`) — module accessors that mirror Effect 4's
- * `SubscriptionRef` surface rather than exposing the channels as members.
+ * A hot, await-first reactive value: `get` reads the current value as an
+ * `Effect`, `changes` is a `Stream` of every value (including the current one).
+ * Read them either directly or through the {@link get} / {@link changes} module
+ * accessors, which mirror Effect 4's `SubscriptionRef.get` / `.changes` so a
+ * `Subscribable` and a `SubscriptionRef` read the same way at a call site.
  *
  * This is Weft's local replacement for Effect 3's `Subscribable`, preserved as
  * public API so `Source`, `Boundary`, and the DOM renderers keep the same
  * reactivity surface across the Effect 4 migration.
  */
 export interface Subscribable<A, E = never, R = never> {
-  readonly [TypeId]: {
-    readonly get: Effect.Effect<A, E, R>;
-    readonly changes: Stream.Stream<A, E, R>;
-  };
+  readonly [TypeId]: TypeId;
+  /** Read the current value; also reachable via the {@link get} accessor. */
+  readonly get: Effect.Effect<A, E, R>;
+  /** Stream of every value; also reachable via the {@link changes} accessor. */
+  readonly changes: Stream.Stream<A, E, R>;
 }
 
 /**
@@ -43,22 +43,24 @@ export const make = <A, E = never, R = never>(options: {
   readonly get: Effect.Effect<A, E, R>;
   readonly changes: Stream.Stream<A, E, R>;
 }): Subscribable<A, E, R> => ({
-  [TypeId]: { get: options.get, changes: options.changes },
+  [TypeId]: TypeId,
+  get: options.get,
+  changes: options.changes,
 });
 
 /**
  * Read the current value of a {@link Subscribable} as an `Effect`. Mirrors
- * `SubscriptionRef.get`.
+ * `SubscriptionRef.get`, so call sites read `Subscribable`s and
+ * `SubscriptionRef`s the same way.
  */
-export const get = <A, E, R>(self: Subscribable<A, E, R>): Effect.Effect<A, E, R> =>
-  self[TypeId].get;
+export const get = <A, E, R>(self: Subscribable<A, E, R>): Effect.Effect<A, E, R> => self.get;
 
 /**
  * The `Stream` of every value of a {@link Subscribable}, starting with the
  * current one. Mirrors `SubscriptionRef.changes`.
  */
 export const changes = <A, E, R>(self: Subscribable<A, E, R>): Stream.Stream<A, E, R> =>
-  self[TypeId].changes;
+  self.changes;
 
 /**
  * Refinement guard: `true` when `u` carries the {@link TypeId} brand, i.e. was

@@ -133,7 +133,9 @@ const LoginForm = () =>
           h.input({ type: "password", placeholder: "Enter password" }),
         ]),
         h.button({ type: "submit" }, "Login"),
-        h.div({ class: "preview" }, [Stream.map(SubscriptionRef.changes(status), (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [
+          Stream.map(SubscriptionRef.changes(status), (s) => (s ? h.span(s) : null)),
+        ]),
       ],
     );
   });
@@ -196,10 +198,16 @@ const SchemaForm = () =>
     const passwordError = Stream.map(SubscriptionRef.changes(passwordRef), (v) =>
       v ? validateField(Password, v) : null,
     );
-    const ageError = Stream.map(SubscriptionRef.changes(ageRef), (v) => (v ? validateField(Age, v) : null));
+    const ageError = Stream.map(SubscriptionRef.changes(ageRef), (v) =>
+      v ? validateField(Age, v) : null,
+    );
 
     const isValid = Stream.zipLatestWith(
-      Stream.zipLatestWith(SubscriptionRef.changes(usernameRef), SubscriptionRef.changes(passwordRef), (u, p) => ({ u, p })),
+      Stream.zipLatestWith(
+        SubscriptionRef.changes(usernameRef),
+        SubscriptionRef.changes(passwordRef),
+        (u, p) => ({ u, p }),
+      ),
       SubscriptionRef.changes(ageRef),
       ({ u, p }, a) =>
         u.length > 0 &&
@@ -268,7 +276,9 @@ const SchemaForm = () =>
         h.button({ type: "submit" }, [
           Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields")),
         ]),
-        h.div({ class: "preview" }, [Stream.map(SubscriptionRef.changes(statusRef), (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [
+          Stream.map(SubscriptionRef.changes(statusRef), (s) => (s ? h.span(s) : null)),
+        ]),
       ],
     );
   });
