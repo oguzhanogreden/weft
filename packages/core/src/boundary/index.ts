@@ -51,7 +51,7 @@ function makeFailureBoundaryNode<E, R>(
  * Boundary namespace encapsulating failure and suspense boundaries. Each
  * variant wraps a subtree and shows a fallback in response to an event.
  *
- * - **Failure boundaries** (`catchAll`, `catchAllCause`, `catchTag`,
+ * - **Failure boundaries** (`catch`, `catchCause`, `catchTag`,
  *   `catchTags`, `catchSome`, `catchIf`) intercept rendering-path errors —
  *   construction-time errors and post-mount stream failures — mirroring
  *   Effect's `catch*` combinators.
@@ -67,7 +67,7 @@ function makeFailureBoundaryNode<E, R>(
  * import { Boundary, h } from "@weftui/core";
  *
  * // Failure boundary wrapping a suspense boundary — the common pairing:
- * Boundary.catchAll({ fallback: (e) => h.div({}, e.message) }, [
+ * Boundary.catch({ fallback: (e) => h.div({}, e.message) }, [
  *   Boundary.suspend({ fallback: h.div({}, "Loading…") }, [AsyncCard()]),
  * ])
  * ```
@@ -101,23 +101,28 @@ export namespace Boundary {
   /**
    * Catch all typed failures (not defects). The children's `E` is fully
    * consumed; the output `E` is only the fallback's error channel.
+   *
+   * Mirrors Effect 4's `Effect.catch` (renamed from `catchAll` in v3).
    */
-  export function catchAll<C extends readonly Renderable[], FE = never, FR = never>(
+  function catch_<C extends readonly Renderable[], FE = never, FR = never>(
     props: { readonly fallback: (e: ChildrenE<C>) => Node<FE, FR> },
     children: C,
   ): Node<FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
-      const opt = Cause.failureOption(cause);
+      const opt = Cause.findErrorOption(cause);
       return Option.isSome(opt) ? props.fallback(opt.value as ChildrenE<C>) : null;
     };
     return makeFailureBoundaryNode(match, children);
   }
+  export { catch_ as catch };
 
   /**
    * Catch all causes including defects and interruptions. The children's `E`
    * is fully consumed; the output `E` is only the fallback's error channel.
+   *
+   * Mirrors Effect 4's `Effect.catchCause` (renamed from `catchAllCause` in v3).
    */
-  export function catchAllCause<C extends readonly Renderable[], FE = never, FR = never>(
+  export function catchCause<C extends readonly Renderable[], FE = never, FR = never>(
     props: { readonly fallback: (cause: Cause.Cause<ChildrenE<C>>) => Node<FE, FR> },
     children: C,
   ): Node<FE, ChildrenR<C> | FR> {
@@ -143,7 +148,7 @@ export namespace Boundary {
     children: C,
   ): Node<CatchTagE<C, Tag> | FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
-      const opt = Cause.failureOption(cause);
+      const opt = Cause.findErrorOption(cause);
       if (Option.isNone(opt)) return null;
       const e = opt.value as { _tag?: string };
       return e._tag === props.tag
@@ -179,7 +184,7 @@ export namespace Boundary {
       }[keyof Handlers]
   > {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
-      const opt = Cause.failureOption(cause);
+      const opt = Cause.findErrorOption(cause);
       if (Option.isNone(opt)) return null;
       const e = opt.value as { _tag?: string };
       const tag = e._tag;
@@ -202,7 +207,7 @@ export namespace Boundary {
     children: C,
   ): Node<ChildrenE<C> | FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
-      const opt = Cause.failureOption(cause);
+      const opt = Cause.findErrorOption(cause);
       if (Option.isNone(opt)) return null;
       const result = props.fallback(opt.value as ChildrenE<C>);
       return Option.isSome(result) ? (result.value as Node<unknown, unknown>) : null;
@@ -223,7 +228,7 @@ export namespace Boundary {
     children: C,
   ): Node<ChildrenE<C> | FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
-      const opt = Cause.failureOption(cause);
+      const opt = Cause.findErrorOption(cause);
       if (Option.isNone(opt)) return null;
       const e = opt.value as ChildrenE<C>;
       return props.predicate(e) ? props.fallback(e) : null;
