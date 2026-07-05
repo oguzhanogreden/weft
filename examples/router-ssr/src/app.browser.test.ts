@@ -51,7 +51,15 @@ beforeEach(() => {
     const url =
       input instanceof Request ? input.url : input instanceof URL ? input.href : String(input);
     if (new URL(url, window.location.origin).pathname === "/_eui/rpc") {
-      return serverHandler(input instanceof Request ? input : new Request(url, init));
+      const req = input instanceof Request ? input : new Request(url, init);
+      return serverHandler(req).then(
+        async (res) =>
+          new Response(await res.arrayBuffer(), {
+            status: res.status,
+            statusText: res.statusText,
+            headers: res.headers,
+          }),
+      );
     }
     return originalFetch(input, init);
   }) as typeof globalThis.fetch;
