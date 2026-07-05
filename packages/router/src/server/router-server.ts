@@ -413,8 +413,7 @@ export namespace RouterServer {
     );
     // Register the HttpApi page routes into the ambient `HttpRouter`, provided
     // with the page + fallback group handlers.
-    // oxlint-disable-next-line typescript/no-explicit-any
-    const apiRoutes: Layer.Layer<any, any, any> = HttpApiBuilder.layer(api).pipe(
+    const apiRoutes = HttpApiBuilder.layer(api).pipe(
       Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)),
     );
 
@@ -424,7 +423,7 @@ export namespace RouterServer {
     // route wins over the catch-all page dispatch. With no `rpc` configured the
     // route is not registered and `/_eui/rpc` falls through to page dispatch (404).
     const rpc = options.rpc;
-    const rpcRoutes: Layer.Layer<any, any, any> =
+    const rpcRoutes =
       rpc !== undefined
         ? RpcServer.layerHttp({ group: rpc.group, path: RPC_PATH }).pipe(
             // oxlint-disable-next-line typescript/no-explicit-any
