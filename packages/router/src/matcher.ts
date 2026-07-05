@@ -1,4 +1,4 @@
-import { Either, Option, Schema } from "effect";
+import { Option, Result, Schema } from "effect";
 import type { CompiledLeaf, RouterDef } from "./compile";
 
 /** The resolved match for a URL: a leaf with decoded params/query, or not-found. */
@@ -184,21 +184,21 @@ export function match(def: RouterDef, url: string): RouteMatch {
       if (raw !== undefined) rawParams[name] = decodeURIComponent(raw);
     });
 
-    const decodedPath = Schema.decodeUnknownEither(entry.pathSchema)(rawParams);
-    if (Either.isLeft(decodedPath)) continue;
+    const decodedPath = Schema.decodeUnknownResult(entry.pathSchema)(rawParams);
+    if (Result.isFailure(decodedPath)) continue;
 
     // M8: a query decode failure (a declared query field whose value violates its
     // schema, e.g. `?page=abc` for `NumberFromString`) is a no-match, like a path
     // decode failure — not a thrown error. Excess/undeclared query keys are
     // ignored by `Schema.Struct`, so only declared-but-invalid values 404.
-    const decodedQuery = Schema.decodeUnknownEither(entry.querySchema)(parseQuery(search));
-    if (Either.isLeft(decodedQuery)) continue;
+    const decodedQuery = Schema.decodeUnknownResult(entry.querySchema)(parseQuery(search));
+    if (Result.isFailure(decodedQuery)) continue;
 
     return {
       _tag: "Matched",
       leaf: entry.leaf,
-      path: decodedPath.right,
-      query: decodedQuery.right,
+      path: decodedPath.success,
+      query: decodedQuery.success,
       url: normalizedUrl,
     };
   }
