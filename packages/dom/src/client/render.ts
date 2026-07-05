@@ -5,11 +5,9 @@ import {
   Effect,
   Exit,
   Fiber,
-  FiberRef,
   HashMap,
   HashSet,
   Layer,
-  LogLevel,
   ManagedRuntime,
   Option,
   Ref,
@@ -342,8 +340,7 @@ function camelToKebab(str: string): string {
  *
  * With an enclosing Boundary, failure causes are routed to
  * `BoundaryContext.reportError` (unchanged behavior). Without one, the exit is
- * left unobserved so the Effect runtime reports the failure itself
- * ("Fiber terminated with an unhandled error") — raised to LogLevel.Error and
+ * observed here and a failure is logged at `LogLevel.Error` via `Effect.logError`,
  * annotated with `weft.region` so it is visible and attributable by default.
  * Interruption (unmount teardown) is never reported.
  *
@@ -359,19 +356,27 @@ function forkSupervised<A, E, R>(
   return Effect.gen(function* () {
     const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
     if (Option.isNone(boundaryCtx)) {
-      // Fork-time fiber refs are inherited by the child and never restored, so
-      // the raised level + annotation survive to the runtime's reportExitValue.
-      // The effect *body* runs with the ambient level restored: fibers the
-      // stream machinery forks internally inherit that ambient (default Debug)
-      // level instead of the raised one, so a failure is reported exactly once
-      // — by the subscription fiber itself, whose body-local ref is restored to
-      // the raised fork-time value before it exits.
-      const ambientLevel = yield* FiberRef.get(FiberRef.unhandledErrorLogLevel);
-      return yield* pipe(
-        Effect.forkIn(Effect.withUnhandledErrorLogLevel(effect, ambientLevel), scope),
-        Effect.withUnhandledErrorLogLevel(Option.some(LogLevel.Error)),
-        Effect.annotateLogs("weft.region", errorContext),
+      // No enclosing Boundary: observe the forked fiber's exit ourselves and
+      // report an unhandled failure at `LogLevel.Error`, annotated with
+      // `weft.region` so it is visible and attributable by default. Interruption
+      // (unmount teardown) is never reported. Effect 4 removed the
+      // unhandled-error-log-level FiberRef (and `withUnhandledErrorLogLevel`), so
+      // the report is explicit here rather than deferred to the runtime — which
+      // mirrors the with-Boundary branch below and is deterministic (exactly once).
+      const fiber = yield* Effect.forkIn(effect, scope);
+      yield* pipe(
+        Fiber.await(fiber),
+        Effect.flatMap((exit) =>
+          Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)
+            ? pipe(
+                Effect.logError(exit.cause),
+                Effect.annotateLogs("weft.region", errorContext),
+              )
+            : Effect.void,
+        ),
+        Effect.forkIn(scope),
       );
+      return fiber;
     }
     const fiber = yield* Effect.forkIn(effect, scope);
     yield* pipe(
