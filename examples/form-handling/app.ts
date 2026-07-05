@@ -153,12 +153,9 @@ const Password = Schema.String.pipe(
   Schema.check(Schema.makeFilter((s) => /[0-9]/.test(s) ? undefined : "Must contain number")),
 );
 
-const Age = Schema.String.pipe(
-  Schema.check(Schema.makeFilter((s) => /^\d+$/.test(s) ? undefined : "Must be a number")),
-  Schema.transform(Schema.Number, {
-    decode: (s) => Number.parseInt(s, 10),
-    encode: (n) => String(n),
-  }),
+// `NumberFromString` decodes the string input to a number (failing on a
+// non-numeric value), replacing v3's explicit digit-check + `Schema.transform`.
+const Age = Schema.NumberFromString.pipe(
   Schema.check(Schema.makeFilter((n) => n >= 18 ? undefined : "Must be 18 or older")),
   Schema.check(Schema.makeFilter((n) => n <= 120 ? undefined : "Invalid age")),
 );
