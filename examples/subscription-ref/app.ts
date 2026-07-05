@@ -11,7 +11,7 @@
  */
 
 import { h } from "@weftui/core";
-import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
+import { Effect, Result, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
 // Example 1: Basic Counter
@@ -72,12 +72,12 @@ interface FormState {
   errors: { name: string | null; email: string | null };
 }
 
-const validate = <A, I>(schema: Schema.Schema<A, I>, value: I): string | null => {
+const validate = <A, I>(schema: Schema.Codec<A, I>, value: I): string | null => {
   if (!value) return null;
-  const result = Schema.decodeUnknownEither(schema)(value);
-  return Either.match(result, {
-    onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-    onRight: () => null,
+  const result = Schema.decodeUnknownResult(schema)(value);
+  return Result.match(result, {
+    onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+    onSuccess: () => null,
   });
 };
 

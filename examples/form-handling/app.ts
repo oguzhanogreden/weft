@@ -6,7 +6,7 @@
  */
 
 import { h } from "@weftui/core";
-import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
+import { Effect, Result, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
 // Example 1: Basic Reactive Input
@@ -44,13 +44,13 @@ const SchemaEmailInput = () =>
 
     const validationStream = Stream.map(email.changes, (value) => {
       if (value.length === 0) return { valid: false, error: null };
-      const result = Schema.decodeUnknownEither(Email)(value);
-      return Either.match(result, {
-        onLeft: (e) => ({
+      const result = Schema.decodeUnknownResult(Email)(value);
+      return Result.match(result, {
+        onFailure: (e) => ({
           valid: false,
           error: e.message.split(":").pop()?.trim() ?? "Invalid",
         }),
-        onRight: () => ({ valid: true, error: null }),
+        onSuccess: () => ({ valid: true, error: null }),
       });
     });
 
@@ -175,11 +175,11 @@ const Age = Schema.String.pipe(
   Schema.filter((n) => n <= 120, { message: () => "Invalid age" }),
 );
 
-const validateField = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
-  const result = Schema.decodeUnknownEither(schema)(value);
-  return Either.match(result, {
-    onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-    onRight: () => null,
+const validateField = <A, I>(schema: Schema.Codec<A, I>, value: I) => {
+  const result = Schema.decodeUnknownResult(schema)(value);
+  return Result.match(result, {
+    onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+    onSuccess: () => null,
   });
 };
 
