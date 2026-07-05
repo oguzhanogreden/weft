@@ -51,7 +51,7 @@ export const CodeBlock = Component.gen(function* (props: CodeBlockProps) {
           yield* SubscriptionRef.set(copied, false);
         }),
       ),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
 
   const label = Stream.map(copied.changes, (done) => (done ? "Copied" : "Copy"));

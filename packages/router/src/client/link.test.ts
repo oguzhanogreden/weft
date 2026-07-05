@@ -28,7 +28,7 @@ function fixture() {
 let dom: JSDOM;
 /** Navigation targets recorded by the test's `navigate`. */
 let navigations: string[];
-let scope: Scope.CloseableScope;
+let scope: Scope.Closeable;
 
 /** Sets up a fresh JSDOM at `url`, installs the interceptor, and records navigations. */
 async function install(url = "http://localhost/"): Promise<void> {
@@ -46,7 +46,7 @@ async function install(url = "http://localhost/"): Promise<void> {
     });
 
   scope = await Effect.runPromise(Scope.make());
-  await Effect.runPromise(Scope.extend(installLinkInterceptor(fixture(), navigate), scope));
+  await Effect.runPromise(Scope.provide(installLinkInterceptor(fixture(), navigate), scope));
 }
 
 /** Appends an anchor with `attrs`, dispatches a click on it, and returns the event. */

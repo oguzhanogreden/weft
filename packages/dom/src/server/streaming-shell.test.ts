@@ -136,7 +136,7 @@ describe("renderToHydratableShell — shell split", () => {
           Boundary.suspend({ fallback: h.span({}, "loading") }, [Effect.never]),
         ]);
         const { patches } = yield* Effect.provide(renderToHydratableShell(tree), NoRpc).pipe(
-          Scope.extend(scope),
+          Scope.provide(scope),
         );
         const collector = yield* Effect.fork(Stream.runCollect(patches));
         yield* Scope.close(scope, Exit.void);

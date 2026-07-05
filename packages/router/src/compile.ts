@@ -38,7 +38,7 @@ export interface CompiledLeaf {
    * `HttpApiEndpoint.setPath` constraint without an `as any` cast — param schemas
    * round-trip strings, so the `Schema.Struct` value is asserted to this shape.
    */
-  readonly pathSchema: Schema.Schema<
+  readonly pathSchema: Schema.Codec<
     Record<string, unknown>,
     Readonly<Record<string, string | undefined>>
   >;
@@ -47,7 +47,7 @@ export interface CompiledLeaf {
    * (`Record<string, string | ReadonlyArray<string> | undefined>`) so it satisfies
    * platform's `HttpApiEndpoint.setUrlParams` constraint without a cast.
    */
-  readonly querySchema: Schema.Schema<
+  readonly querySchema: Schema.Codec<
     Record<string, unknown>,
     Readonly<Record<string, string | ReadonlyArray<string> | undefined>>
   >;

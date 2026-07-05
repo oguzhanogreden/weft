@@ -17,7 +17,7 @@ export type RouteMatch =
     };
 
 /** A string-encodeable schema as carried by an HttpApi endpoint's path/urlParams slot. */
-type ParamSchema = Schema.Schema<Record<string, unknown>, unknown, never>;
+type ParamSchema = Schema.Codec<Record<string, unknown>, unknown, never>;
 
 /**
  * The slice of an `HttpApiEndpoint` the matcher reads. `def.httpApi` is typed

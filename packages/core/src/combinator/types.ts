@@ -1,4 +1,5 @@
-import type { Effect, Stream, Subscribable } from "effect";
+import type { Effect, Stream } from "effect";
+import type * as Subscribable from "~/subscribable";
 import type { ElementDescriptor, Renderable } from "~/types";
 
 export type { ElementDescriptor, Renderable };

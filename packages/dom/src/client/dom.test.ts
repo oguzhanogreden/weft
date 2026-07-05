@@ -996,7 +996,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
         Stream.fromEffect(
           fetchUser(id).pipe(
             Effect.flatMap((user) => h.div({ id: "profile" }, user.name)),
-            Effect.catchAll(() => h.div({ id: "profile" }, "Failed to load user")),
+            Effect.catch(() => h.div({ id: "profile" }, "Failed to load user")),
           ),
         ),
       );
