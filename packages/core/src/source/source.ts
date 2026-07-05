@@ -111,7 +111,7 @@ export namespace Source {
           Stream.runForEach(source, (value) =>
             pipe(
               SubscriptionRef.set(ref, Option.some(value)),
-              Effect.zipRight(Deferred.succeed(latch, value)),
+              Effect.andThen(Deferred.succeed(latch, value)),
               Effect.asVoid,
             ),
           ),
@@ -129,7 +129,7 @@ export namespace Source {
           // Surface a real source failure on `changes`; ignore scope-close
           // interruption (teardown is not an error).
           Effect.onError((cause) =>
-            Cause.isInterruptedOnly(cause)
+            Cause.hasInterruptsOnly(cause)
               ? Effect.void
               : Effect.asVoid(Deferred.failCause(failure, cause)),
           ),
