@@ -322,7 +322,9 @@ describe("AC-S8: no-scope regression — plain mount via bare runPromise", () =>
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
 
-    const handle = await Effect.runPromise(mount(h.div({}, [SubscriptionRef.changes(region)]), root));
+    const handle = await Effect.runPromise(
+      mount(h.div({}, [SubscriptionRef.changes(region)]), root),
+    );
     await tick();
     assert.equal(root.textContent, "first");
 

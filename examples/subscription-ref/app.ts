@@ -58,12 +58,12 @@ const DerivedState = () =>
 // ============================================================================
 
 const Name = Schema.String.pipe(
-  Schema.check(Schema.makeFilter((s) => s.length >= 2 ? undefined : "Min 2 characters")),
+  Schema.check(Schema.makeFilter((s) => (s.length >= 2 ? undefined : "Min 2 characters"))),
 );
 
 const Email = Schema.String.pipe(
-  Schema.check(Schema.makeFilter((s) => s.includes("@") ? undefined : "Must contain @")),
-  Schema.check(Schema.makeFilter((s) => s.includes(".") ? undefined : "Must have domain")),
+  Schema.check(Schema.makeFilter((s) => (s.includes("@") ? undefined : "Must contain @"))),
+  Schema.check(Schema.makeFilter((s) => (s.includes(".") ? undefined : "Must have domain"))),
 );
 
 interface FormState {

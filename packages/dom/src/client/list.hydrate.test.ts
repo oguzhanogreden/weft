@@ -152,7 +152,9 @@ describe("List.each hydration — HY2 flash-free adoption", () => {
     createTestDOM();
     const counter = await Effect.runPromise(SubscriptionRef.make(0));
     const app = List.each({ of: [p("a"), p("b")], by: (x) => x.id }, (x) =>
-      x.id === "a" ? h.li({ id: x.id }, [SubscriptionRef.changes(counter)]) : h.li({ id: x.id }, x.name),
+      x.id === "a"
+        ? h.li({ id: x.id }, [SubscriptionRef.changes(counter)])
+        : h.li({ id: x.id }, x.name),
     );
     const root = await seedServerHtml(app);
 
@@ -369,7 +371,9 @@ describe("List.each hydration — HY2 marker id stability", () => {
   it("post-hydration inserts mint marker ids that don't collide with adopted ones", async () => {
     createTestDOM();
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
-    const app = List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name));
+    const app = List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+      h.li({ id: x.id }, x.name),
+    );
     const root = await seedServerHtml(app);
 
     await Effect.runPromise(hydrate(app, root));
@@ -398,7 +402,9 @@ describe("List.each hydration — HY2 source & identity coverage", () => {
   it("hydrates an empty server region and inserts on a later emission", async () => {
     createTestDOM();
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([]));
-    const app = List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name));
+    const app = List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+      h.li({ id: x.id }, x.name),
+    );
     const root = await seedServerHtml(app);
     assert.equal(commentData(root).filter((d) => d.includes("list-item-start")).length, 0);
 

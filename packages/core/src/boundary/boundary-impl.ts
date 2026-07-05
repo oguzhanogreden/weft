@@ -147,9 +147,7 @@ export function catchTag<
     const opt = Cause.findErrorOption(cause);
     if (Option.isNone(opt)) return null;
     const e = opt.value as { _tag?: string };
-    return e._tag === props.tag
-      ? props.fallback(e as Extract<ChildrenE<C>, { _tag: Tag }>)
-      : null;
+    return e._tag === props.tag ? props.fallback(e as Extract<ChildrenE<C>, { _tag: Tag }>) : null;
   };
   return makeFailureBoundaryNode(match, children);
 }

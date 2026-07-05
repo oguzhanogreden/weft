@@ -68,7 +68,9 @@ describe("mountScoped — scoped layer outlives initial render (issue #123)", ()
         // Reactive region reads the scoped service via the mount runtime.
         Effect.gen(function* () {
           const counter = yield* Counter;
-          return h.strong({ "data-testid": "count" }, [Stream.map(SubscriptionRef.changes(counter.value), String)]);
+          return h.strong({ "data-testid": "count" }, [
+            Stream.map(SubscriptionRef.changes(counter.value), String),
+          ]);
         }),
         h.button(
           {

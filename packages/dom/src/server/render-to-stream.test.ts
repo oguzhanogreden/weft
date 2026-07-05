@@ -80,14 +80,7 @@ describe("renderToStream - streaming behavior", () => {
     const chunks = await Effect.runPromise(
       Stream.runCollect(renderToStream(h.div({}, [h.span({}, "a"), "b"]))),
     );
-    assert.deepEqual(chunks, [
-      "<div>",
-      "<span>",
-      "a",
-      "</span>",
-      "b",
-      "</div>",
-    ]);
+    assert.deepEqual(chunks, ["<div>", "<span>", "a", "</span>", "b", "</div>"]);
   });
 
   it("AC-ST2: empty/boolean/null nodes contribute no chunks", async () => {
