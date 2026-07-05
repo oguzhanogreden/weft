@@ -50,8 +50,12 @@ beforeEach(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url =
       input instanceof Request ? input.url : input instanceof URL ? input.href : String(input);
-    if (new URL(url, window.location.origin).pathname === "/_eui/rpc") {
+    // The rpc client posts to `/_eui/rpc` but the HTTP transport normalizes a
+    // trailing slash (`/_eui/rpc/`); match either so the shim always intercepts.
+    if (new URL(url, window.location.origin).pathname.replace(/\/$/, "") === "/_eui/rpc") {
       const req = input instanceof Request ? input : new Request(url, init);
+      // Buffer the streamed rpc response into bytes before returning it (see the
+      // refetch spec) so the browser fetch client receives a non-empty body.
       return serverHandler(req).then(
         async (res) =>
           new Response(await res.arrayBuffer(), {

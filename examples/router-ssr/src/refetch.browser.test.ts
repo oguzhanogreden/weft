@@ -55,7 +55,9 @@ beforeEach(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url =
       input instanceof Request ? input.url : input instanceof URL ? input.href : String(input);
-    if (new URL(url, window.location.origin).pathname === "/_eui/rpc") {
+    // The rpc client posts to `/_eui/rpc` but the HTTP transport normalizes a
+    // trailing slash (`/_eui/rpc/`); match either so the shim always intercepts.
+    if (new URL(url, window.location.origin).pathname.replace(/\/$/, "") === "/_eui/rpc") {
       // Buffer the handler's response into concrete bytes before handing it back
       // to the browser fetch client. The Effect 4 rpc web handler streams its
       // ndjson body from a scope that closes once the handler returns; relaying
