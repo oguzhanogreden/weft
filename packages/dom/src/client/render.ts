@@ -649,11 +649,14 @@ function renderSuspenseBoundary(
           ? (rawChildren as readonly Renderable[])
           : [rawChildren as Renderable];
 
-    // Wrap direct Effect/Stream children in function-component descriptors so
-    // they go through renderComponent and register/settle with this boundary.
-    // Static element nodes ({type, props}) are passed through unchanged.
+    // Wrap direct *reactive* Effect/Stream children in function-component
+    // descriptors so they go through renderComponent and register/settle with
+    // this boundary. Static-markup Nodes carry a descriptor (and are Effects too,
+    // iterable under Effect 4) — pass them through so renderNode renders them
+    // synchronously; wrapping them would defer to an async fiber that no longer
+    // completes at mount, and they never suspend anyway.
     const suspenseChildren = childArray.map((child): Renderable => {
-      if (Effect.isEffect(child) || isStream(child)) {
+      if (getElementDescriptor(child) === undefined && (Effect.isEffect(child) || isStream(child))) {
         const fn = (): Renderable => child;
         return { type: fn, props: {} };
       }
