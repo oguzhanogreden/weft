@@ -1,4 +1,4 @@
-import { AppRpcClientTag, type Node } from "@weftui/core";
+import { AppRpcClientTag, type Node, Subscribable } from "@weftui/core";
 import {
   renderToHydratableShell,
   renderToStringHydratable,
@@ -8,7 +8,7 @@ import {
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { HttpServer, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "effect/unstable/rpc";
-import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream, Subscribable } from "effect";
+import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream } from "effect";
 import type { RouterDef } from "../compile";
 import { isRouterNotFound, RouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";

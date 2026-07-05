@@ -16,7 +16,8 @@
 
 import { getElementDescriptor } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
-import { Effect, Exit, Subscribable } from "effect";
+import { Effect, Exit } from "effect";
+import { Subscribable } from "@weftui/core";
 import type { RouteMatch } from "./matcher";
 import { Router } from "./router-service";
 

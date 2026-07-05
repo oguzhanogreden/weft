@@ -1,4 +1,4 @@
-import { AppRpcClientTag } from "@weftui/core";
+import { AppRpcClientTag, Subscribable } from "@weftui/core";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 import type { RpcGroup } from "effect/unstable/rpc";
@@ -13,7 +13,6 @@ import {
   Runtime,
   Scope,
   Stream,
-  Subscribable,
   SubscriptionRef,
 } from "effect";
 import type { RouterDef } from "../compile";

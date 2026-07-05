@@ -1,6 +1,7 @@
 import type { Node } from "@weftui/core";
 import type { HttpApiClient } from "effect/unstable/httpapi";
-import { Context, Effect, type Option, Stream, Subscribable } from "effect";
+import { Context, Effect, type Option, Stream } from "effect";
+import { Subscribable } from "@weftui/core";
 import { makeRouter } from "./compile";
 import { RouterParamsError } from "./errors";
 import type { RouteMatch } from "./matcher";
