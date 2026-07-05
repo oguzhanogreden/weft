@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Deferred, Effect, Filter, Option, pipe, Result, Stream } from "effect";
+import { Cause, Data, Deferred, Effect, Filter, pipe, Result, Stream } from "effect";
 import { Boundary, h, List } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
