@@ -36,7 +36,7 @@ const AutoFocusInput = () =>
 
 - **The `ref` prop** takes a `SubscriptionRef<Option<T>>`. The renderer sets it to `Option.some(element)` **once**, when the element is created — so the ref is an `Option`: `None` until mount, `Some(el)` after.
 - **React to mount** by observing `SubscriptionRef.changes(ref)`: `Stream.filter(Option.isSome)` waits for the element, `Stream.take(1)` takes just the first appearance, and `Stream.runForEach` does the imperative work. This is the equivalent of a mount effect.
-- **Use `Effect.forkScoped`, not `Effect.fork`.** `forkScoped` ties the observer fiber to the component's **instance scope** (the ambient `Scope` the renderer provides), so it lives as long as the component is mounted. A bare `Effect.fork` binds to the transient component-body fiber and is interrupted the instant the generator returns — the observer would never fire.
+- **Use `Effect.forkScoped`, not `Effect.forkChild`.** `forkScoped` ties the observer fiber to the component's **instance scope** (the ambient `Scope` the renderer provides), so it lives as long as the component is mounted. A bare `Effect.forkChild` binds to the transient component-body fiber and is interrupted the instant the generator returns — the observer would never fire.
 
 ## Read a ref imperatively
 
