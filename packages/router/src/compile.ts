@@ -1,5 +1,5 @@
 import type { Node } from "@weftui/core";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { Schema } from "effect";
 import { RouterNotFound } from "./errors";
 import type { ComponentSlot, LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
@@ -268,11 +268,12 @@ export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.Any {
     // oxlint-disable-next-line typescript/no-explicit-any
     (g: any, leaf) =>
       g.add(
-        HttpApiEndpoint.get(leaf.id, leaf.fullPathPattern as `/${string}`)
-          .setPath(leaf.pathSchema)
-          .setUrlParams(leaf.querySchema)
-          .addSuccess(Schema.String)
-          .addError(RouterNotFound, { status: 404 }),
+        HttpApiEndpoint.get(leaf.id, leaf.fullPathPattern as `/${string}`, {
+          params: leaf.pathSchema,
+          query: leaf.querySchema,
+          success: Schema.String,
+          error: RouterNotFound.pipe(HttpApiSchema.status(404)),
+        }),
       ),
     HttpApiGroup.make("pages"),
   );
