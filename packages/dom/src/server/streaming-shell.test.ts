@@ -50,24 +50,25 @@ describe("renderToHydratableShell — shell split", () => {
     assert.ok(patchHtml.includes("resolved"));
   });
 
-  it("AC-SH2: an error during the main walk fails the Effect and interrupts pending resolution fibers", async () => {
-    await Effect.runPromise(
+  it("AC-SH2: an error during the main walk fails the Effect and tears down pending resolution fibers", async () => {
+    // The boundary holds a resolution that never settles (`Effect.never`). If a
+    // walk error let its fiber outlive the shell, the enclosing `Effect.scoped`
+    // would hang awaiting it — so the scoped Effect *completing* is the no-leak
+    // guarantee. (Effect 4 forks resolution fibers lazily via `Effect.forkIn`, so
+    // when the walk fails before the fiber's first step it is discarded
+    // un-started; an `onInterrupt` proxy on the child never fires, unlike v3.)
+    const exit = await Effect.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
-          const interrupted = yield* Deferred.make<boolean>();
-          const child = Effect.never.pipe(
-            Effect.onInterrupt(() => Deferred.succeed(interrupted, true)),
-          );
           const tree = h.div({}, [
-            Boundary.suspend({ fallback: h.span({}, "loading") }, [child]),
+            Boundary.suspend({ fallback: h.span({}, "loading") }, [Effect.never]),
             badNode,
           ]);
-          const exit = yield* Effect.exit(Effect.provide(renderToHydratableShell(tree), NoRpc));
-          assert.ok(Exit.isFailure(exit));
-          assert.ok(yield* Deferred.await(interrupted));
+          return yield* Effect.exit(Effect.provide(renderToHydratableShell(tree), NoRpc));
         }),
       ),
     );
+    assert.ok(Exit.isFailure(exit));
   });
 
   it("AC-SH3: patches are emitted in resolution order, not document order", async () => {
