@@ -29,7 +29,10 @@ const config: ViteUserConfig = {
   },
   test: {
     include: ["**/*.browser.test.{ts,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],
+    // `examples/effect-atom` is excluded from the workspace (pnpm-workspace.yaml)
+    // pending an Effect 4 build of `@effect-atom/atom`; its browser test pulls in
+    // effect@3-only APIs, so keep it out of the browser run too.
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**", "examples/effect-atom/**"],
     browser: {
       enabled: true,
       headless: true,
