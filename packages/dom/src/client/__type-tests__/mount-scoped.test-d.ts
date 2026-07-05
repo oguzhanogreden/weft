@@ -10,7 +10,7 @@
 // Checked by `vp run check` (the package tsconfig includes `src`). See
 // `hydrate.test-d.ts` for the plain-`hydrate` counterpart.
 import { Boundary, ServerTag, h, type Node } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
+import { Rpc } from "effect/unstable/rpc";
 import { Effect, Schema } from "effect";
 import type { Scope } from "effect";
 import type { HydrationMismatchError } from "~/data";

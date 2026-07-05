@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@weftui/core";
-import { HttpApiSchema } from "@effect/platform";
+import { HttpApiSchema } from "effect/unstable/httpapi";
 import { Either, Option, Schema, SchemaAST as AST } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";

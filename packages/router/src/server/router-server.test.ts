@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, Component, h } from "@weftui/core";
 import type { Node } from "@weftui/core";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup } from "effect/unstable/rpc";
 import { Context, Deferred, Effect, Layer, Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, notFound } from "~/index";

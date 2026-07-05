@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Component, h } from "@weftui/core";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup } from "effect/unstable/rpc";
 import { Context, Effect, Exit, Fiber, Layer, Option, Schema, Scope, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test } from "vite-plus/test";
