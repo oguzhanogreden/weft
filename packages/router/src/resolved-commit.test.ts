@@ -159,7 +159,7 @@ describe("leaf pre-run (AC-R1/AC-R2/AC-R7)", () => {
     assert.equal(Exit.isFailure(exit), true);
     // The typed failure is recoverable from the exit for boundary replay (AC-R7).
     if (Exit.isFailure(exit)) {
-      const failure = Cause.failureOption(exit.cause);
+      const failure = Cause.findErrorOption(exit.cause);
       assert.equal(Option.isSome(failure), true);
       if (Option.isSome(failure)) {
         assert.equal(isRouterNotFound(failure.value), true);

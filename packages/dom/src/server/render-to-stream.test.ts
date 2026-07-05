@@ -166,7 +166,7 @@ describe("renderToStream - streaming behavior", () => {
           Effect.sync(() => {
             html += chunk;
           }).pipe(
-            Effect.zipRight(
+            Effect.andThen(
               OBSERVE ? Effect.log(`+${JSON.stringify(chunk)} | so far: ${html}`) : Effect.void,
             ),
           ),

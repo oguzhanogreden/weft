@@ -218,7 +218,7 @@ describe("Source.toSubscribable", () => {
       assert.ok(Exit.isFailure(exit), "changes surfaces the source failure");
       assert.ok(
         Exit.isFailure(exit) &&
-          Option.exists(Cause.failureOption(exit.cause), (e) => e instanceof Boom),
+          Option.exists(Cause.findErrorOption(exit.cause), (e) => e instanceof Boom),
         "the failure carries the original source error",
       );
     });
@@ -314,7 +314,7 @@ describe("Source.toSubscribable", () => {
         ),
       ),
     );
-    const failure = Cause.failureOption(cause);
+    const failure = Cause.findErrorOption(cause);
     assert.ok(Option.isSome(failure));
     assert.ok(failure.value instanceof NoPropValue);
     assert.equal(failure.value.key, "label");

@@ -9,7 +9,7 @@ import { mountScoped } from "@weftui/dom/client";
 // ============================================================================
 // Issue #123 acceptance criterion, in a real browser.
 //
-// A hand-rolled `Layer.scoped` service (no @effect-atom dependency) stands in for
+// A hand-rolled `Layer.effect` service (no @effect-atom dependency) stands in for
 // any scoped layer (e.g. effect-atom's `Registry.layer`). Provided OUTSIDE a
 // long-lived scoped region driven by `runFork`, it must:
 //   - be acquired once and stay alive across real click interactions
@@ -47,7 +47,7 @@ describe("mountScoped — scoped layer outlives initial render (issue #123)", ()
     // subscription was interrupted by unmount.
     let capturedRef: SubscriptionRef.SubscriptionRef<number> | undefined;
 
-    const CounterLive = Layer.scoped(
+    const CounterLive = Layer.effect(
       Counter,
       Effect.acquireRelease(
         Effect.gen(function* () {

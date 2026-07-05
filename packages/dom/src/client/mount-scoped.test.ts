@@ -98,7 +98,7 @@ describe("AC-S3: scoped layer outside the region stays alive", () => {
     let acquired = false;
     let released = false;
 
-    const ProbeLive = Layer.scoped(
+    const ProbeLive = Layer.effect(
       Probe,
       Effect.acquireRelease(
         Effect.sync(() => {
@@ -135,7 +135,7 @@ describe("AC-S4: teardown ordering", () => {
     const root = createRoot();
     const events: string[] = [];
 
-    const LayerLive = Layer.scoped(
+    const LayerLive = Layer.effect(
       Probe,
       Effect.acquireRelease(Effect.succeed({ value: 1 }), () =>
         Effect.sync(() => void events.push("layer-teardown")),
@@ -219,7 +219,7 @@ describe("AC-S6: failing render", () => {
     );
 
     assert.ok(Exit.isFailure(exit), "region fails");
-    const err = Exit.isFailure(exit) ? Option.getOrNull(Cause.failureOption(exit.cause)) : null;
+    const err = Exit.isFailure(exit) ? Option.getOrNull(Cause.findErrorOption(exit.cause)) : null;
     assert.ok(err instanceof UnsupportedNodeTypeError, "fails with UnsupportedNodeTypeError");
     assert.equal(probe, 1, "scope still tears down cleanly (finalizer runs once)");
   });
