@@ -36,7 +36,7 @@ class FooError extends Data.TaggedError("Foo")<{ msg: string }> {}
 describe("AC22 non-hydratable: children succeed — boundary is transparent", () => {
   it("renders children HTML inline with no boundary markers", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [
         h.div({ class: "content" }, "hello"),
       ]),
     );
@@ -45,7 +45,7 @@ describe("AC22 non-hydratable: children succeed — boundary is transparent", ()
 
   it("renderToString: renders children inline with no markers", async () => {
     const html = await runString(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [
         h.p({}, "text"),
       ]),
     );
@@ -60,7 +60,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
         failingChild,
       ]),
     );
@@ -72,7 +72,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
         failingChild,
       ]),
     );
@@ -102,7 +102,7 @@ describe("AC22 non-hydratable: match returns null → stream failure", () => {
 describe("AC24 hydratable: children succeed — boundary transparent", () => {
   it("no boundary markers emitted when children succeed", async () => {
     const html = await runHydratable(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [h.div({ class: "content" }, "ok")]),
+      Boundary.catch({ fallback: () => h.span({}, "err") }, [h.div({ class: "content" }, "ok")]),
     );
     assert.ok(!html.includes("boundary"), `Unexpected boundary marker in: ${html}`);
     assert.ok(html.includes("content"), `Expected content in: ${html}`);
@@ -119,7 +119,7 @@ describe("AC25 hydratable: children fail — fallback emitted inline", () => {
     const failingChild = Effect.fail(new FooError({ msg: "err" }));
 
     const html = await runHydratable(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failingChild]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failingChild]),
     );
     assert.ok(html.includes("fallback"), `Expected fallback in: ${html}`);
     assert.ok(html.includes("fb"), `Expected fallback text in: ${html}`);
@@ -151,8 +151,8 @@ describe("AC26 hydratable: match returns null → stream failure", () => {
 describe("AC27: boundary renders inline (no markers to track)", () => {
   it("multiple nested boundaries each render their children inline", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({}, "outer-err") }, [
-        Boundary.catchAll({ fallback: () => h.span({}, "inner-err") }, [
+      Boundary.catch({ fallback: () => h.span({}, "outer-err") }, [
+        Boundary.catch({ fallback: () => h.span({}, "inner-err") }, [
           h.div({ class: "deep" }, "nested"),
         ]),
       ]),
@@ -167,7 +167,7 @@ describe("AC27: boundary renders inline (no markers to track)", () => {
 describe("stream child inside boundary on server", () => {
   it("renders first emission of stream child inline", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [Stream.make(h.strong({}, "live"))]),
+      Boundary.catch({ fallback: () => h.span({}, "err") }, [Stream.make(h.strong({}, "live"))]),
     );
     assert.ok(html.includes("<strong>live</strong>"), `Expected stream content in: ${html}`);
   });

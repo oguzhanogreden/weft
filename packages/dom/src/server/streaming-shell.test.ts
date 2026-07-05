@@ -226,7 +226,7 @@ describe("SuspenseFailureHandlerTag — late-failure seam", () => {
     };
     const tree = h.div({}, [
       Boundary.suspend({ fallback: "f" }, [
-        Boundary.catchAll({ fallback: () => h.span({}, "caught inline") }, [
+        Boundary.catch({ fallback: () => h.span({}, "caught inline") }, [
           Effect.fail(new Error("boom")),
         ]),
       ]),

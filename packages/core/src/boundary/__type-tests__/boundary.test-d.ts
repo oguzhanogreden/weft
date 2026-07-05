@@ -29,23 +29,23 @@ declare const fallbackWithR: Node<never, OtherService>;
 // ── catchAll ─────────────────────────────────────────────────────────────────
 
 // Children's E is fully consumed; output E is never, R is never
-const _catchAll = Boundary.catchAll({ fallback: (_e: FooError) => fallbackNode }, [fooChild]);
+const _catchAll = Boundary.catch({ fallback: (_e: FooError) => fallbackNode }, [fooChild]);
 type _TCatchAll = Expect<Equal<typeof _catchAll, Node<never, never>>>;
 
 // R from children propagates out
-const _catchAllChildR = Boundary.catchAll({ fallback: (_e: FooError) => fallbackNode }, [
+const _catchAllChildR = Boundary.catch({ fallback: (_e: FooError) => fallbackNode }, [
   fooChildWithR,
 ]);
 type _TCatchAllChildR = Expect<Equal<typeof _catchAllChildR, Node<never, SomeService>>>;
 
 // R from fallback propagates out
-const _catchAllFallbackR = Boundary.catchAll({ fallback: (_e: FooError) => fallbackWithR }, [
+const _catchAllFallbackR = Boundary.catch({ fallback: (_e: FooError) => fallbackWithR }, [
   fooChild,
 ]);
 type _TCatchAllFallbackR = Expect<Equal<typeof _catchAllFallbackR, Node<never, OtherService>>>;
 
 // R from both children and fallback unions
-const _catchAllBothR = Boundary.catchAll({ fallback: (_e: FooError) => fallbackWithR }, [
+const _catchAllBothR = Boundary.catch({ fallback: (_e: FooError) => fallbackWithR }, [
   fooChildWithR,
 ]);
 type _TCatchAllBothR = Expect<
@@ -53,24 +53,24 @@ type _TCatchAllBothR = Expect<
 >;
 
 // Empty children: C inferred as never[], ChildrenR must not leak unknown
-const _catchAllEmpty = Boundary.catchAll({ fallback: (_e: never) => fallbackNode }, []);
+const _catchAllEmpty = Boundary.catch({ fallback: (_e: never) => fallbackNode }, []);
 type _TCatchAllEmpty = Expect<Equal<typeof _catchAllEmpty, Node<never, never>>>;
 
 // @ts-expect-error — fallback parameter type does not match children's E
-Boundary.catchAll({ fallback: (_e: BarError) => fallbackNode }, [fooChild]);
+Boundary.catch({ fallback: (_e: BarError) => fallbackNode }, [fooChild]);
 
 // ── catchAllCause ─────────────────────────────────────────────────────────────
 
 // Children's E fully consumed; fallback receives full Cause
-const _catchAllCause = Boundary.catchAllCause({ fallback: (_cause) => fallbackNode }, [fooChild]);
+const _catchAllCause = Boundary.catchCause({ fallback: (_cause) => fallbackNode }, [fooChild]);
 type _TCatchAllCause = Expect<Equal<typeof _catchAllCause, Node<never, never>>>;
 
 // Empty children: ChildrenR must not leak unknown
-const _catchAllCauseEmpty = Boundary.catchAllCause({ fallback: (_cause) => fallbackNode }, []);
+const _catchAllCauseEmpty = Boundary.catchCause({ fallback: (_cause) => fallbackNode }, []);
 type _TCatchAllCauseEmpty = Expect<Equal<typeof _catchAllCauseEmpty, Node<never, never>>>;
 
 // R from children propagates through catchAllCause
-const _catchAllCauseR = Boundary.catchAllCause({ fallback: (_cause) => fallbackNode }, [
+const _catchAllCauseR = Boundary.catchCause({ fallback: (_cause) => fallbackNode }, [
   fooChildWithR,
 ]);
 type _TCatchAllCauseR = Expect<Equal<typeof _catchAllCauseR, Node<never, SomeService>>>;

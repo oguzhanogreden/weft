@@ -2,7 +2,7 @@
  * End-to-end browser test for the Error Boundary example.
  *
  * Mounts the real `App` in Chromium and asserts the headline behaviour: when a
- * child fails on the rendering path, the `Boundary.catchAll` fallback renders
+ * child fails on the rendering path, the `Boundary.catch` fallback renders
  * instead of the app crashing.
  */
 

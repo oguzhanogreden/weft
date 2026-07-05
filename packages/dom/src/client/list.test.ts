@@ -149,7 +149,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     const root = createRoot();
 
     await runMount(
-      Boundary.catchAll({ fallback: (e) => h.div({ id: "fallback" }, (e as Error).message) }, [
+      Boundary.catch({ fallback: (e) => h.div({ id: "fallback" }, (e as Error).message) }, [
         List.each({ of: [p("a"), p("a")], by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
       ]),
       root,
@@ -463,7 +463,7 @@ describe("List.each — Errors (ER)", () => {
     const root = createRoot();
 
     await runMount(
-      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "render failed") }, [
+      Boundary.catch({ fallback: () => h.div({ id: "fallback" }, "render failed") }, [
         // render returns a node whose `E` fails when the item is inserted.
         List.each({ of: [p("a")], by: (x) => x.id }, () => Effect.fail(new Error("render boom"))),
       ]),
@@ -485,7 +485,7 @@ describe("List.each — Errors (ER)", () => {
     );
 
     await runMount(
-      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "source failed") }, [
+      Boundary.catch({ fallback: () => h.div({ id: "fallback" }, "source failed") }, [
         List.each({ of, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
       ]),
       root,

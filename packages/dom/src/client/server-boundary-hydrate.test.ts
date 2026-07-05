@@ -309,7 +309,7 @@ describe("Boundary.rpc hydrate — payload divergence", () => {
 describe("Boundary.rpc hydrate — typed-failure replay", () => {
   /** A failing-rpc server boundary under a `catchAll` that renders the error. */
   const makeFailingApp = () =>
-    Boundary.catchAll({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
+    Boundary.catch({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
       Boundary.rpc(
         Failing,
         () => ({ id: 1 }),

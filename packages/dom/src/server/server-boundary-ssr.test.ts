@@ -219,7 +219,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   };
 
   it("plain SSR shows the fallback with no failure payload (AC-8)", async () => {
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
       [failingBoundary()],
     );
@@ -231,7 +231,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("hydratable emits the failure payload before the fallback, decodable to the error (AC-7)", async () => {
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
       [failingBoundary()],
     );
@@ -255,7 +255,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   it("relocates the payload to the outer boundary when the inner match returns null (AC-9)", async () => {
     // Inner `catchSome` declines (Option.none → match null); the failure
     // re-propagates without draining, so the outer boundary emits the payload.
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "outer" }, e.reason) },
       [Boundary.catchSome({ fallback: () => Option.none() }, [failingBoundary()])],
     );
@@ -272,7 +272,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("does not emit a failure payload for an rpc defect (AC-9)", async () => {
-    const node = Boundary.catchAllCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
+    const node = Boundary.catchCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
       Boundary.rpc(
         Failing,
         () => ({ id: 1 }),

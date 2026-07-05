@@ -114,7 +114,7 @@ describe("AC-H13: failure-boundary live machinery", () => {
     root.innerHTML = SERVER_REGION_HTML;
 
     const trigger = await Effect.runPromise(Deferred.make<void>());
-    const app = Boundary.catchAll({ fallback: () => h.p({ id: "fb" }, "recovered") }, [
+    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "recovered") }, [
       h.div({}, [failAfterFirst(trigger)]),
     ]);
 
@@ -145,7 +145,7 @@ describe("AC-H13: failure-boundary live machinery", () => {
       { tag: "Nope", fallback: () => h.p({ id: "inner" }, "inner") },
       [h.div({}, [failAfterFirst(trigger)])],
     );
-    const app = Boundary.catchAll({ fallback: () => h.p({ id: "outer" }, "outer") }, [inner]);
+    const app = Boundary.catch({ fallback: () => h.p({ id: "outer" }, "outer") }, [inner]);
 
     await Effect.runPromise(hydrate(app, root));
     await Effect.runPromise(Deferred.succeed(trigger, void 0));
@@ -161,7 +161,7 @@ describe("AC-H13: failure-boundary live machinery", () => {
     // Server snapshot diverges structurally: a <span> where the tree has <div>.
     root.innerHTML = "<span>wrong</span>";
 
-    const app = Boundary.catchAll({ fallback: () => h.p({ id: "fb" }, "nope") }, [
+    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "nope") }, [
       h.div({}, "right"),
     ]);
 
@@ -233,7 +233,7 @@ describe("AC-H14: substituted-suspense failure replay", () => {
       '<script type="application/json" data-weft-suspense-failure>{not json</script>' +
       '<p id="sub">substituted</p><!-- suspense-end-1 --></div>';
 
-    const app = Boundary.catchAll({ fallback: () => h.p({ id: "fb" }, "fb") }, [
+    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "fb") }, [
       h.div({ id: "layout" }, [
         Boundary.suspend({ fallback: h.span({}, "loading") }, [neverChild]),
       ]),
@@ -273,7 +273,7 @@ describe("AC-H15: reactive-region failure routing", () => {
     const trigger = await Effect.runPromise(Deferred.make<void>());
     // The failing region sits under a nested static element — the report must
     // travel through the walk to the boundary installed above it.
-    const app = Boundary.catchAll({ fallback: () => h.p({ id: "fb" }, "routed") }, [
+    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "routed") }, [
       h.div({}, [failAfterFirst(trigger)]),
     ]);
 
