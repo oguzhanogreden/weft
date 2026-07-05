@@ -6,7 +6,7 @@ import { App } from "./app";
 
 let container: HTMLElement;
 let shutdown: Deferred.Deferred<void>;
-let fiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+let fiber: Fiber.Fiber<void, unknown> | undefined;
 
 beforeEach(() => {
   container = document.createElement("div");
