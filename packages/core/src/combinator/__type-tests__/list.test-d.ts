@@ -4,7 +4,8 @@
  * source and the render node, and `by` key typing.
  */
 
-import { Effect, Stream, Subscribable } from "effect";
+import { Effect, Stream } from "effect";
+import { Subscribable } from "@weftui/core";
 import { List } from "../list";
 import { h } from "../element";
 import type { Node } from "../types";

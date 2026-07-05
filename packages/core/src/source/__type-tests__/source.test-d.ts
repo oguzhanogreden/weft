@@ -5,7 +5,8 @@
  * Subscribable / static value).
  */
 
-import { Effect, Stream, Subscribable } from "effect";
+import { Effect, Stream } from "effect";
+import { Subscribable } from "@weftui/core";
 import { Source } from "../source";
 
 // =============================================================================

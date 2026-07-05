@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { h } from "@weftui/core";
-import { Effect, Option, Schema, Stream, Subscribable } from "effect";
+import { h, Subscribable } from "@weftui/core";
+import { Effect, Option, Schema, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test, vi } from "vite-plus/test";
 import { back, forward, navigate, patchQuery, push, replace, setQuery } from "~/client/navigation";

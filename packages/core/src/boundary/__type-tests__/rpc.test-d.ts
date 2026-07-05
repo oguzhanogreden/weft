@@ -1,6 +1,6 @@
 // oxlint-disable no-unused-vars
-import { Boundary, ServerTag, type AssertNoServerOnly, type Node } from "@weftui/core";
-import { Effect, Option, Schema, Subscribable } from "effect";
+import { Boundary, ServerTag, Subscribable, type AssertNoServerOnly, type Node } from "@weftui/core";
+import { Effect, Option, Schema } from "effect";
 import { Rpc } from "@effect/rpc";
 
 // ── Type equality helpers ─────────────────────────────────────────────────────

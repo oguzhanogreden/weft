@@ -6,7 +6,8 @@
  * `Router.navigatingStream` yields that Subscribable under the `Router` requirement.
  */
 
-import type { Effect, Subscribable } from "effect";
+import type { Effect } from "effect";
+import type { Subscribable } from "@weftui/core";
 import type { NavState } from "~/router-service";
 import { Router } from "~/router-service";
 

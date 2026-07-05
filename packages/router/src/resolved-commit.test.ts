@@ -6,8 +6,8 @@
  */
 
 import * as assert from "node:assert/strict";
-import { Component, h } from "@weftui/core";
-import { Cause, Effect, Exit, Option, Schema, Stream, Subscribable } from "effect";
+import { Component, h, Subscribable } from "@weftui/core";
+import { Cause, Effect, Exit, Option, Schema, Stream } from "effect";
 import { describe, test } from "vite-plus/test";
 import { isRouterNotFound, match, notFound, Router } from "~/index";
 import type { RouteMatch } from "~/matcher";
