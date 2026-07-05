@@ -3,7 +3,6 @@ import {
   Context,
   Deferred,
   Effect,
-  ExecutionStrategy,
   Exit,
   Fiber,
   FiberRef,
@@ -555,7 +554,7 @@ function renderBoundary(
     const startMarker = document.createComment(boundaryStartText(id));
     const endMarker = document.createComment(boundaryEndText(id));
 
-    const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const subtreeScope = yield* Scope.fork(context.scope, "sequential");
     const subtreeContext = { ...context, scope: subtreeScope };
 
     const errorDeferred = yield* Deferred.make<void, import("effect").Cause.Cause<unknown>>();
@@ -1084,7 +1083,7 @@ function renderComponent(
       // (spawned via Effect.forkScoped inside toSubscribable) are tied to this
       // component instance and not to the mount-level scope. The instance scope
       // is a child of context.scope — closing context.scope closes it too.
-      const instanceScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const instanceScope = yield* Scope.fork(context.scope, "sequential");
       const instanceContext = { ...context, scope: instanceScope };
 
       // Check whether this component is inside a Suspense boundary.
@@ -1158,7 +1157,7 @@ function handleStreamChild(
           yield* Scope.close(currentContentScope, Exit.void);
         }
         // Fork a fresh child scope for this emission from the enclosing scope.
-        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        currentContentScope = yield* Scope.fork(context.scope, "sequential");
         const contentContext = { ...context, scope: currentContentScope };
 
         // Render under the content scope: RenderContext.scope and Scope.Scope
@@ -1512,7 +1511,7 @@ function renderList(
     // Region scope: parent of every per-item scope and of the `of` pump fiber.
     // Forked from the enclosing scope so region teardown (SC3) cascades to all
     // item scopes when the enclosing render scope closes.
-    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const regionScope = yield* Scope.fork(context.scope, "sequential");
 
     // Normalize `of` (static Iterable / Effect / Stream / Subscribable) and
     // subscribe to its `.changes`. The pump fiber lives in the region scope.
@@ -1690,7 +1689,7 @@ function renderItem(
   RenderContext
 > {
   return Effect.gen(function* () {
-    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemScope = yield* Scope.fork(regionScope, "sequential");
     const itemContext = { ...context, scope: itemScope };
 
     const itemId = yield* nextStreamId();
@@ -2350,7 +2349,7 @@ function hydrateReactive(
         if (currentContentScope !== null) {
           yield* Scope.close(currentContentScope, Exit.void);
         }
-        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        currentContentScope = yield* Scope.fork(context.scope, "sequential");
         const contentContext = { ...context, scope: currentContentScope };
 
         yield* Effect.gen(function* () {
@@ -2574,7 +2573,7 @@ function hydrateFailureBoundary(
       const context = yield* RenderContext;
       const parentBoundary = yield* Effect.serviceOption(BoundaryContext);
 
-      const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const subtreeScope = yield* Scope.fork(context.scope, "sequential");
       const subtreeContext = { ...context, scope: subtreeScope };
 
       const errorDeferred = yield* Deferred.make<void, Cause.Cause<unknown>>();
@@ -2955,7 +2954,7 @@ function hydrateList(
 
     // Region scope: parent of every per-item scope and of the `of` pump fiber
     // (mirrors renderList). Closing the enclosing scope cascades teardown.
-    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const regionScope = yield* Scope.fork(context.scope, "sequential");
     const subscribable = yield* Source.toSubscribable(of).pipe(
       Effect.provideService(Scope.Scope, regionScope),
     );
@@ -3147,7 +3146,7 @@ function hydrateItem(
   path: string,
 ): Effect.Effect<ItemRecord, HydrateError, RenderContext> {
   return Effect.gen(function* () {
-    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemScope = yield* Scope.fork(regionScope, "sequential");
     const itemContext = { ...context, scope: itemScope };
     const node = render(item, index);
 
@@ -3185,7 +3184,7 @@ function hydrateItem(
       `[weft] hydrate: list item at ${path} diverged from server output (${divergence}); patching.`,
     );
     yield* Scope.close(itemScope, Exit.void);
-    const freshScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const freshScope = yield* Scope.fork(regionScope, "sequential");
     const freshContext = { ...context, scope: freshScope };
 
     removeNodesBetweenMarkers(adopted.startMarker, adopted.endMarker);
