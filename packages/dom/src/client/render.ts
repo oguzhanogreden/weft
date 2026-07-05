@@ -487,7 +487,7 @@ function setEventHandler(
 function boundaryRecoveryEffect(
   props: Boundary.FailureProps,
   errorDeferred: Deferred.Deferred<void, Cause.Cause<unknown>>,
-  subtreeScope: Scope.CloseableScope,
+  subtreeScope: Scope.Closeable,
   parentBoundary: Option.Option<BoundaryContext["Type"]>,
   startMarker: Comment,
   endMarker: Comment,
@@ -1147,7 +1147,7 @@ function handleStreamChild(
 
     // Mutable slot: the content scope from the most recent emission.
     // Closed before each new emission so nested fibers don't accumulate.
-    let currentContentScope: Scope.CloseableScope | null = null;
+    let currentContentScope: Scope.Closeable | null = null;
 
     // AC20: Set up subscription — one fiber per stream, content scope per emission.
     const effect = Stream.runForEach(stream, (value) =>
@@ -1459,7 +1459,7 @@ interface ItemRecord {
   /** The reconciliation key (compared via Effect `Equal`, hashed via `Hash`). */
   readonly key: unknown;
   /** Per-item scope, forked from the region scope; persists across emissions. */
-  readonly scope: Scope.CloseableScope;
+  readonly scope: Scope.Closeable;
   /** This item's opening comment marker (` list-item-start-<id> `). */
   readonly startMarker: Comment;
   /** This item's closing comment marker (` list-item-end-<id> `). */
@@ -2343,7 +2343,7 @@ function hydrateReactive(
     const settleOnce = makeSettleOnce(context.hydrationReady);
 
     let isFirst = true;
-    let currentContentScope: Scope.CloseableScope | null = null;
+    let currentContentScope: Scope.Closeable | null = null;
     const effect = Stream.runForEach(stream, (value) =>
       Effect.gen(function* () {
         if (currentContentScope !== null) {
