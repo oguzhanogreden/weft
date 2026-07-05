@@ -1,6 +1,5 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@weftui/core";
-import { HttpApiSchema } from "effect/unstable/httpapi";
 import { Option, Result, Schema, SchemaAST as AST } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";
@@ -180,7 +179,9 @@ describe("httpApi spine", () => {
         readonly types?: readonly AST.AST[];
       };
       const members = ast._tag === "Union" ? ast.types! : [ast as unknown as AST.AST];
-      const statuses = members.map((m) => HttpApiSchema.getStatusErrorAST(m));
+      const statuses = members.map(
+        (m) => (m.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
+      );
       assert.ok(statuses.includes(404), `${endpoint.path} declares a 404 error`);
 
       const decoded = Schema.decodeUnknownResult(endpoint.errorSchema)({ _tag: "RouterNotFound" });
