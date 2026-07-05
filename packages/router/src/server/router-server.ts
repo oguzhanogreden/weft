@@ -122,7 +122,7 @@ export namespace RouterServer {
   }
 
   /** Builds the fixed per-request `Router` from an already-resolved match; `navigate` is a no-op on the server. */
-  function serverRouter(matched: RouteMatch): Router["Type"] {
+  function serverRouter(matched: RouteMatch): Router["Service"] {
     // Server render is buffered, so navigation state is a client-only concern: a
     // constant `Idle` keeps the service shape sound on both sides (AC-N10).
     const idle: NavState = { _tag: "Idle" };
@@ -188,7 +188,7 @@ export namespace RouterServer {
   function renderDocument(
     options: RenderOptions,
     app: Node<never, never>,
-    router: Router["Type"],
+    router: Router["Service"],
   ): Effect.Effect<string, Error> {
     const document = Effect.provideService(options.document({}), Router.Outlet, app);
     return renderToStringHydratable(document).pipe(

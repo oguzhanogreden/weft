@@ -16,17 +16,17 @@ import type { ResolvedCommitEntry, ResolvedCommitSlot } from "~/resolved-commit"
 import { ResolvedCommit, preRunLeaf, stageMatch, takeResolvedCommit } from "~/resolved-commit";
 import type { Router } from "~/router-service";
 
-declare const router: Router["Type"];
+declare const router: Router["Service"];
 declare const target: RouteMatch;
 
 // ── The stash does not leak into the public service type ───────────────────────
 
-// @ts-expect-error — `Router["Type"]` carries no ResolvedCommit member; only an
+// @ts-expect-error — `Router["Service"]` carries no ResolvedCommit member; only an
 // instance explicitly widened to `ResolvedCommitSlot` may be indexed by the brand.
 const _leak = router[ResolvedCommit];
 
 // A widened instance is indexable, and the entry is `{ url, exit } | undefined`.
-declare const slot: Router["Type"] & ResolvedCommitSlot;
+declare const slot: Router["Service"] & ResolvedCommitSlot;
 const _entry: ResolvedCommitEntry | undefined = slot[ResolvedCommit];
 
 // ── Entry shape: committed url + the pre-run's Exit over a Renderable ──────────
@@ -44,7 +44,7 @@ entry.url = "/elsewhere";
 const _taken: ResolvedCommitEntry | undefined = takeResolvedCommit(router, "/docs/a/b");
 
 // `stageMatch` returns a full `Router` view — a drop-in for the live service.
-const _staged: Router["Type"] = stageMatch(router, target);
+const _staged: Router["Service"] = stageMatch(router, target);
 
 // `preRunLeaf` never fails and needs no context beyond the caller's runtime:
 // failures are folded into the returned `Exit` (AC-R7).

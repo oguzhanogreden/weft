@@ -29,7 +29,7 @@ const def = Router.router(
 );
 
 /** A fixed-match `Router` service over a resolved match. */
-const routerFor = (m: RouteMatch): Router["Type"] =>
+const routerFor = (m: RouteMatch): Router["Service"] =>
   Router.of({
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: () => Effect.void,

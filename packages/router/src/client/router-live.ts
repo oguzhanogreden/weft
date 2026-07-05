@@ -146,7 +146,7 @@ export function RouterLive<R>(
       // Forward reference to the service instance built below: the pre-run needs
       // it for the staged view and the resolved-commit stash. `commitTo` only
       // runs after the layer is built, when the instance exists.
-      let router!: Router["Type"];
+      let router!: Router["Service"];
 
       // The `Router.lazy` preloads for a matched branch (leaf component + each
       // layout in its chain); empty for an eager branch or a no-match, which take
@@ -314,7 +314,7 @@ export function RouterLive<R>(
       // With no `rpc` configured the seam is a stub whose `call` fails
       // descriptively, so a stray `Boundary.rpc` surfaces the misconfiguration.
       const rpc = options.rpc;
-      let appRpcClient: AppRpcClientTag["Type"];
+      let appRpcClient: AppRpcClientTag["Service"];
       if (rpc === undefined) {
         appRpcClient = AppRpcClientTag.of({
           call: (tag) =>

@@ -28,7 +28,7 @@ const def = Router.router(
 let calls: Array<{ to: string; options: NavigateOptions | undefined }>;
 
 /** A `Router` whose `navigate` records its args and whose `currentMatch` is `match(def, url)`. */
-const routerFor = (m: RouteMatch): Router["Type"] =>
+const routerFor = (m: RouteMatch): Router["Service"] =>
   Router.of({
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: (to, options) =>

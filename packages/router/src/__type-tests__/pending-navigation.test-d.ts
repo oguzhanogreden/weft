@@ -24,7 +24,7 @@ const _badTag: NavState = { _tag: "Loading" };
 
 // ── The service Type carries `navigating: Subscribable<NavState>` ──────────────
 
-type Navigating = Router["Type"]["navigating"];
+type Navigating = Router["Service"]["navigating"];
 const _isSubscribable: Navigating extends Subscribable.Subscribable<NavState> ? true : false = true;
 const _carriesNavState: Subscribable.Subscribable<NavState> extends Navigating ? true : false =
   true;

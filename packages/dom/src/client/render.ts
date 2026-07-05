@@ -490,7 +490,7 @@ function boundaryRecoveryEffect(
   props: Boundary.FailureProps,
   errorDeferred: Deferred.Deferred<void, Cause.Cause<unknown>>,
   subtreeScope: Scope.Closeable,
-  parentBoundary: Option.Option<BoundaryContext["Type"]>,
+  parentBoundary: Option.Option<BoundaryContext["Service"]>,
   startMarker: Comment,
   endMarker: Comment,
 ): Effect.Effect<
@@ -561,7 +561,7 @@ function renderBoundary(
 
     const errorDeferred = yield* Deferred.make<void, import("effect").Cause.Cause<unknown>>();
 
-    const boundaryService: BoundaryContext["Type"] = {
+    const boundaryService: BoundaryContext["Service"] = {
       reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
     };
 
@@ -1589,7 +1589,7 @@ function reconcileList(
   prev: ListState,
   regionScope: Scope.Scope,
   regionEnd: Comment,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
 ): Effect.Effect<
   ListState,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
@@ -1684,7 +1684,7 @@ function renderItem(
   index: number,
   render: (item: unknown, index: number) => Renderable,
   regionScope: Scope.Scope,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
 ): Effect.Effect<
   ItemRecord,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
@@ -2579,7 +2579,7 @@ function hydrateFailureBoundary(
       const subtreeContext = { ...context, scope: subtreeScope };
 
       const errorDeferred = yield* Deferred.make<void, Cause.Cause<unknown>>();
-      const boundaryService: BoundaryContext["Type"] = {
+      const boundaryService: BoundaryContext["Service"] = {
         reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
       };
 
@@ -3079,7 +3079,7 @@ function hydrateFirstListEmission(
   regionScope: Scope.Scope,
   regionStart: Comment,
   regionEnd: Comment,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
   path: string,
 ): Effect.Effect<ListState, HydrateError, RenderContext> {
   return Effect.gen(function* () {
@@ -3144,7 +3144,7 @@ function hydrateItem(
   render: (item: unknown, index: number) => Renderable,
   adopted: AdoptedItem,
   regionScope: Scope.Scope,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
   path: string,
 ): Effect.Effect<ItemRecord, HydrateError, RenderContext> {
   return Effect.gen(function* () {

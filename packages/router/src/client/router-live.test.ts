@@ -55,7 +55,7 @@ afterEach(() => {
 });
 
 /** Reads the `Router` service exposed by `RouterLive(def, options)`. */
-function readService(options?: Partial<RouterLiveOptions>): Promise<Router["Type"]> {
+function readService(options?: Partial<RouterLiveOptions>): Promise<Router["Service"]> {
   return Effect.runPromise(
     Effect.scoped(
       Effect.provide(
@@ -153,7 +153,7 @@ describe("RouterLive render-time context seam (AC4)", () => {
 // ── Pending (deferred-commit) navigation (`pending-navigation.specs.md`) ────────
 
 /** Reads the `Router` service exposed by `RouterLive(def)` for an arbitrary def. */
-function readServiceFor(def: RouterDef): Promise<Router["Type"]> {
+function readServiceFor(def: RouterDef): Promise<Router["Service"]> {
   return Effect.runPromise(
     Effect.scoped(Effect.provide(Router, RouterLive(def, { rpc: { group: NoopRpcs } }))),
   );
@@ -174,9 +174,11 @@ function gateLoader(slot: ComponentSlot): {
 /** Yields to the macrotask queue so a forked navigation runs its synchronous prefix. */
 const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
-const readNav = (s: Router["Type"]): Promise<{ readonly _tag: string; readonly to?: string }> =>
+const readNav = (s: Router["Service"]): Promise<{ readonly _tag: string; readonly to?: string }> =>
   Effect.runPromise(s.navigating.get);
-const readMatch = (s: Router["Type"]): Promise<{ readonly _tag: string; readonly url?: string }> =>
+const readMatch = (
+  s: Router["Service"],
+): Promise<{ readonly _tag: string; readonly url?: string }> =>
   Effect.runPromise(s.currentMatch.get);
 
 describe("RouterLive — pending navigation (deferred commit)", () => {
