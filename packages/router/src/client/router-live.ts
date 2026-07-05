@@ -10,7 +10,6 @@ import {
   Fiber,
   Layer,
   Option,
-  Runtime,
   Scope,
   Stream,
   SubscriptionRef,
@@ -117,7 +116,7 @@ export function RouterLive<R>(
       // Reactive navigation state (`pending-navigation.specs.md`): `Navigating{to}`
       // while a deferred-commit navigation resolves its lazy chunk(s), else `Idle`.
       const navRef = yield* SubscriptionRef.make<NavState>({ _tag: "Idle" });
-      const runtime = yield* Effect.runtime<never>();
+      const services = yield* Effect.context<never>();
 
       // The authoritative HttpApi is typed `HttpApi.Any` (runtime-assembled), so
       // `make` over it yields an opaque client and an unbounded requirement that
@@ -239,8 +238,8 @@ export function RouterLive<R>(
             if (!emitted) {
               yield* Effect.forkChild(
                 Effect.gen(function* () {
-                  const done = yield* Fiber.poll(fiber);
-                  if (Option.isNone(done) && token === latest) {
+                  const done = fiber.pollUnsafe();
+                  if (done === undefined && token === latest) {
                     emitted = true;
                     yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
                   }
@@ -293,7 +292,7 @@ export function RouterLive<R>(
       // the ref — but resolve the target branch's lazy chunk(s) first so back-nav is
       // also blank-free (AC-N8).
       const onPopState = (): void => {
-        Runtime.runFork(runtime)(commitTo(locationUrl(), false, false));
+        Effect.runForkWith(services)(commitTo(locationUrl(), false, false));
       };
       yield* Effect.acquireRelease(
         Effect.sync(() => window.addEventListener("popstate", onPopState)),
@@ -352,7 +351,10 @@ export function RouterLive<R>(
         currentMatch,
         navigate,
         httpApiClient: Option.some(httpApiClient),
-        navigating: navRef,
+        navigating: Subscribable.make({
+          get: SubscriptionRef.get(navRef),
+          changes: SubscriptionRef.changes(navRef),
+        }),
       });
 
       return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));
