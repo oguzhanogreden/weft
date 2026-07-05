@@ -46,7 +46,7 @@ export class RouterParamsError extends Schema.TaggedErrorClass<RouterParamsError
   "RouterParamsError",
   {
     /** Which side of the match failed validation. */
-    source: Schema.Literal("path", "query"),
+    source: Schema.Literals(["path", "query"]),
     /** The requested field names, for diagnostics. */
     keys: Schema.Array(Schema.String),
   },
