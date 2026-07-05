@@ -27,11 +27,11 @@ const AutoFocusInput = () =>
     const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
-      inputRef.changes,
+      SubscriptionRef.changes(inputRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((option) => Effect.sync(() => Option.getOrThrow(option).focus())),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.input({ ref: inputRef, type: "text" });
@@ -67,11 +67,11 @@ const AutoFocus = () =>
     const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
-      ref.changes,
+      SubscriptionRef.changes(ref),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((opt) => Effect.sync(() => Option.getOrThrow(opt).focus())),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.input({ ref });
@@ -87,7 +87,7 @@ const Measure = () =>
     const size = yield* SubscriptionRef.make("...");
 
     yield* pipe(
-      ref.changes,
+      SubscriptionRef.changes(ref),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((opt) =>
@@ -96,12 +96,12 @@ const Measure = () =>
           yield* SubscriptionRef.set(size, `${rect.width}x${rect.height}`);
         }),
       ),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.div([
       h.div({ ref, style: { width: "200px", height: "100px" } }, "Box"),
-      h.p(["Size: ", size.changes]),
+      h.p(["Size: ", SubscriptionRef.changes(size)]),
     ]);
   });
 ```
@@ -136,7 +136,7 @@ const CanvasExample = () =>
     const canvasRef = yield* SubscriptionRef.make<Option.Option<HTMLCanvasElement>>(Option.none());
 
     yield* pipe(
-      canvasRef.changes,
+      SubscriptionRef.changes(canvasRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((opt) =>
@@ -148,7 +148,7 @@ const CanvasExample = () =>
           }
         }),
       ),
-      Effect.fork,
+      Effect.forkScoped,
     );
 
     return yield* h.canvas({ ref: canvasRef, width: 200, height: 100 });
@@ -161,7 +161,7 @@ const CanvasExample = () =>
 | ------------------------------------------- | ----------------------------------------------------------------- |
 | `useRef<HTMLElement>(null)`                 | `SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none())` |
 | `ref.current` (nullable)                    | `Ref.get(ref)` returns `Option`                                   |
-| `useEffect(() => { if (ref.current) ... })` | `Stream.filter(Option.isSome)` on `.changes`                      |
+| `useEffect(() => { if (ref.current) ... })` | `Stream.filter(Option.isSome)` on `SubscriptionRef.changes(ref)`  |
 | Manual null checks                          | Type-safe `Option` operations                                     |
 
 ## Notes

@@ -20,7 +20,7 @@ npm install @weftui/core effect
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `h`         | Proxy namespace of element builders — `h.div`, `h.span`, `h.button`, … plus `h.fragment` for wrapper-less groups.                                                                 |
 | `Component` | `Component.gen` / `Component.make` — reusable components whose reactive prop channels propagate to the call site.                                                                 |
-| `Boundary`  | Error boundaries (`catchAll`, `catchTag`, `catchTags`, `catchSome`, `catchIf`, `catchAllCause`), plus `Boundary.suspend` (async fallbacks) and `Boundary.rpc` (server-data seam). |
+| `Boundary`  | Error boundaries (`catch`, `catchTag`, `catchTags`, `catchFilter`, `catchIf`, `catchCause`), plus `Boundary.suspend` (async fallbacks) and `Boundary.rpc` (server-data seam). |
 | `List`      | `List.each` — the keyed list combinator; renders once per key and reconciles across emissions.                                                                                    |
 | `Source`    | The reactive prop vocabulary (`A \| Effect \| Stream \| Subscribable`) + `Source.toSubscribable`.                                                                                 |
 | `Node<E,R>` | The core tree type — an alias for `Effect.Effect<ElementDescriptor, E, R>`.                                                                                                       |
@@ -37,7 +37,7 @@ const Counter = () =>
     const count = yield* SubscriptionRef.make(0);
 
     return yield* h.div([
-      h.span([count.changes]),
+      h.span([SubscriptionRef.changes(count)]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
     ]);

@@ -50,37 +50,37 @@ Streams are the primary reactive primitive. Each emission replaces the previous 
 ```typescript
 import { SubscriptionRef, Stream } from "effect";
 
-const count = yield * SubscriptionRef.make(0);
+const count = yield* SubscriptionRef.make(0);
 
-// count.changes is a Stream<number> — each new value updates the text node
-h.span([count.changes]);
+// SubscriptionRef.changes(count) is a Stream<number> — each new value updates the text node
+h.span([SubscriptionRef.changes(count)]);
 
 // Stream as a prop — each emission sets the attribute
-const isDisabled = Stream.map(count.changes, (n) => n >= 10);
+const isDisabled = Stream.map(SubscriptionRef.changes(count), (n) => n >= 10);
 h.button({ disabled: isDisabled }, "Submit");
 ```
 
 Streams can also supply entire child arrays. Each emission replaces the previous set of children:
 
 ```typescript
-const todos = yield * SubscriptionRef.make<string[]>([]);
+const todos = yield* SubscriptionRef.make<string[]>([]);
 
-h.ul([Stream.map(todos.changes, (list) => list.map((item) => h.li(item)))]);
+h.ul([Stream.map(SubscriptionRef.changes(todos), (list) => list.map((item) => h.li(item)))]);
 ```
 
 ## Derived streams
 
-Because `.changes` is a plain `Stream`, the full Stream API applies:
+Because `SubscriptionRef.changes(ref)` returns a plain `Stream`, the full Stream API applies:
 
 ```typescript
-const count = yield * SubscriptionRef.make(0);
+const count = yield* SubscriptionRef.make(0);
 
-const doubled = Stream.map(count.changes, (n) => n * 2);
-const formatted = Stream.map(count.changes, (n) => `Count: ${n}`);
-const isHigh = Stream.map(count.changes, (n) => n > 10);
+const doubled = Stream.map(SubscriptionRef.changes(count), (n) => n * 2);
+const formatted = Stream.map(SubscriptionRef.changes(count), (n) => `Count: ${n}`);
+const isHigh = Stream.map(SubscriptionRef.changes(count), (n) => n > 10);
 
 h.div([
-  h.p([count.changes]),
+  h.p([SubscriptionRef.changes(count)]),
   h.p([doubled]),
   h.p([formatted]),
   h.p({ style: { color: Stream.map(isHigh, (b) => (b ? "red" : "black")) } }, "Status"),
@@ -90,11 +90,13 @@ h.div([
 Multiple refs can be combined with `Stream.zipLatestWith`, `Stream.merge`, or other combinators:
 
 ```typescript
-const firstName = yield * SubscriptionRef.make("");
-const lastName = yield * SubscriptionRef.make("");
+const firstName = yield* SubscriptionRef.make("");
+const lastName = yield* SubscriptionRef.make("");
 
-const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) =>
-  `${first} ${last}`.trim(),
+const fullName = Stream.zipLatestWith(
+  SubscriptionRef.changes(firstName),
+  SubscriptionRef.changes(lastName),
+  (first, last) => `${first} ${last}`.trim(),
 );
 ```
 
