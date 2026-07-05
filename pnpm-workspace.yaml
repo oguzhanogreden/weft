@@ -1,6 +1,10 @@
 packages:
   - packages/*
   - examples/*
+  # Excluded during the Effect 4 migration: @effect-atom/atom has no Effect-4
+  # compatible release (latest 0.5.3 requires effect@^3). Re-include once a v4
+  # build ships. See examples/effect-atom/readme.md.
+  - "!examples/effect-atom"
   - website
 
 allowBuilds:

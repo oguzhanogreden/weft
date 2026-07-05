@@ -1,5 +1,12 @@
 # effect-atom (External State Library Integration)
 
+> **⚠️ Temporarily excluded from the workspace (Effect 4 migration).**
+> `@effect-atom/atom` has no Effect-4-compatible release yet — its latest
+> version (`0.5.3`) depends on `effect@^3`. This example is excluded from
+> `pnpm-workspace.yaml` (`!examples/effect-atom`) so it does not break the
+> workspace's Effect 4 build. **TODO:** re-include and migrate once
+> `@effect-atom/atom` ships an Effect 4 build.
+
 ## Overview
 
 This example demonstrates driving a Weft UI from [effect-atom](https://github.com/tim-smart/effect-atom), an external Effect-native state management library (`@effect-atom/atom`). It shows a writable atom, a derived atom, and an async atom rendered through its `Result` states.
