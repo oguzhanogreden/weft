@@ -292,7 +292,7 @@ The tree is the authoring surface, but `effect/unstable/httpapi`'s `HttpApi` is 
 | `RouterNotFound`    | `notFound()`, or no route matched                                     | `Boundary.catchTag("RouterNotFound", …)` (or the app-level `notFound` page) |
 | `RouterParamsError` | `Router.params` / `Router.query` on a missing/invalid key or no match | `Boundary.catchTag("RouterParamsError", …)`                                 |
 
-Both are modeled as `Schema.TaggedError`, so they encode/decode across the wire the same way `Boundary.rpc` replays typed failures.
+Both are modeled as `Schema.TaggedErrorClass`, so they encode/decode across the wire the same way `Boundary.rpc` replays typed failures.
 
 ## `Boundary.rpc` interplay
 
