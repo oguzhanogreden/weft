@@ -13,9 +13,9 @@ import { NoRpc } from "../__tests__/rpc-stub";
 // These failure/suspense boundary trees contain no `Boundary.rpc`; shadow the
 // render fns with the no-op `NoRpc` layer pre-provided (the render fns require an
 // AppRpcClientTag unconditionally).
-const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStream = (n: Renderable) => Stream.provide(_renderToStream(n), NoRpc);
 const renderToStreamHydratable = (n: Renderable) =>
-  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+  Stream.provide(_renderToStreamHydratable(n), NoRpc);
 const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

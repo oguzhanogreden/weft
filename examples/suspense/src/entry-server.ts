@@ -28,4 +28,4 @@ const NoRpc = Layer.succeed(AppRpcClientTag, {
 
 /** Returns the live Effect Stream of HTML chunks. */
 export const renderStream = (): Stream.Stream<string, Error> =>
-  Stream.provideLayer(renderToStreamHydratable(App()), NoRpc);
+  Stream.provide(renderToStreamHydratable(App()), NoRpc);

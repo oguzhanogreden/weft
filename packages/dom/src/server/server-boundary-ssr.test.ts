@@ -45,7 +45,7 @@ const provideRpc = (
 const provideStream = (
   stream: Stream.Stream<string, Error, AppRpcClientTag>,
   handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown>>,
-) => Stream.provideLayer(stream, appRpcLayer(handlers));
+) => Stream.provide(stream, appRpcLayer(handlers));
 
 // ---------------------------------------------------------------------------
 // Fixtures

@@ -42,7 +42,7 @@ describe("renderToHydratableShell — shell split", () => {
 
     const { shell, patchHtml } = await runShell(makeTree());
     const combined = await Effect.runPromise(
-      Stream.mkString(Stream.provideLayer(renderToStreamHydratable(makeTree()), NoRpc)),
+      Stream.mkString(Stream.provide(renderToStreamHydratable(makeTree()), NoRpc)),
     );
     assert.equal(shell + patchHtml, combined);
     assert.ok(shell.includes("loading"));
@@ -290,7 +290,7 @@ describe("SuspenseFailureHandlerTag — late-failure seam", () => {
     const tree = h.div({}, [Boundary.suspend({ fallback: "f" }, [Effect.fail(new Error("boom"))])]);
     const html = await Effect.runPromise(
       Stream.mkString(
-        Stream.provideLayer(
+        Stream.provide(
           renderToStreamHydratable(tree),
           Layer.mergeAll(NoRpc, Layer.succeed(SuspenseFailureHandlerTag, handler)),
         ),

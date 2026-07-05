@@ -12,9 +12,9 @@ import { NoRpc } from "../__tests__/rpc-stub";
 
 // These tests render boundary-free trees; the render fns require an AppRpcClientTag
 // unconditionally, so shadow them with the no-op `NoRpc` layer pre-provided.
-const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStream = (n: Renderable) => Stream.provide(_renderToStream(n), NoRpc);
 const renderToStreamHydratable = (n: Renderable) =>
-  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+  Stream.provide(_renderToStreamHydratable(n), NoRpc);
 const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 const run = (node: Renderable) => Effect.runPromise(Stream.mkString(renderToStream(node)));
