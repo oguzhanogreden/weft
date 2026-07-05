@@ -1,6 +1,6 @@
 // oxlint-disable no-unused-vars
 import { Boundary, type Node } from "@weftui/core";
-import { Data, Option } from "effect";
+import { Data, Filter, Result } from "effect";
 
 // ── Type equality helpers ─────────────────────────────────────────────────────
 
@@ -113,21 +113,32 @@ const _catchTagsPartial = Boundary.catchTags({ Foo: (_e: FooError) => fallbackNo
 ]);
 type _TCatchTagsPartial = Expect<Equal<typeof _catchTagsPartial, Node<BarError, never>>>;
 
-// ── catchSome ────────────────────────────────────────────────────────────────
+// ── catchFilter ──────────────────────────────────────────────────────────────
 
-// Children's E preserved in output (boundary may not handle the error)
-const _catchSome = Boundary.catchSome({ fallback: (_e: FooError) => Option.none() }, [fooChild]);
-type _TCatchSome = Expect<Equal<typeof _catchSome, Node<FooError, never>>>;
+// The Filter's Fail channel (X) is preserved in output — a declined error is
+// re-raised, so it stays in E (boundary may not handle the error).
+const _catchFilter = Boundary.catchFilter(
+  Filter.make((e: FooError) => Result.fail(e)),
+  () => fallbackNode,
+  [fooChild],
+);
+type _TCatchFilter = Expect<Equal<typeof _catchFilter, Node<FooError, never>>>;
 
 // Empty children: ChildrenE and ChildrenR must not leak unknown
-const _catchSomeEmpty = Boundary.catchSome({ fallback: (_e: never) => Option.none() }, []);
-type _TCatchSomeEmpty = Expect<Equal<typeof _catchSomeEmpty, Node<never, never>>>;
+const _catchFilterEmpty = Boundary.catchFilter(
+  Filter.make((e: never) => Result.fail(e)),
+  () => fallbackNode,
+  [],
+);
+type _TCatchFilterEmpty = Expect<Equal<typeof _catchFilterEmpty, Node<never, never>>>;
 
 // R from children preserved when boundary is conditional
-const _catchSomeR = Boundary.catchSome({ fallback: (_e: FooError) => Option.none() }, [
-  fooChildWithR,
-]);
-type _TCatchSomeR = Expect<Equal<typeof _catchSomeR, Node<FooError, SomeService>>>;
+const _catchFilterR = Boundary.catchFilter(
+  Filter.make((e: FooError) => Result.fail(e)),
+  () => fallbackNode,
+  [fooChildWithR],
+);
+type _TCatchFilterR = Expect<Equal<typeof _catchFilterR, Node<FooError, SomeService>>>;
 
 // ── catchIf ──────────────────────────────────────────────────────────────────
 
