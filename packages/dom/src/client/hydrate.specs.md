@@ -141,7 +141,7 @@ until the fallback patch supersedes them; they are cleaned up at unmount.
   `HydrationMismatchError` for it. The boundary's recovery then swaps the
   boundary extent to the fallback (e.g. the router's notFound page). The
   replayed value is the raw Schema-encoded object matched structurally by
-  `_tag` — a generic `Boundary.catchAll` receives that object, not a class
+  `_tag` — a generic `Boundary.catch` receives that object, not a class
   instance. With **no** enclosing `BoundaryContext`, the failure is logged via
   `console.error` and the substituted static DOM is left standing. A sentinel
   that fails to parse is logged and the region skipped (static DOM stands) —

@@ -145,13 +145,13 @@ children's render. Inner `Boundary.suspend` boundaries shadow the outer service 
 their subtree.
 
 ```typescript
-class SuspenseContext extends Context.Tag("SuspenseContext")<
+class SuspenseContext extends Context.Service<
   SuspenseContext,
   {
     readonly register: Effect.Effect<void>; // increment pending count
     readonly settle: Effect.Effect<void>; // decrement; triggers swap at 0
   }
->() {}
+>()("SuspenseContext") {}
 ```
 
 ### Sentinel pattern
@@ -195,7 +195,7 @@ When `allSettled` fires in the swap fiber:
 
 ## Constraints
 
-- Error handling is out of scope here; the failure boundaries (`Boundary.catchAll`,
+- Error handling is out of scope here; the failure boundaries (`Boundary.catch`,
   `Boundary.catchTag`, etc.) cover failures in child Effects
 - No timeout mechanism — hanging Effects keep the fallback visible indefinitely
 - `Boundary.suspend` is not a valid SSR streaming component by itself; see

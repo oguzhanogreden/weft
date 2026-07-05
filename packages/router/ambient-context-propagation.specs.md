@@ -14,7 +14,7 @@ App-wide services are provided to a router render through an explicit `context` 
 — a `Layer` — that is threaded to the document shell **and** every route/layout/leaf:
 
 ```ts
-class Greeting extends Context.Tag("Greeting")<Greeting, { text: string }>() {}
+class Greeting extends Context.Service<Greeting, { text: string }>()("Greeting") {}
 
 const Page = Component.gen(function* () {
   const g = yield* Greeting; // ✅ resolved from the render-time context
@@ -91,7 +91,7 @@ the user `Layer` **there** — alongside the existing `Router`, `Router.Outlet`,
 ## Website
 
 Migrated off the module-singleton workaround: `website/src/lib/docs-service.ts` now
-exposes a `Docs` `Context.Tag`; `docs-live.ts` provides `DocsLive` (the build-time model
+exposes a `Docs` `Context.Service`; `docs-live.ts` provides `DocsLive` (the build-time model
 as a `Layer`). Route components, layouts, and the document shell read it via
 `yield* Docs`; the entries provide it through the seam (`entry-server.ts` →
 `RouterServer.render(App, { …, context: DocsLive })`, `entry-client.ts` →
