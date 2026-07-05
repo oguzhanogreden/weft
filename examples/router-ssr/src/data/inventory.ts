@@ -14,7 +14,7 @@
  * hand-rolled boundary id and refetch carries the product id as a real payload.
  */
 
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup } from "effect/unstable/rpc";
 import { Context, Effect, Layer, Schema } from "effect";
 
 /** Wire contract for a product's live stock: encoded to JSON on the server, decoded on the client. */
@@ -40,10 +40,10 @@ export const StockRpcs = RpcGroup.make(GetStock);
  * Server-only live-inventory source. Read only inside {@link StockLive} (the rpc
  * handler Layer), which the client never imports — so it never reaches the browser.
  */
-export class Inventory extends Context.Tag("Inventory")<
+export class Inventory extends Context.Service<
   Inventory,
   { readonly stockFor: (id: number) => Effect.Effect<Stock> }
->() {}
+>()("Inventory") {}
 
 /**
  * Per-product restock counter. Module-level so a refetch (which re-resolves the
