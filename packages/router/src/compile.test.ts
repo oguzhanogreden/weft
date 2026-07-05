@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@weftui/core";
 import { HttpApiSchema } from "effect/unstable/httpapi";
-import { Either, Option, Schema, SchemaAST as AST } from "effect";
+import { Option, Result, Schema, SchemaAST as AST } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";
 import { Router } from "~/index";
@@ -121,9 +121,9 @@ interface HttpApiView {
           readonly name: string;
           readonly path: string;
           readonly method: string;
-          readonly pathSchema: Option.Option<Schema.Schema<unknown, unknown>>;
-          readonly urlParamsSchema: Option.Option<Schema.Schema<unknown, unknown>>;
-          readonly errorSchema: Schema.Schema<unknown, unknown>;
+          readonly pathSchema: Option.Option<Schema.Codec<unknown, unknown>>;
+          readonly urlParamsSchema: Option.Option<Schema.Codec<unknown, unknown>>;
+          readonly errorSchema: Schema.Codec<unknown, unknown>;
         }
       >;
     }
@@ -183,8 +183,8 @@ describe("httpApi spine", () => {
       const statuses = members.map((m) => HttpApiSchema.getStatusErrorAST(m));
       assert.ok(statuses.includes(404), `${endpoint.path} declares a 404 error`);
 
-      const decoded = Schema.decodeUnknownEither(endpoint.errorSchema)({ _tag: "RouterNotFound" });
-      assert.ok(Either.isRight(decoded), `${endpoint.path} error decodes a RouterNotFound`);
+      const decoded = Schema.decodeUnknownResult(endpoint.errorSchema)({ _tag: "RouterNotFound" });
+      assert.ok(Result.isSuccess(decoded), `${endpoint.path} error decodes a RouterNotFound`);
     }
   });
 });

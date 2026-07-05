@@ -80,7 +80,7 @@ const SCRIPT_RE = /<script type="application\/json">(.*?)<\/script>/;
 const SCRIPT_RE_G = /<script type="application\/json">(.*?)<\/script>/g;
 
 const decodeScript = (json: string) =>
-  Effect.runPromise(Schema.decodeUnknown(Product)(JSON.parse(json)));
+  Effect.runPromise(Schema.decodeUnknownEffect(Product)(JSON.parse(json)));
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -244,7 +244,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
     assert.ok(match !== null, "expected a data-weft-boundary-failure payload");
     const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
     assert.equal(payload.index, 0);
-    const decoded = await Effect.runPromise(Schema.decodeUnknown(LoadError)(payload.error));
+    const decoded = await Effect.runPromise(Schema.decodeUnknownEffect(LoadError)(payload.error));
     assert.equal(decoded.reason, "db down");
 
     // Payload precedes the fallback; the fallback is still rendered for no-JS.
@@ -334,7 +334,7 @@ describe("Boundary.rpc — payload escaping (XSS-safe)", () => {
     const match = SCRIPT_RE.exec(html);
     assert.ok(match !== null);
     const decoded = await Effect.runPromise(
-      Schema.decodeUnknown(Evil)(JSON.parse(match[1] as string)),
+      Schema.decodeUnknownEffect(Evil)(JSON.parse(match[1] as string)),
     );
     assert.equal(decoded.html, "</script><script>alert(1)</script>");
   });
