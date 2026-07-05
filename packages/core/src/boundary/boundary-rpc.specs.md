@@ -3,7 +3,7 @@
 ## Overview
 
 `Boundary.rpc` is a universal server/client render boundary backed by one `Rpc`
-from the application's merged `RpcGroup` (`@effect/rpc`). It is a **thin consumer**:
+from the application's merged `RpcGroup` (`effect/unstable/rpc`). It is a **thin consumer**:
 its data source is the ambient {@link AppRpcClientTag} seam, not a co-located
 `load`. The rpc **tag** is the boundary's stable identity and the rpc **payload
 schema** its typed input — so there is no hand-rolled `id`, no `provide`, no
@@ -51,7 +51,7 @@ prior model and spec'd in `packages/core/src/server`.
   with no `error` schema) is not replayed; it propagates (server fallback, client
   mismatch).
 - **Out of scope (this pass):** streamed success (`Rpc.make(..., { stream: true })`)
-  and mutations. The `@effect/rpc` foundation supports both; deferred to follow-on
+  and mutations. The `effect/unstable/rpc` foundation supports both; deferred to follow-on
   specs.
 
 ---
@@ -68,10 +68,10 @@ prior model and spec'd in `packages/core/src/server`.
    - `tag: string` — `rpc._tag`, the rpc identity. It is the stable boundary id
      (replacing the former author-supplied `id`) and the key the client passes to
      {@link AppRpcClientTag.call}.
-   - `payloadSchema: Schema.Schema<any, any>` — `rpc.payloadSchema`.
-   - `successSchema: Schema.Schema<any, any>` — `rpc.successSchema`, the wire
+   - `payloadSchema: Schema.Codec<any, any>` — `rpc.payloadSchema`.
+   - `successSchema: Schema.Codec<any, any>` — `rpc.successSchema`, the wire
      contract used for the inline SSR payload and refetch decode.
-   - `errorSchema: Schema.Schema<any, any>` — `rpc.errorSchema`, used to encode a
+   - `errorSchema: Schema.Codec<any, any>` — `rpc.errorSchema`, used to encode a
      resolved rpc error for typed-failure replay.
    - `payload: () => Payload` — a **thunk** producing a fresh payload per call
      (SSR, refetch, mount). Not invoked at descriptor-build time.
@@ -116,9 +116,9 @@ prior model and spec'd in `packages/core/src/server`.
 
 ### `AppRpcClient` seam (AC-9)
 
-9. {@link AppRpcClientTag} is a `Context.Tag` holding a **flat, untyped** caller
+9. {@link AppRpcClientTag} is a `Context.Service` holding a **flat, untyped** caller
    `{ call: (tag: string, payload: unknown) => Effect<unknown, unknown> }`. It lets
-   `@weftui/dom` resolve a boundary without importing `@effect/rpc` or
+   `@weftui/dom` resolve a boundary without importing `effect/unstable/rpc` or
    `@weftui/router`. `@weftui/router` provides it: a network `RpcClient`
    (POST `/_eui/rpc`) on the browser, an in-process client over the handler Layer
    on the server. `call` returns the **already-decoded** success; the renderer owns
@@ -179,10 +179,9 @@ interface RpcOptions {
 interface AppRpcClient {
   readonly call: (tag: string, payload: unknown) => Effect.Effect<unknown, unknown>;
 }
-class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
-  AppRpcClientTag,
-  AppRpcClient
->() {}
+class AppRpcClientTag extends Context.Service<AppRpcClientTag, AppRpcClient>()(
+  "@weftui/core/AppRpcClient",
+) {}
 
 Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(
   rpc: R,
@@ -210,6 +209,6 @@ Boundary.rpc<R extends Rpc.Any, C extends Node<any, any>>(
 ## Deferred / roadmap
 
 - **Streamed success** (`Rpc.make(..., { stream: true })`) — stream-the-shell-then-fill,
-  natively supported by `@effect/rpc`. Needs its own spec.
+  natively supported by `effect/unstable/rpc`. Needs its own spec.
 - **Mutations** (non-GET-style rpcs that change server state) — out of scope this
   pass; the contract/handler split already accommodates them.
