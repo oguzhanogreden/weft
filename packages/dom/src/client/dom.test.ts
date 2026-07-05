@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Schedule, Stream, SubscriptionRef } from "effect";
-import { Component, h, Source } from "@weftui/core";
+import { Component, h, Source, Subscribable } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
@@ -1536,7 +1536,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(h.div({ ref }, "test"), root);
 
@@ -1614,7 +1616,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(h.div({ ref, id: "my-div" }), root);
 
@@ -1627,7 +1631,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()),
+    );
 
     await runMount(h.input({ ref, type: "email", value: "test@example.com" }), root);
 
@@ -1642,7 +1648,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLButtonElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLButtonElement>>(Option.none()),
+    );
 
     await runMount(h.button({ ref, type: "submit", disabled: true }, "Click"), root);
 
@@ -1656,7 +1664,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(
       h.div(
@@ -1703,8 +1713,12 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const divRef = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
-    const spanRef = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const divRef = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
+    const spanRef = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
     const inputRef = await Effect.runPromise(
       SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()),
     );
@@ -1739,7 +1753,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     // Check value before mount
     const valueBefore = await Effect.runPromise(SubscriptionRef.get(ref));
@@ -2045,8 +2061,15 @@ describe("scope lifetime: advanced cases", () => {
   // toSubscribable returns it by reference — no pump is forked into instanceScope.
   // Closing instanceScope must NOT interrupt the ref, which lives in an outer scope.
   // ──────────────────────────────────────────────────────────────────────────
-  it("SubscriptionRef passed as Source is not interrupted when the component is removed", async () => {
+  it("Subscribable passed as Source is not interrupted when the component is removed", async () => {
     const sharedRef = await Effect.runPromise(SubscriptionRef.make("alive"));
+    // v4: a SubscriptionRef is no longer a Subscribable, so pass an explicit
+    // Subscribable view of the ref; `toSubscribable` short-circuits it by
+    // reference, and the underlying ref stays external to the instance scope.
+    const shared = Subscribable.make({
+      get: SubscriptionRef.get(sharedRef),
+      changes: SubscriptionRef.changes(sharedRef),
+    });
 
     const Comp = (props: { val: Source.Source<string> }) =>
       Effect.gen(function* () {
@@ -2057,7 +2080,7 @@ describe("scope lifetime: advanced cases", () => {
       });
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<Renderable>(Comp({ val: sharedRef })),
+      SubscriptionRef.make<Renderable>(Comp({ val: shared })),
     );
 
     createTestDOM();
