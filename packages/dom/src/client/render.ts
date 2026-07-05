@@ -445,7 +445,7 @@ function setEventHandler(
           context.runtime.runFork(
             pipe(
               result as Effect.Effect<void, unknown, never>,
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 if (process.env.NODE_ENV !== "development") {
                   return Effect.void;
                 }
@@ -502,7 +502,7 @@ function boundaryRecoveryEffect(
     // flip's residual success-as-error path is dead — discharge it.
     const cause = yield* Deferred.await(errorDeferred).pipe(
       Effect.flip,
-      Effect.catchAll(() => Effect.interrupt),
+      Effect.catch(() => Effect.interrupt),
     );
     const fallbackNode = props.match(cause);
     yield* Scope.close(subtreeScope, Exit.void);
@@ -569,7 +569,7 @@ function renderBoundary(
       Effect.provideService(BoundaryContext, boundaryService),
       Effect.provideService(RenderContext, subtreeContext),
       Effect.provideService(Scope.Scope, subtreeScope),
-      Effect.catchAllCause((cause) => {
+      Effect.catchCause((cause) => {
         const fallbackNode = props.match(cause);
         if (fallbackNode === null) return Effect.failCause(cause);
         return pipe(
@@ -801,7 +801,7 @@ function renderServerBoundary(
         }
       }
     }).pipe(
-      Effect.catchAllCause((cause) =>
+      Effect.catchCause((cause) =>
         Effect.logError(
           `[weft] Boundary.rpc "${props.tag}" mount failed to resolve; fallback left in place.`,
           cause,
@@ -1898,7 +1898,7 @@ export function mount(
     };
 
     // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
-    const cleanup = Effect.zipRight(
+    const cleanup = Effect.andThen(
       Scope.close(scope, Exit.void),
       Effect.promise(() => runtime.dispose()),
     );
@@ -2058,7 +2058,7 @@ export function hydrate(
     seedStreamIdCounter(root, context.streamIdCounter);
 
     // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
-    const cleanup = Effect.zipRight(
+    const cleanup = Effect.andThen(
       Scope.close(scope, Exit.void),
       Effect.promise(() => runtime.dispose()),
     );
@@ -2477,7 +2477,7 @@ function hydrateSubstitutedSuspense(
       payload = yield* Effect.try({
         try: () => JSON.parse(raw) as unknown,
         catch: (cause) => cause,
-      }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+      }).pipe(Effect.catch(() => Effect.succeed(null)));
     }
 
     if (payload === null || typeof payload !== "object" || !("error" in payload)) {
@@ -2645,7 +2645,7 @@ function hydrateFailureBoundary(
       const decoded = yield* Schema.decodeUnknownEffect(owner.errorSchema)(payload.error);
       return props.match(Cause.fail(decoded));
     }).pipe(
-      Effect.catchAll((cause) => {
+      Effect.catch((cause) => {
         console.error(
           `[weft] hydrate: boundary failure payload at ${path} failed to decode; cannot replay.`,
           cause,
@@ -2816,7 +2816,7 @@ function hydrateServerBoundary(
       catch: (cause) => cause,
     }).pipe(
       Effect.flatMap((encoded) => Schema.decodeUnknownEffect(props.successSchema)(encoded)),
-      Effect.catchAll((cause) => {
+      Effect.catch((cause) => {
         console.error(
           `[weft] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
           cause,

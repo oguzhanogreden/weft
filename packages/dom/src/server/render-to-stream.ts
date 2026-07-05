@@ -216,8 +216,8 @@ function renderSuspenseSSRInline(
         // ambient SuspenseFailureHandler. Absent seam / Option.none keeps the
         // swallow default (AC-ST8); a failing substitute render degrades to it
         // via the trailing Effect.ignore (AC-FH6).
-        Effect.catchAllCause((cause) =>
-          Cause.isInterruptedOnly(cause)
+        Effect.catchCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
             ? Effect.failCause(cause)
             : Effect.gen(function* () {
                 const handler = yield* Effect.serviceOption(SuspenseFailureHandlerTag);
@@ -302,10 +302,10 @@ function renderBoundarySSR(
         : (props.children as Renderable[])
   ) as Renderable;
 
-  return Stream.unwrapScoped(
+  return Stream.unwrap(
     Effect.gen(function* () {
       const childrenHtml = yield* Stream.mkString(renderFn(childrenNode)).pipe(
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           Effect.gen(function* () {
             const fallbackNode = props.match(cause);
             // Not handled here: re-fail without draining so any stashed failure
@@ -359,7 +359,7 @@ interface ServerBoundarySSRProps {
  * `failureCollector` for the enclosing failure `Boundary` to relocate, then
  * re-fails the **original** cause so `match` still sees it unchanged. No-ops
  * (re-fails unchanged) on the plain passes (`failureCollector === null`), on a
- * defect (no `Cause.failureOption`), or if the encode itself fails (e.g. a
+ * defect (no `Cause.findErrorOption`), or if the encode itself fails (e.g. a
  * transport defect against an rpc with no `error` schema, where `errorSchema` is
  * `Never`) — all of which fall back to a server fallback + client mismatch.
  */
@@ -371,7 +371,7 @@ function stashServerBoundaryFailure(
   if (failureCollector === null) {
     return Effect.failCause(cause);
   }
-  const error = Cause.failureOption(cause);
+  const error = Cause.findErrorOption(cause);
   if (Option.isNone(error)) {
     return Effect.failCause(cause);
   }
@@ -440,7 +440,7 @@ function renderServerBoundarySSR(
       const data = yield* (
         client.call(props.tag, props.payload()) as Effect.Effect<unknown, Error>
       ).pipe(
-        Effect.catchAllCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
+        Effect.catchCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
       );
       const childrenHtml = renderFn(props.render(staticResource(data)));
       if (!emitPayload) {
@@ -822,7 +822,7 @@ export const renderToStreamFallbackOnly = (
  * after all pending boundaries have emitted their patch.
  */
 export const renderToStream = (node: Renderable): Stream.Stream<string, Error, AppRpcClientTag> =>
-  Stream.unwrapScoped(
+  Stream.unwrap(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
       const pendingCount = yield* Ref.make(0);
@@ -921,7 +921,7 @@ export const makeHydratableSSR = (
 export const renderToStreamHydratable = (
   node: Renderable,
 ): Stream.Stream<string, Error, AppRpcClientTag> =>
-  Stream.unwrapScoped(
+  Stream.unwrap(
     Effect.gen(function* () {
       const scope = yield* Effect.scope;
       const { mainStream, patches } = yield* makeHydratableSSR(node, scope);
