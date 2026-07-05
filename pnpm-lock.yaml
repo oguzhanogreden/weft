@@ -6,12 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@effect/platform':
-      specifier: ^0.96.2
-      version: 0.96.2
-    '@effect/rpc':
-      specifier: ^0.75.1
-      version: 0.75.1
     '@types/node':
       specifier: ^25.9.2
       version: 25.9.2
@@ -19,8 +13,8 @@ catalogs:
       specifier: 4.1.9
       version: 4.1.9
     effect:
-      specifier: ^3.21.4
-      version: 3.21.4
+      specifier: 4.0.0-beta.93
+      version: 4.0.0-beta.93
     tsx:
       specifier: ^4.22.4
       version: 4.22.4
@@ -40,8 +34,8 @@ importers:
   .:
     devDependencies:
       '@effect/language-service':
-        specifier: ^0.86.2
-        version: 0.86.2
+        specifier: ^0.86.4
+        version: 0.86.4
       '@semantic-release/commit-analyzer':
         specifier: ^13.0.1
         version: 13.0.1(semantic-release@25.0.5(typescript@6.0.3))
@@ -89,7 +83,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -111,7 +105,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -124,7 +118,7 @@ importers:
     dependencies:
       '@effect-atom/atom':
         specifier: ^0.5.3
-        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93))(@effect/platform@0.96.2(effect@4.0.0-beta.93))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -136,7 +130,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -158,7 +152,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -180,7 +174,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -202,7 +196,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -224,7 +218,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -246,7 +240,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -268,7 +262,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -279,12 +273,6 @@ importers:
 
   examples/router-ssr:
     dependencies:
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.96.2(effect@3.21.4)
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -296,7 +284,7 @@ importers:
         version: link:../../packages/router
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -313,9 +301,6 @@ importers:
 
   examples/server-boundary:
     dependencies:
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -327,7 +312,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -346,7 +331,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -374,7 +359,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -393,7 +378,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -421,7 +406,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -432,9 +417,6 @@ importers:
 
   packages/core:
     devDependencies:
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
@@ -443,7 +425,7 @@ importers:
         version: 3.2.3
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
       tsx:
         specifier: 'catalog:'
         version: 4.22.4
@@ -463,9 +445,6 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/jsdom':
         specifier: ^28.0.3
         version: 28.0.3
@@ -474,7 +453,7 @@ importers:
         version: 25.9.2
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -493,12 +472,6 @@ importers:
 
   packages/router:
     dependencies:
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.96.2(effect@3.21.4)
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../core
@@ -514,7 +487,7 @@ importers:
         version: 25.9.2
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -545,7 +518,7 @@ importers:
         version: link:../core
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -555,9 +528,6 @@ importers:
 
   website:
     dependencies:
-      '@effect/rpc':
-        specifier: 'catalog:'
-        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@weftui/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -569,7 +539,7 @@ importers:
         version: link:../packages/router
       effect:
         specifier: 'catalog:'
-        version: 3.21.4
+        version: 4.0.0-beta.93
     devDependencies:
       '@radix-ui/colors':
         specifier: ^3.0.0
@@ -755,8 +725,8 @@ packages:
       lmdb:
         optional: true
 
-  '@effect/language-service@0.86.2':
-    resolution: {integrity: sha512-SaPln+8srOqDJDUwNTDmP5e+IYpEDr9+1epGznnsLqu8xvo6VnxyWARdeLpqvZJlb0Pgy9ca7ppqvvdWbHPXAg==}
+  '@effect/language-service@0.86.4':
+    resolution: {integrity: sha512-XzAPsbwCdm0gRh0E8wJu3wXECb00QraE3LnbObA4RgHn8u2TEbwAjmBadRnwSgOIElfzZjbsRqNR706/V54hDg==}
     hasBin: true
 
   '@effect/platform@0.96.2':
@@ -1978,8 +1948,8 @@ packages:
   duplexer2@0.1.4:
     resolution: {integrity: sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA==}
 
-  effect@3.21.4:
-    resolution: {integrity: sha512-B89v/xSgPbl1J2Ai2u18jxq3odpFauU1rC6/eSs4FeNHi72kwKdJp12VGigvRV2lK+kRnx+OOz41XV8guZd4gQ==}
+  effect@4.0.0-beta.93:
+    resolution: {integrity: sha512-wNS5MKFa3C42uBfIDik2oJ78lhpoYz2hN4oBR0229BeeDCIrkg/FiOvoiPGdCVlWa7MEKxEL5I0f8AILVHSD9A==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -2051,9 +2021,9 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
-  fast-check@3.23.2:
-    resolution: {integrity: sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A==}
-    engines: {node: '>=8.0.0'}
+  fast-check@4.8.0:
+    resolution: {integrity: sha512-GOJ158CUMnN6cSahsv4+ExARvIDuzzinFjkp0E9WtiBa5zcVeLozVkWaE4IzFcc+Y48Wp1EDlUZsXRyAztQcSg==}
+    engines: {node: '>=12.17.0'}
 
   fast-content-type-parse@3.0.0:
     resolution: {integrity: sha512-ZvLdcY8P+N8mGQJahJV5G4U88CSvT1rP8ApL6uETe88MBXrBHAkZlSEySdUlyztF7ccb+Znos3TFqaepHxdhBg==}
@@ -2246,6 +2216,10 @@ packages:
   ini@1.3.8:
     resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
 
+  ini@7.0.0:
+    resolution: {integrity: sha512-ifK0CgjALofS5bkrcTy4RaQ9Vx2Knf/eLeIO+NaswQEpH1UblrtTSCIvN71qQDMq0PeQ/SSPojvEJp9vvvfr+w==}
+    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
+
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
 
@@ -2325,6 +2299,9 @@ packages:
 
   jsonfile@6.2.1:
     resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
+
+  kubernetes-types@1.30.0:
+    resolution: {integrity: sha512-Dew1okvhM/SQcIa2rcgujNndZwU8VnSapDgdxlYoB84ZlpAD43U6KLAFqYo17ykSFGHNPrg0qry0bP+GJd9v7Q==}
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -2633,6 +2610,9 @@ packages:
 
   msgpackr@1.11.12:
     resolution: {integrity: sha512-RBdJ1Un7yGlXWajrkxcSa93nvQ0w4zBf60c0yYv7YtBelP8H2FA7XsfBbMHtXKXUMUxH7zV3Zuozh+kUQWhHvg==}
+
+  msgpackr@2.0.4:
+    resolution: {integrity: sha512-o1C5KRmuRt+apqMr1HuGSqWStZoRBUpEsCsl15uM9VdAF1qHLtvMOU2En747EnTyEl6c4pzPewRMFF31s1CNbA==}
 
   multipasta@0.2.7:
     resolution: {integrity: sha512-KPA58d68KgGil15oDqXjkUBEBYc00XvbPj5/X+dyzeo/lWm9Nc25pQRlf1D+gv4OpK7NM0J1odrbu9JNNGvynA==}
@@ -2947,8 +2927,8 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  pure-rand@6.1.0:
-    resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
+  pure-rand@8.4.1:
+    resolution: {integrity: sha512-c58R2+SPFcSIPXoU834QN/KPDDOSd8sXcSrqf6e83Me6Rrp1EYkxukkjXMVrKvKaADs1SOyNkWdfvLf6zY8qLQ==}
 
   rc@1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
@@ -3239,6 +3219,10 @@ packages:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
 
+  toml@4.1.2:
+    resolution: {integrity: sha512-m0vXfHODcw3gk+KONAOlVQ5yNHc3yS3B1ybM3HS1vqDoS0RWTDDVBVVTYi8hH0k+2OM1vmo9fb1WX9EVqjqfHA==}
+    engines: {node: '>=20'}
+
   totalist@3.0.1:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
     engines: {node: '>=6'}
@@ -3361,6 +3345,10 @@ packages:
 
   uuid@11.1.1:
     resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+    hasBin: true
+
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
 
   validate-npm-package-license@3.0.4:
@@ -3610,32 +3598,32 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.0': {}
 
-  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93))(@effect/platform@0.96.2(effect@4.0.0-beta.93))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)':
     dependencies:
-      '@effect/experimental': 0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
-      '@effect/platform': 0.96.2(effect@3.21.4)
-      '@effect/rpc': 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
-      effect: 3.21.4
+      '@effect/experimental': 0.58.0(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)
+      '@effect/platform': 0.96.2(effect@4.0.0-beta.93)
+      '@effect/rpc': 0.75.1(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)
+      effect: 4.0.0-beta.93
 
-  '@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
+  '@effect/experimental@0.58.0(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)':
     dependencies:
-      '@effect/platform': 0.96.2(effect@3.21.4)
-      effect: 3.21.4
+      '@effect/platform': 0.96.2(effect@4.0.0-beta.93)
+      effect: 4.0.0-beta.93
       uuid: 11.1.1
 
-  '@effect/language-service@0.86.2': {}
+  '@effect/language-service@0.86.4': {}
 
-  '@effect/platform@0.96.2(effect@3.21.4)':
+  '@effect/platform@0.96.2(effect@4.0.0-beta.93)':
     dependencies:
-      effect: 3.21.4
+      effect: 4.0.0-beta.93
       find-my-way-ts: 0.1.6
       msgpackr: 1.11.12
       multipasta: 0.2.7
 
-  '@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
+  '@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@4.0.0-beta.93))(effect@4.0.0-beta.93)':
     dependencies:
-      '@effect/platform': 0.96.2(effect@3.21.4)
-      effect: 3.21.4
+      '@effect/platform': 0.96.2(effect@4.0.0-beta.93)
+      effect: 4.0.0-beta.93
       msgpackr: 1.11.12
 
   '@esbuild/aix-ppc64@0.28.0':
@@ -4598,10 +4586,18 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
-  effect@3.21.4:
+  effect@4.0.0-beta.93:
     dependencies:
       '@standard-schema/spec': 1.1.0
-      fast-check: 3.23.2
+      fast-check: 4.8.0
+      find-my-way-ts: 0.1.6
+      ini: 7.0.0
+      kubernetes-types: 1.30.0
+      msgpackr: 2.0.4
+      multipasta: 0.2.7
+      toml: 4.1.2
+      uuid: 14.0.1
+      yaml: 2.9.0
 
   emoji-regex@10.6.0: {}
 
@@ -4701,9 +4697,9 @@ snapshots:
 
   extend@3.0.2: {}
 
-  fast-check@3.23.2:
+  fast-check@4.8.0:
     dependencies:
-      pure-rand: 6.1.0
+      pure-rand: 8.4.1
 
   fast-content-type-parse@3.0.0: {}
 
@@ -4889,6 +4885,8 @@ snapshots:
 
   ini@1.3.8: {}
 
+  ini@7.0.0: {}
+
   is-arrayish@0.2.1: {}
 
   is-fullwidth-code-point@3.0.0: {}
@@ -4966,6 +4964,8 @@ snapshots:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
+
+  kubernetes-types@1.30.0: {}
 
   lightningcss-android-arm64@1.32.0:
     optional: true
@@ -5437,6 +5437,10 @@ snapshots:
     optionalDependencies:
       msgpackr-extract: 3.0.4
 
+  msgpackr@2.0.4:
+    optionalDependencies:
+      msgpackr-extract: 3.0.4
+
   multipasta@0.2.7: {}
 
   mz@2.7.0:
@@ -5686,7 +5690,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  pure-rand@6.1.0: {}
+  pure-rand@8.4.1: {}
 
   rc@1.2.8:
     dependencies:
@@ -6051,6 +6055,8 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
+  toml@4.1.2: {}
+
   totalist@3.0.1: {}
 
   tough-cookie@6.0.1:
@@ -6150,6 +6156,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@11.1.1: {}
+
+  uuid@14.0.1: {}
 
   validate-npm-package-license@3.0.4:
     dependencies:

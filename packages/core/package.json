@@ -41,7 +41,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@effect/rpc": "catalog:",
     "@types/node": "catalog:",
     "csstype": "^3.2.3",
     "effect": "catalog:",
@@ -51,7 +50,6 @@
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
-    "@effect/rpc": "^0.75",
-    "effect": "^3.21"
+    "effect": "4.0.0-beta.93"
   }
 }
