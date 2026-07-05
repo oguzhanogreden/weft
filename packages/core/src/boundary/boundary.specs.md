@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `Boundary` namespace groups the subtree-wrapping boundaries: the **failure boundaries** (`catchAll`, `catchAllCause`, `catchTag`, `catchTags`, `catchSome`, `catchIf`) that intercept rendering-path errors, and the **suspense boundary** (`suspend`) that shows a fallback while async children are pending (spec'd in `dom/.../suspense.specs.md`). Each variant returns a plain descriptor `{ type, props }` that the renderer detects and handles. The `type` field is a symbol tag — `FAILURE_BOUNDARY` for the failure variants, `SUSPENSE_BOUNDARY` for `suspend`; for failure boundaries, variant-specific matching logic is encoded in a `match` function stored in `props`.
+The `Boundary` namespace groups the subtree-wrapping boundaries: the **failure boundaries** (`catch`, `catchCause`, `catchTag`, `catchTags`, `catchFilter`, `catchIf`) that intercept rendering-path errors, and the **suspense boundary** (`suspend`) that shows a fallback while async children are pending (spec'd in `dom/.../suspense.specs.md`). Each variant returns a plain descriptor `{ type, props }` that the renderer detects and handles. The `type` field is a symbol tag — `FAILURE_BOUNDARY` for the failure variants, `SUSPENSE_BOUNDARY` for `suspend`; for failure boundaries, variant-specific matching logic is encoded in a `match` function stored in `props`.
 
 The failure boundaries only catch **rendering-path** errors:
 
@@ -23,20 +23,20 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
    - `children: readonly Renderable[]`
 3. The `FAILURE_BOUNDARY` and `SUSPENSE_BOUNDARY` symbols are exported from `@weftui/core` for use by renderers.
 
-### `Boundary.catchAll`
+### `Boundary.catch`
 
-4. `match` always returns `fallback(error)` for any `Cause` that contains a failure (i.e. `Cause.failureOption` is `Some`). Defects (`Cause.die`) are **not** caught — `match` returns `null` for pure defects.
+4. `match` always returns `fallback(error)` for any `Cause` that contains a failure (i.e. `Cause.findErrorOption` is `Some`). Defects (`Cause.die`) are **not** caught — `match` returns `null` for pure defects.
 5. Output `E` is `FallbackE` (the fallback's own error channel) — the children's `E` is fully consumed.
 6. Output `R` is `ChildrenR | FallbackR`.
 
-### `Boundary.catchAllCause`
+### `Boundary.catchCause`
 
 7. `match` always returns `fallback(cause)` for any `Cause`, including defects and interruptions.
 8. Output `E` is `FallbackE`. Output `R` is `ChildrenR | FallbackR`.
 
 ### `Boundary.catchTag`
 
-9. `match` returns `fallback(error)` only when `Cause.failureOption` is `Some` and the failure's `_tag` equals `props.tag`. Returns `null` otherwise.
+9. `match` returns `fallback(error)` only when `Cause.findErrorOption` is `Some` and the failure's `_tag` equals `props.tag`. Returns `null` otherwise.
 10. The `fallback` parameter is typed to receive `Extract<ChildrenE<C>, { _tag: Tag }>`.
 11. Output `E` is `Exclude<ChildrenE<C>, { _tag: Tag }> | FallbackE` — the matched tag is removed from the union.
 12. Output `R` is `ChildrenR | FallbackR`.
@@ -48,10 +48,10 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 15. Output `E` excludes all tags present as keys in the handlers record.
 16. Output `R` is `ChildrenR | union of all FallbackR from handlers`.
 
-### `Boundary.catchSome`
+### `Boundary.catchFilter`
 
-17. `match` calls `fallback(error)` and returns the resulting `Node` if the fallback returns `Option.some(node)`, or `null` if it returns `Option.none()`.
-18. Output `E` preserves all of `ChildrenE<C>` (the boundary may or may not handle any given error).
+17. Mirrors Effect 4's `Effect.catchFilter` (renamed from v3's `catchSome`, which took an `Option`-returning function). Positional call: `catchFilter(filter, fallback, children)` — a `Filter.Filter<ChildrenE<C>, EB, X>` first, then the `fallback: (matched: EB) => Node`, then children. `match` runs `filter(error)`; on `Result.success` it returns `fallback(result.success)`, on `Result.fail` (or no error present) it returns `null`.
+18. Output `E` is `X | FallbackE` — `X` is the filter's fall-through channel (errors it declined), so unhandled errors are preserved.
 19. Output `R` is `ChildrenR | FallbackR`.
 
 ### `Boundary.catchIf`
@@ -73,13 +73,13 @@ Event handler errors are explicitly **not** caught — they run in detached fibe
 import { Boundary } from "@weftui/core";
 
 // Catch all typed failures
-Boundary.catchAll(
+Boundary.catch(
   { fallback: (e: E) => Node<FE, FR> },
   children: readonly Renderable[],
 ): Node<FE, ChildrenR | FR>
 
 // Catch all causes including defects
-Boundary.catchAllCause(
+Boundary.catchCause(
   { fallback: (cause: Cause.Cause<E>) => Node<FE, FR> },
   children: readonly Renderable[],
 ): Node<FE, ChildrenR | FR>
@@ -96,11 +96,12 @@ Boundary.catchTags(
   children: readonly Renderable[],
 ): Node<Exclude<ChildrenE, NetworkError | AuthError> | FE, ChildrenR | FR>
 
-// Conditionally catch — fallback returns Option
-Boundary.catchSome(
-  { fallback: (e: E) => Option.Option<Node<FE, FR>> },
+// Conditionally catch — a Filter decides (positional args, not a props object)
+Boundary.catchFilter(
+  filter: Filter.Filter<ChildrenE, EB, X>,
+  fallback: (matched: EB) => Node<FE, FR>,
   children: readonly Renderable[],
-): Node<ChildrenE | FE, ChildrenR | FR>
+): Node<X | FE, ChildrenR | FR>
 
 // Conditionally catch — predicate gates the fallback
 Boundary.catchIf(
