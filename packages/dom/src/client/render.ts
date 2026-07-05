@@ -103,7 +103,7 @@ export function setElementProps(
         continue;
       }
 
-      if (key === "ref" && typeof value === "object" && Ref.RefTypeId in value) {
+      if (key === "ref" && typeof value === "object" && SubscriptionRef.isSubscriptionRef(value)) {
         yield* Ref.set(value, Option.some(element));
         continue;
       }
@@ -352,7 +352,7 @@ function forkSupervised<A, E, R>(
   effect: Effect.Effect<A, E, R>,
   scope: Scope.Scope,
   errorContext: string,
-): Effect.Effect<Fiber.RuntimeFiber<A, E>, never, R> {
+): Effect.Effect<Fiber.Fiber<A, E>, never, R> {
   return Effect.gen(function* () {
     const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
     if (Option.isNone(boundaryCtx)) {
@@ -2749,10 +2749,19 @@ function makeClientResource(
     });
 
     return {
-      value: valueRef as Subscribable.Subscribable<unknown>,
+      value: Subscribable.make({
+        get: SubscriptionRef.get(valueRef),
+        changes: SubscriptionRef.changes(valueRef),
+      }),
       refetch,
-      pending: pendingRef as Subscribable.Subscribable<boolean>,
-      error: errorRef as Subscribable.Subscribable<Option.Option<unknown>>,
+      pending: Subscribable.make({
+        get: SubscriptionRef.get(pendingRef),
+        changes: SubscriptionRef.changes(pendingRef),
+      }),
+      error: Subscribable.make({
+        get: SubscriptionRef.get(errorRef),
+        changes: SubscriptionRef.changes(errorRef),
+      }),
     };
   });
 }

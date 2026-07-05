@@ -140,7 +140,7 @@ export function RouterLive<R>(
       // The in-flight leaf pre-run fiber, interrupted by a superseding
       // navigation (AC-R6), and the committed pre-run's scope, retained until a
       // later navigation replaces the leaf emission (AC-R12).
-      let inflightPreRun: Fiber.RuntimeFiber<Exit.Exit<Renderable, unknown>> | undefined;
+      let inflightPreRun: Fiber.Fiber<Exit.Exit<Renderable, unknown>> | undefined;
       let committedScope: Scope.Closeable | undefined;
 
       // Forward reference to the service instance built below: the pre-run needs
