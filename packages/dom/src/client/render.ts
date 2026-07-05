@@ -272,7 +272,7 @@ function handleStyle(
             // Set new styles
             for (const [key, styleValue] of Object.entries(val)) {
               if (styleValue !== undefined && styleValue !== null) {
-                element.style.setProperty(camelToKebab(key), String(styleValue));
+                element.style.setProperty(camelToKebab(key), String(styleValue as string | number));
               }
             }
           }
