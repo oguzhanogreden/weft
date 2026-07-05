@@ -1036,8 +1036,11 @@ function renderElement(
       const childArray = Array.isArray(children) ? children : [children];
 
       for (const child of childArray) {
-        // Check if child is a stream/effect
-        if (isStream(child) || Effect.isEffect(child)) {
+        // Check if child is a *reactive* stream/effect. Static-markup Nodes are
+        // Effects too (and, in Effect 4, iterable), but they carry a descriptor
+        // and must render synchronously via renderNode — routing them through the
+        // async stream path would leave them unrendered when mount resolves.
+        if (getElementDescriptor(child) === undefined && (isStream(child) || Effect.isEffect(child))) {
           const stream = toStream<Renderable>(child);
           const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
