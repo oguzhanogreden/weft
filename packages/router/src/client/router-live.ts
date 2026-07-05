@@ -335,7 +335,7 @@ export function RouterLive<R>(
         const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
           Effect.provide(
             RpcClient.layerProtocolHttp({ url: `${baseUrl}${RPC_PATH}` }).pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerJson)),
+              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerNdjson)),
             ),
           ),
           // The group is runtime-assembled (`RpcGroup<any>`); the flat caller is

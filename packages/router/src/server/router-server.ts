@@ -425,9 +425,9 @@ export namespace RouterServer {
     const rpc = options.rpc;
     const rpcRoutes =
       rpc !== undefined
-        ? RpcServer.layerHttp({ group: rpc.group, path: RPC_PATH }).pipe(
+        ? RpcServer.layerHttp({ group: rpc.group, path: RPC_PATH, protocol: "http" }).pipe(
             // oxlint-disable-next-line typescript/no-explicit-any
-            Layer.provide(Layer.mergeAll(rpc.handlers, RpcSerialization.layerJson) as any),
+            Layer.provide(Layer.mergeAll(rpc.handlers, RpcSerialization.layerNdjson) as any),
           )
         : Layer.empty;
 
