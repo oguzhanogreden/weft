@@ -8,7 +8,6 @@ import type {
   PropsE,
   PropsR,
 } from "./types";
-import type { YieldWrap } from "effect/Utils";
 
 /**
  * Factories for building custom components whose returned `Node`s carry the
@@ -94,7 +93,7 @@ export namespace Component {
    * ```
    */
   export function gen<
-    Eff extends YieldWrap<Effect.Effect<any, any, any>>,
+    Eff extends Effect.Effect<any, any, any>,
     BaseProps = Record<string, never>,
     C extends Children = readonly Renderable[],
   >(
@@ -102,8 +101,8 @@ export namespace Component {
   ): Component.Component<
     BaseProps,
     C,
-    Eff extends YieldWrap<Effect.Effect<any, infer E, any>> ? E : never,
-    Eff extends YieldWrap<Effect.Effect<any, any, infer R>> ? R : never
+    Eff extends Effect.Effect<any, infer E, any> ? E : never,
+    Eff extends Effect.Effect<any, any, infer R> ? R : never
   > {
     return (props: any, children: any = []) =>
       Effect.gen(function* () {
