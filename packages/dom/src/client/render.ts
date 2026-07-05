@@ -104,7 +104,7 @@ export function setElementProps(
       }
 
       if (key === "ref" && typeof value === "object" && SubscriptionRef.isSubscriptionRef(value)) {
-        yield* Ref.set(value, Option.some(element));
+        yield* SubscriptionRef.set(value, Option.some(element));
         continue;
       }
 

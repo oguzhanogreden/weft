@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
+import { Cause, Effect, Exit, Option, Schedule, Stream, SubscriptionRef } from "effect";
 import { Component, h, Source } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
@@ -1536,11 +1536,11 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
 
     await runMount(h.div({ ref }, "test"), root);
 
-    const refValue = await Effect.runPromise(Ref.get(ref));
+    const refValue = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(refValue), "Ref should contain Option.some");
     const element = Option.getOrThrow(refValue);
     assert.equal(element.tagName, "DIV");
@@ -1557,7 +1557,7 @@ describe("Ref Handling", () => {
 
     await runMount(h.span({ ref, class: "test-span" }, "content"), root);
 
-    const refValue = await Effect.runPromise(Ref.get(ref));
+    const refValue = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(refValue), "SubscriptionRef should contain Option.some");
     const element = Option.getOrThrow(refValue);
     assert.equal(element.tagName, "SPAN");
@@ -1614,11 +1614,11 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
 
     await runMount(h.div({ ref, id: "my-div" }), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "DIV");
     assert.equal(element.id, "my-div");
   });
@@ -1627,11 +1627,11 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLInputElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()));
 
     await runMount(h.input({ ref, type: "email", value: "test@example.com" }), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "INPUT");
     assert.equal(element.type, "email");
     // Input value is a property, should be set
@@ -1642,11 +1642,11 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLButtonElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLButtonElement>>(Option.none()));
 
     await runMount(h.button({ ref, type: "submit", disabled: true }, "Click"), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "BUTTON");
     assert.equal(element.type, "submit");
     assert.equal(element.disabled, true);
@@ -1656,7 +1656,7 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
 
     await runMount(
       h.div(
@@ -1672,7 +1672,7 @@ describe("Ref Handling", () => {
       root,
     );
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.id, "test-id");
     assert.equal(element.className, "test-class");
     assert.equal(element.getAttribute("data-custom"), "custom-value");
@@ -1703,10 +1703,10 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const divRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
-    const spanRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const divRef = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
+    const spanRef = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
     const inputRef = await Effect.runPromise(
-      Ref.make<Option.Option<HTMLInputElement>>(Option.none()),
+      SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()),
     );
 
     await runMount(
@@ -1717,9 +1717,9 @@ describe("Ref Handling", () => {
       root,
     );
 
-    const divElement = Option.getOrThrow(await Effect.runPromise(Ref.get(divRef)));
-    const spanElement = Option.getOrThrow(await Effect.runPromise(Ref.get(spanRef)));
-    const inputElement = Option.getOrThrow(await Effect.runPromise(Ref.get(inputRef)));
+    const divElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(divRef)));
+    const spanElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(spanRef)));
+    const inputElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(inputRef)));
 
     assert.equal(divElement.tagName, "DIV");
     assert.equal(spanElement.tagName, "SPAN");
@@ -1739,16 +1739,16 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()));
 
     // Check value before mount
-    const valueBefore = await Effect.runPromise(Ref.get(ref));
+    const valueBefore = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isNone(valueBefore), "Ref should be Option.none before mount");
 
     await runMount(h.div({ ref }, "test"), root);
 
     // Check value after mount
-    const valueAfter = await Effect.runPromise(Ref.get(ref));
+    const valueAfter = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(valueAfter), "Ref should be Option.some after mount");
   });
 });

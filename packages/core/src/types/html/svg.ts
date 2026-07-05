@@ -1,4 +1,4 @@
-import type { Option, Ref } from "effect";
+import type { Option, SubscriptionRef } from "effect";
 import type { DOMAttributes } from "./dom";
 import type { HTMLAttributeSource, StyleAttributeValue } from "./attributes";
 import type { Renderable } from "..";
@@ -66,7 +66,7 @@ type SVGUnits = "userSpaceOnUse" | "objectBoundingBox";
 export interface SVGAttributes<T> extends DOMAttributes<T> {
   // weft internals ========================================================
   children?: HTMLAttributeSource<Renderable>;
-  ref?: Ref.Ref<Option.Option<T>>;
+  ref?: SubscriptionRef.SubscriptionRef<Option.Option<T>>;
   // ============================================================================
 
   id?: HTMLAttributeSource<string>;
