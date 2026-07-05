@@ -69,7 +69,7 @@ describe("AC-S2: ambient scope close unmounts", () => {
     await Effect.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
-          yield* mountScoped(h.div({}, [region.changes]), root);
+          yield* mountScoped(h.div({}, [SubscriptionRef.changes(region)]), root);
           yield* tickE;
           assert.equal(root.textContent, "first");
           yield* SubscriptionRef.set(region, "second");
@@ -237,7 +237,7 @@ describe("hydrateScoped parity", () => {
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("srv"));
 
-    const app = h.div({}, [region.changes]);
+    const app = h.div({}, [SubscriptionRef.changes(region)]);
     const html = await Effect.runPromise(renderToStringHydratable(app));
     root.innerHTML = html;
 
@@ -273,7 +273,7 @@ describe("AC-S9: hardening — plain mount/hydrate honor an ambient scope", () =
     await Effect.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
-          yield* mount(h.div({}, [region.changes]), root);
+          yield* mount(h.div({}, [SubscriptionRef.changes(region)]), root);
           yield* tickE;
           assert.equal(root.textContent, "first");
         }),
@@ -290,7 +290,7 @@ describe("AC-S9: hardening — plain mount/hydrate honor an ambient scope", () =
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("srv"));
 
-    const app = h.div({}, [region.changes]);
+    const app = h.div({}, [SubscriptionRef.changes(region)]);
     const html = await Effect.runPromise(renderToStringHydratable(app));
     root.innerHTML = html;
 
@@ -322,7 +322,7 @@ describe("AC-S8: no-scope regression — plain mount via bare runPromise", () =>
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
 
-    const handle = await Effect.runPromise(mount(h.div({}, [region.changes]), root));
+    const handle = await Effect.runPromise(mount(h.div({}, [SubscriptionRef.changes(region)]), root));
     await tick();
     assert.equal(root.textContent, "first");
 

@@ -150,11 +150,11 @@ export namespace Source {
         // source-pump failure is injected via `interruptWhen` so it propagates to
         // subscribers instead of being swallowed; on normal completion the
         // `failure` deferred stays pending and never interrupts. `interruptWhen`
-        // keeps the primary `ref.changes` subscription in the foreground, so the
+        // keeps the primary `SubscriptionRef.changes(ref)` subscription in the foreground, so the
         // emission timing the await-first contract relies on is preserved (unlike a
         // concurrent `merge`, which would fork it a hop later).
         const changes = pipe(
-          ref.changes,
+          SubscriptionRef.changes(ref),
           Stream.filterMap(identity),
           Stream.interruptWhen(Deferred.await(failure)),
         ) as Stream.Stream<A, NoPropValue>;
