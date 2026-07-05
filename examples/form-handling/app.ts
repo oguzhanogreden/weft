@@ -31,11 +31,9 @@ const BasicInput = () =>
 // ============================================================================
 
 const Email = Schema.String.pipe(
-  Schema.filter((s) => s.length > 0, { message: () => "Email is required" }),
-  Schema.filter((s) => s.includes("@"), { message: () => "Must contain @" }),
-  Schema.filter((s) => s.includes("."), {
-    message: () => "Must contain a domain",
-  }),
+  Schema.check(Schema.makeFilter((s) => s.length > 0 ? undefined : "Email is required")),
+  Schema.check(Schema.makeFilter((s) => s.includes("@") ? undefined : "Must contain @")),
+  Schema.check(Schema.makeFilter((s) => s.includes(".") ? undefined : "Must contain a domain")),
 );
 
 const SchemaEmailInput = () =>
@@ -145,36 +143,24 @@ const LoginForm = () =>
 // ============================================================================
 
 const Username = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 3, {
-    message: () => "Min 3 characters",
-  }),
-  Schema.filter((s) => /^[a-zA-Z0-9_]+$/.test(s), {
-    message: () => "Only letters, numbers, underscore",
-  }),
+  Schema.check(Schema.makeFilter((s) => s.length >= 3 ? undefined : "Min 3 characters")),
+  Schema.check(Schema.makeFilter((s) => /^[a-zA-Z0-9_]+$/.test(s) ? undefined : "Only letters, numbers, underscore")),
 );
 
 const Password = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 8, {
-    message: () => "Min 8 characters",
-  }),
-  Schema.filter((s) => /[A-Z]/.test(s), {
-    message: () => "Must contain uppercase",
-  }),
-  Schema.filter((s) => /[0-9]/.test(s), {
-    message: () => "Must contain number",
-  }),
+  Schema.check(Schema.makeFilter((s) => s.length >= 8 ? undefined : "Min 8 characters")),
+  Schema.check(Schema.makeFilter((s) => /[A-Z]/.test(s) ? undefined : "Must contain uppercase")),
+  Schema.check(Schema.makeFilter((s) => /[0-9]/.test(s) ? undefined : "Must contain number")),
 );
 
 const Age = Schema.String.pipe(
-  Schema.filter((s) => /^\d+$/.test(s), {
-    message: () => "Must be a number",
-  }),
+  Schema.check(Schema.makeFilter((s) => /^\d+$/.test(s) ? undefined : "Must be a number")),
   Schema.transform(Schema.Number, {
     decode: (s) => Number.parseInt(s, 10),
     encode: (n) => String(n),
   }),
-  Schema.filter((n) => n >= 18, { message: () => "Must be 18 or older" }),
-  Schema.filter((n) => n <= 120, { message: () => "Invalid age" }),
+  Schema.check(Schema.makeFilter((n) => n >= 18 ? undefined : "Must be 18 or older")),
+  Schema.check(Schema.makeFilter((n) => n <= 120 ? undefined : "Invalid age")),
 );
 
 const validateField = <A, I>(schema: Schema.Codec<A, I>, value: I) => {
