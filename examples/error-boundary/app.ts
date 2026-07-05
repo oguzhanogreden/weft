@@ -7,7 +7,7 @@
  */
 
 import { Boundary, h } from "@weftui/core";
-import { Data, Effect, Option, Stream, SubscriptionRef } from "effect";
+import { Data, Effect, Filter, Result, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
 // Error types
@@ -71,7 +71,7 @@ function CatchAllSection() {
       "Catches any typed failure and renders a fallback. Defects (thrown exceptions) are not caught.",
     ),
     h.div({ class: "demo" }, [
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: (e) =>
             h.div({ class: "error-box" }, [
@@ -163,22 +163,20 @@ function CatchSomeSection() {
   return h.section({ class: "section" }, [
     h.h2("4. catchSome"),
     h.p(
-      "Catches 503 errors only. A non-503 NetworkError returns Option.none() and re-raises to the outer boundary.",
+      "Catches 503 errors only. A non-503 NetworkError fails the Filter and re-raises to the outer boundary.",
     ),
     h.div({ class: "demo" }, [
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: (e) =>
             h.div({ class: "error-box error-box--outer" }, `Outer caught: ${e.status} ${e.url}`),
         },
         [
-          Boundary.catchSome(
-            {
-              fallback: (e) =>
-                e.status === 503
-                  ? Option.some(h.div({ class: "error-box" }, `Service unavailable: ${e.url}`))
-                  : Option.none(),
-            },
+          Boundary.catchFilter(
+            Filter.make((e: NetworkError) =>
+              e.status === 503 ? Result.succeed(e) : Result.fail(e),
+            ),
+            (e) => h.div({ class: "error-box" }, `Service unavailable: ${e.url}`),
             [failingFetch("/api/resource")],
           ),
         ],
@@ -219,7 +217,7 @@ function NestedSection() {
       "Inner boundary catches AuthError. NetworkError re-raises from the inner boundary to the outer.",
     ),
     h.div({ class: "demo" }, [
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: (e) =>
             h.div({ class: "error-box error-box--outer" }, [
@@ -263,7 +261,7 @@ function StreamErrorSection() {
       "The stream shows live data for 2 seconds, then fails. The boundary swaps to the fallback.",
     ),
     h.div({ class: "demo" }, [
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: (e) =>
             h.div({ class: "error-box" }, [
@@ -296,7 +294,7 @@ function CatchAllCauseSection() {
       "Catches defects (thrown exceptions) as well as typed failures. The fallback receives the full Cause.",
     ),
     h.div({ class: "demo" }, [
-      Boundary.catchAllCause(
+      Boundary.catchCause(
         {
           fallback: (cause) =>
             h.div({ class: "error-box" }, [
@@ -329,7 +327,7 @@ function ToggleSection() {
     Stream.flatMap((visible: boolean) => {
       if (!visible) return Stream.fromEffect(h.span({ class: "muted" }, "(unmounted)"));
       return Stream.fromEffect(
-        Boundary.catchAll(
+        Boundary.catch(
           { fallback: () => h.span({ class: "error-box" }, "Caught after remount") },
           [failingFetch("/api/toggle")],
         ),
