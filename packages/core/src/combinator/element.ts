@@ -28,13 +28,13 @@ export interface CustomElements {}
  * - `el()` — no arguments; yields a `Node<never, never>`.
  */
 export interface ElementFn<Props> {
-  <P extends Props, C extends readonly Renderable[]>(
+  <P extends Props, const C extends readonly Renderable[]>(
     props: P,
     children: C,
   ): Node<PropsE<P> | ChildrenE<C>, PropsR<P> | ChildrenR<C>>;
   <P extends Props>(props: P, child: string | number): Node<PropsE<P>, PropsR<P>>;
   <P extends Props>(props: P): Node<PropsE<P>, PropsR<P>>;
-  <C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  <const C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
   (child: string | number): Node<never, never>;
   (): Node<never, never>;
 }
@@ -54,7 +54,7 @@ type H = {
    * h.fragment([h.span({}, "left"), h.span({}, "right")]);
    * ```
    */
-  fragment<C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
+  fragment<const C extends readonly Renderable[]>(children: C): Node<ChildrenE<C>, ChildrenR<C>>;
 } & {
   [K in keyof HTMLElements]: ElementFn<CombinatorialProps<HTMLElements[K] & DataAttributes>>;
 } & {
