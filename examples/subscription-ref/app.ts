@@ -24,7 +24,7 @@ const Counter = () =>
     const decrement = () => SubscriptionRef.update(count, (n) => n - 1);
 
     return yield* h.div([
-      h.div({ class: "counter" }, [count.changes]),
+      h.div({ class: "counter" }, [SubscriptionRef.changes(count)]),
       h.button({ type: "button", onclick: () => decrement() }, "-"),
       h.button({ type: "button", onclick: () => increment() }, "+"),
     ]);
@@ -38,14 +38,14 @@ const DerivedState = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
 
-    const doubled = Stream.map(count.changes, (n) => n * 2);
-    const squared = Stream.map(count.changes, (n) => n * n);
-    const isEven = Stream.map(count.changes, (n) => (n % 2 === 0 ? "Yes" : "No"));
+    const doubled = Stream.map(SubscriptionRef.changes(count), (n) => n * 2);
+    const squared = Stream.map(SubscriptionRef.changes(count), (n) => n * n);
+    const isEven = Stream.map(SubscriptionRef.changes(count), (n) => (n % 2 === 0 ? "Yes" : "No"));
 
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
     return yield* h.div([
-      h.p(["Count: ", h.strong([count.changes])]),
+      h.p(["Count: ", h.strong([SubscriptionRef.changes(count)])]),
       h.p(["Doubled: ", h.span({ class: "derived" }, [doubled])]),
       h.p(["Squared: ", h.span({ class: "derived" }, [squared])]),
       h.p(["Is Even: ", h.span({ class: "derived" }, [isEven])]),
@@ -104,7 +104,7 @@ const ObjectState = () =>
       }));
 
     const isValid = Stream.map(
-      form.changes,
+      SubscriptionRef.changes(form),
       (s) => s.name.length > 0 && s.email.length > 0 && !s.errors.name && !s.errors.email,
     );
 
@@ -116,7 +116,7 @@ const ObjectState = () =>
           placeholder: "Min 2 characters",
           oninput: (e) => updateName((e.target as HTMLInputElement).value),
         }),
-        Stream.map(form.changes, (s) =>
+        Stream.map(SubscriptionRef.changes(form), (s) =>
           s.errors.name
             ? h.span({ style: { color: "#c00", marginLeft: "0.5rem" } }, s.errors.name)
             : null,
@@ -129,14 +129,14 @@ const ObjectState = () =>
           placeholder: "user@example.com",
           oninput: (e) => updateEmail((e.target as HTMLInputElement).value),
         }),
-        Stream.map(form.changes, (s) =>
+        Stream.map(SubscriptionRef.changes(form), (s) =>
           s.errors.email
             ? h.span({ style: { color: "#c00", marginLeft: "0.5rem" } }, s.errors.email)
             : null,
         ),
       ]),
       h.div({ class: "preview" }, [
-        Stream.map(form.changes, (s) =>
+        Stream.map(SubscriptionRef.changes(form), (s) =>
           s.name || s.email ? `Name: ${s.name}\nEmail: ${s.email}` : "(empty)",
         ),
       ]),
@@ -170,13 +170,13 @@ const TodoList = () =>
         list.map((todo) => (todo.id === id ? { ...todo, done: !todo.done } : todo)),
       );
 
-    const completedCount = Stream.map(todos.changes, (list) => list.filter((t) => t.done).length);
-    const totalCount = Stream.map(todos.changes, (list) => list.length);
+    const completedCount = Stream.map(SubscriptionRef.changes(todos), (list) => list.filter((t) => t.done).length);
+    const totalCount = Stream.map(SubscriptionRef.changes(todos), (list) => list.length);
 
     return yield* h.div([
       h.p(["Completed: ", h.span({ class: "derived" }, [completedCount]), " / ", totalCount]),
       h.ul({ style: { listStyle: "none", padding: 0 } }, [
-        Stream.map(todos.changes, (list) =>
+        Stream.map(SubscriptionRef.changes(todos), (list) =>
           list.map((todo) =>
             h.li(
               {
@@ -207,7 +207,7 @@ const CoordinatedRefs = () =>
     const firstName = yield* SubscriptionRef.make("");
     const lastName = yield* SubscriptionRef.make("");
 
-    const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) => {
+    const fullName = Stream.zipLatestWith(SubscriptionRef.changes(firstName), SubscriptionRef.changes(lastName), (first, last) => {
       if (!first && !last) return "(empty)";
       return `${first} ${last}`.trim();
     });

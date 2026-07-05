@@ -9,7 +9,7 @@
  * - Type-safe references (HTMLInputElement, HTMLCanvasElement, etc.)
  * - Reactive mount detection via SubscriptionRef.changes
  *
- * Observers of `ref.changes` are forked with `Effect.forkScoped`, not bare
+ * Observers of `SubscriptionRef.changes(ref)` are forked with `Effect.forkScoped`, not bare
  * `Effect.fork`: this ties them to the component's instance scope (the ambient
  * `Scope.Scope` the renderer provides per component) so they live as long as the
  * component is mounted. A bare `Effect.fork` would bind the observer to the
@@ -31,7 +31,7 @@ const AutoFocusInput = () =>
     const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
-      inputRef.changes,
+      SubscriptionRef.changes(inputRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((option) => Effect.sync(() => option.value.focus())),
@@ -62,7 +62,7 @@ const MeasureElement = () =>
     const dimensions = yield* SubscriptionRef.make("Measuring...");
 
     yield* pipe(
-      boxRef.changes,
+      SubscriptionRef.changes(boxRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((option) =>
@@ -94,7 +94,7 @@ const MeasureElement = () =>
         },
         "Measured Box",
       ),
-      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong([dimensions.changes])]),
+      h.p({ style: { marginTop: "0.5rem" } }, ["Dimensions: ", h.strong([SubscriptionRef.changes(dimensions)])]),
     ]);
   });
 
@@ -110,7 +110,7 @@ const CanvasDrawing = () =>
     const canvasRef = yield* SubscriptionRef.make<Option.Option<HTMLCanvasElement>>(Option.none());
 
     yield* pipe(
-      canvasRef.changes,
+      SubscriptionRef.changes(canvasRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((option) =>

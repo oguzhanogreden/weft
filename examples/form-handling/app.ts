@@ -22,7 +22,7 @@ const BasicInput = () =>
         placeholder: "Type something...",
         oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
       }),
-      h.div({ class: "preview" }, ["You typed: ", value.changes]),
+      h.div({ class: "preview" }, ["You typed: ", SubscriptionRef.changes(value)]),
     ]);
   });
 
@@ -42,7 +42,7 @@ const SchemaEmailInput = () =>
   Effect.gen(function* () {
     const email = yield* SubscriptionRef.make("");
 
-    const validationStream = Stream.map(email.changes, (value) => {
+    const validationStream = Stream.map(SubscriptionRef.changes(email), (value) => {
       if (value.length === 0) return { valid: false, error: null };
       const result = Schema.decodeUnknownResult(Email)(value);
       return Result.match(result, {
@@ -82,7 +82,7 @@ const CharacterCounter = () =>
     const text = yield* SubscriptionRef.make("");
     const maxLength = 100;
 
-    const countStream = Stream.map(text.changes, (t) => t.length);
+    const countStream = Stream.map(SubscriptionRef.changes(text), (t) => t.length);
     const remainingStream = Stream.map(countStream, (count) => maxLength - count);
 
     return yield* h.div({ class: "form-group" }, [
@@ -133,7 +133,7 @@ const LoginForm = () =>
           h.input({ type: "password", placeholder: "Enter password" }),
         ]),
         h.button({ type: "submit" }, "Login"),
-        h.div({ class: "preview" }, [Stream.map(status.changes, (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [Stream.map(SubscriptionRef.changes(status), (s) => (s ? h.span(s) : null))]),
       ],
     );
   });
@@ -190,17 +190,17 @@ const SchemaForm = () =>
     const ageRef = yield* SubscriptionRef.make("");
     const statusRef = yield* SubscriptionRef.make<string | null>(null);
 
-    const usernameError = Stream.map(usernameRef.changes, (v) =>
+    const usernameError = Stream.map(SubscriptionRef.changes(usernameRef), (v) =>
       v ? validateField(Username, v) : null,
     );
-    const passwordError = Stream.map(passwordRef.changes, (v) =>
+    const passwordError = Stream.map(SubscriptionRef.changes(passwordRef), (v) =>
       v ? validateField(Password, v) : null,
     );
-    const ageError = Stream.map(ageRef.changes, (v) => (v ? validateField(Age, v) : null));
+    const ageError = Stream.map(SubscriptionRef.changes(ageRef), (v) => (v ? validateField(Age, v) : null));
 
     const isValid = Stream.zipLatestWith(
-      Stream.zipLatestWith(usernameRef.changes, passwordRef.changes, (u, p) => ({ u, p })),
-      ageRef.changes,
+      Stream.zipLatestWith(SubscriptionRef.changes(usernameRef), SubscriptionRef.changes(passwordRef), (u, p) => ({ u, p })),
+      SubscriptionRef.changes(ageRef),
       ({ u, p }, a) =>
         u.length > 0 &&
         p.length > 0 &&
@@ -268,7 +268,7 @@ const SchemaForm = () =>
         h.button({ type: "submit" }, [
           Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields")),
         ]),
-        h.div({ class: "preview" }, [Stream.map(statusRef.changes, (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [Stream.map(SubscriptionRef.changes(statusRef), (s) => (s ? h.span(s) : null))]),
       ],
     );
   });
@@ -281,7 +281,7 @@ const SearchPreview = () =>
   Effect.gen(function* () {
     const query = yield* SubscriptionRef.make("");
 
-    const resultsStream = Stream.map(query.changes, (q) => {
+    const resultsStream = Stream.map(SubscriptionRef.changes(query), (q) => {
       if (q.length < 2) return [];
       const items = ["Apple", "Banana", "Cherry", "Date", "Elderberry"];
       return items.filter((item) => item.toLowerCase().includes(q.toLowerCase()));

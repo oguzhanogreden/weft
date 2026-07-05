@@ -3,7 +3,7 @@
  *
  * A controlled input whose `SubscriptionRef` value drives a derived validation
  * stream: the message and its color are pure functions of the current value,
- * recomputed on every keystroke via `Stream.map` over `value.changes`. Shows that
+ * recomputed on every keystroke via `Stream.map` over `SubscriptionRef.changes(value)`. Shows that
  * derived UI state is just a stream transformation, with no separate state library.
  */
 
@@ -21,14 +21,14 @@ export const ReactiveInput = (): Node =>
     const onInput = (event: Event) =>
       SubscriptionRef.set(value, (event.target as HTMLInputElement).value);
 
-    const message = Stream.map(value.changes, (text) =>
+    const message = Stream.map(SubscriptionRef.changes(value), (text) =>
       text.length === 0
         ? "Type something…"
         : text.length < MIN_LENGTH
           ? `Keep going… (${MIN_LENGTH - text.length} more)`
           : `Looks good — ${text.length} characters`,
     );
-    const isValid = Stream.map(value.changes, (text) => text.length >= MIN_LENGTH);
+    const isValid = Stream.map(SubscriptionRef.changes(value), (text) => text.length >= MIN_LENGTH);
 
     return yield* h.div(
       { class: "flex flex-col gap-2 rounded-lg border border-slate-7 bg-slate-2 p-4" },
@@ -38,7 +38,7 @@ export const ReactiveInput = (): Node =>
           // `demo-input-field` is a semantic test hook.
           class: "demo-input-field rounded-md border border-slate-6 px-2.5 py-2 text-[0.95rem]",
           placeholder: "Type here…",
-          value: value.changes,
+          value: SubscriptionRef.changes(value),
           oninput: onInput,
         }),
         h.p(
