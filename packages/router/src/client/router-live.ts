@@ -1,6 +1,7 @@
 import { AppRpcClientTag } from "@weftui/core";
-import { FetchHttpClient, HttpApiClient } from "@effect/platform";
-import type { RpcGroup } from "@effect/rpc";
+import { FetchHttpClient } from "effect/unstable/http";
+import { HttpApiClient } from "effect/unstable/httpapi";
+import type { RpcGroup } from "effect/unstable/rpc";
 import type { Renderable } from "@weftui/core";
 import {
   Context,
@@ -105,7 +106,7 @@ function normalizeTo(to: string): string {
  * **network** flat rpc client (`RpcClient.make` over `layerProtocolHttp` →
  * `POST /_eui/rpc`) — so `@weftui/dom` can resolve a `Boundary.rpc` (hydrated
  * refetch and client-first mount) without depending on this package or
- * `@effect/rpc`.
+ * `effect/unstable/rpc`.
  */
 export function RouterLive<R>(
   def: RouterDef<any, R>,
@@ -310,7 +311,7 @@ export function RouterLive<R>(
       // The {@link AppRpcClientTag} seam: a **network** flat rpc client over the
       // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@weftui/dom`
       // reads this tag to resolve a `Boundary.rpc` — hydrated refetch and
-      // client-first mount — without importing this package or `@effect/rpc`.
+      // client-first mount — without importing this package or `effect/unstable/rpc`.
       // With no `rpc` configured the seam is a stub whose `call` fails
       // descriptively, so a stray `Boundary.rpc` surfaces the misconfiguration.
       const rpc = options.rpc;
@@ -325,11 +326,13 @@ export function RouterLive<R>(
             ),
         });
       } else {
-        // `@effect/rpc` (and its `msgpackr` serialization dependency) is loaded
+        // `effect/unstable/rpc` (and its `msgpackr` serialization dependency) is loaded
         // lazily so it stays out of the base client bundle: an app with no
         // `Boundary.rpc` never passes `rpc`, so this branch — and the async
         // chunk it pulls — never runs. Only rpc-enabled apps pay the cost.
-        const { RpcClient, RpcSerialization } = yield* Effect.promise(() => import("@effect/rpc"));
+        const { RpcClient, RpcSerialization } = yield* Effect.promise(
+          () => import("effect/unstable/rpc"),
+        );
         const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
         const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
           Effect.provide(

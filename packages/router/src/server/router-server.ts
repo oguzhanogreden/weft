@@ -5,15 +5,9 @@ import {
   SuspenseFailureHandlerTag,
   type SuspenseFailureHandler,
 } from "@weftui/dom/server";
-import {
-  HttpApiBuilder,
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpServer,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "@effect/platform";
-import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "@effect/rpc";
+import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpServer, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "effect/unstable/rpc";
 import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream, Subscribable } from "effect";
 import type { RouterDef } from "../compile";
 import { isRouterNotFound, RouterNotFound } from "../errors";
