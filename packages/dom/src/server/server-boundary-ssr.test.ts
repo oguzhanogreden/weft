@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Boundary, h } from "@weftui/core";
 import type { AppRpcClient, Node } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
-import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
+import { Effect, Exit, Filter, Layer, Option, Result, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
@@ -253,11 +253,11 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("relocates the payload to the outer boundary when the inner match returns null (AC-9)", async () => {
-    // Inner `catchSome` declines (Option.none → match null); the failure
+    // Inner `catchFilter` declines (Result.fail → match null); the failure
     // re-propagates without draining, so the outer boundary emits the payload.
     const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "outer" }, e.reason) },
-      [Boundary.catchSome({ fallback: () => Option.none() }, [failingBoundary()])],
+      [Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => h.div({}), [failingBoundary()])],
     );
 
     const html = await Effect.runPromise(

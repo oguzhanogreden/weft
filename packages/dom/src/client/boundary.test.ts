@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Deferred, Effect, Option, pipe, Stream } from "effect";
+import { Cause, Data, Deferred, Effect, Filter, Option, pipe, Result, Stream } from "effect";
 import { Boundary, h, List } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
@@ -403,16 +403,16 @@ describe("AC19: markers remain after swap", () => {
   });
 });
 
-// ── catchSome / catchIf with non-matching predicate re-raise ──────────────────
+// ── catchFilter / catchIf with non-matching predicate re-raise ──────────────────
 
-describe("edge: catchSome non-matching re-raises to parent", () => {
-  it("outer boundary catches when catchSome returns none", async () => {
+describe("edge: catchFilter non-matching re-raises to parent", () => {
+  it("outer boundary catches when catchFilter declines", async () => {
     createTestDOM();
     const root = createRoot();
 
     const handle = await runMount(
       Boundary.catch({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
-        Boundary.catchSome({ fallback: () => Option.none() }, [
+        Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => h.span({}), [
           Effect.fail(new FooError({ msg: "e" })),
         ]),
       ]),
