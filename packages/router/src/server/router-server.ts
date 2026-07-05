@@ -6,7 +6,7 @@ import {
   type SuspenseFailureHandler,
 } from "@weftui/dom/server";
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
-import { HttpServer, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServer, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "effect/unstable/rpc";
 import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream } from "effect";
 import type { RouterDef } from "../compile";
@@ -406,29 +406,33 @@ export namespace RouterServer {
           renderNoMatch(def, options, (request.request as HttpServerRequest.HttpServerRequest).url),
         ),
     );
+    // Register the HttpApi page routes into the ambient `HttpRouter`, provided
+    // with the page + fallback group handlers.
     // oxlint-disable-next-line typescript/no-explicit-any
-    const apiLayer: Layer.Layer<any, never, never> = builder
-      .api(api)
-      .pipe(Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)));
-    const { handler: pageHandler } = HttpApiBuilder.toWebHandler(
-      Layer.mergeAll(apiLayer, HttpServer.layerContext),
+    const apiRoutes: Layer.Layer<any, never, never> = HttpApiBuilder.layer(api).pipe(
+      Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)),
     );
 
-    // `Boundary.rpc` data is served out-of-band from the page routes: an rpc web
-    // handler over the app's merged `RpcGroup` + JSON serialization, claiming
-    // `POST /_eui/rpc`. The combined handler delegates that path to rpc and every
-    // other URL to the HttpApi page dispatch above. With no `rpc` configured the
-    // path is not claimed — `/_eui/rpc` falls through to page dispatch (404).
+    // `Boundary.rpc` data is served in-band: the app's merged `RpcGroup` (+ JSON
+    // serialization) registers an rpc route at `POST /_eui/rpc` on the same
+    // `HttpRouter` as the page routes; the router dispatches by path, so the rpc
+    // route wins over the catch-all page dispatch. With no `rpc` configured the
+    // route is not registered and `/_eui/rpc` falls through to page dispatch (404).
     const rpc = options.rpc;
-    let handler = pageHandler;
-    if (rpc !== undefined) {
-      const { handler: rpcHandler } = RpcServer.toWebHandler(rpc.group, {
-        // oxlint-disable-next-line typescript/no-explicit-any
-        layer: Layer.mergeAll(rpc.handlers, RpcSerialization.layerJson) as any,
-      });
-      handler = (request: Request): Promise<Response> =>
-        new URL(request.url).pathname === RPC_PATH ? rpcHandler(request) : pageHandler(request);
-    }
+    const rpcRoutes: Layer.Layer<never, never, never> =
+      rpc !== undefined
+        ? RpcServer.layerHttp({ group: rpc.group, path: RPC_PATH }).pipe(
+            // oxlint-disable-next-line typescript/no-explicit-any
+            Layer.provide(Layer.mergeAll(rpc.handlers, RpcSerialization.layerJson) as any),
+          )
+        : Layer.empty;
+
+    // A single buffered web handler over the merged router (page + rpc routes)
+    // plus the platform services those layers require.
+    const { handler } = HttpRouter.toWebHandler(
+      // oxlint-disable-next-line typescript/no-explicit-any
+      Layer.mergeAll(apiRoutes, rpcRoutes, HttpServer.layerServices) as any,
+    );
 
     perDef.set(options.document, handler);
     return handler;
