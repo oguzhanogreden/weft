@@ -1,4 +1,4 @@
-import { Cause, type Effect, Option } from "effect";
+import { Cause, type Effect, type Filter, Option, Result } from "effect";
 import type * as Subscribable from "~/subscribable";
 import type { Rpc } from "@effect/rpc";
 import { elementNode } from "~/combinator/descriptor";
@@ -52,7 +52,7 @@ function makeFailureBoundaryNode<E, R>(
  * variant wraps a subtree and shows a fallback in response to an event.
  *
  * - **Failure boundaries** (`catch`, `catchCause`, `catchTag`,
- *   `catchTags`, `catchSome`, `catchIf`) intercept rendering-path errors —
+ *   `catchTags`, `catchFilter`, `catchIf`) intercept rendering-path errors —
  *   construction-time errors and post-mount stream failures — mirroring
  *   Effect's `catch*` combinators.
  * - **Suspense boundary** (`suspend`) shows a fallback while async children are
@@ -198,19 +198,45 @@ export namespace Boundary {
   }
 
   /**
-   * Conditionally catch — the fallback returns `Option`. If it returns
-   * `Option.none()`, the error is re-raised. The children's `E` is preserved
-   * in the output since the boundary may not handle any given error.
+   * Conditionally catch using a `Filter`. The `filter` runs on each typed
+   * failure: a `Result.succeed` (pass) recovers via `fallback`, receiving the
+   * possibly-narrowed pass value; a `Result.fail` re-raises the error (its
+   * `Fail` channel `X` is preserved in the output `E`, since the boundary may
+   * not handle any given error).
+   *
+   * Mirrors Effect 4's `Effect.catchFilter` (renamed from `catchSome`, which
+   * took an `Option`-returning function in v3).
+   *
+   * @example
+   * ```ts
+   * import { Boundary } from "@weftui/core";
+   * import { Filter, Result } from "effect";
+   *
+   * Boundary.catchFilter(
+   *   Filter.make((e: AppError) =>
+   *     e._tag === "Net" ? Result.succeed(e) : Result.fail(e),
+   *   ),
+   *   (matched) => h.div({}, matched.message),
+   *   [Widget()],
+   * );
+   * ```
    */
-  export function catchSome<C extends readonly Renderable[], FE = never, FR = never>(
-    props: { readonly fallback: (e: ChildrenE<C>) => Option.Option<Node<FE, FR>> },
+  export function catchFilter<
+    C extends readonly Renderable[],
+    EB,
+    X,
+    FE = never,
+    FR = never,
+  >(
+    filter: Filter.Filter<ChildrenE<C>, EB, X>,
+    fallback: (matched: EB) => Node<FE, FR>,
     children: C,
-  ): Node<ChildrenE<C> | FE, ChildrenR<C> | FR> {
+  ): Node<X | FE, ChildrenR<C> | FR> {
     const match = (cause: Cause.Cause<unknown>): Node<unknown, unknown> | null => {
       const opt = Cause.findErrorOption(cause);
       if (Option.isNone(opt)) return null;
-      const result = props.fallback(opt.value as ChildrenE<C>);
-      return Option.isSome(result) ? (result.value as Node<unknown, unknown>) : null;
+      const result = filter(opt.value as ChildrenE<C>);
+      return Result.isSuccess(result) ? fallback(result.success) : null;
     };
     return makeFailureBoundaryNode(match, children);
   }
