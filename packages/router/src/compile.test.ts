@@ -120,9 +120,9 @@ interface HttpApiView {
           readonly name: string;
           readonly path: string;
           readonly method: string;
-          readonly params: Schema.Top | undefined;
-          readonly query: Schema.Top | undefined;
-          readonly error: ReadonlySet<Schema.Top>;
+          readonly params: Schema.Codec<unknown, unknown> | undefined;
+          readonly query: Schema.Codec<unknown, unknown> | undefined;
+          readonly error: ReadonlySet<Schema.Codec<unknown, unknown>>;
         }
       >;
     }
@@ -174,7 +174,7 @@ describe("httpApi spine", () => {
     for (const endpoint of endpoints) {
       // Effect 4: an endpoint's declared errors are a Set of schemas, each
       // carrying its own `httpApiStatus` annotation (via `HttpApiSchema.status`).
-      const errorSchemas = [...(endpoint.error as ReadonlySet<Schema.Top>)];
+      const errorSchemas = [...endpoint.error];
       const statuses = errorSchemas.map(
         (s) =>
           (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
