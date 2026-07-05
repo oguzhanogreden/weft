@@ -205,7 +205,9 @@ export const DocsShell = Component.gen(function* () {
   const docs = yield* Docs;
   const router = yield* Router;
   const outlet = yield* Router.Outlet;
-  const path = Stream.map(router.SubscriptionRef.changes(currentMatch), (match) => pathnameOf(match.url));
+  const path = Stream.map(router.currentMatch.changes, (match) =>
+    pathnameOf(match.url),
+  );
 
   // Mobile sidebar drawer state (source of truth). daisyUI's drawer CSS keys off the
   // hidden checkbox's `:checked`, which we drive from this ref via its `checked`
