@@ -4,7 +4,7 @@
  * `Boundary.rpc` is Weft's server-resolved, client-refreshable data boundary. Its
  * four lifecycles (SSR, hydrate-replay, refetch, client-first mount) all resolve one
  * rpc through the ambient `AppRpcClientTag` seam. `@weftui/router` normally provides
- * that seam, but it is a plain `Context.Tag` from `@weftui/core`, so a **router-less**
+ * that seam, but it is a plain `Context.Service` key from `@weftui/core`, so a **router-less**
  * client app can provide it directly — which is exactly what this example does to show
  * the **client-first mount** path in isolation:
  *
@@ -23,7 +23,7 @@
 
 import { AppRpcClientTag, Boundary, h } from "@weftui/core";
 import type { AppRpcClient } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
+import { Rpc } from "effect/unstable/rpc";
 import { Effect, Layer, Schema, Stream } from "effect";
 
 /** The rpc contract: `_tag` "GetProduct" is the boundary's stable identity. */
