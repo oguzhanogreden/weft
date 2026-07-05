@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { Component, h } from "@weftui/core";
-import { Option, Result, Schema, SchemaAST as AST } from "effect";
+import { Result, Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import type { CompiledLeaf } from "~/compile";
 import { Router } from "~/index";
@@ -120,9 +120,9 @@ interface HttpApiView {
           readonly name: string;
           readonly path: string;
           readonly method: string;
-          readonly pathSchema: Option.Option<Schema.Codec<unknown, unknown>>;
-          readonly urlParamsSchema: Option.Option<Schema.Codec<unknown, unknown>>;
-          readonly errorSchema: Schema.Codec<unknown, unknown>;
+          readonly params: Schema.Top | undefined;
+          readonly query: Schema.Top | undefined;
+          readonly error: ReadonlySet<Schema.Top>;
         }
       >;
     }
@@ -161,30 +161,30 @@ describe("httpApi spine", () => {
 
   test("each endpoint carries real path + urlParams schemas (no `as any` bridge)", () => {
     for (const endpoint of endpoints) {
-      assert.ok(Option.isSome(endpoint.pathSchema), `${endpoint.path} has a path schema`);
-      assert.ok(Option.isSome(endpoint.urlParamsSchema), `${endpoint.path} has a urlParams schema`);
+      assert.ok(endpoint.params !== undefined, `${endpoint.path} has a path schema`);
+      assert.ok(endpoint.query !== undefined, `${endpoint.path} has a urlParams schema`);
     }
     // The `:id` path schema decodes through the leaf's `NumberFromString`.
     const settings = endpoints.find((e) => e.path === "/users/:id/settings")!;
-    const pathSchema = Option.getOrThrow(settings.pathSchema);
+    const pathSchema = settings.params!;
     assert.deepEqual(Schema.decodeUnknownSync(pathSchema)({ id: "42" }), { id: 42 });
   });
 
   test("each endpoint declares a RouterNotFound → 404 error", () => {
     for (const endpoint of endpoints) {
-      // The status annotation lives on each union member's AST (the top union node
-      // carries none), so walk members and assert 404 is among the declared errors.
-      const ast = endpoint.errorSchema.ast as {
-        readonly _tag: string;
-        readonly types?: readonly AST.AST[];
-      };
-      const members = ast._tag === "Union" ? ast.types! : [ast as unknown as AST.AST];
-      const statuses = members.map(
-        (m) => (m.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
+      // Effect 4: an endpoint's declared errors are a Set of schemas, each
+      // carrying its own `httpApiStatus` annotation (via `HttpApiSchema.status`).
+      const errorSchemas = [...(endpoint.error as ReadonlySet<Schema.Top>)];
+      const statuses = errorSchemas.map(
+        (s) => (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
       );
       assert.ok(statuses.includes(404), `${endpoint.path} declares a 404 error`);
 
-      const decoded = Schema.decodeUnknownResult(endpoint.errorSchema)({ _tag: "RouterNotFound" });
+      const errSchema = errorSchemas.find(
+        (s) =>
+          (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus === 404,
+      )!;
+      const decoded = Schema.decodeUnknownResult(errSchema)({ _tag: "RouterNotFound" });
       assert.ok(Result.isSuccess(decoded), `${endpoint.path} error decodes a RouterNotFound`);
     }
   });
