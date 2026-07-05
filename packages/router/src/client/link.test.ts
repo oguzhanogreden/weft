@@ -65,7 +65,7 @@ async function clickAnchor(
     ...init,
   });
   anchor.dispatchEvent(event);
-  // `navigate` is dispatched via `Runtime.runFork`; let the microtask flush.
+  // `navigate` is dispatched via `Effect.runForkWith`; let the microtask flush.
   await Promise.resolve();
   return event;
 }

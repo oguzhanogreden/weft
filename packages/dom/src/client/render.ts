@@ -340,7 +340,7 @@ function camelToKebab(str: string): string {
  *
  * With an enclosing Boundary, failure causes are routed to
  * `BoundaryContext.reportError` (unchanged behavior). Without one, the exit is
- * observed here and a failure is logged at `LogLevel.Error` via `Effect.logError`,
+ * observed here and a failure is logged at the `"Error"` level via `Effect.logError`,
  * annotated with `weft.region` so it is visible and attributable by default.
  * Interruption (unmount teardown) is never reported.
  *
@@ -357,7 +357,7 @@ function forkSupervised<A, E, R>(
     const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
     if (Option.isNone(boundaryCtx)) {
       // No enclosing Boundary: observe the forked fiber's exit ourselves and
-      // report an unhandled failure at `LogLevel.Error`, annotated with
+      // report an unhandled failure at the `"Error"` level, annotated with
       // `weft.region` so it is visible and attributable by default. Interruption
       // (unmount teardown) is never reported. Effect 4 removed the
       // unhandled-error-log-level FiberRef (and `withUnhandledErrorLogLevel`), so

@@ -558,7 +558,7 @@ describe("nested: inner re-raises, outer catches", () => {
 // ── AC8: no boundary — failure exit left unobserved, runtime reports it ───────
 // With no enclosing Boundary the subscription fiber's failure exit is left
 // unobserved; the Effect runtime logs "Fiber terminated with an unhandled
-// error" at LogLevel.Error (raised from the default Debug), annotated with
+// error" at the "Error" level (raised from the default "Debug"), annotated with
 // `weft.region` identifying the failing region/prop. Interruption stays silent.
 
 describe("AC8: no boundary — runtime reports unhandled subscription failure", () => {
