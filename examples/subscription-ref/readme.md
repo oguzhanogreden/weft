@@ -50,7 +50,7 @@ const Counter = () =>
 ### Basic Counter
 
 ```typescript
-const count = yield* SubscriptionRef.make(0);
+const count = yield * SubscriptionRef.make(0);
 
 // Display current value
 h.span([SubscriptionRef.changes(count)]);
@@ -62,7 +62,7 @@ h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+");
 ### Derived State
 
 ```typescript
-const count = yield* SubscriptionRef.make(0);
+const count = yield * SubscriptionRef.make(0);
 const doubled = Stream.map(SubscriptionRef.changes(count), (n) => n * 2);
 const isEven = Stream.map(SubscriptionRef.changes(count), (n) => (n % 2 === 0 ? "Yes" : "No"));
 
@@ -88,10 +88,12 @@ const validate = <A, I>(schema: Schema.Codec<A, I>, value: I): string | null => 
   });
 };
 
-const form = yield* SubscriptionRef.make({
-  name: "",
-  errors: { name: null as string | null },
-});
+const form =
+  yield *
+  SubscriptionRef.make({
+    name: "",
+    errors: { name: null as string | null },
+  });
 
 const updateName = (name: string) =>
   SubscriptionRef.update(form, (state) => ({
@@ -109,8 +111,8 @@ Stream.map(SubscriptionRef.changes(form), (s) =>
 ### Combining Multiple Refs
 
 ```typescript
-const firstName = yield* SubscriptionRef.make("");
-const lastName = yield* SubscriptionRef.make("");
+const firstName = yield * SubscriptionRef.make("");
+const lastName = yield * SubscriptionRef.make("");
 
 const fullName = Stream.zipLatestWith(
   SubscriptionRef.changes(firstName),
@@ -124,7 +126,7 @@ h.span(["Full name: ", fullName]);
 ### Array State
 
 ```typescript
-const todos = yield* SubscriptionRef.make<Todo[]>([]);
+const todos = yield * SubscriptionRef.make<Todo[]>([]);
 
 const addTodo = (text: string) =>
   SubscriptionRef.update(todos, (list) => [...list, { id: Date.now(), text, done: false }]);
@@ -137,12 +139,12 @@ const toggleTodo = (id: number) =>
 
 ## Comparison with SolidJS Signals
 
-| SolidJS                         | Effect SubscriptionRef                        |
-| -------------------------------- | ---------------------------------------------- |
-| `createSignal(0)`               | `SubscriptionRef.make(0)`                     |
-| `count()`                       | `SubscriptionRef.changes(count)` (stream)     |
-| `setCount(5)`                   | `SubscriptionRef.set(count, 5)`               |
-| `setCount(n => n + 1)`          | `SubscriptionRef.update(count, n => n + 1)`   |
+| SolidJS                         | Effect SubscriptionRef                                   |
+| ------------------------------- | -------------------------------------------------------- |
+| `createSignal(0)`               | `SubscriptionRef.make(0)`                                |
+| `count()`                       | `SubscriptionRef.changes(count)` (stream)                |
+| `setCount(5)`                   | `SubscriptionRef.set(count, 5)`                          |
+| `setCount(n => n + 1)`          | `SubscriptionRef.update(count, n => n + 1)`              |
 | `createMemo(() => count() * 2)` | `Stream.map(SubscriptionRef.changes(count), n => n * 2)` |
 
 ## When to Use

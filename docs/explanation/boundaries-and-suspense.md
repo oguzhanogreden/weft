@@ -26,7 +26,7 @@ Boundary.catch({ fallback: (e) => h.div({ class: "error" }, `Failed: ${e.message
 There are six failure-catch variants, mirroring Effect's own error operators so the mental model transfers directly:
 
 | Variant                   | Catches                                    |
-| ------------------------- | ------------------------------------------- |
+| ------------------------- | ------------------------------------------ |
 | `catch`                   | every failure in `E`                       |
 | `catchCause`              | the full `Cause` (defects included)        |
 | `catchTag` / `catchTags`  | one / several tagged errors by `_tag`      |

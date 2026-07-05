@@ -51,7 +51,7 @@ const ReactiveInput = () =>
 ### Basic Reactive Input
 
 ```typescript
-const value = yield* SubscriptionRef.make("");
+const value = yield * SubscriptionRef.make("");
 
 h.input({
   type: "text",
@@ -72,7 +72,7 @@ const Email = Schema.String.pipe(
   Schema.check(Schema.makeFilter((s) => (s.includes(".") ? undefined : "Must have domain"))),
 );
 
-const email = yield* SubscriptionRef.make("");
+const email = yield * SubscriptionRef.make("");
 
 const validationStream = Stream.map(SubscriptionRef.changes(email), (value) => {
   if (!value) return null;
@@ -93,7 +93,7 @@ Stream.map(validationStream, (err) => (err ? h.span({ class: "error" }, err) : n
 ### Character Counter
 
 ```typescript
-const text = yield* SubscriptionRef.make("");
+const text = yield * SubscriptionRef.make("");
 const countStream = Stream.map(SubscriptionRef.changes(text), (t) => t.length);
 const remainingStream = Stream.map(countStream, (c) => 100 - c);
 

@@ -16,14 +16,14 @@ npm install @weftui/core effect
 
 ## Key exports
 
-| Export      | What it is                                                                                                                                                                        |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `h`         | Proxy namespace of element builders — `h.div`, `h.span`, `h.button`, … plus `h.fragment` for wrapper-less groups.                                                                 |
-| `Component` | `Component.gen` / `Component.make` — reusable components whose reactive prop channels propagate to the call site.                                                                 |
+| Export      | What it is                                                                                                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `h`         | Proxy namespace of element builders — `h.div`, `h.span`, `h.button`, … plus `h.fragment` for wrapper-less groups.                                                             |
+| `Component` | `Component.gen` / `Component.make` — reusable components whose reactive prop channels propagate to the call site.                                                             |
 | `Boundary`  | Error boundaries (`catch`, `catchTag`, `catchTags`, `catchFilter`, `catchIf`, `catchCause`), plus `Boundary.suspend` (async fallbacks) and `Boundary.rpc` (server-data seam). |
-| `List`      | `List.each` — the keyed list combinator; renders once per key and reconciles across emissions.                                                                                    |
-| `Source`    | The reactive prop vocabulary (`A \| Effect \| Stream \| Subscribable`) + `Source.toSubscribable`.                                                                                 |
-| `Node<E,R>` | The core tree type — an alias for `Effect.Effect<ElementDescriptor, E, R>`.                                                                                                       |
+| `List`      | `List.each` — the keyed list combinator; renders once per key and reconciles across emissions.                                                                                |
+| `Source`    | The reactive prop vocabulary (`A \| Effect \| Stream \| Subscribable`) + `Source.toSubscribable`.                                                                             |
+| `Node<E,R>` | The core tree type — an alias for `Effect.Effect<ElementDescriptor, E, R>`.                                                                                                   |
 
 ## Example
 

@@ -92,19 +92,19 @@ FieldsType<Query> }`. The router passes `{ path, query }` into the leaf slot at
 
 ## Module map
 
-| Module                        | Side   | Responsibility                                                              |
-| ----------------------------- | ------ | --------------------------------------------------------------------------- |
-| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types     |
-| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + build the `HttpApi` spine   |
-| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query      |
-| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                 |
+| Module                        | Side   | Responsibility                                                                  |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types         |
+| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + build the `HttpApi` spine       |
+| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query          |
+| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                     |
 | `src/router-service.ts`       | shared | `Router` `Context.Service` + `Router.{route,layout,router,Outlet,params,query}` |
-| `src/errors.ts`               | shared | `RouterNotFound` + `RouterParamsError` tagged errors + `notFound()` helper  |
-| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`      |
-| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                  |
-| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                       |
-| `src/client/navigation.ts`    | client | typed `navigate`/`push`/`replace`/`back`/`forward`/`setQuery`/`patchQuery`  |
-| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                  |
+| `src/errors.ts`               | shared | `RouterNotFound` + `RouterParamsError` tagged errors + `notFound()` helper      |
+| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`          |
+| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                      |
+| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                           |
+| `src/client/navigation.ts`    | client | typed `navigate`/`push`/`replace`/`back`/`forward`/`setQuery`/`patchQuery`      |
+| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                      |
 
 ## Authoring API
 
