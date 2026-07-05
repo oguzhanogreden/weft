@@ -1,6 +1,5 @@
 import * as assert from "node:assert/strict";
 import {
-  Chunk,
   Deferred,
   Effect,
   Exit,
@@ -39,7 +38,7 @@ describe("Source.toSubscribable", () => {
       const values = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(42);
-          return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
+          return yield* pipe(sub.changes, Stream.runCollect);
         }),
       );
       assert.deepEqual(values, [42]);
@@ -77,7 +76,7 @@ describe("Source.toSubscribable", () => {
       const values = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(Effect.succeed(7));
-          return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
+          return yield* pipe(sub.changes, Stream.runCollect);
         }),
       );
       assert.deepEqual(values, [7]);
@@ -99,7 +98,6 @@ describe("Source.toSubscribable", () => {
           const items = yield* pipe(
             sub.changes,
             Stream.runCollect,
-            Effect.map(Chunk.toReadonlyArray),
           );
           assert.equal(v1, "once");
           assert.equal(v2, "once");
