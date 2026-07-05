@@ -900,7 +900,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const root = createRoot();
 
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const before = regionTextNode(root);
@@ -924,7 +924,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const region = await Effect.runPromise(
       SubscriptionRef.make<Renderable>(h.input({ class: "a" })),
     );
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const before = root.querySelector("input");
@@ -957,7 +957,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const region = await Effect.runPromise(
       SubscriptionRef.make<Renderable>(h.div({ id: "host" }, "hello")),
     );
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const beforeDiv = root.querySelector("#host");
@@ -1031,7 +1031,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const root = createRoot();
 
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>(h.span({}, "boxed")));
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     assert.ok(root.querySelector("span") !== null, "first emission should render a <span>");
@@ -1577,7 +1577,7 @@ describe("Ref Handling", () => {
 
         // Subscribe to changes and capture the first Option.some emission
         yield* Effect.fork(
-          Stream.runForEach(Stream.filter(ref.changes, Option.isSome), (opt) =>
+          Stream.runForEach(Stream.filter(SubscriptionRef.changes(ref), Option.isSome), (opt) =>
             Effect.sync(() => {
               if (captured.element === null) {
                 captured.element = Option.getOrThrow(opt);
@@ -1851,7 +1851,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
 
     assert.ok(!cancelled, "pump should be running while component is mounted");
@@ -1883,7 +1883,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.equal(cancelledCount, 0, "no pumps cancelled yet");
 
@@ -1924,10 +1924,10 @@ describe("scope lifetime: advanced cases", () => {
       Effect.gen(function* () {
         const sub = yield* Source.toSubscribable(props.val);
         const v = yield* sub.get;
-        // {internalRef.changes} creates a reactive region *inside* the component.
+        // {SubscriptionRef.changes(internalRef)} creates a reactive region *inside* the component.
         // Re-emitting it rotates a child contentScope — the pump in instanceScope
         // must not be touched.
-        return h.div({ class: v }, [internalRef.changes]);
+        return h.div({ class: v }, [SubscriptionRef.changes(internalRef)]);
       });
 
     createTestDOM();
@@ -1978,7 +1978,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!innerCancelled, "inner pump should be running while outer is mounted");
 
@@ -2028,7 +2028,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!aCancelled && !bCancelled, "both pumps should be running after mount");
 
@@ -2062,7 +2062,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
 
     // Remove the component — instanceScope closes, but sharedRef is external.
@@ -2109,7 +2109,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!cancelled, "pump should be running while component is mounted");
 
@@ -2122,7 +2122,7 @@ describe("scope lifetime: advanced cases", () => {
 
   // ──────────────────────────────────────────────────────────────────────────
   // Transitive teardown — two levels of reactive regions above a component.
-  // outerRef.changes wraps a div with innerRef.changes which contains Comp.
+  // SubscriptionRef.changes(outerRef) wraps a div with SubscriptionRef.changes(innerRef) which contains Comp.
   // Replacing the outer emission must cascade all the way down and kill the pump.
   // ──────────────────────────────────────────────────────────────────────────
   it("pump is cancelled through two levels of reactive regions", async () => {
@@ -2147,12 +2147,12 @@ describe("scope lifetime: advanced cases", () => {
       SubscriptionRef.make<Renderable>(Comp({ val: propStream })),
     );
     const outerRef = await Effect.runPromise(
-      SubscriptionRef.make<Renderable>(h.div({}, [innerRef.changes])),
+      SubscriptionRef.make<Renderable>(h.div({}, [SubscriptionRef.changes(innerRef)])),
     );
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(outerRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(outerRef), root);
     await waitForStream();
     assert.ok(!cancelled, "pump should be running before outer region changes");
 
