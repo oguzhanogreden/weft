@@ -229,7 +229,7 @@ export function RouterLive<R>(
           let exit: Exit.Exit<Renderable, unknown> | undefined;
           if (target._tag === "Matched") {
             const scope = yield* Scope.make();
-            const fiber = yield* Effect.fork(
+            const fiber = yield* Effect.forkChild(
               Effect.provideService(preRunLeaf(router, target), Scope.Scope, scope),
             );
             inflightPreRun = fiber;
@@ -237,7 +237,7 @@ export function RouterLive<R>(
             // is forked *after* the pre-run fiber, so a synchronous body has
             // already completed when the poll runs and no emission happens (AC-R3).
             if (!emitted) {
-              yield* Effect.fork(
+              yield* Effect.forkChild(
                 Effect.gen(function* () {
                   const done = yield* Fiber.poll(fiber);
                   if (Option.isNone(done) && token === latest) {

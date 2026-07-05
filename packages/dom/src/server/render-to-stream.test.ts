@@ -112,7 +112,7 @@ describe("renderToStream - streaming behavior", () => {
 
         const node = h.div({}, [h.span({}, "shell"), slow]);
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(renderToStream(node), (chunk) =>
             Effect.sync(() => {
               collected.push(chunk);
@@ -274,7 +274,7 @@ describe("renderToStream - Suspense SSR", () => {
 
         const chunks: string[] = [];
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(
             renderToStream(
               h.div({}, [Boundary.suspend({ fallback: h.span({}, "loading") }, [GatedChild()])]),
@@ -348,7 +348,7 @@ describe("renderToStream - Suspense SSR", () => {
         const SlowB = makeGatedComponent(gateB, h.p({}, "branch B"));
 
         const html = yield* Effect.gen(function* () {
-          const fiberHtml = yield* Effect.fork(
+          const fiberHtml = yield* Effect.forkChild(
             Stream.mkString(
               renderToStream(
                 h.fragment([
@@ -415,7 +415,7 @@ describe("renderToStream - Suspense SSR", () => {
 
         const chunks: string[] = [];
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(
             renderToStream(
               Boundary.suspend({ fallback: h.span({}, "forever loading") }, [NeverChild()]),

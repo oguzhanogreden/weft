@@ -1576,7 +1576,7 @@ describe("Ref Handling", () => {
         const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
         // Subscribe to changes and capture the first Option.some emission
-        yield* Effect.fork(
+        yield* Effect.forkChild(
           Stream.runForEach(Stream.filter(SubscriptionRef.changes(ref), Option.isSome), (opt) =>
             Effect.sync(() => {
               if (captured.element === null) {

@@ -160,7 +160,7 @@ describe("Source.toSubscribable", () => {
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(source);
           // Fork get — it should park because the gate is not yet open.
-          const getFiber = yield* Effect.fork(sub.get);
+          const getFiber = yield* Effect.forkChild(sub.get);
           // Open the gate, supplying the first (and only) value.
           yield* Deferred.succeed(gate, "parked-value");
           return yield* Fiber.join(getFiber);

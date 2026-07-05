@@ -138,7 +138,7 @@ describe("renderToHydratableShell — shell split", () => {
         const { patches } = yield* Effect.provide(renderToHydratableShell(tree), NoRpc).pipe(
           Scope.provide(scope),
         );
-        const collector = yield* Effect.fork(Stream.runCollect(patches));
+        const collector = yield* Effect.forkChild(Stream.runCollect(patches));
         yield* Scope.close(scope, Exit.void);
         const collected = yield* Fiber.join(collector);
         assert.equal(Chunk.size(collected), 0);
