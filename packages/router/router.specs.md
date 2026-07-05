@@ -224,7 +224,7 @@ browser (refactor _Feasibility constraint_). The compiled entries are memoized p
 
 ### Server render + 404 (`server/router-server.ts`)
 
-Server dispatch runs **through `@effect/platform` `HttpApiBuilder`** — platform owns
+Server dispatch runs **through `effect/unstable/httpapi` `HttpApiBuilder`** — the platform layer owns
 request→leaf matching and path/query decode. The handler builds a dispatch-only
 **server-local** `HttpApi`: `def.httpApi` (pristine — the client and S4 read it)
 extended with a second `"fallback"` group holding one catch-all `"*"` endpoint.
