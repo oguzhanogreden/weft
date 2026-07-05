@@ -165,7 +165,7 @@ export namespace RouterServer {
         }),
       );
     }
-    return Layer.scoped(
+    return Layer.effect(
       AppRpcClientTag,
       Effect.map(
         // The group is `RpcGroup<any>` (runtime-assembled by the app); the flat
@@ -267,7 +267,7 @@ export namespace RouterServer {
   function notFoundSuspenseHandler(def: RouterDef): SuspenseFailureHandler {
     return {
       handle: (cause) => {
-        const failure = Cause.failureOption(cause);
+        const failure = Cause.findErrorOption(cause);
         return Option.isSome(failure) && isRouterNotFound(failure.value)
           ? Option.some({
               content: def.compiled.notFound() as Node<never, never>,
@@ -305,7 +305,7 @@ export namespace RouterServer {
         // Same render-time provide seam as the buffered path (renderDocument): the
         // shell walk and every leaf drain in this context, so app-wide services reach them.
         Effect.provide(options.context ?? Layer.empty),
-        Scope.extend(scope),
+        Scope.provide(scope),
         Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause))),
       );
       const body = Stream.make(`<!DOCTYPE html>\n${shell}`).pipe(

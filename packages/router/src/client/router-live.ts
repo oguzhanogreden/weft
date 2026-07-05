@@ -112,7 +112,7 @@ export function RouterLive<R>(
   def: RouterDef<any, R>,
   options: RouterLiveOptions & ContextOption<R> = {} as RouterLiveOptions & ContextOption<R>,
 ): Layer.Layer<Router | AppRpcClientTag | AppServices<R>> {
-  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.scopedContext(
+  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.effectContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
       // Reactive navigation state (`pending-navigation.specs.md`): `Navigating{to}`
@@ -142,7 +142,7 @@ export function RouterLive<R>(
       // navigation (AC-R6), and the committed pre-run's scope, retained until a
       // later navigation replaces the leaf emission (AC-R12).
       let inflightPreRun: Fiber.RuntimeFiber<Exit.Exit<Renderable, unknown>> | undefined;
-      let committedScope: Scope.CloseableScope | undefined;
+      let committedScope: Scope.Closeable | undefined;
 
       // Forward reference to the service instance built below: the pre-run needs
       // it for the staged view and the resolved-commit stash. `commitTo` only
