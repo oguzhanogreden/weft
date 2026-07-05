@@ -1,4 +1,4 @@
-import { Option, Result, Schema } from "effect";
+import { Result, Schema } from "effect";
 import type { CompiledLeaf, RouterDef } from "./compile";
 
 /** The resolved match for a URL: a leaf with decoded params/query, or not-found. */
@@ -30,8 +30,10 @@ interface EndpointShape {
   readonly name: string;
   /** Full path template, e.g. `/users/:id` (same as the leaf's `fullPathPattern`). */
   readonly path: string;
-  readonly pathSchema: Option.Option<ParamSchema>;
-  readonly urlParamsSchema: Option.Option<ParamSchema>;
+  /** Path-param schema (v4 `params` slot); `undefined` when the endpoint has none. */
+  readonly params: ParamSchema | undefined;
+  /** Query schema (v4 `query` slot); `undefined` when the endpoint has none. */
+  readonly query: ParamSchema | undefined;
 }
 
 /** Structural view of the compiled `HttpApi`: its `"pages"` group of leaf endpoints. */
@@ -124,8 +126,8 @@ export function compileMatchers(def: RouterDef): readonly MatcherEntry[] {
       leaf,
       regex: patternToRegex(endpoint.path),
       paramNames: paramNamesOf(endpoint.path),
-      pathSchema: Option.getOrElse(endpoint.pathSchema, () => emptySchema),
-      querySchema: Option.getOrElse(endpoint.urlParamsSchema, () => emptySchema),
+      pathSchema: endpoint.params ?? emptySchema,
+      querySchema: endpoint.query ?? emptySchema,
     });
   }
 
