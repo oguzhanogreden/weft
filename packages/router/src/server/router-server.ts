@@ -370,7 +370,7 @@ export namespace RouterServer {
     const fallbackGroup = HttpApiGroup.make("fallback").add(
       // `"*"` (platform's match-any path) is not a `/${string}` literal; the cast is
       // the same loosening `buildHttpApi` uses for concrete leaf patterns.
-      HttpApiEndpoint.get("catchAll", "*" as `/${string}`).addSuccess(Schema.String),
+      HttpApiEndpoint.get("catchAll", "*" as `/${string}`, { success: Schema.String }),
     );
     // oxlint-disable-next-line typescript/no-explicit-any
     const api = (def.httpApi as any).add(fallbackGroup);
