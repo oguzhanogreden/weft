@@ -393,8 +393,8 @@ export namespace RouterServer {
               leafRenderer(def, options, {
                 _tag: "Matched",
                 leaf,
-                path: request.path as Record<string, unknown>,
-                query: request.urlParams as Record<string, unknown>,
+                path: request.params as Record<string, unknown>,
+                query: request.query as Record<string, unknown>,
                 url: (request.request as HttpServerRequest.HttpServerRequest).url,
               }),
             ),
