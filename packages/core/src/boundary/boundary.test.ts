@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Effect, Option, pipe, Schema, Stream } from "effect";
+import { Cause, Data, Effect, Filter, Option, pipe, Result, Schema, Stream } from "effect";
 import { Subscribable } from "@weftui/core";
 import { Rpc } from "@effect/rpc";
 import { FAILURE_BOUNDARY, SERVER_BOUNDARY, Boundary } from "./index";
@@ -52,8 +52,8 @@ describe("AC1: descriptor shape", () => {
     assert.equal(type, FAILURE_BOUNDARY);
   });
 
-  it("catchSome returns FAILURE_BOUNDARY descriptor", () => {
-    const node = Boundary.catchSome({ fallback: () => Option.none() }, []);
+  it("catchFilter returns FAILURE_BOUNDARY descriptor", () => {
+    const node = Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => fallbackNode, []);
     const { type } = extractDescriptor(node);
     assert.equal(type, FAILURE_BOUNDARY);
   });
@@ -215,25 +215,25 @@ describe("AC14: catchTags match", () => {
   });
 });
 
-// ── AC17: catchSome match ─────────────────────────────────────────────────────
+// ── AC17: catchFilter match ─────────────────────────────────────────────────────
 
-describe("AC17: catchSome match", () => {
+describe("AC17: catchFilter match", () => {
   it("returns node when fallback returns Option.some", () => {
-    const node = Boundary.catchSome({ fallback: () => Option.some(fallbackNode) }, []);
+    const node = Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, []);
     const { props } = extractDescriptor(node);
     const result = props.match(Cause.fail(new FooError({ msg: "e" })));
     assert.equal(result, fallbackNode);
   });
 
   it("returns null when fallback returns Option.none", () => {
-    const node = Boundary.catchSome({ fallback: () => Option.none() }, []);
+    const node = Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => fallbackNode, []);
     const { props } = extractDescriptor(node);
     const result = props.match(Cause.fail(new FooError({ msg: "e" })));
     assert.equal(result, null);
   });
 
   it("returns null for defect", () => {
-    const node = Boundary.catchSome({ fallback: () => Option.some(fallbackNode) }, []);
+    const node = Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, []);
     const { props } = extractDescriptor(node);
     assert.equal(props.match(Cause.die("boom")), null);
   });
@@ -292,7 +292,7 @@ describe("AC23/24: call shape", () => {
       Boundary.catchTag({ tag: "Foo", fallback: () => fallbackNode }, [fooChild]),
     );
     assert.doesNotThrow(() =>
-      Boundary.catchSome({ fallback: () => Option.some(fallbackNode) }, [fooChild]),
+      Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, [fooChild]),
     );
     assert.doesNotThrow(() =>
       Boundary.catchIf({ predicate: () => true, fallback: () => fallbackNode }, [fooChild]),
