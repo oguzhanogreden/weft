@@ -12,7 +12,9 @@ const NotFound = () => h.h1({}, "404");
 // failing, so add a finite check: an invalid `:id` (e.g. "abc") is then a real
 // decode failure the matcher treats as a no-match (M7).
 const IdParam = Schema.NumberFromString.pipe(
-  Schema.check(Schema.makeFilter((n) => (Number.isFinite(n) ? undefined : "expected a finite number"))),
+  Schema.check(
+    Schema.makeFilter((n) => (Number.isFinite(n) ? undefined : "expected a finite number")),
+  ),
 );
 
 /** A passthrough layout `component`: renders the injected outlet directly. */

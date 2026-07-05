@@ -176,13 +176,15 @@ describe("httpApi spine", () => {
       // carrying its own `httpApiStatus` annotation (via `HttpApiSchema.status`).
       const errorSchemas = [...(endpoint.error as ReadonlySet<Schema.Top>)];
       const statuses = errorSchemas.map(
-        (s) => (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
+        (s) =>
+          (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus,
       );
       assert.ok(statuses.includes(404), `${endpoint.path} declares a 404 error`);
 
       const errSchema = errorSchemas.find(
         (s) =>
-          (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus === 404,
+          (s.ast.annotations as { readonly httpApiStatus?: number } | undefined)?.httpApiStatus ===
+          404,
       )!;
       const decoded = Schema.decodeUnknownResult(errSchema)({ _tag: "RouterNotFound" });
       assert.ok(Result.isSuccess(decoded), `${endpoint.path} error decodes a RouterNotFound`);

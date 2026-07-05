@@ -656,7 +656,10 @@ function renderSuspenseBoundary(
     // synchronously; wrapping them would defer to an async fiber that no longer
     // completes at mount, and they never suspend anyway.
     const suspenseChildren = childArray.map((child): Renderable => {
-      if (getElementDescriptor(child) === undefined && (Effect.isEffect(child) || isStream(child))) {
+      if (
+        getElementDescriptor(child) === undefined &&
+        (Effect.isEffect(child) || isStream(child))
+      ) {
         const fn = (): Renderable => child;
         return { type: fn, props: {} };
       }
@@ -854,12 +857,19 @@ export function renderNode(
         return yield* renderNode(descriptor);
       }
       // Untagged Effect: probe for synchronous resolution (e.g. a synchronous
-      // Component.gen used directly as a child) so it renders inline. A genuinely
-      // async Effect resolves to a failure exit (AsyncFiberException) and falls
-      // through to the fork + stream-marker path below.
+      // Component.gen used directly as a child) so it renders inline. The probe
+      // runs under the *ambient* context (Effect 4's runSyncExit otherwise uses a
+      // bare runtime with no services, so a component that reads a service — e.g. a
+      // route leaf reading `Router` — would fail the probe and be forced onto the
+      // async stream-marker path, breaking in-place reuse against a later static
+      // render). A genuinely async Effect resolves to a failure exit
+      // (AsyncFiberException) and falls through to the fork + stream-marker path.
       if (Effect.isEffect(node)) {
+        const services = yield* Effect.context<never>();
         // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
-        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        const exit = Effect.runSyncExitWith(services)(
+          node as Effect.Effect<Renderable, never, never>,
+        );
         if (Exit.isSuccess(exit)) {
           return yield* renderNode(exit.value);
         }
@@ -974,7 +984,10 @@ function renderChildren(
       // Static-markup Nodes are Effects too (and iterable under Effect 4), but
       // carry a descriptor — render them synchronously via renderNode so they
       // are in the DOM at mount rather than deferred behind stream markers.
-      if (getElementDescriptor(child) === undefined && (isStream(child) || Effect.isEffect(child))) {
+      if (
+        getElementDescriptor(child) === undefined &&
+        (isStream(child) || Effect.isEffect(child))
+      ) {
         const stream = toStream<Renderable>(child);
         const markers = yield* handleStreamChild(stream);
         nodes.push(...markers);
@@ -1046,7 +1059,10 @@ function renderElement(
         // Effects too (and, in Effect 4, iterable), but they carry a descriptor
         // and must render synchronously via renderNode — routing them through the
         // async stream path would leave them unrendered when mount resolves.
-        if (getElementDescriptor(child) === undefined && (isStream(child) || Effect.isEffect(child))) {
+        if (
+          getElementDescriptor(child) === undefined &&
+          (isStream(child) || Effect.isEffect(child))
+        ) {
           const stream = toStream<Renderable>(child);
           const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
