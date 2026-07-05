@@ -875,6 +875,12 @@ export const makeHydratableSSR = (
 }> =>
   Effect.gen(function* () {
     const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
+    // If the scope closes while resolution fibers are still pending (consumer
+    // disconnect, AC-SH6), those fibers are interrupted before they can offer
+    // the terminal None — so the patch stream would hang. Offer None on scope
+    // close so the stream always terminates; harmless after a normal close (the
+    // last-settling boundary already offered None).
+    yield* Scope.addFinalizer(scope, Effect.asVoid(Queue.offer(patchQueue, Option.none())));
     const pendingCount = yield* Ref.make(0);
     const idCounter = { current: 0 };
     const failureCollector: FailureCollector = yield* Ref.make(
