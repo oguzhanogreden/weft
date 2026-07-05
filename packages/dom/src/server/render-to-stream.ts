@@ -80,7 +80,7 @@ interface ServerSuspenseCtx {
   /**
    * Single-slot collector for a `Boundary.server` **load failure** being
    * relocated to its enclosing failure `Boundary` (typed-failure replay). A
-   * failing server boundary `Schema.encode`s its error and stashes
+   * failing server boundary `Schema.encodeEffect`s its error and stashes
    * `{ owner, encoded }` here, then re-fails the original cause; the enclosing
    * failure boundary drains it (after its `match` handles the cause) to emit the
    * `data-weft-boundary-failure` payload before its fallback. `null` on the plain
@@ -93,7 +93,7 @@ interface ServerSuspenseCtx {
 interface ServerBoundaryFailure {
   /** The failing `Boundary.server`'s live `props` (matched by reference for its index). */
   readonly owner: ServerBoundaryReplayProps;
-  /** The `Schema.encode`d typed `ELoad` error, ready to embed in the payload. */
+  /** The `Schema.encodeEffect`d typed `ELoad` error, ready to embed in the payload. */
   readonly encoded: unknown;
 }
 
@@ -348,13 +348,13 @@ function renderBoundarySSR(
 interface ServerBoundarySSRProps {
   readonly tag: string;
   readonly payload: () => unknown;
-  readonly successSchema: Schema.Schema<unknown, unknown>;
-  readonly errorSchema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Codec<unknown, unknown>;
+  readonly errorSchema: Schema.Codec<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
 }
 
 /**
- * On an rpc **failure** during a hydratable pass, `Schema.encode`s the resolved
+ * On an rpc **failure** during a hydratable pass, `Schema.encodeEffect`s the resolved
  * error via `props.errorSchema` and stashes `{ owner, encoded }` in
  * `failureCollector` for the enclosing failure `Boundary` to relocate, then
  * re-fails the **original** cause so `match` still sees it unchanged. No-ops
@@ -375,7 +375,7 @@ function stashServerBoundaryFailure(
   if (Option.isNone(error)) {
     return Effect.failCause(cause);
   }
-  return Schema.encode(props.errorSchema)(error.value).pipe(
+  return Schema.encodeEffect(props.errorSchema)(error.value).pipe(
     Effect.flatMap((encoded) => Ref.set(failureCollector, Option.some({ owner: props, encoded }))),
     // Whether the encode succeeds or fails, re-raise the original cause so the
     // enclosing boundary's `match` sees the unchanged failure.
@@ -446,7 +446,7 @@ function renderServerBoundarySSR(
       if (!emitPayload) {
         return childrenHtml;
       }
-      const encoded = yield* Schema.encode(props.successSchema)(data);
+      const encoded = yield* Schema.encodeEffect(props.successSchema)(data);
       const payload = `<script type="application/json">${serializeJsonForScript(encoded)}</script>`;
       return Stream.make(payload).pipe(Stream.concat(childrenHtml));
     }),

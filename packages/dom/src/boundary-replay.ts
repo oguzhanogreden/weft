@@ -30,9 +30,9 @@ export const BOUNDARY_FAILURE_ATTR = "data-weft-boundary-failure";
  * objects (not copies).
  */
 export interface ServerBoundaryReplayProps {
-  readonly successSchema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Codec<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
-  readonly errorSchema: Schema.Schema<unknown, unknown>;
+  readonly errorSchema: Schema.Codec<unknown, unknown>;
 }
 
 /**

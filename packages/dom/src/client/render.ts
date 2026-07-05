@@ -2546,7 +2546,7 @@ function findMatchingSuspenseEnd(startMarker: Comment): Comment | null {
  *   `<script type="application/json" data-weft-boundary-failure>` the server
  *   emitted (carrying `{ index, error }`). The client does **not** run `load`: it
  *   locates the `index`-th statically-reachable {@link Boundary.server} in
- *   `props.children`, `Schema.decode`s `error` via **that** boundary's `failure`
+ *   `props.children`, `Schema.decodeUnknownEffect`s `error` via **that** boundary's `failure`
  *   schema, `Cause.fail`s the rebuilt typed error, and feeds it to `props.match`
  *   to obtain the **same** fallback the server rendered — hydrating it against the
  *   adopted DOM at `script.nextSibling` and removing the script.
@@ -2642,7 +2642,7 @@ function hydrateFailureBoundary(
       if (owner === undefined) {
         return null;
       }
-      const decoded = yield* Schema.decodeUnknown(owner.errorSchema)(payload.error);
+      const decoded = yield* Schema.decodeUnknownEffect(owner.errorSchema)(payload.error);
       return props.match(Cause.fail(decoded));
     }).pipe(
       Effect.catchAll((cause) => {
@@ -2682,7 +2682,7 @@ function hydrateFailureBoundary(
 interface ServerBoundaryProps {
   readonly tag: string;
   readonly payload: () => unknown;
-  readonly successSchema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Codec<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
   readonly fallback?: Renderable;
 }
@@ -2815,7 +2815,7 @@ function hydrateServerBoundary(
       try: () => JSON.parse(raw) as unknown,
       catch: (cause) => cause,
     }).pipe(
-      Effect.flatMap((encoded) => Schema.decodeUnknown(props.successSchema)(encoded)),
+      Effect.flatMap((encoded) => Schema.decodeUnknownEffect(props.successSchema)(encoded)),
       Effect.catchAll((cause) => {
         console.error(
           `[weft] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
