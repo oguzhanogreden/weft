@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
-import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
+import { Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
 import {
   renderToStream as _renderToStream,
@@ -80,7 +80,7 @@ describe("renderToStream - streaming behavior", () => {
     const chunks = await Effect.runPromise(
       Stream.runCollect(renderToStream(h.div({}, [h.span({}, "a"), "b"]))),
     );
-    assert.deepEqual(Chunk.toReadonlyArray(chunks), [
+    assert.deepEqual(chunks, [
       "<div>",
       "<span>",
       "a",
@@ -93,7 +93,7 @@ describe("renderToStream - streaming behavior", () => {
   it("AC-ST2: empty/boolean/null nodes contribute no chunks", async () => {
     for (const node of [null, undefined, true, false] as Renderable[]) {
       const chunks = await Effect.runPromise(Stream.runCollect(renderToStream(node)));
-      assert.equal(Chunk.size(chunks), 0);
+      assert.equal(chunks.length, 0);
     }
   });
 
@@ -434,8 +434,8 @@ describe("renderToStream - Suspense SSR", () => {
         assert.ok(html.includes("<span>forever loading</span>"), "fallback emitted");
         assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker emitted");
 
-        const poll = yield* Fiber.poll(fiber);
-        assert.ok(poll._tag === "None", "stream still open — patch not yet emitted");
+        const poll = fiber.pollUnsafe();
+        assert.ok(poll === undefined, "stream still open — patch not yet emitted");
         assert.ok(!html.includes("<template"), "no patch emitted yet");
 
         yield* Fiber.interrupt(fiber);
