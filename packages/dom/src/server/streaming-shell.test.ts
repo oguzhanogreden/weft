@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
-import { Cause, Chunk, Deferred, Effect, Exit, Fiber, Layer, Option, Scope, Stream } from "effect";
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Scope, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStreamHydratable } from "./render-to-stream";
 import { renderToStringHydratable } from "./render-to-string";
@@ -89,12 +89,12 @@ describe("renderToHydratableShell — shell split", () => {
 
           // Resolve the *second* boundary first: its patch must arrive first.
           yield* Deferred.succeed(dB, void 0);
-          const first = Chunk.join(yield* pull, "");
+          const first = (yield* pull).join("");
           assert.ok(first.includes("content-B"));
           assert.ok(first.includes('id="ef-s-2"'));
 
           yield* Deferred.succeed(dA, void 0);
-          const second = Chunk.join(yield* pull, "");
+          const second = (yield* pull).join("");
           assert.ok(second.includes("content-A"));
           assert.ok(second.includes('id="ef-s-1"'));
         }),
@@ -141,7 +141,7 @@ describe("renderToHydratableShell — shell split", () => {
         const collector = yield* Effect.forkChild(Stream.runCollect(patches));
         yield* Scope.close(scope, Exit.void);
         const collected = yield* Fiber.join(collector);
-        assert.equal(Chunk.size(collected), 0);
+        assert.equal(collected.length, 0);
       }),
     );
   });
@@ -164,7 +164,7 @@ describe("SuspenseFailureHandlerTag — late-failure seam", () => {
     assert.equal(patchHtml, "");
     assert.equal(causes.length, 2);
     const messages = causes
-      .flatMap((c) => Array.from(Cause.failures(c)))
+      .flatMap((c) => c.reasons.filter(Cause.isFailReason).map((r) => r.error))
       .map((e) => (e as Error).message)
       .sort();
     assert.deepEqual(messages, ["boom-a", "boom-b"]);
