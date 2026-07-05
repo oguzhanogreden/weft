@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Boundary, h } from "@weftui/core";
 import type { AppRpcClient } from "@weftui/core";
 import { Rpc } from "effect/unstable/rpc";
-import { Cause, Effect, Exit, Layer, Schema } from "effect";
+import { Cause, Deferred, Effect, Exit, Layer, Schema } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { RenderError } from "~/data";
@@ -75,19 +75,21 @@ describe("Boundary.rpc mount — client-first (C1)", () => {
   it("renders the fallback, forks the rpc call, then swaps in render(resource)", async () => {
     createTestDOM();
     const root = createRoot();
-    // Delay the resolve so the forked swap has not happened by the time `mount`
-    // resolves — making the fallback observable before the live subtree swaps in.
-    const layer = client(() =>
-      Effect.succeed<ProductShape>({ name: "Gadget", price: 12 }).pipe(Effect.delay("30 millis")),
-    );
+    // Gate the resolve on a Deferred the test controls, so the forked swap
+    // provably has not happened by the time `mount` resolves — making the
+    // fallback observable before the live subtree swaps in (deterministic; a
+    // timer-based delay races the mount under Effect 4's fiber scheduling).
+    const gate = await Effect.runPromise(Deferred.make<ProductShape>());
+    const layer = client(() => Deferred.await(gate));
 
     await Effect.runPromise(Effect.provide(mount(boundary(), root), layer));
 
-    // Fallback is visible while the (delayed) rpc resolution is still in flight.
+    // Fallback is visible while the (gated) rpc resolution is still in flight.
     assert.ok(root.querySelector("div.fallback"), "fallback rendered while pending");
     assert.equal(root.querySelector("div.product"), null);
 
-    // After the forked call resolves, the live subtree swaps in for the fallback.
+    // Open the gate → the forked call resolves and the live subtree swaps in.
+    await Effect.runPromise(Deferred.succeed(gate, { name: "Gadget", price: 12 }));
     await waitForEl(() => root.querySelector("div.product"));
     assert.equal(root.querySelector("div.fallback"), null, "fallback removed after swap");
     const product = root.querySelector("div.product");
