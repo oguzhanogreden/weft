@@ -327,10 +327,9 @@ function ToggleSection() {
     Stream.flatMap((visible: boolean) => {
       if (!visible) return Stream.fromEffect(h.span({ class: "muted" }, "(unmounted)"));
       return Stream.fromEffect(
-        Boundary.catch(
-          { fallback: () => h.span({ class: "error-box" }, "Caught after remount") },
-          [failingFetch("/api/toggle")],
-        ),
+        Boundary.catch({ fallback: () => h.span({ class: "error-box" }, "Caught after remount") }, [
+          failingFetch("/api/toggle"),
+        ]),
       );
     }),
   );

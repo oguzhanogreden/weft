@@ -161,9 +161,7 @@ describe("AC-H13: failure-boundary live machinery", () => {
     // Server snapshot diverges structurally: a <span> where the tree has <div>.
     root.innerHTML = "<span>wrong</span>";
 
-    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "nope") }, [
-      h.div({}, "right"),
-    ]);
+    const app = Boundary.catch({ fallback: () => h.p({ id: "fb" }, "nope") }, [h.div({}, "right")]);
 
     const exit = await Effect.runPromiseExit(hydrate(app, root));
     assert.equal(exit._tag, "Failure");

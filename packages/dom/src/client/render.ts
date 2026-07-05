@@ -368,10 +368,7 @@ function forkSupervised<A, E, R>(
         Fiber.await(fiber),
         Effect.flatMap((exit) =>
           Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)
-            ? pipe(
-                Effect.logError(exit.cause),
-                Effect.annotateLogs("weft.region", errorContext),
-              )
+            ? pipe(Effect.logError(exit.cause), Effect.annotateLogs("weft.region", errorContext))
             : Effect.void,
         ),
         Effect.forkIn(scope),

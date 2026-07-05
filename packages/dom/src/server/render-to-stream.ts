@@ -12,17 +12,7 @@ import {
   type Renderable,
 } from "@weftui/core";
 import { getElementDescriptor, isStream, toStream } from "@weftui/core";
-import {
-  Cause,
-  Effect,
-  Exit,
-  Option,
-  Queue,
-  Ref,
-  Schema,
-  Scope,
-  Stream,
-} from "effect";
+import { Cause, Effect, Exit, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
 import {
   listItemEndText,
   listItemStartText,

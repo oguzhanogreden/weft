@@ -45,9 +45,7 @@ describe("AC22 non-hydratable: children succeed — boundary is transparent", ()
 
   it("renderToString: renders children inline with no markers", async () => {
     const html = await runString(
-      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [
-        h.p({}, "text"),
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [h.p({}, "text")]),
     );
     assert.equal(html, "<p>text</p>");
   });
@@ -60,9 +58,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [failingChild]),
     );
     assert.ok(html.includes("fallback"), `Expected fallback in: ${html}`);
     assert.ok(html.includes("error!"), `Expected error text in: ${html}`);
@@ -72,9 +68,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [failingChild]),
     );
     assert.ok(!html.includes("boundary"), `Unexpected boundary marker in: ${html}`);
   });

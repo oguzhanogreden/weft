@@ -35,7 +35,6 @@ export interface AppRpcClient {
  * in a router-less mount, where a {@link Boundary.rpc} resolves to a descriptive
  * "needs router/rpc" error.
  */
-export class AppRpcClientTag extends Context.Service<
-  AppRpcClientTag,
-  AppRpcClient
->()("@weftui/core/AppRpcClient") {}
+export class AppRpcClientTag extends Context.Service<AppRpcClientTag, AppRpcClient>()(
+  "@weftui/core/AppRpcClient",
+) {}

@@ -92,9 +92,7 @@ export class Router extends Context.Service<
  * structurally by {@link makeLayout} / {@link makeRouter}, never inferred across
  * this DI boundary. Re-exported on the namespace as `Router.Outlet`.
  */
-class OutletTag extends Context.Service<OutletTag, Node<never, never>>()(
-  "@weftui/router/Outlet",
-) {}
+class OutletTag extends Context.Service<OutletTag, Node<never, never>>()("@weftui/router/Outlet") {}
 
 /** Picks the requested `fields` keys out of a decoded match record. */
 function pick<F extends Fields>(

@@ -380,9 +380,7 @@ describe("AC19: markers remain after swap", () => {
     const controlledStream = Stream.fromEffect(Deferred.await(failSignal));
 
     const handle = await runMount(
-      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [
-        controlledStream,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [controlledStream]),
       root,
     );
 
@@ -412,9 +410,11 @@ describe("edge: catchFilter non-matching re-raises to parent", () => {
 
     const handle = await runMount(
       Boundary.catch({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
-        Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => h.span({}), [
-          Effect.fail(new FooError({ msg: "e" })),
-        ]),
+        Boundary.catchFilter(
+          Filter.make((e) => Result.fail(e)),
+          () => h.span({}),
+          [Effect.fail(new FooError({ msg: "e" }))],
+        ),
       ]),
       root,
     );

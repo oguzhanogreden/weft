@@ -23,11 +23,11 @@ export type TypeId = typeof TypeId;
  * reactivity surface across the Effect 4 migration.
  */
 export interface Subscribable<A, E = never, R = never> {
-	readonly [TypeId]: TypeId;
-	/** Read the current value. */
-	readonly get: Effect.Effect<A, E, R>;
-	/** Stream of every value, starting with the current one. */
-	readonly changes: Stream.Stream<A, E, R>;
+  readonly [TypeId]: TypeId;
+  /** Read the current value. */
+  readonly get: Effect.Effect<A, E, R>;
+  /** Stream of every value, starting with the current one. */
+  readonly changes: Stream.Stream<A, E, R>;
 }
 
 /**
@@ -36,12 +36,12 @@ export interface Subscribable<A, E = never, R = never> {
  * `changes` replays the current value); `make` only stamps the brand.
  */
 export const make = <A, E = never, R = never>(options: {
-	readonly get: Effect.Effect<A, E, R>;
-	readonly changes: Stream.Stream<A, E, R>;
+  readonly get: Effect.Effect<A, E, R>;
+  readonly changes: Stream.Stream<A, E, R>;
 }): Subscribable<A, E, R> => ({
-	[TypeId]: TypeId,
-	get: options.get,
-	changes: options.changes,
+  [TypeId]: TypeId,
+  get: options.get,
+  changes: options.changes,
 });
 
 /**
@@ -50,4 +50,4 @@ export const make = <A, E = never, R = never>(options: {
  * existing `Subscribable` through by reference instead of re-wrapping it.
  */
 export const isSubscribable = (u: unknown): u is Subscribable<unknown, unknown, unknown> =>
-	Predicate.hasProperty(u, TypeId);
+  Predicate.hasProperty(u, TypeId);

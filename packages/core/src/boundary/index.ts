@@ -221,13 +221,7 @@ export namespace Boundary {
    * );
    * ```
    */
-  export function catchFilter<
-    C extends readonly Renderable[],
-    EB,
-    X,
-    FE = never,
-    FR = never,
-  >(
+  export function catchFilter<C extends readonly Renderable[], EB, X, FE = never, FR = never>(
     filter: Filter.Filter<ChildrenE<C>, EB, X>,
     fallback: (matched: EB) => Node<FE, FR>,
     children: C,

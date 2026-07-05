@@ -257,7 +257,13 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
     // re-propagates without draining, so the outer boundary emits the payload.
     const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "outer" }, e.reason) },
-      [Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => h.div({}), [failingBoundary()])],
+      [
+        Boundary.catchFilter(
+          Filter.make((e) => Result.fail(e)),
+          () => h.div({}),
+          [failingBoundary()],
+        ),
+      ],
     );
 
     const html = await Effect.runPromise(

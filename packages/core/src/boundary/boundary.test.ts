@@ -53,7 +53,11 @@ describe("AC1: descriptor shape", () => {
   });
 
   it("catchFilter returns FAILURE_BOUNDARY descriptor", () => {
-    const node = Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => fallbackNode, []);
+    const node = Boundary.catchFilter(
+      Filter.make((e) => Result.fail(e)),
+      () => fallbackNode,
+      [],
+    );
     const { type } = extractDescriptor(node);
     assert.equal(type, FAILURE_BOUNDARY);
   });
@@ -219,21 +223,33 @@ describe("AC14: catchTags match", () => {
 
 describe("AC17: catchFilter match", () => {
   it("returns node when fallback returns Option.some", () => {
-    const node = Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, []);
+    const node = Boundary.catchFilter(
+      Filter.make((e) => Result.succeed(e)),
+      () => fallbackNode,
+      [],
+    );
     const { props } = extractDescriptor(node);
     const result = props.match(Cause.fail(new FooError({ msg: "e" })));
     assert.equal(result, fallbackNode);
   });
 
   it("returns null when fallback returns Option.none", () => {
-    const node = Boundary.catchFilter(Filter.make((e) => Result.fail(e)), () => fallbackNode, []);
+    const node = Boundary.catchFilter(
+      Filter.make((e) => Result.fail(e)),
+      () => fallbackNode,
+      [],
+    );
     const { props } = extractDescriptor(node);
     const result = props.match(Cause.fail(new FooError({ msg: "e" })));
     assert.equal(result, null);
   });
 
   it("returns null for defect", () => {
-    const node = Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, []);
+    const node = Boundary.catchFilter(
+      Filter.make((e) => Result.succeed(e)),
+      () => fallbackNode,
+      [],
+    );
     const { props } = extractDescriptor(node);
     assert.equal(props.match(Cause.die("boom")), null);
   });
@@ -292,7 +308,11 @@ describe("AC23/24: call shape", () => {
       Boundary.catchTag({ tag: "Foo", fallback: () => fallbackNode }, [fooChild]),
     );
     assert.doesNotThrow(() =>
-      Boundary.catchFilter(Filter.make((e) => Result.succeed(e)), () => fallbackNode, [fooChild]),
+      Boundary.catchFilter(
+        Filter.make((e) => Result.succeed(e)),
+        () => fallbackNode,
+        [fooChild],
+      ),
     );
     assert.doesNotThrow(() =>
       Boundary.catchIf({ predicate: () => true, fallback: () => fallbackNode }, [fooChild]),
