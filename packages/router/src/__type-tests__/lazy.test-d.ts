@@ -12,7 +12,7 @@ import { Context, Schema } from "effect";
 import { href, Router, RouterApp, RouterParamsError } from "~/index";
 
 /** A service a page may require — used to assert requirement propagation. */
-class Theme extends Context.Tag("@test/Theme")<Theme, string>() {}
+class Theme extends Context.Service<Theme, string>()("@test/Theme") {}
 
 /** A passthrough layout so a single leaf can be sealed into a router. */
 const passthrough = Router.layout(

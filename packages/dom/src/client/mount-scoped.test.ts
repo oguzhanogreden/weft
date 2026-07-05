@@ -52,7 +52,7 @@ const renderToStringHydratable = (n: Renderable) =>
   Effect.provide(_renderToStringHydratable(n), NoRpc);
 
 /** A hand-rolled scoped service whose acquire/release we can observe. */
-class Probe extends Context.Tag("test/mount-scoped/Probe")<Probe, { readonly value: number }>() {}
+class Probe extends Context.Service<Probe, { readonly value: number }>()("test/mount-scoped/Probe") {}
 
 // ============================================================================
 // AC-S2: ambient scope close unmounts (subscriptions interrupted, DOM retained)

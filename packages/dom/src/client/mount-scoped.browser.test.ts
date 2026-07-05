@@ -23,7 +23,7 @@ interface CounterService {
   readonly increment: Effect.Effect<void>;
 }
 
-class Counter extends Context.Tag("test/mount-scoped-e2e/Counter")<Counter, CounterService>() {}
+class Counter extends Context.Service<Counter, CounterService>()("test/mount-scoped-e2e/Counter") {}
 
 let container: HTMLElement;
 

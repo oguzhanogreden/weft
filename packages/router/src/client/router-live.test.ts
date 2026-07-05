@@ -16,7 +16,7 @@ const NoopRpcs = RpcGroup.make(Rpc.make("Noop", { payload: Schema.Void, success:
 const Page = (label: string) => () => h.div({}, label);
 
 /** An app-wide service exercised through the render-time `context` seam (AC4). */
-class Greeting extends Context.Tag("test/Greeting")<Greeting, string>() {}
+class Greeting extends Context.Service<Greeting, string>()("test/Greeting") {}
 
 /** A passthrough layout `component`: renders the injected outlet directly. */
 const passthrough = Component.gen(function* () {
