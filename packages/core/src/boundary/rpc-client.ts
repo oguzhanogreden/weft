@@ -5,7 +5,7 @@ import { Context, type Effect } from "effect";
  * data through the application's merged `RpcGroup`. The DOM renderer
  * (`@weftui/dom`) must resolve a boundary — on the server (SSR), during a
  * client refetch, and on a client-first SPA mount — **without** importing
- * `@effect/rpc` or `@weftui/router`. So the rpc caller is injected as a
+ * `effect/unstable/rpc` or `@weftui/router`. So the rpc caller is injected as a
  * service: `@weftui/router` provides it (a network `RpcClient` on the browser,
  * an in-process client over the handler layer on the server), and the renderer
  * reads it from ambient context, treating `Option.none` (no router/rpc present)
@@ -14,7 +14,7 @@ import { Context, type Effect } from "effect";
  * The seam is **flat and untyped at the boundary**: a single `call(tag, payload)`
  * that mirrors `RpcClient`'s flat-client shape (`(tag, payload) => Effect<success>`).
  * The renderer carries the rpc's `successSchema`/`errorSchema` on the descriptor
- * and owns decoding, so this seam stays free of `@effect/rpc` types.
+ * and owns decoding, so this seam stays free of `effect/unstable/rpc` types.
  */
 export interface AppRpcClient {
   /**
@@ -35,7 +35,7 @@ export interface AppRpcClient {
  * in a router-less mount, where a {@link Boundary.rpc} resolves to a descriptive
  * "needs router/rpc" error.
  */
-export class AppRpcClientTag extends Context.Tag("@weftui/core/AppRpcClient")<
+export class AppRpcClientTag extends Context.Service<
   AppRpcClientTag,
   AppRpcClient
->() {}
+>()("@weftui/core/AppRpcClient") {}
