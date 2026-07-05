@@ -321,7 +321,7 @@ describe("List.each — Scope & state preservation (SC)", () => {
 
     await runMount(
       List.each({ of: SubscriptionRef.changes(listRef), by: (x) => x.id }, (x) =>
-        h.li({ id: x.id }, [counters.get(x.id)!.changes]),
+        h.li({ id: x.id }, [SubscriptionRef.changes(counters.get(x.id)!)]),
       ),
       root,
     );
