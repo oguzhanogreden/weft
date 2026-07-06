@@ -38,10 +38,25 @@ export default defineConfig({
     projects: ["packages/*", "website"],
   },
   fmt: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
+    ignorePatterns: [
+      "**/dist/**",
+      "*.min.js",
+      "**/.claude/**",
+      "graphify-out",
+      "examples/effect-atom/**",
+    ],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
+    // `examples/effect-atom` is excluded from the pnpm workspace (no Effect 4 build
+    // of `@effect-atom/atom`), so its deps aren't installed — type-aware lint can't
+    // resolve its imports in a clean CI checkout. Skip it until the dep ships v4.
+    ignorePatterns: [
+      "**/dist/**",
+      "*.min.js",
+      "**/.claude/**",
+      "graphify-out",
+      "examples/effect-atom/**",
+    ],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,
