@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bb75db2e`
+- Built from commit: `f7551a08`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -357,10 +357,10 @@
 4. `router` - 36 edges
 5. `Acceptance Criteria` - 29 edges
 6. `ExternalResourceSVGAttributes` - 27 edges
-7. `ConditionalProcessingSVGAttributes` - 23 edges
-8. `SVGAttributes` - 21 edges
-9. `mount()` - 20 edges
-10. `match()` - 20 edges
+7. `_` - 23 edges
+8. `ConditionalProcessingSVGAttributes` - 23 edges
+9. `SVGAttributes` - 21 edges
+10. `mount()` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `CharacterCounter()` --indirect_call--> `text()`  [INFERRED]
@@ -397,7 +397,7 @@ Nodes (13): Acceptance criteria, Deliverables, Edge cases, Out of scope, Output 
 
 ### Community 4 - "Community 4"
 Cohesion: 0.10
-Nodes (47): changes(), AdoptedItem, appendRenderedChildren(), camelToKebab(), collectItemRange(), createStreamMarkers(), describeKey(), flattenChildren() (+39 more)
+Nodes (48): changes(), AdoptedItem, appendRenderedChildren(), camelToKebab(), collectItemRange(), createStreamMarkers(), describeKey(), flattenChildren() (+40 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
@@ -473,7 +473,7 @@ Nodes (27): _clean, _clientR, ClientService, CtxOf, Database, DatabaseReq, dbUse
 
 ### Community 23 - "Community 23"
 Cohesion: 0.08
-Nodes (25): _, Context, each(), Error, ItemOf, LIST, Options, people (+17 more)
+Nodes (26): _, Context, each(), Error, ItemOf, LIST, Options, people (+18 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.22
@@ -557,7 +557,7 @@ Nodes (40): StyleAttributeValue, StyleProperties, DOMAttributes, DescSVGAttribut
 
 ### Community 45 - "Community 45"
 Cohesion: 0.13
-Nodes (15): daisyui, @radix-ui/colors, rehype-autolink-headings, rehype-slug, @shikijs/rehype, unist-util-visit, devDependencies, daisyui (+7 more)
+Nodes (15): daisyui, @radix-ui/colors, rehype-autolink-headings, @shikijs/rehype, unist-util-visit, devDependencies, daisyui, @radix-ui/colors (+7 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.11
@@ -852,8 +852,8 @@ Cohesion: 0.22
 Nodes (9): A minimal app, Development, Documentation, Examples, Features, Installation, License, Packages (+1 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.11
-Nodes (37): AppRpcClientTag, boundaryRecoveryEffect(), collectAdoptedItems(), describeNode(), findMatchingEnd(), findMatchingSuspenseEnd(), hydrateChildren(), hydrateElement() (+29 more)
+Cohesion: 0.12
+Nodes (36): AppRpcClientTag, boundaryRecoveryEffect(), collectAdoptedItems(), describeNode(), findMatchingEnd(), findMatchingSuspenseEnd(), hydrateChildren(), hydrateElement() (+28 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.20

@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "examples/effect-atom/readme.md": {
-    "mtime": 1783841986.9652445,
-    "ast_hash": "bbbd7e06128ef1ae34cfdb5848134ec5",
+    "mtime": 1783841806.3748562,
+    "ast_hash": "f2e89ec94468c2b2c5fb2e66816e05a3",
     "semantic_hash": ""
   },
   "packages/dom/src/client/mount-scoped.specs.md": {
