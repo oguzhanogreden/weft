@@ -229,6 +229,23 @@ Invariants:
 
 - Use specific imports, avoid `import * as X`
 
+## Effect 4 Reference (`effect-smol/`)
+
+A shallow clone of [Effect-TS/effect-smol](https://github.com/Effect-TS/effect-smol) (the Effect 4 development repo) lives at `./effect-smol` as a **local docs/source reference** for AI agents. It is gitignored and not part of the workspace.
+
+- Use it to look up Effect 4 APIs, semantics, and migration guidance instead of guessing or relying on Effect 3 knowledge. Most useful entry points:
+  - `effect-smol/packages/effect/src/` — actual source of every module (authoritative for signatures and JSDoc)
+  - `effect-smol/MIGRATION.md` — Effect 3 → 4 migration notes
+  - `effect-smol/AGENTS.md` and `effect-smol/LLMS.md` — repo guidance written for AI agents
+- If `./effect-smol` is missing, fetch it first:
+
+  ```bash
+  git clone --depth 1 https://github.com/Effect-TS/effect-smol.git effect-smol
+  ```
+
+- To refresh an existing clone: `git -C effect-smol pull --depth 1`
+- Never edit files in `effect-smol/`, import from it in workspace code, or include it in builds/tests — it is read-only reference material.
+
 ## Meta Rules
 
 - Always discuss new rules and rule changes in Q&A style. Ask a question and await the answer before asking the next question, until sufficient information is provided.
