@@ -1,11 +1,12 @@
 /**
  * Recipe: effect-atom
  *
- * This recipe demonstrates driving Weft UI from effect-atom
- * (https://github.com/tim-smart/effect-atom), an external Effect-native
- * state management library.
+ * This recipe demonstrates driving Weft UI from Effect 4's built-in atom
+ * state management module, `effect/unstable/reactivity` — the upstreamed
+ * successor of effect-atom (https://github.com/tim-smart/effect-atom).
+ * `AsyncResult` is the former effect-atom `Result`.
  *
- * The integration is adapter-free because both libraries speak Effect:
+ * The integration is adapter-free because both sides speak Effect:
  * - Read path: `Atom.toStream(atom)` yields a `Stream<A, never, AtomRegistry>`
  *   that emits the current value immediately and on every change — Weft
  *   consumes Streams natively as children and props.
@@ -14,9 +15,9 @@
  *   mount runtime, which carries the registry provided around `mount`.
  */
 
-import { Atom, Result } from "@effect-atom/atom";
 import { h } from "@weftui/core";
 import { Effect, Stream } from "effect";
+import { Atom, AsyncResult } from "effect/unstable/reactivity";
 
 // ============================================================================
 // Atoms (module scope — state lives in the Registry, not the component)
@@ -72,7 +73,7 @@ const Counter = () =>
 const Greeting = () => {
   const display = Stream.map(
     Atom.toStream(greetingAtom),
-    Result.match({
+    AsyncResult.match({
       onInitial: () => "Loading…",
       onFailure: () => "Failed to load",
       onSuccess: (success) => (success.waiting ? "Reloading…" : success.value),

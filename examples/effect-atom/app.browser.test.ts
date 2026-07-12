@@ -1,6 +1,6 @@
-import { Registry } from "@effect-atom/atom";
 import { mountScoped } from "@weftui/dom/client";
 import { Deferred, Effect, Fiber } from "effect";
+import { AtomRegistry } from "effect/unstable/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";
 
@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  // Signal the scoped region to close (unmount → Registry.layer release), then
+  // Signal the scoped region to close (unmount → AtomRegistry.layer release), then
   // await the fiber so the runtime is fully torn down before the next test.
   await Effect.runPromise(Deferred.succeed(shutdown, undefined));
   if (fiber) await Effect.runPromise(Fiber.join(fiber));
@@ -22,7 +22,7 @@ afterEach(async () => {
   container.remove();
 });
 
-// Mount via the recommended composition: `Registry.layer` (scoped) is provided
+// Mount via the recommended composition: `AtomRegistry.layer` (scoped) is provided
 // OUTSIDE a long-lived scoped region, so it lives for the app's whole lifetime;
 // `mountScoped` registers unmount on the region's scope; `runFork` drives it and
 // `Deferred.await` keeps the region open until `afterEach` signals shutdown.
@@ -34,7 +34,7 @@ const mountApp = async () => {
         yield* mountScoped(App(), container);
         yield* Deferred.await(shutdown);
       }),
-    ).pipe(Effect.provide(Registry.layer)),
+    ).pipe(Effect.provide(AtomRegistry.layer)),
   );
 };
 
@@ -53,7 +53,10 @@ describe("effect-atom example", () => {
 
   it("updates the counter and derived atom on click", async () => {
     await mountApp();
-    await vi.waitFor(() => expect(byTestId("increment")).not.toBeNull());
+    // Wait for the counter to render its initial value, not just for the button:
+    // v4 atoms are lazy — an update fired before the first subscriber is live
+    // (the `Atom.toStream` child) is not retained by the registry.
+    await vi.waitFor(() => expect(byTestId("count")?.textContent).toBe("0"));
 
     byTestId("increment")?.click();
     await vi.waitFor(() => {
@@ -68,7 +71,7 @@ describe("effect-atom example", () => {
     });
   });
 
-  it("renders the async atom through its Result states", async () => {
+  it("renders the async atom through its AsyncResult states", async () => {
     await mountApp();
     await vi.waitFor(() => expect(byTestId("greeting")?.textContent).toBe("Loading…"));
     await vi.waitFor(() =>
@@ -90,7 +93,7 @@ describe("effect-atom example", () => {
   });
 
   // Issue #123: the previously-broken composition now works. With the scoped
-  // `Registry.layer` provided outside the region, the registry stays alive across
+  // `AtomRegistry.layer` provided outside the region, the registry stays alive across
   // interactions (updates keep flowing); after shutdown the mount is unmounted and
   // post-shutdown clicks no longer patch the DOM.
   it("keeps the registry alive across interactions, then stops after shutdown", async () => {

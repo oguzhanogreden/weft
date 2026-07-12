@@ -9,9 +9,9 @@ import { mountScoped } from "@weftui/dom/client";
 // ============================================================================
 // Issue #123 acceptance criterion, in a real browser.
 //
-// A hand-rolled `Layer.effect` service (no @effect-atom dependency) stands in for
-// any scoped layer (e.g. effect-atom's `Registry.layer`). Provided OUTSIDE a
-// long-lived scoped region driven by `runFork`, it must:
+// A hand-rolled `Layer.effect` service (no reactivity dependency) stands in for
+// any scoped layer (e.g. `AtomRegistry.layer` from `effect/unstable/reactivity`).
+// Provided OUTSIDE a long-lived scoped region driven by `runFork`, it must:
 //   - be acquired once and stay alive across real click interactions
 //     (its `release` finalizer does NOT run at mount-resolve), and
 //   - be released only when the region ends, after the mount is unmounted, so
