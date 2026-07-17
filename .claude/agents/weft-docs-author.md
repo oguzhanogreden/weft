@@ -68,3 +68,5 @@ Rules of engagement:
 - Assume you are documenting recently added or changed surfaces unless told to document the whole library.
 
 Your output is documentation a discerning Effect developer would trust on the first read and rely on while building real applications. Accuracy and clarity are non-negotiable.
+
+**Scope when invoked from `/document` (TDD step 8):** the caller handles JSDoc and `specs.md` sync itself — write only the prose targets you are given (docs/ pages, package READMEs, example readmes). Do not edit source files or specs unless your prompt explicitly includes them.
