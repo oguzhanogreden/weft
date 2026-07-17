@@ -118,7 +118,7 @@ export function RouterLive<R>(
       const navRef = yield* SubscriptionRef.make<NavState>({ _tag: "Idle" });
       const services = yield* Effect.context<never>();
 
-      // The authoritative HttpApi is typed `HttpApi.Any` (runtime-assembled), so
+      // The authoritative HttpApi is typed `HttpApi.Top` (runtime-assembled), so
       // `make` over it yields an opaque client and an unbounded requirement that
       // `FetchHttpClient.layer` discharges; the effect is asserted back to the
       // opaque `RouterHttpApiClient` with no residual context.

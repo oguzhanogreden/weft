@@ -323,7 +323,7 @@ These power the runtime and are exported for tooling/tests; most apps never touc
 | Export                      | Description                                                                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `compile(def)`              | Walks a tree into flat `CompiledLeaf`s with merged path/query schemas and layout chains.                                                                                       |
-| `buildHttpApi(leaves)`      | Builds the authoritative `HttpApi` (one `"pages"` group, a GET endpoint per leaf with `setPath`/`setUrlParams` + 404). Called by `Router.router`; the result is `def.httpApi`. |
+| `buildHttpApi(leaves)`      | Builds the authoritative `HttpApi` (one `"pages"` group, a GET endpoint per leaf with `params`/`query` schemas + 404). Called by `Router.router`; the result is `def.httpApi`. |
 | `leafRegistry`              | `WeakMap<RouteNode, CompiledLeaf>` read by `href` to resolve a leaf's pattern/schemas.                                                                                         |
 | `match(compiled, url)`      | Resolves a URL to a `RouteMatch` (`Matched` with decoded `path`/`query`, or `NotFound`).                                                                                       |
 | `compileMatchers(compiled)` | Precompiles per-leaf regex matchers.                                                                                                                                           |

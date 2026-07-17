@@ -33,7 +33,7 @@ Assert the feature's behavior in a real Chromium browser, or record an explicit,
 
 3. **Known pitfalls** (each has bitten before):
    - **Post-mount render tick:** the mounted tree is appended a tick *after* `mount`'s Effect resolves — assert initial state with `vi.waitFor`, never synchronously.
-   - **Ref observers:** to run an effect when a `ref`'s element mounts, fork the `ref.changes` observer with `Effect.forkScoped`, not bare `Effect.fork` — a bare fork binds to the transient component-body fiber and is interrupted under an isolated `mount` (see `examples/element-ref`).
+   - **Ref observers:** to run an effect when a `ref`'s element mounts, fork the `ref.changes` observer with `Effect.forkScoped`, not bare `Effect.forkChild` — a bare fork binds to the transient component-body fiber and is interrupted under an isolated `mount` (see `examples/element-ref`).
    - **Missing example CSS:** the test page has none of the example's `index.html` CSS — do not assert layout-derived pixel values.
 
 4. **Run:** `vp run test:browser` (packs first, then runs all `*.browser.test.*` in headless Chromium). Must be green.

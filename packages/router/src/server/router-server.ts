@@ -365,7 +365,7 @@ export namespace RouterServer {
     if (cached !== undefined) return cached;
 
     const leaves = def.compiled.leaves;
-    // `def.httpApi` is typed `HttpApi.Any`; the concrete group/endpoint shapes are
+    // `def.httpApi` is typed `HttpApi.Top`; the concrete group/endpoint shapes are
     // only known at runtime (assembled in a loop), so `group`/`api` are invoked
     // loosely — a precise static type across the runtime loop is not expressible.
     // oxlint-disable-next-line typescript/no-explicit-any

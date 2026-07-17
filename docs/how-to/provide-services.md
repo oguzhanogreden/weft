@@ -9,7 +9,7 @@ description: Provide plain and scoped Layers to a mounted app — the direct mou
 
 **Goal:** provide a `Layer` to the mounted app so its components can read services with `yield* Service`.
 
-Which recipe to reach for depends on whether the layer has anything to release. A plain value layer (`Layer.succeed`, `Layer.effect` with no `acquireRelease`) can be provided directly at the mount — there is nothing to leak. A **scoped** layer (`Layer.scoped`, anything backed by `acquireRelease`) needs the mount to outlive the effect's own resolution — see [Layer lifetime at the mount](../explanation/services-and-context.md#layer-lifetime-at-the-mount) for why.
+Which recipe to reach for depends on whether the layer has anything to release. Both plain and scoped layers are built with `Layer.succeed` or `Layer.effect` — the distinction is whether the layer's effect acquires releasable resources (`acquireRelease`, or a scope finalizer added directly). A plain value layer (`Layer.succeed`, or `Layer.effect` whose effect has no `acquireRelease`) can be provided directly at the mount — there is nothing to leak. A **scoped** layer (`Layer.effect` whose effect is backed by `acquireRelease`) needs the mount to outlive the effect's own resolution — see [Layer lifetime at the mount](../explanation/services-and-context.md#layer-lifetime-at-the-mount) for why.
 
 ## Recipe 1 — plain value layers with `mount`
 

@@ -21,13 +21,13 @@ type ParamSchema = Schema.Codec<Record<string, unknown>, unknown, never>;
 
 /**
  * The slice of an `HttpApiEndpoint` the matcher reads. `def.httpApi` is typed
- * `HttpApi.Any` (its group/endpoint shapes are assembled in a runtime loop by
+ * `HttpApi.Top` (its group/endpoint shapes are assembled in a runtime loop by
  * `buildHttpApi`), so the endpoints are read through this structural view rather
  * than platform's precise generic types.
  */
 interface EndpointShape {
-  /** Endpoint name — the leaf `id`, the `httpApi ↔ compiled` join key. */
-  readonly name: string;
+  /** Endpoint identifier — the leaf `id`, the `httpApi ↔ compiled` join key. */
+  readonly identifier: string;
   /** Full path template, e.g. `/users/:id` (same as the leaf's `fullPathPattern`). */
   readonly path: string;
   /** Path-param schema (v4 `params` slot); `undefined` when the endpoint has none. */
@@ -47,9 +47,9 @@ interface MatcherEntry {
   readonly leaf: CompiledLeaf;
   readonly regex: RegExp;
   readonly paramNames: readonly string[];
-  /** Path-param schema, read from the endpoint's `setPath` slot. */
+  /** Path-param schema, read from the endpoint's `params` slot. */
   readonly pathSchema: ParamSchema;
-  /** Query schema, read from the endpoint's `setUrlParams` slot. */
+  /** Query schema, read from the endpoint's `query` slot. */
   readonly querySchema: ParamSchema;
 }
 
@@ -118,7 +118,7 @@ export function compileMatchers(def: RouterDef): readonly MatcherEntry[] {
 
   const entries: MatcherEntry[] = [];
   for (const endpoint of Object.values(endpoints)) {
-    const leaf = leafById.get(endpoint.name);
+    const leaf = leafById.get(endpoint.identifier);
     // Every "pages" endpoint is built from a compiled leaf (same id), so the join
     // is total; guard only to satisfy the index-access type.
     if (leaf === undefined) continue;

@@ -32,8 +32,10 @@ Weft is a monorepo with three packages:
 ## Installation
 
 ```bash
-npm install @weftui/core @weftui/dom @weftui/router effect
+npm install @weftui/core @weftui/dom @weftui/router effect@beta
 ```
+
+Weft tracks Effect 4's beta line. This release is built and tested against `effect@4.0.0-beta.98`; the peer range accepts newer 4.0 betas, which may contain upstream breaking changes.
 
 **New to Effect?** Check out the [Effect documentation](https://effect.website/docs/getting-started/introduction) to learn the fundamentals — the docs assume you know them.
 
@@ -49,7 +51,7 @@ const Counter = () =>
     const count = yield* SubscriptionRef.make(0);
 
     return yield* h.div([
-      h.span([count.changes]),
+      h.span([SubscriptionRef.changes(count)]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
     ]);

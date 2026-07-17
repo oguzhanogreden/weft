@@ -29,7 +29,7 @@ Services flow **down** from that provide point to every reader, including across
 
 ## Layer lifetime at the mount
 
-The `ThemeServiceLive` example above works because `mount`'s effect and the service's lifetime coincide by accident: `ThemeServiceLive` is a plain value layer with nothing to release, so it makes no difference whether it is "alive" for one tick or the whole session. That accident stops holding the moment the layer is **scoped** — built with `Layer.scoped`, backed by an `acquireRelease` — because `mount`'s effect resolves right after the tree's **initial render**, not when the app stops running. Streams, event handlers, and forked work all keep running on the mount's runtime long after that Effect has settled.
+The `ThemeServiceLive` example above works because `mount`'s effect and the service's lifetime coincide by accident: `ThemeServiceLive` is a plain value layer with nothing to release, so it makes no difference whether it is "alive" for one tick or the whole session. That accident stops holding the moment the layer is **scoped** — built from an `acquireRelease`-backed `Layer.effect` — because `mount`'s effect resolves right after the tree's **initial render**, not when the app stops running. Streams, event handlers, and forked work all keep running on the mount's runtime long after that Effect has settled.
 
 `Effect.provide(scopedLayer)` is `acquireUseRelease` sugar: acquire, run the wrapped effect, then release **when that effect completes**. Wrap it directly around `mount`, and the release runs at mount-resolve — while the mounted tree is still reading from the now-disposed service:
 

@@ -45,7 +45,7 @@ describe("match", () => {
     // `def.httpApi` "pages" endpoint (same id + path), not a parallel structure.
     const endpoints = (
       def.httpApi as unknown as {
-        groups: Record<string, { endpoints: Record<string, { name: string; path: string }> }>;
+        groups: Record<string, { endpoints: Record<string, { identifier: string; path: string }> }>;
       }
     ).groups["pages"]?.endpoints;
     assert.ok(endpoints !== undefined);
@@ -54,7 +54,7 @@ describe("match", () => {
       const probe = endpoint.path.replace(/:[^/]+/g, "42");
       const m = match(def, probe);
       assert.equal(m._tag, "Matched");
-      if (m._tag === "Matched") assert.equal(m.leaf.id, endpoint.name);
+      if (m._tag === "Matched") assert.equal(m.leaf.id, endpoint.identifier);
     }
   });
 

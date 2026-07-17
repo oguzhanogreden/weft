@@ -430,8 +430,5 @@
   "428": "entry-client.ts",
   "429": "root",
   "430": "runtime",
-  "431": "entry-server.ts",
-  "432": "/effect-beta — Effect 4 beta management",
-  "433": "bump-effect-beta.mjs",
-  "434": "rehype-slug"
+  "431": "entry-server.ts"
 }

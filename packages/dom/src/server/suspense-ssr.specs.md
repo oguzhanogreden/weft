@@ -220,7 +220,7 @@ For each `Boundary.suspend` encountered during the main render:
 
 1. Increment `pendingCount`
 2. Emit fallback + markers into the main stream (synchronous, in document order)
-3. Fork a detached fiber (`Effect.fork`) to resolve the children:
+3. Fork a resolution fiber into the streaming scope (`Effect.forkIn(…, ctx.scope)`) to resolve the children:
    - Render children to an HTML string via `Stream.mkString`
    - Build the patch string
    - `Queue.offer(patchQueue, patch)`

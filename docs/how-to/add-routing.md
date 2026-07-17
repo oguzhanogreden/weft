@@ -280,7 +280,7 @@ export const handler = RouterServer.toWebHandler(App, { document: documentShell 
 
 ### `effect/unstable/httpapi` is the spine
 
-The tree is the authoring surface, but `effect/unstable/httpapi`'s `HttpApi` is the **single source of truth** for paths and schemas. Sealing the tree with `Router.router(...)` builds it once (`buildHttpApi`) and stamps it onto `def.httpApi`: a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `setPath(pathSchema)`, `setUrlParams(querySchema)`, and a `RouterNotFound → 404` error. Both sides read that one definition, so they always agree:
+The tree is the authoring surface, but `effect/unstable/httpapi`'s `HttpApi` is the **single source of truth** for paths and schemas. Sealing the tree with `Router.router(...)` builds it once (`buildHttpApi`) and stamps it onto `def.httpApi`: a single `"pages"` group with one GET endpoint per leaf at its full path pattern, carrying `params: pathSchema`, `query: querySchema`, and a `RouterNotFound → 404` error. Both sides read that one definition, so they always agree:
 
 - **Server** — `RouterServer` dispatches through `HttpApiBuilder` (platform owns request→leaf matching, path/query decode, and the 404 status).
 - **Client** — `RouterLive` derives a real `HttpApiClient` from the same `def.httpApi` (exposed as `Router.httpApiClient`) for network work. SPA URL→leaf resolution stays **local** (there is no public client-side "match this URL against my `HttpApi`" utility in platform), fed from the same endpoint definitions so it never drifts from the server.
