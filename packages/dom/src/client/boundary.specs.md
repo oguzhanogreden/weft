@@ -24,8 +24,8 @@ Errors are reported via a `Cause<unknown>` so that `catchCause` can access defec
 
 ### `subscribeToStream` modification
 
-7. After forking the stream subscription fiber via `Effect.forkIn`, errors/defects from the fiber are caught with `Effect.catchCause`.
-8. On caught cause: check for `BoundaryContext` via `Effect.serviceOption`. If present, call `ctx.reportError(cause)`. If absent, the failure exit is left **unobserved** and the Effect runtime reports it itself (`"Fiber terminated with an unhandled error"`): the subscription fiber is forked with `FiberRef.unhandledErrorLogLevel` raised to `LogLevel.Error` and a `weft.region` log annotation identifying the region/prop (e.g. `attribute:<name>`, `child:stream-<id>`, `list:stream-<id>`), so both typed failures and defects surface exactly once at Error level with the pretty-printed cause. Interruption-only causes (unmount teardown) stay silent (runtime `isInterruptedOnly` guard).
+7. The stream subscription fiber is forked via `Effect.forkIn` and supervised: a watcher fiber (`Fiber.await` on the subscription fiber, itself forked into the same scope) observes its exit.
+8. Before forking, check for `BoundaryContext` via `Effect.serviceOption`. If present, the watcher routes any failure exit to `ctx.reportError(cause)`. If absent, the watcher reports the failure **explicitly** — Effect 4 removed the unhandled-error-log-level `FiberRef`, so nothing is deferred to the runtime: `Effect.logError(cause)` with a `weft.region` log annotation identifying the region/prop (e.g. `attribute:<name>`, `child:stream-<id>`, `list:stream-<id>`), so both typed failures and defects surface exactly once at Error level with the pretty-printed cause. Interruption-only causes (unmount teardown) stay silent (`Cause.hasInterruptsOnly` guard).
 9. This modification applies only to the subscription fiber — not to the synchronous stream setup path.
 
 ### `renderBoundary` — construction-time path
@@ -128,4 +128,4 @@ Errors are reported via a `Cause<unknown>` so that `catchCause` can access defec
 
 type-tests: not applicable — `forkSupervised` (AC8 unobserved-exit supervision) is a non-exported module-internal helper in `render.ts`, unreachable from `__type-tests__`; its generics are plain pass-through with no overloads or conditional types, fully enforced by the main typecheck at its call sites.
 
-e2e: not applicable — AC8 no-boundary failure reporting is a pure Effect-runtime logging path (`reportExitValue` + `FiberRef.unhandledErrorLogLevel`), not browser-observable behavior beyond what jsdom reproduces faithfully; DOM effects (markers, adopted content standing) are covered by the jsdom unit tests, and the existing browser suite was run green as a renderer regression check.
+e2e: not applicable — AC8 no-boundary failure reporting is an explicit `Effect.logError` path inside `forkSupervised` (a watcher fiber observing the subscription fiber's exit), not browser-observable behavior beyond what jsdom reproduces faithfully; DOM effects (markers, adopted content standing) are covered by the jsdom unit tests, and the existing browser suite was run green as a renderer regression check.

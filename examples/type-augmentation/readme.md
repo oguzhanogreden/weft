@@ -19,12 +19,18 @@ cannot know about a custom element you register at runtime (`<greeting-badge>`,
 alongside the native tags:
 
 ```ts
+import type { Source } from "@weftui/core";
+
 declare module "@weftui/core" {
   interface CustomElements {
     "greeting-badge": { name?: Source.Source<string> };
   }
 }
 ```
+
+(The `import` matters: it brings `Source` into scope **and** makes the file a module,
+so the `declare module` block _augments_ `@weftui/core` — in an import-free file it
+would instead redeclare, and thus shadow, the whole package.)
 
 That single declaration makes `h["greeting-badge"]({ name: "Weft" })` a typed builder:
 `name` is checked, an unknown prop is a compile error, and — because the prop is typed as

@@ -103,7 +103,7 @@ const fiber = Effect.runFork(program); // runFork, NOT runPromise (Effect.never 
 
 - Imports: `mount` / `hydrate` / `MountHandle` from `./render`; errors from `~/data`;
   `AssertNoServerOnly` / `ServerOnlyLeak` / `Node` / `Renderable` from `@weftui/core`.
-- Effect 3.21.4 semantics: `Effect.provide(scopedLayer)` releases the layer when
+- Effect semantics: `Effect.provide(scopedLayer)` releases the layer when
   the **wrapped effect completes** (acquireUseRelease) — hence `provide` must wrap a
   long-lived scoped region (`Effect.never` / `Deferred.await`), and `runFork` (not
   `runPromise`) drives it.
@@ -132,7 +132,7 @@ Applicable and done (browser-observable: real event dispatch + scoped-layer
 lifetime):
 
 - `mount-scoped.browser.test.ts` — issue #123 acceptance criterion with a
-  hand-rolled `Layer.scoped` counter service driven by `runFork` + `Deferred`
+  hand-rolled `Layer.effect` + `acquireRelease` counter service driven by `runFork` + `Deferred`
   shutdown: acquired once, alive across real clicks, released only at scope close,
   no DOM patch post-shutdown.
 - `examples/effect-atom/app.browser.test.ts` — reworked to the scoped composition
@@ -172,6 +172,10 @@ with 9 errors in `examples/effect-atom`, all pre-dating this work:
 - `main.ts` ×1 + `app.browser.test.ts` ×2 — `Registry.AtomRegistry` /
   `registry.dispose()` TS2345 — same drift, plus the manual-registry workaround this
   feature is meant to replace.
+
+_(Historical — pre-Effect-4. `@effect-atom/atom` and the pnpm override below were
+removed in the Effect 4 migration; the workspace now tracks the Effect 4 beta
+line and the atom APIs come from `effect/unstable/reactivity`.)_
 
 **Root cause + fix (resolved in /implement):** all 9 errors were a single
 dual-`effect`-instance skew — `@effect-atom@0.5.3` resolved `effect@3.21.3` in its

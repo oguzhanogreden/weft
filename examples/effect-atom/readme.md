@@ -28,7 +28,7 @@ const Counter = () =>
   ]);
 ```
 
-`effect/unstable/reactivity` lives under Effect's `unstable` namespace: it ships with `effect@4.0.0-beta.93`, but its API may still change before it stabilizes.
+`effect/unstable/reactivity` lives under Effect's `unstable` namespace: it ships with `effect@beta`, but its API may still change before it stabilizes.
 
 ## How It Works
 
@@ -37,7 +37,7 @@ const Counter = () =>
 3. `Atom.update(atom, fn)` and `Atom.refresh(atom)` return Effects requiring `AtomRegistry`. An `onclick` handler that returns one of these Effects is run on the mount runtime, which carries whatever services were provided around `mount(...)` — no manual `Effect.runPromise` inside the handler.
 4. Async atoms wrap an Effect (e.g. `Atom.make(Effect.gen(...))`) and expose their state as an `AsyncResult`. `AsyncResult.match` maps `onInitial` / `onFailure` / `onSuccess` to renderable values; the `waiting` flag on a `Success` result distinguishes an already-loaded value from one currently being refreshed via `Atom.refresh`, so the UI can show "Reloading…" instead of flashing back to a loading state.
 
-**Gotcha — the registry must outlive the mount effect.** Atom subscriptions are fibers forked for the lifetime of the app, not the lifetime of `mount(...)`. `AtomRegistry.layer` is a `Layer.scoped`, and `mount`'s effect resolves right after initial render — not when the app stops running — so providing the layer directly around `mount` releases the registry the instant that effect settles, while every subscription keeps reading from it:
+**Gotcha — the registry must outlive the mount effect.** Atom subscriptions are fibers forked for the lifetime of the app, not the lifetime of `mount(...)`. `AtomRegistry.layer` is a scope-backed `Layer.effect` — its registry is disposed when the layer's scope closes — and `mount`'s effect resolves right after initial render — not when the app stops running — so providing the layer directly around `mount` releases the registry the instant that effect settles, while every subscription keeps reading from it:
 
 ```typescript
 // ❌ the registry is disposed the moment mount resolves — every atom
