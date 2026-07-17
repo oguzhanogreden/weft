@@ -1,10 +1,9 @@
 import * as assert from "node:assert/strict";
-import { Chunk, Effect, Stream } from "effect";
+import { Effect, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { isStream, toStream } from "./stream";
 
-const collect = <A>(stream: Stream.Stream<A>) =>
-  Effect.runPromise(Stream.runCollect(stream).pipe(Effect.map(Chunk.toReadonlyArray)));
+const collect = <A>(stream: Stream.Stream<A>) => Effect.runPromise(Stream.runCollect(stream));
 
 describe("toStream", () => {
   it("AC-1: normalizes a static value to a single-element stream", async () => {

@@ -124,7 +124,9 @@ describe("List.each — Mount (MR)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([]));
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, x.name),
+      ),
       root,
     );
     await waitForStream();
@@ -149,7 +151,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     const root = createRoot();
 
     await runMount(
-      Boundary.catchAll({ fallback: (e) => h.div({ id: "fallback" }, (e as Error).message) }, [
+      Boundary.catch({ fallback: (e) => h.div({ id: "fallback" }, (e as Error).message) }, [
         List.each({ of: [p("a"), p("a")], by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
       ]),
       root,
@@ -168,7 +170,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) => {
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => {
         renders.set(x.id, (renders.get(x.id) ?? 0) + 1);
         return h.li({ id: x.id }, x.name);
       }),
@@ -197,7 +199,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) => {
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => {
         renders++;
         return h.li({ id: x.id }, x.name);
       }),
@@ -228,7 +230,7 @@ describe("List.each — Keyed reconciliation (KR)", () => {
       );
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) =>
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
         h.li({ id: x.id }, [itemStream(x.id)]),
       ),
       root,
@@ -253,7 +255,9 @@ describe("List.each — Keyed reconciliation (KR)", () => {
     );
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, x.name),
+      ),
       root,
     );
     await waitForStream();
@@ -316,8 +320,8 @@ describe("List.each — Scope & state preservation (SC)", () => {
     );
 
     await runMount(
-      List.each({ of: listRef.changes, by: (x) => x.id }, (x) =>
-        h.li({ id: x.id }, [counters.get(x.id)!.changes]),
+      List.each({ of: SubscriptionRef.changes(listRef), by: (x) => x.id }, (x) =>
+        h.li({ id: x.id }, [SubscriptionRef.changes(counters.get(x.id)!)]),
       ),
       root,
     );
@@ -346,7 +350,7 @@ describe("List.each — Scope & state preservation (SC)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a"), p("b")]));
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) =>
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) =>
         h.li({ id: x.id }, [h.input({ id: `input-${x.id}` })]),
       ),
       root,
@@ -408,7 +412,7 @@ describe("List.each — Identity (ID)", () => {
     );
 
     await runMount(
-      List.each({ of: ref.changes }, (x) => {
+      List.each({ of: SubscriptionRef.changes(ref) }, (x) => {
         renders++;
         return h.li({ id: x.id }, x.name);
       }),
@@ -431,7 +435,7 @@ describe("List.each — Identity (ID)", () => {
     const ref = await Effect.runPromise(SubscriptionRef.make<readonly Person[]>([p("a", "Ann")]));
 
     await runMount(
-      List.each({ of: ref.changes, by: (x) => x.id }, (x) => {
+      List.each({ of: SubscriptionRef.changes(ref), by: (x) => x.id }, (x) => {
         renders++;
         return h.li({ id: x.id }, x.name);
       }),
@@ -463,7 +467,7 @@ describe("List.each — Errors (ER)", () => {
     const root = createRoot();
 
     await runMount(
-      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "render failed") }, [
+      Boundary.catch({ fallback: () => h.div({ id: "fallback" }, "render failed") }, [
         // render returns a node whose `E` fails when the item is inserted.
         List.each({ of: [p("a")], by: (x) => x.id }, () => Effect.fail(new Error("render boom"))),
       ]),
@@ -485,7 +489,7 @@ describe("List.each — Errors (ER)", () => {
     );
 
     await runMount(
-      Boundary.catchAll({ fallback: () => h.div({ id: "fallback" }, "source failed") }, [
+      Boundary.catch({ fallback: () => h.div({ id: "fallback" }, "source failed") }, [
         List.each({ of, by: (x) => x.id }, (x) => h.li({ id: x.id }, x.name)),
       ]),
       root,

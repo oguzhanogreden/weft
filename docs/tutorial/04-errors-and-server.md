@@ -20,12 +20,12 @@ import { Data, Effect } from "effect";
 class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
 
 const SafeWidget = () =>
-  Boundary.catchAll({ fallback: (e) => h.div({ class: "error" }, `Request failed: ${e.status}`) }, [
+  Boundary.catch({ fallback: (e) => h.div({ class: "error" }, `Request failed: ${e.status}`) }, [
     Effect.fail(new ApiError({ status: 503 })),
   ]);
 ```
 
-There are six failure-catch variants — `catchAll`, `catchAllCause`, `catchTag`, `catchTags`, `catchSome`, `catchIf` — mirroring Effect's own error operators. A failure that a boundary does not match re-raises to the **nearest enclosing** boundary; if none catches it, the mount fails. The conceptual model (and why the boundary's type reflects exactly which failures are handled) is [Boundaries and Suspense](../explanation/boundaries-and-suspense.md).
+There are six failure-catch variants — `catch`, `catchCause`, `catchTag`, `catchTags`, `catchFilter`, `catchIf` — mirroring Effect's own error operators. A failure that a boundary does not match re-raises to the **nearest enclosing** boundary; if none catches it, the mount fails. The conceptual model (and why the boundary's type reflects exactly which failures are handled) is [Boundaries and Suspense](../explanation/boundaries-and-suspense.md).
 
 ## Render on the server
 

@@ -6,7 +6,7 @@
  */
 
 import { h } from "@weftui/core";
-import { Effect, Either, Schema, Stream, SubscriptionRef } from "effect";
+import { Effect, Result, Schema, Stream, SubscriptionRef } from "effect";
 
 // ============================================================================
 // Example 1: Basic Reactive Input
@@ -22,7 +22,7 @@ const BasicInput = () =>
         placeholder: "Type something...",
         oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
       }),
-      h.div({ class: "preview" }, ["You typed: ", value.changes]),
+      h.div({ class: "preview" }, ["You typed: ", SubscriptionRef.changes(value)]),
     ]);
   });
 
@@ -31,26 +31,24 @@ const BasicInput = () =>
 // ============================================================================
 
 const Email = Schema.String.pipe(
-  Schema.filter((s) => s.length > 0, { message: () => "Email is required" }),
-  Schema.filter((s) => s.includes("@"), { message: () => "Must contain @" }),
-  Schema.filter((s) => s.includes("."), {
-    message: () => "Must contain a domain",
-  }),
+  Schema.check(Schema.makeFilter((s) => (s.length > 0 ? undefined : "Email is required"))),
+  Schema.check(Schema.makeFilter((s) => (s.includes("@") ? undefined : "Must contain @"))),
+  Schema.check(Schema.makeFilter((s) => (s.includes(".") ? undefined : "Must contain a domain"))),
 );
 
 const SchemaEmailInput = () =>
   Effect.gen(function* () {
     const email = yield* SubscriptionRef.make("");
 
-    const validationStream = Stream.map(email.changes, (value) => {
+    const validationStream = Stream.map(SubscriptionRef.changes(email), (value) => {
       if (value.length === 0) return { valid: false, error: null };
-      const result = Schema.decodeUnknownEither(Email)(value);
-      return Either.match(result, {
-        onLeft: (e) => ({
+      const result = Schema.decodeUnknownResult(Email)(value);
+      return Result.match(result, {
+        onFailure: (e) => ({
           valid: false,
           error: e.message.split(":").pop()?.trim() ?? "Invalid",
         }),
-        onRight: () => ({ valid: true, error: null }),
+        onSuccess: () => ({ valid: true, error: null }),
       });
     });
 
@@ -82,7 +80,7 @@ const CharacterCounter = () =>
     const text = yield* SubscriptionRef.make("");
     const maxLength = 100;
 
-    const countStream = Stream.map(text.changes, (t) => t.length);
+    const countStream = Stream.map(SubscriptionRef.changes(text), (t) => t.length);
     const remainingStream = Stream.map(countStream, (count) => maxLength - count);
 
     return yield* h.div({ class: "form-group" }, [
@@ -133,7 +131,9 @@ const LoginForm = () =>
           h.input({ type: "password", placeholder: "Enter password" }),
         ]),
         h.button({ type: "submit" }, "Login"),
-        h.div({ class: "preview" }, [Stream.map(status.changes, (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [
+          Stream.map(SubscriptionRef.changes(status), (s) => (s ? h.span(s) : null)),
+        ]),
       ],
     );
   });
@@ -143,43 +143,32 @@ const LoginForm = () =>
 // ============================================================================
 
 const Username = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 3, {
-    message: () => "Min 3 characters",
-  }),
-  Schema.filter((s) => /^[a-zA-Z0-9_]+$/.test(s), {
-    message: () => "Only letters, numbers, underscore",
-  }),
+  Schema.check(Schema.makeFilter((s) => (s.length >= 3 ? undefined : "Min 3 characters"))),
+  Schema.check(
+    Schema.makeFilter((s) =>
+      /^[a-zA-Z0-9_]+$/.test(s) ? undefined : "Only letters, numbers, underscore",
+    ),
+  ),
 );
 
 const Password = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 8, {
-    message: () => "Min 8 characters",
-  }),
-  Schema.filter((s) => /[A-Z]/.test(s), {
-    message: () => "Must contain uppercase",
-  }),
-  Schema.filter((s) => /[0-9]/.test(s), {
-    message: () => "Must contain number",
-  }),
+  Schema.check(Schema.makeFilter((s) => (s.length >= 8 ? undefined : "Min 8 characters"))),
+  Schema.check(Schema.makeFilter((s) => (/[A-Z]/.test(s) ? undefined : "Must contain uppercase"))),
+  Schema.check(Schema.makeFilter((s) => (/[0-9]/.test(s) ? undefined : "Must contain number"))),
 );
 
-const Age = Schema.String.pipe(
-  Schema.filter((s) => /^\d+$/.test(s), {
-    message: () => "Must be a number",
-  }),
-  Schema.transform(Schema.Number, {
-    decode: (s) => Number.parseInt(s, 10),
-    encode: (n) => String(n),
-  }),
-  Schema.filter((n) => n >= 18, { message: () => "Must be 18 or older" }),
-  Schema.filter((n) => n <= 120, { message: () => "Invalid age" }),
+// `NumberFromString` decodes the string input to a number (failing on a
+// non-numeric value), replacing v3's explicit digit-check + `Schema.transform`.
+const Age = Schema.NumberFromString.pipe(
+  Schema.check(Schema.makeFilter((n) => (n >= 18 ? undefined : "Must be 18 or older"))),
+  Schema.check(Schema.makeFilter((n) => (n <= 120 ? undefined : "Invalid age"))),
 );
 
-const validateField = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
-  const result = Schema.decodeUnknownEither(schema)(value);
-  return Either.match(result, {
-    onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-    onRight: () => null,
+const validateField = <A, I>(schema: Schema.Codec<A, I>, value: I) => {
+  const result = Schema.decodeUnknownResult(schema)(value);
+  return Result.match(result, {
+    onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+    onSuccess: () => null,
   });
 };
 
@@ -190,17 +179,23 @@ const SchemaForm = () =>
     const ageRef = yield* SubscriptionRef.make("");
     const statusRef = yield* SubscriptionRef.make<string | null>(null);
 
-    const usernameError = Stream.map(usernameRef.changes, (v) =>
+    const usernameError = Stream.map(SubscriptionRef.changes(usernameRef), (v) =>
       v ? validateField(Username, v) : null,
     );
-    const passwordError = Stream.map(passwordRef.changes, (v) =>
+    const passwordError = Stream.map(SubscriptionRef.changes(passwordRef), (v) =>
       v ? validateField(Password, v) : null,
     );
-    const ageError = Stream.map(ageRef.changes, (v) => (v ? validateField(Age, v) : null));
+    const ageError = Stream.map(SubscriptionRef.changes(ageRef), (v) =>
+      v ? validateField(Age, v) : null,
+    );
 
     const isValid = Stream.zipLatestWith(
-      Stream.zipLatestWith(usernameRef.changes, passwordRef.changes, (u, p) => ({ u, p })),
-      ageRef.changes,
+      Stream.zipLatestWith(
+        SubscriptionRef.changes(usernameRef),
+        SubscriptionRef.changes(passwordRef),
+        (u, p) => ({ u, p }),
+      ),
+      SubscriptionRef.changes(ageRef),
       ({ u, p }, a) =>
         u.length > 0 &&
         p.length > 0 &&
@@ -268,7 +263,9 @@ const SchemaForm = () =>
         h.button({ type: "submit" }, [
           Stream.map(isValid, (valid) => (valid ? "Register" : "Fill all fields")),
         ]),
-        h.div({ class: "preview" }, [Stream.map(statusRef.changes, (s) => (s ? h.span(s) : null))]),
+        h.div({ class: "preview" }, [
+          Stream.map(SubscriptionRef.changes(statusRef), (s) => (s ? h.span(s) : null)),
+        ]),
       ],
     );
   });
@@ -281,7 +278,7 @@ const SearchPreview = () =>
   Effect.gen(function* () {
     const query = yield* SubscriptionRef.make("");
 
-    const resultsStream = Stream.map(query.changes, (q) => {
+    const resultsStream = Stream.map(SubscriptionRef.changes(query), (q) => {
       if (q.length < 2) return [];
       const items = ["Apple", "Banana", "Cherry", "Date", "Elderberry"];
       return items.filter((item) => item.toLowerCase().includes(q.toLowerCase()));

@@ -2,15 +2,16 @@ import {
   pipe,
   Cause,
   Effect,
+  Filter,
   Scope,
   Stream,
-  Subscribable,
   Deferred,
   SubscriptionRef,
   Option,
   Data,
   identity,
 } from "effect";
+import * as Subscribable from "~/subscribable";
 import { isStream } from "~/stream";
 
 /**
@@ -111,7 +112,7 @@ export namespace Source {
           Stream.runForEach(source, (value) =>
             pipe(
               SubscriptionRef.set(ref, Option.some(value)),
-              Effect.zipRight(Deferred.succeed(latch, value)),
+              Effect.andThen(Deferred.succeed(latch, value)),
               Effect.asVoid,
             ),
           ),
@@ -129,7 +130,7 @@ export namespace Source {
           // Surface a real source failure on `changes`; ignore scope-close
           // interruption (teardown is not an error).
           Effect.onError((cause) =>
-            Cause.isInterruptedOnly(cause)
+            Cause.hasInterruptsOnly(cause)
               ? Effect.void
               : Effect.asVoid(Deferred.failCause(failure, cause)),
           ),
@@ -150,12 +151,12 @@ export namespace Source {
         // source-pump failure is injected via `interruptWhen` so it propagates to
         // subscribers instead of being swallowed; on normal completion the
         // `failure` deferred stays pending and never interrupts. `interruptWhen`
-        // keeps the primary `ref.changes` subscription in the foreground, so the
+        // keeps the primary `SubscriptionRef.changes(ref)` subscription in the foreground, so the
         // emission timing the await-first contract relies on is preserved (unlike a
         // concurrent `merge`, which would fork it a hop later).
         const changes = pipe(
-          ref.changes,
-          Stream.filterMap(identity),
+          SubscriptionRef.changes(ref),
+          Stream.filterMap(Filter.fromPredicateOption(identity)),
           Stream.interruptWhen(Deferred.await(failure)),
         ) as Stream.Stream<A, NoPropValue>;
 

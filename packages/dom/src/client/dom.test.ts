@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Effect, Exit, Option, Ref, Schedule, Stream, SubscriptionRef } from "effect";
-import { Component, h, Source } from "@weftui/core";
+import { Cause, Effect, Exit, Option, Schedule, Stream, SubscriptionRef } from "effect";
+import { Component, h, Source, Subscribable } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
 import { JSDOM } from "jsdom";
@@ -900,7 +900,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const root = createRoot();
 
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const before = regionTextNode(root);
@@ -924,7 +924,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const region = await Effect.runPromise(
       SubscriptionRef.make<Renderable>(h.input({ class: "a" })),
     );
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const before = root.querySelector("input");
@@ -957,7 +957,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const region = await Effect.runPromise(
       SubscriptionRef.make<Renderable>(h.div({ id: "host" }, "hello")),
     );
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     const beforeDiv = root.querySelector("#host");
@@ -996,7 +996,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
         Stream.fromEffect(
           fetchUser(id).pipe(
             Effect.flatMap((user) => h.div({ id: "profile" }, user.name)),
-            Effect.catchAll(() => h.div({ id: "profile" }, "Failed to load user")),
+            Effect.catch(() => h.div({ id: "profile" }, "Failed to load user")),
           ),
         ),
       );
@@ -1031,7 +1031,7 @@ describe("AC20 SP1/SP3: same-type patching (in-place)", () => {
     const root = createRoot();
 
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>(h.span({}, "boxed")));
-    const handle = await runMount(region.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(region), root);
     await waitForStream();
 
     assert.ok(root.querySelector("span") !== null, "first emission should render a <span>");
@@ -1536,11 +1536,13 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(h.div({ ref }, "test"), root);
 
-    const refValue = await Effect.runPromise(Ref.get(ref));
+    const refValue = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(refValue), "Ref should contain Option.some");
     const element = Option.getOrThrow(refValue);
     assert.equal(element.tagName, "DIV");
@@ -1557,7 +1559,7 @@ describe("Ref Handling", () => {
 
     await runMount(h.span({ ref, class: "test-span" }, "content"), root);
 
-    const refValue = await Effect.runPromise(Ref.get(ref));
+    const refValue = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(refValue), "SubscriptionRef should contain Option.some");
     const element = Option.getOrThrow(refValue);
     assert.equal(element.tagName, "SPAN");
@@ -1576,8 +1578,8 @@ describe("Ref Handling", () => {
         const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
         // Subscribe to changes and capture the first Option.some emission
-        yield* Effect.fork(
-          Stream.runForEach(Stream.filter(ref.changes, Option.isSome), (opt) =>
+        yield* Effect.forkChild(
+          Stream.runForEach(Stream.filter(SubscriptionRef.changes(ref), Option.isSome), (opt) =>
             Effect.sync(() => {
               if (captured.element === null) {
                 captured.element = Option.getOrThrow(opt);
@@ -1614,11 +1616,13 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(h.div({ ref, id: "my-div" }), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "DIV");
     assert.equal(element.id, "my-div");
   });
@@ -1627,11 +1631,13 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLInputElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()),
+    );
 
     await runMount(h.input({ ref, type: "email", value: "test@example.com" }), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "INPUT");
     assert.equal(element.type, "email");
     // Input value is a property, should be set
@@ -1642,11 +1648,13 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLButtonElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLButtonElement>>(Option.none()),
+    );
 
     await runMount(h.button({ ref, type: "submit", disabled: true }, "Click"), root);
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.tagName, "BUTTON");
     assert.equal(element.type, "submit");
     assert.equal(element.disabled, true);
@@ -1656,7 +1664,9 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     await runMount(
       h.div(
@@ -1672,7 +1682,7 @@ describe("Ref Handling", () => {
       root,
     );
 
-    const element = Option.getOrThrow(await Effect.runPromise(Ref.get(ref)));
+    const element = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(ref)));
     assert.equal(element.id, "test-id");
     assert.equal(element.className, "test-class");
     assert.equal(element.getAttribute("data-custom"), "custom-value");
@@ -1703,10 +1713,14 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const divRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
-    const spanRef = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const divRef = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
+    const spanRef = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
     const inputRef = await Effect.runPromise(
-      Ref.make<Option.Option<HTMLInputElement>>(Option.none()),
+      SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none()),
     );
 
     await runMount(
@@ -1717,9 +1731,9 @@ describe("Ref Handling", () => {
       root,
     );
 
-    const divElement = Option.getOrThrow(await Effect.runPromise(Ref.get(divRef)));
-    const spanElement = Option.getOrThrow(await Effect.runPromise(Ref.get(spanRef)));
-    const inputElement = Option.getOrThrow(await Effect.runPromise(Ref.get(inputRef)));
+    const divElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(divRef)));
+    const spanElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(spanRef)));
+    const inputElement = Option.getOrThrow(await Effect.runPromise(SubscriptionRef.get(inputRef)));
 
     assert.equal(divElement.tagName, "DIV");
     assert.equal(spanElement.tagName, "SPAN");
@@ -1739,16 +1753,18 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    const ref = await Effect.runPromise(Ref.make<Option.Option<HTMLElement>>(Option.none()));
+    const ref = await Effect.runPromise(
+      SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none()),
+    );
 
     // Check value before mount
-    const valueBefore = await Effect.runPromise(Ref.get(ref));
+    const valueBefore = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isNone(valueBefore), "Ref should be Option.none before mount");
 
     await runMount(h.div({ ref }, "test"), root);
 
     // Check value after mount
-    const valueAfter = await Effect.runPromise(Ref.get(ref));
+    const valueAfter = await Effect.runPromise(SubscriptionRef.get(ref));
     assert.ok(Option.isSome(valueAfter), "Ref should be Option.some after mount");
   });
 });
@@ -1851,7 +1867,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
 
     assert.ok(!cancelled, "pump should be running while component is mounted");
@@ -1883,7 +1899,7 @@ describe("AC-10/12/13/14: toSubscribable pump scope lifetime", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.equal(cancelledCount, 0, "no pumps cancelled yet");
 
@@ -1924,10 +1940,10 @@ describe("scope lifetime: advanced cases", () => {
       Effect.gen(function* () {
         const sub = yield* Source.toSubscribable(props.val);
         const v = yield* sub.get;
-        // {internalRef.changes} creates a reactive region *inside* the component.
+        // {SubscriptionRef.changes(internalRef)} creates a reactive region *inside* the component.
         // Re-emitting it rotates a child contentScope — the pump in instanceScope
         // must not be touched.
-        return h.div({ class: v }, [internalRef.changes]);
+        return h.div({ class: v }, [SubscriptionRef.changes(internalRef)]);
       });
 
     createTestDOM();
@@ -1978,7 +1994,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!innerCancelled, "inner pump should be running while outer is mounted");
 
@@ -2028,7 +2044,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!aCancelled && !bCancelled, "both pumps should be running after mount");
 
@@ -2045,8 +2061,15 @@ describe("scope lifetime: advanced cases", () => {
   // toSubscribable returns it by reference — no pump is forked into instanceScope.
   // Closing instanceScope must NOT interrupt the ref, which lives in an outer scope.
   // ──────────────────────────────────────────────────────────────────────────
-  it("SubscriptionRef passed as Source is not interrupted when the component is removed", async () => {
+  it("Subscribable passed as Source is not interrupted when the component is removed", async () => {
     const sharedRef = await Effect.runPromise(SubscriptionRef.make("alive"));
+    // v4: a SubscriptionRef is no longer a Subscribable, so pass an explicit
+    // Subscribable view of the ref; `toSubscribable` short-circuits it by
+    // reference, and the underlying ref stays external to the instance scope.
+    const shared = Subscribable.make({
+      get: SubscriptionRef.get(sharedRef),
+      changes: SubscriptionRef.changes(sharedRef),
+    });
 
     const Comp = (props: { val: Source.Source<string> }) =>
       Effect.gen(function* () {
@@ -2057,12 +2080,12 @@ describe("scope lifetime: advanced cases", () => {
       });
 
     const regionRef = await Effect.runPromise(
-      SubscriptionRef.make<Renderable>(Comp({ val: sharedRef })),
+      SubscriptionRef.make<Renderable>(Comp({ val: shared })),
     );
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
 
     // Remove the component — instanceScope closes, but sharedRef is external.
@@ -2109,7 +2132,7 @@ describe("scope lifetime: advanced cases", () => {
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(regionRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(regionRef), root);
     await waitForStream();
     assert.ok(!cancelled, "pump should be running while component is mounted");
 
@@ -2122,7 +2145,7 @@ describe("scope lifetime: advanced cases", () => {
 
   // ──────────────────────────────────────────────────────────────────────────
   // Transitive teardown — two levels of reactive regions above a component.
-  // outerRef.changes wraps a div with innerRef.changes which contains Comp.
+  // SubscriptionRef.changes(outerRef) wraps a div with SubscriptionRef.changes(innerRef) which contains Comp.
   // Replacing the outer emission must cascade all the way down and kill the pump.
   // ──────────────────────────────────────────────────────────────────────────
   it("pump is cancelled through two levels of reactive regions", async () => {
@@ -2147,12 +2170,12 @@ describe("scope lifetime: advanced cases", () => {
       SubscriptionRef.make<Renderable>(Comp({ val: propStream })),
     );
     const outerRef = await Effect.runPromise(
-      SubscriptionRef.make<Renderable>(h.div({}, [innerRef.changes])),
+      SubscriptionRef.make<Renderable>(h.div({}, [SubscriptionRef.changes(innerRef)])),
     );
 
     createTestDOM();
     const root = createRoot();
-    const handle = await runMount(outerRef.changes, root);
+    const handle = await runMount(SubscriptionRef.changes(outerRef), root);
     await waitForStream();
     assert.ok(!cancelled, "pump should be running before outer region changes");
 

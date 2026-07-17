@@ -9,9 +9,9 @@ import { mountScoped } from "@weftui/dom/client";
 // ============================================================================
 // Issue #123 acceptance criterion, in a real browser.
 //
-// A hand-rolled `Layer.scoped` service (no @effect-atom dependency) stands in for
-// any scoped layer (e.g. effect-atom's `Registry.layer`). Provided OUTSIDE a
-// long-lived scoped region driven by `runFork`, it must:
+// A hand-rolled `Layer.effect` service (no reactivity dependency) stands in for
+// any scoped layer (e.g. `AtomRegistry.layer` from `effect/unstable/reactivity`).
+// Provided OUTSIDE a long-lived scoped region driven by `runFork`, it must:
 //   - be acquired once and stay alive across real click interactions
 //     (its `release` finalizer does NOT run at mount-resolve), and
 //   - be released only when the region ends, after the mount is unmounted, so
@@ -23,7 +23,7 @@ interface CounterService {
   readonly increment: Effect.Effect<void>;
 }
 
-class Counter extends Context.Tag("test/mount-scoped-e2e/Counter")<Counter, CounterService>() {}
+class Counter extends Context.Service<Counter, CounterService>()("test/mount-scoped-e2e/Counter") {}
 
 let container: HTMLElement;
 
@@ -47,7 +47,7 @@ describe("mountScoped — scoped layer outlives initial render (issue #123)", ()
     // subscription was interrupted by unmount.
     let capturedRef: SubscriptionRef.SubscriptionRef<number> | undefined;
 
-    const CounterLive = Layer.scoped(
+    const CounterLive = Layer.effect(
       Counter,
       Effect.acquireRelease(
         Effect.gen(function* () {
@@ -68,7 +68,9 @@ describe("mountScoped — scoped layer outlives initial render (issue #123)", ()
         // Reactive region reads the scoped service via the mount runtime.
         Effect.gen(function* () {
           const counter = yield* Counter;
-          return h.strong({ "data-testid": "count" }, [Stream.map(counter.value.changes, String)]);
+          return h.strong({ "data-testid": "count" }, [
+            Stream.map(SubscriptionRef.changes(counter.value), String),
+          ]);
         }),
         h.button(
           {

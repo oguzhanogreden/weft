@@ -1,6 +1,7 @@
 import type { Node } from "@weftui/core";
-import type { HttpApiClient } from "@effect/platform";
-import { Context, Effect, type Option, Stream, Subscribable } from "effect";
+import type { HttpApiClient } from "effect/unstable/httpapi";
+import { Context, Effect, type Option, Stream } from "effect";
+import { Subscribable } from "@weftui/core";
 import { makeRouter } from "./compile";
 import { RouterParamsError } from "./errors";
 import type { RouteMatch } from "./matcher";
@@ -51,7 +52,7 @@ export interface NavigateOptions {
   readonly replace?: boolean;
 }
 
-export class Router extends Context.Tag("@weftui/router/Router")<
+export class Router extends Context.Service<
   Router,
   {
     /** The current match as a hot `Subscribable`; drives the outlet. */
@@ -78,7 +79,7 @@ export class Router extends Context.Tag("@weftui/router/Router")<
      */
     readonly navigating: Subscribable.Subscribable<NavState>;
   }
->() {}
+>()("@weftui/router/Router") {}
 
 /**
  * The injected outlet: the node a layout (or the server document shell) splices
@@ -91,7 +92,7 @@ export class Router extends Context.Tag("@weftui/router/Router")<
  * structurally by {@link makeLayout} / {@link makeRouter}, never inferred across
  * this DI boundary. Re-exported on the namespace as `Router.Outlet`.
  */
-class OutletTag extends Context.Tag("@weftui/router/Outlet")<OutletTag, Node<never, never>>() {}
+class OutletTag extends Context.Service<OutletTag, Node<never, never>>()("@weftui/router/Outlet") {}
 
 /** Picks the requested `fields` keys out of a decoded match record. */
 function pick<F extends Fields>(

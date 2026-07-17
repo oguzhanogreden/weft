@@ -13,7 +13,6 @@
   ],
   "type": "module",
   "dependencies": {
-    "@effect/rpc": "catalog:",
     "@weftui/core": "workspace:*",
     "@weftui/dom": "workspace:*",
     "@weftui/router": "workspace:*",

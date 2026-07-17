@@ -39,7 +39,7 @@ The `ThemeServiceLive` example above works because `mount`'s effect and the serv
 Effect.runPromise(mount(App(), root).pipe(Effect.provide(SomeScopedLayer)));
 ```
 
-This is exactly what happened with effect-atom's `Registry.layer` in the [`effect-atom` example](../../examples/effect-atom) (issue #122): every atom-driven region rendered empty, with no error, because the registry the streams read from had already been disposed.
+This is exactly what happened with the atom registry layer (`AtomRegistry.layer`, from `effect/unstable/reactivity`) in the [`effect-atom` example](../../examples/effect-atom) (issue #122): every atom-driven region rendered empty, with no error, because the registry the streams read from had already been disposed.
 
 The fix is to give the scoped layer a lifetime that matches the app, not the initial render: provide it **outside** a scoped region that stays open for as long as the app should run, and mount inside that region with `mountScoped` (which ties `unmount` to the region's scope instead of to the resolution of the mount effect). An `Effect.never` (or `Deferred.await` on a shutdown signal) keeps the region — and therefore the layer — alive until something explicitly closes it. See [Provide Services](../how-to/provide-services.md) for the recipe, including the `ManagedRuntime` alternative when a scoped region isn't a good fit.
 
@@ -50,7 +50,7 @@ A plain `mount`/`hydrate` discharges `R` at the call site. But under `@weftui/ro
 So the router exposes an explicit **`context` seam** — a `Layer` threaded to the document shell and every route, layout, and leaf:
 
 ```typescript
-class Greeting extends Context.Tag("Greeting")<Greeting, { text: string }>() {}
+class Greeting extends Context.Service<Greeting, { text: string }>()("Greeting") {}
 
 // server entry
 RouterServer.render(App, { document, url, context: Layer.succeed(Greeting, { text: "hi" }) });
@@ -63,7 +63,7 @@ The seam is **symmetric** (same shape on both sides) and **type-tracked**: the d
 
 ## Server-only services: `ServerTag`
 
-Some services must _never_ run in the browser — a database handle, a private credential, an rpc handler's backing store. Declare those with [`ServerTag`](../reference/core.md#servertag) instead of `Context.Tag`. It behaves exactly like `Context.Tag`, but its identifier carries a **server-only brand**.
+Some services must _never_ run in the browser — a database handle, a private credential, an rpc handler's backing store. Declare those with [`ServerTag`](../reference/core.md#servertag) instead of `Context.Service`. It behaves exactly like `Context.Service`, but its identifier carries a **server-only brand**.
 
 The brand's job is to turn a leak into a **compile error at the `hydrate` call site**. A `Boundary.rpc` handler legitimately reads server-only services on the server, but they must not survive into client code: since `render` only ever touches the _decoded result_ (never the service), a correctly-written boundary keeps its output `R` free of the brand. If a branded tag ever leaks into `render` and reaches the client requirement channel, `hydrate`'s `AssertNoServerOnly` resolves `R` to a compile-error sentinel — you learn at build time, not from a runtime defect.
 

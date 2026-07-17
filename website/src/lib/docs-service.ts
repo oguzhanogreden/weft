@@ -37,7 +37,7 @@ export interface DocsService {
  * router's render-time `context` seam and read by any route/layout/shell via
  * `yield* Docs`. `DocsLive` (build-time model) and fixture layers live in `docs-live.ts`.
  */
-export class Docs extends Context.Tag("website/Docs")<Docs, DocsService>() {}
+export class Docs extends Context.Service<Docs, DocsService>()("website/Docs") {}
 
 /**
  * Builds a `DocsService` from the metadata manifest plus a `loadTree` fetcher (the

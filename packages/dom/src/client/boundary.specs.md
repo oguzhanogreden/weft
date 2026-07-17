@@ -4,7 +4,7 @@
 
 The DOM renderer handles failure `Boundary` descriptors (identified by `type === FAILURE_BOUNDARY`) by intercepting rendering-path errors in the subtree and swapping the DOM to a fallback when an error is caught. The renderer adds a `BoundaryContext` service (parallel to `SuspenseContext`) that is provided to children during rendering and receives error reports from stream fibers within the boundary's scope.
 
-Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access defects, not just typed failures.
+Errors are reported via a `Cause<unknown>` so that `catchCause` can access defects, not just typed failures.
 
 ---
 
@@ -18,13 +18,13 @@ Errors are reported via a `Cause<unknown>` so that `catchAllCause` can access de
 
 ### `BoundaryContext` service
 
-4. `BoundaryContext` is an optional `Context.Tag` service (like `SuspenseContext`) with a single method: `reportError: (cause: Cause.Cause<unknown>) => Effect.Effect<void>`.
+4. `BoundaryContext` is an optional `Context.Service` (like `SuspenseContext`) with a single method: `reportError: (cause: Cause.Cause<unknown>) => Effect.Effect<void>`.
 5. `BoundaryContext` is provided to children using `Effect.provideService` during `renderBoundary`, so inner boundaries shadow outer ones — children always report to the innermost boundary.
 6. Nested boundaries: when the inner boundary's `match` returns `null` (error not handled), the inner boundary calls its parent `BoundaryContext`'s `reportError` with the same cause. A `parent` reference is stored in the boundary service for this purpose.
 
 ### `subscribeToStream` modification
 
-7. After forking the stream subscription fiber via `Effect.forkIn`, errors/defects from the fiber are caught with `Effect.catchAllCause`.
+7. After forking the stream subscription fiber via `Effect.forkIn`, errors/defects from the fiber are caught with `Effect.catchCause`.
 8. On caught cause: check for `BoundaryContext` via `Effect.serviceOption`. If present, call `ctx.reportError(cause)`. If absent, the failure exit is left **unobserved** and the Effect runtime reports it itself (`"Fiber terminated with an unhandled error"`): the subscription fiber is forked with `FiberRef.unhandledErrorLogLevel` raised to `LogLevel.Error` and a `weft.region` log annotation identifying the region/prop (e.g. `attribute:<name>`, `child:stream-<id>`, `list:stream-<id>`), so both typed failures and defects surface exactly once at Error level with the pretty-printed cause. Interruption-only causes (unmount teardown) stay silent (runtime `isInterruptedOnly` guard).
 9. This modification applies only to the subscription fiber — not to the synchronous stream setup path.
 

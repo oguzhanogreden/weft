@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, Component, h } from "@weftui/core";
 import type { Node } from "@weftui/core";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup } from "effect/unstable/rpc";
 import { Context, Deferred, Effect, Layer, Schema } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, notFound } from "~/index";
@@ -373,7 +373,7 @@ describe("RouterServer.toStreamingWebHandler (streaming SSR)", () => {
 // ── Render-time provide seam (ambient-context-propagation.specs.md, AC1) ───────
 
 /** An app-wide service that must reach the shell, layouts, and route leaves. */
-class Greeting extends Context.Tag("test/Greeting")<Greeting, { readonly text: string }>() {}
+class Greeting extends Context.Service<Greeting, { readonly text: string }>()("test/Greeting") {}
 
 /** A leaf that reads the app service — the core failing case from the spec. */
 const GreetingLeaf = Component.gen(function* () {

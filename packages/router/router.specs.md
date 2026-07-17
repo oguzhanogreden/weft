@@ -34,7 +34,7 @@ after the commit. Still no per-route loader/schema.
 The tree is authored with the namespaced `Router.layout(...)` and
 `Router.route(...)` combinators and sealed with `Router.router(...)` (mirroring
 the namespaced core surface — `Component.gen`, `Boundary.catchTag`, `h.div`). The
-`Router` symbol is both the service `Context.Tag` (`yield* Router`) and the
+`Router` symbol is both the service `Context.Service` (`yield* Router`) and the
 authoring namespace; the two roles merge by declaration. The tree is the
 **authoring** surface; the compiled `HttpApi` is the **operational** source of
 truth. `compile` builds it (via `buildHttpApi`) and `makeRouter` stamps it onto
@@ -55,7 +55,7 @@ the authoring surface.
 The outlet and the current match's params/query are delivered by **dependency
 injection**, not callback arguments:
 
-- **`Router.Outlet`** — a `Context.Tag` whose value is the node to splice. A
+- **`Router.Outlet`** — a `Context.Service` whose value is the node to splice. A
   layout's `component` thunk reads it with `const outlet = yield* Router.Outlet`
   and places `[outlet]` like an `h`-style child; the server document shell thunk
   does the same to place the app. It is typed **opaque** as `Node<never, never>` so
@@ -92,19 +92,19 @@ FieldsType<Query> }`. The router passes `{ path, query }` into the leaf slot at
 
 ## Module map
 
-| Module                        | Side   | Responsibility                                                              |
-| ----------------------------- | ------ | --------------------------------------------------------------------------- |
-| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types     |
-| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + build the `HttpApi` spine   |
-| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query      |
-| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                 |
-| `src/router-service.ts`       | shared | `Router` `Context.Tag` + `Router.{route,layout,router,Outlet,params,query}` |
-| `src/errors.ts`               | shared | `RouterNotFound` + `RouterParamsError` tagged errors + `notFound()` helper  |
-| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`      |
-| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                  |
-| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                       |
-| `src/client/navigation.ts`    | client | typed `navigate`/`push`/`replace`/`back`/`forward`/`setQuery`/`patchQuery`  |
-| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                  |
+| Module                        | Side   | Responsibility                                                                  |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `src/route-tree.ts`           | shared | `route()` / `layout()` combinators (exposed as `Router.*`) + node types         |
+| `src/compile.ts`              | shared | walk the tree once into flat leaf descriptors + build the `HttpApi` spine       |
+| `src/matcher.ts`              | shared | compile patterns to regex, `match(path)` → leaf + decoded params/query          |
+| `src/href.ts`                 | shared | type-safe URL builder from a leaf's schemas                                     |
+| `src/router-service.ts`       | shared | `Router` `Context.Service` + `Router.{route,layout,router,Outlet,params,query}` |
+| `src/errors.ts`               | shared | `RouterNotFound` + `RouterParamsError` tagged errors + `notFound()` helper      |
+| `src/outlet.ts`               | shared | `RouterApp` / `outletNode` — nested page UI from `Router.currentMatch`          |
+| `src/client/router-live.ts`   | client | `Router` `Layer` backed by the History API                                      |
+| `src/client/link.ts`          | client | global same-origin click interceptor → SPA navigation                           |
+| `src/client/navigation.ts`    | client | typed `navigate`/`push`/`replace`/`back`/`forward`/`setQuery`/`patchQuery`      |
+| `src/server/router-server.ts` | server | per-request server `Router` + render + 404                                      |
 
 ## Authoring API
 
@@ -189,11 +189,15 @@ browser (refactor _Feasibility constraint_). The compiled entries are memoized p
   the not-found page).
 - **M6** More specific (static) segments win over param segments at the same
   position (e.g. `/users/new` beats `/users/:id` when both exist).
-- **M7** A path-param decode failure (e.g. `:id` is `Schema.NumberFromString`
-  and the value is `"abc"`) ⇒ no match (`Option.none()`), not a thrown error.
+- **M7** A path-param decode failure ⇒ no match (`Option.none()`), not a thrown
+  error. Note: Effect 4's `Schema.NumberFromString` maps a non-numeric string to
+  `NaN` (decode _succeeds_) rather than failing, so a numeric `:id` that should
+  404 on non-numbers needs an explicit finite check, e.g.
+  `Schema.NumberFromString.pipe(Schema.check(Schema.makeFilter((n) => (Number.isFinite(n) ? undefined : "expected a finite number"))))`;
+  `"abc"` then fails decode and the leaf is a no-match.
 - **M8** A query decode failure (a **declared** query field whose value violates
-  its schema, e.g. `?page=abc` for `Schema.NumberFromString`) ⇒ no match, like a
-  path decode failure — not a thrown error. Excess/undeclared query keys are
+  its schema) ⇒ no match, like a path decode failure — not a thrown error (subject
+  to the same `NumberFromString` caveat above). Excess/undeclared query keys are
   ignored by `Schema.Struct`, so only declared-but-invalid values fall through.
 
 ### `href` (`href.ts`)
@@ -220,7 +224,7 @@ browser (refactor _Feasibility constraint_). The compiled entries are memoized p
 
 ### Server render + 404 (`server/router-server.ts`)
 
-Server dispatch runs **through `@effect/platform` `HttpApiBuilder`** — platform owns
+Server dispatch runs **through `effect/unstable/httpapi` `HttpApiBuilder`** — the platform layer owns
 request→leaf matching and path/query decode. The handler builds a dispatch-only
 **server-local** `HttpApi`: `def.httpApi` (pristine — the client and S4 read it)
 extended with a second `"fallback"` group holding one catch-all `"*"` endpoint.

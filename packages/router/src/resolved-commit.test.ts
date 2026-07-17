@@ -6,8 +6,8 @@
  */
 
 import * as assert from "node:assert/strict";
-import { Component, h } from "@weftui/core";
-import { Cause, Effect, Exit, Option, Schema, Stream, Subscribable } from "effect";
+import { Component, h, Subscribable } from "@weftui/core";
+import { Cause, Effect, Exit, Option, Schema, Stream } from "effect";
 import { describe, test } from "vite-plus/test";
 import { isRouterNotFound, match, notFound, Router } from "~/index";
 import type { RouteMatch } from "~/matcher";
@@ -16,7 +16,7 @@ import { preRunLeaf, setResolvedCommit, stageMatch, takeResolvedCommit } from "~
 const Page = (label: string) => () => h.div({}, label);
 
 /** A minimal `Router` service instance (no layer, no JSDOM) for seam tests. */
-function fakeRouter(current: RouteMatch): Router["Type"] {
+function fakeRouter(current: RouteMatch): Router["Service"] {
   return Router.of({
     currentMatch: Subscribable.make({
       get: Effect.succeed(current),
@@ -159,7 +159,7 @@ describe("leaf pre-run (AC-R1/AC-R2/AC-R7)", () => {
     assert.equal(Exit.isFailure(exit), true);
     // The typed failure is recoverable from the exit for boundary replay (AC-R7).
     if (Exit.isFailure(exit)) {
-      const failure = Cause.failureOption(exit.cause);
+      const failure = Cause.findErrorOption(exit.cause);
       assert.equal(Option.isSome(failure), true);
       if (Option.isSome(failure)) {
         assert.equal(isRouterNotFound(failure.value), true);

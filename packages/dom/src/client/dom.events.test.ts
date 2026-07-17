@@ -207,10 +207,10 @@ describe("AC3: Effect Handler with Services", () => {
     const root = createRoot();
 
     // Define a test service
-    class CounterService extends Context.Tag("CounterService")<
+    class CounterService extends Context.Service<
       CounterService,
       { increment: () => Effect.Effect<number> }
-    >() {}
+    >()("CounterService") {}
 
     let counterValue = 0;
     const CounterServiceLive = Layer.succeed(CounterService, {

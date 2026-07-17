@@ -1,6 +1,7 @@
-import { AppRpcClientTag } from "@weftui/core";
-import { FetchHttpClient, HttpApiClient } from "@effect/platform";
-import type { RpcGroup } from "@effect/rpc";
+import { AppRpcClientTag, Subscribable } from "@weftui/core";
+import { FetchHttpClient } from "effect/unstable/http";
+import { HttpApiClient } from "effect/unstable/httpapi";
+import type { RpcGroup } from "effect/unstable/rpc";
 import type { Renderable } from "@weftui/core";
 import {
   Context,
@@ -9,10 +10,8 @@ import {
   Fiber,
   Layer,
   Option,
-  Runtime,
   Scope,
   Stream,
-  Subscribable,
   SubscriptionRef,
 } from "effect";
 import type { RouterDef } from "../compile";
@@ -105,19 +104,19 @@ function normalizeTo(to: string): string {
  * **network** flat rpc client (`RpcClient.make` over `layerProtocolHttp` →
  * `POST /_eui/rpc`) — so `@weftui/dom` can resolve a `Boundary.rpc` (hydrated
  * refetch and client-first mount) without depending on this package or
- * `@effect/rpc`.
+ * `effect/unstable/rpc`.
  */
 export function RouterLive<R>(
   def: RouterDef<any, R>,
   options: RouterLiveOptions & ContextOption<R> = {} as RouterLiveOptions & ContextOption<R>,
 ): Layer.Layer<Router | AppRpcClientTag | AppServices<R>> {
-  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.scopedContext(
+  const core: Layer.Layer<Router | AppRpcClientTag> = Layer.effectContext(
     Effect.gen(function* () {
       const urlRef = yield* SubscriptionRef.make(locationUrl());
       // Reactive navigation state (`pending-navigation.specs.md`): `Navigating{to}`
       // while a deferred-commit navigation resolves its lazy chunk(s), else `Idle`.
       const navRef = yield* SubscriptionRef.make<NavState>({ _tag: "Idle" });
-      const runtime = yield* Effect.runtime<never>();
+      const services = yield* Effect.context<never>();
 
       // The authoritative HttpApi is typed `HttpApi.Any` (runtime-assembled), so
       // `make` over it yields an opaque client and an unbounded requirement that
@@ -140,13 +139,13 @@ export function RouterLive<R>(
       // The in-flight leaf pre-run fiber, interrupted by a superseding
       // navigation (AC-R6), and the committed pre-run's scope, retained until a
       // later navigation replaces the leaf emission (AC-R12).
-      let inflightPreRun: Fiber.RuntimeFiber<Exit.Exit<Renderable, unknown>> | undefined;
-      let committedScope: Scope.CloseableScope | undefined;
+      let inflightPreRun: Fiber.Fiber<Exit.Exit<Renderable, unknown>> | undefined;
+      let committedScope: Scope.Closeable | undefined;
 
       // Forward reference to the service instance built below: the pre-run needs
       // it for the staged view and the resolved-commit stash. `commitTo` only
       // runs after the layer is built, when the instance exists.
-      let router!: Router["Type"];
+      let router!: Router["Service"];
 
       // The `Router.lazy` preloads for a matched branch (leaf component + each
       // layout in its chain); empty for an eager branch or a no-match, which take
@@ -229,7 +228,7 @@ export function RouterLive<R>(
           let exit: Exit.Exit<Renderable, unknown> | undefined;
           if (target._tag === "Matched") {
             const scope = yield* Scope.make();
-            const fiber = yield* Effect.fork(
+            const fiber = yield* Effect.forkChild(
               Effect.provideService(preRunLeaf(router, target), Scope.Scope, scope),
             );
             inflightPreRun = fiber;
@@ -237,10 +236,10 @@ export function RouterLive<R>(
             // is forked *after* the pre-run fiber, so a synchronous body has
             // already completed when the poll runs and no emission happens (AC-R3).
             if (!emitted) {
-              yield* Effect.fork(
+              yield* Effect.forkChild(
                 Effect.gen(function* () {
-                  const done = yield* Fiber.poll(fiber);
-                  if (Option.isNone(done) && token === latest) {
+                  const done = fiber.pollUnsafe();
+                  if (done === undefined && token === latest) {
                     emitted = true;
                     yield* SubscriptionRef.set(navRef, { _tag: "Navigating", to: normalized });
                   }
@@ -293,7 +292,7 @@ export function RouterLive<R>(
       // the ref — but resolve the target branch's lazy chunk(s) first so back-nav is
       // also blank-free (AC-N8).
       const onPopState = (): void => {
-        Runtime.runFork(runtime)(commitTo(locationUrl(), false, false));
+        Effect.runForkWith(services)(commitTo(locationUrl(), false, false));
       };
       yield* Effect.acquireRelease(
         Effect.sync(() => window.addEventListener("popstate", onPopState)),
@@ -304,17 +303,17 @@ export function RouterLive<R>(
 
       const currentMatch = Subscribable.make({
         get: Effect.map(SubscriptionRef.get(urlRef), (url): RouteMatch => match(def, url)),
-        changes: Stream.map(urlRef.changes, (url): RouteMatch => match(def, url)),
+        changes: Stream.map(SubscriptionRef.changes(urlRef), (url): RouteMatch => match(def, url)),
       });
 
       // The {@link AppRpcClientTag} seam: a **network** flat rpc client over the
       // app's merged `RpcGroup`, posting to `<origin>/_eui/rpc`. `@weftui/dom`
       // reads this tag to resolve a `Boundary.rpc` — hydrated refetch and
-      // client-first mount — without importing this package or `@effect/rpc`.
+      // client-first mount — without importing this package or `effect/unstable/rpc`.
       // With no `rpc` configured the seam is a stub whose `call` fails
       // descriptively, so a stray `Boundary.rpc` surfaces the misconfiguration.
       const rpc = options.rpc;
-      let appRpcClient: AppRpcClientTag["Type"];
+      let appRpcClient: AppRpcClientTag["Service"];
       if (rpc === undefined) {
         appRpcClient = AppRpcClientTag.of({
           call: (tag) =>
@@ -325,16 +324,18 @@ export function RouterLive<R>(
             ),
         });
       } else {
-        // `@effect/rpc` (and its `msgpackr` serialization dependency) is loaded
+        // `effect/unstable/rpc` (and its `msgpackr` serialization dependency) is loaded
         // lazily so it stays out of the base client bundle: an app with no
         // `Boundary.rpc` never passes `rpc`, so this branch — and the async
         // chunk it pulls — never runs. Only rpc-enabled apps pay the cost.
-        const { RpcClient, RpcSerialization } = yield* Effect.promise(() => import("@effect/rpc"));
+        const { RpcClient, RpcSerialization } = yield* Effect.promise(
+          () => import("effect/unstable/rpc"),
+        );
         const baseUrl = String(options.baseUrl ?? window.location.origin).replace(/\/$/, "");
         const flatClient = yield* RpcClient.make(rpc.group, { flatten: true }).pipe(
           Effect.provide(
             RpcClient.layerProtocolHttp({ url: `${baseUrl}${RPC_PATH}` }).pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerJson)),
+              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, RpcSerialization.layerNdjson)),
             ),
           ),
           // The group is runtime-assembled (`RpcGroup<any>`); the flat caller is
@@ -350,7 +351,10 @@ export function RouterLive<R>(
         currentMatch,
         navigate,
         httpApiClient: Option.some(httpApiClient),
-        navigating: navRef,
+        navigating: Subscribable.make({
+          get: SubscriptionRef.get(navRef),
+          changes: SubscriptionRef.changes(navRef),
+        }),
       });
 
       return Context.make(Router, router).pipe(Context.add(AppRpcClientTag, appRpcClient));

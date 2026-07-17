@@ -10,7 +10,7 @@ Reactive state management typically requires external libraries (Redux, MobX, Zu
 
 ## Solution
 
-`SubscriptionRef` provides a mutable reference with a `.changes` stream you pass directly as a child or prop:
+`SubscriptionRef` is a mutable reference; `SubscriptionRef.changes(ref)` returns a `Stream` you pass directly as a child or prop:
 
 ```typescript
 import { h } from "@weftui/core";
@@ -22,17 +22,20 @@ const Counter = () =>
 
     const increment = () => SubscriptionRef.update(count, (n) => n + 1);
 
-    return yield* h.div([h.span([count.changes]), h.button({ onclick: () => increment() }, "+")]);
+    return yield* h.div([
+      h.span([SubscriptionRef.changes(count)]),
+      h.button({ onclick: () => increment() }, "+"),
+    ]);
   });
 ```
 
 ## How It Works
 
 1. `SubscriptionRef.make(initial)` creates a ref with initial value
-2. `.changes` is a `Stream` that emits the current value and all future updates
+2. `SubscriptionRef.changes(ref)` returns a `Stream` that emits the current value and all future updates
 3. `SubscriptionRef.set(ref, value)` replaces the current value
 4. `SubscriptionRef.update(ref, fn)` derives the next value from the current one
-5. Derived streams use `Stream.map` or other Stream operators on `.changes`
+5. Derived streams use `Stream.map` or other Stream operators on `SubscriptionRef.changes(ref)`
 
 ## Benefits
 
@@ -50,7 +53,7 @@ const Counter = () =>
 const count = yield * SubscriptionRef.make(0);
 
 // Display current value
-h.span([count.changes]);
+h.span([SubscriptionRef.changes(count)]);
 
 // Update
 h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+");
@@ -60,8 +63,8 @@ h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+");
 
 ```typescript
 const count = yield * SubscriptionRef.make(0);
-const doubled = Stream.map(count.changes, (n) => n * 2);
-const isEven = Stream.map(count.changes, (n) => (n % 2 === 0 ? "Yes" : "No"));
+const doubled = Stream.map(SubscriptionRef.changes(count), (n) => n * 2);
+const isEven = Stream.map(SubscriptionRef.changes(count), (n) => (n % 2 === 0 ? "Yes" : "No"));
 
 h.p(["Doubled: ", doubled]);
 h.p(["Even: ", isEven]);
@@ -70,18 +73,18 @@ h.p(["Even: ", isEven]);
 ### Object State with Schema Validation
 
 ```typescript
-import { Schema, Either } from "effect";
+import { Result, Schema } from "effect";
 
 const Name = Schema.String.pipe(
-  Schema.filter((s) => s.length >= 2, { message: () => "Min 2 chars" }),
+  Schema.check(Schema.makeFilter((s) => (s.length >= 2 ? undefined : "Min 2 chars"))),
 );
 
-const validate = <A, I>(schema: Schema.Schema<A, I>, value: I) => {
+const validate = <A, I>(schema: Schema.Codec<A, I>, value: I): string | null => {
   if (!value) return null;
-  const result = Schema.decodeUnknownEither(schema)(value);
-  return Either.match(result, {
-    onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-    onRight: () => null,
+  const result = Schema.decodeUnknownResult(schema)(value);
+  return Result.match(result, {
+    onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+    onSuccess: () => null,
   });
 };
 
@@ -100,7 +103,9 @@ const updateName = (name: string) =>
   }));
 
 h.input({ oninput: (e) => updateName((e.target as HTMLInputElement).value) });
-Stream.map(form.changes, (s) => (s.errors.name ? h.span({ class: "error" }, s.errors.name) : null));
+Stream.map(SubscriptionRef.changes(form), (s) =>
+  s.errors.name ? h.span({ class: "error" }, s.errors.name) : null,
+);
 ```
 
 ### Combining Multiple Refs
@@ -109,8 +114,10 @@ Stream.map(form.changes, (s) => (s.errors.name ? h.span({ class: "error" }, s.er
 const firstName = yield * SubscriptionRef.make("");
 const lastName = yield * SubscriptionRef.make("");
 
-const fullName = Stream.zipLatestWith(firstName.changes, lastName.changes, (first, last) =>
-  `${first} ${last}`.trim(),
+const fullName = Stream.zipLatestWith(
+  SubscriptionRef.changes(firstName),
+  SubscriptionRef.changes(lastName),
+  (first, last) => `${first} ${last}`.trim(),
 );
 
 h.span(["Full name: ", fullName]);
@@ -132,13 +139,13 @@ const toggleTodo = (id: number) =>
 
 ## Comparison with SolidJS Signals
 
-| SolidJS                         | Effect SubscriptionRef                      |
-| ------------------------------- | ------------------------------------------- |
-| `createSignal(0)`               | `SubscriptionRef.make(0)`                   |
-| `count()`                       | `count.changes` (stream)                    |
-| `setCount(5)`                   | `SubscriptionRef.set(count, 5)`             |
-| `setCount(n => n + 1)`          | `SubscriptionRef.update(count, n => n + 1)` |
-| `createMemo(() => count() * 2)` | `Stream.map(count.changes, n => n * 2)`     |
+| SolidJS                         | Effect SubscriptionRef                                   |
+| ------------------------------- | -------------------------------------------------------- |
+| `createSignal(0)`               | `SubscriptionRef.make(0)`                                |
+| `count()`                       | `SubscriptionRef.changes(count)` (stream)                |
+| `setCount(5)`                   | `SubscriptionRef.set(count, 5)`                          |
+| `setCount(n => n + 1)`          | `SubscriptionRef.update(count, n => n + 1)`              |
+| `createMemo(() => count() * 2)` | `Stream.map(SubscriptionRef.changes(count), n => n * 2)` |
 
 ## When to Use
 

@@ -1,4 +1,4 @@
-import type { Option, Ref } from "effect";
+import type { Option, SubscriptionRef } from "effect";
 import type { AriaAttributes } from "./aria";
 import type {
   DOMAttributes,
@@ -113,7 +113,7 @@ export type HTMLRole =
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // weft internals ========================================================
   children?: HTMLAttributeSource<Renderable>;
-  ref?: Ref.Ref<Option.Option<T>>;
+  ref?: SubscriptionRef.SubscriptionRef<Option.Option<T>>;
   // ============================================================================
 
   /**

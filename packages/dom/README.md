@@ -47,7 +47,7 @@ const Counter = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
     return yield* h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, [
-      count.changes,
+      SubscriptionRef.changes(count),
     ]);
   });
 

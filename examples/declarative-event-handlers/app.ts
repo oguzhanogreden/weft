@@ -76,12 +76,12 @@ const LoggingButton = () =>
 // Example 3: Handlers with Service Access
 // ============================================================================
 
-class Analytics extends Context.Tag("Analytics")<
+class Analytics extends Context.Service<
   Analytics,
   {
     track: (event: string) => Effect.Effect<void>;
   }
->() {}
+>()("Analytics") {}
 
 export const AnalyticsLive = Layer.succeed(Analytics, {
   track: (event) =>

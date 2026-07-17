@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Effect, Stream } from "effect";
+import { Effect, Queue, Stream } from "effect";
 import { Boundary, h } from "@weftui/core";
 import { JSDOM } from "jsdom";
 import { mount, hydrate } from "./render";
@@ -153,15 +153,17 @@ describe("AC2: Single async child — fallback shown, then swap", () => {
     // V1 at +100ms; V2 at +100ms+200ms = +300ms.
     // Check V1 at +160ms (after swap, before V2 replaces it).
     function AsyncChild() {
-      return Stream.async<unknown>((emit) => {
-        setTimeout(() => {
-          emit.single(h.span({ class: "v1" }, "V1"));
+      return Stream.callback<unknown>((queue) =>
+        Effect.sync(() => {
           setTimeout(() => {
-            emit.single(h.span({ class: "v2" }, "V2"));
-            emit.end();
-          }, 200); // 200ms gap so V1 is observable before V2 replaces it
-        }, 100);
-      });
+            Queue.offerUnsafe(queue, h.span({ class: "v1" }, "V1"));
+            setTimeout(() => {
+              Queue.offerUnsafe(queue, h.span({ class: "v2" }, "V2"));
+              Queue.endUnsafe(queue);
+            }, 200); // 200ms gap so V1 is observable before V2 replaces it
+          }, 100);
+        }),
+      );
     }
 
     await runMount(
@@ -542,11 +544,13 @@ describe("AC7: Function component returning Stream<ElementDescriptor> triggers s
 
     // Stream that emits multiple values over time
     function StreamChild() {
-      return Stream.async<unknown>((emit) => {
-        setTimeout(() => emit.single(h.span({ class: "v1" }, "V1")), 100);
-        setTimeout(() => emit.single(h.span({ class: "v2" }, "V2")), 250);
-        setTimeout(() => emit.end(), 300);
-      });
+      return Stream.callback<unknown>((queue) =>
+        Effect.sync(() => {
+          setTimeout(() => Queue.offerUnsafe(queue, h.span({ class: "v1" }, "V1")), 100);
+          setTimeout(() => Queue.offerUnsafe(queue, h.span({ class: "v2" }, "V2")), 250);
+          setTimeout(() => Queue.endUnsafe(queue), 300);
+        }),
+      );
     }
 
     await runMount(
@@ -584,12 +588,14 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
     const root = createRoot();
 
     // A stream used as an inline child (not via a function component)
-    const inlineStream = Stream.async<string>((emit) => {
-      setTimeout(() => {
-        emit.single("Hello");
-        emit.end();
-      }, 100);
-    });
+    const inlineStream = Stream.callback<string>((queue) =>
+      Effect.sync(() => {
+        setTimeout(() => {
+          Queue.offerUnsafe(queue, "Hello");
+          Queue.endUnsafe(queue);
+        }, 100);
+      }),
+    );
 
     // AsyncComponent DOES trigger suspension
     function AsyncComponent() {
@@ -631,12 +637,14 @@ describe("AC8: Non-component reactive values do not trigger suspension", () => {
     createTestDOM();
     const root = createRoot();
 
-    const classStream = Stream.async<string>((emit) => {
-      setTimeout(() => {
-        emit.single("active");
-        emit.end();
-      }, 50);
-    });
+    const classStream = Stream.callback<string>((queue) =>
+      Effect.sync(() => {
+        setTimeout(() => {
+          Queue.offerUnsafe(queue, "active");
+          Queue.endUnsafe(queue);
+        }, 50);
+      }),
+    );
 
     // Without any async function component child, the boundary should fast-path
     await runMount(
@@ -790,7 +798,7 @@ describe("Round-trip: SSR → patch script → hydrate", () => {
     // A component that returns an async Effect — triggers SSR suspension in renderToStreamHydratable.
     function Card() {
       return Effect.gen(function* () {
-        yield* Effect.sleep("0 millis"); // ensures async path for SSR stream markers
+        yield* Effect.sleep("1 millis"); // ensures async path for SSR stream markers (v4 runs sleep(0) synchronously)
         return yield* h.div({ class: "card" }, "Card content");
       });
     }

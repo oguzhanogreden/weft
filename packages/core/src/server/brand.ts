@@ -26,10 +26,11 @@ export type ServerOnlyLeak =
   "A server-only Tag (ServerTag) leaked into the client requirement channel R. Discharge it on the server via Boundary.server's `provide`.";
 
 /**
- * A `Context.Tag` whose identifier carries the {@link ServerOnly} brand.
+ * A `Context.Service` key whose identifier carries the {@link ServerOnly} brand.
  *
- * Use it exactly like `Context.Tag` for services that must only ever be provided
- * on the server (e.g. a database handle behind a `Boundary.server` `load`):
+ * Use it exactly like `Context.Service` for services that must only ever be
+ * provided on the server (e.g. a database handle behind a `Boundary.server`
+ * `load`):
  *
  * ```ts
  * class Database extends ServerTag("Database")<Database, DatabaseShape>() {}
@@ -42,8 +43,12 @@ export type ServerOnlyLeak =
  */
 export const ServerTag =
   <const Id extends string>(id: Id) =>
-  <Self, Shape>(): Context.TagClass<Self & ServerOnly, Id, Shape> =>
-    Context.Tag(id)<Self, Shape>() as unknown as Context.TagClass<Self & ServerOnly, Id, Shape>;
+  <Self, Shape>(): Context.ServiceClass<Self & ServerOnly, Id, Shape> =>
+    Context.Service<Self, Shape>()(id) as unknown as Context.ServiceClass<
+      Self & ServerOnly,
+      Id,
+      Shape
+    >;
 
 /**
  * Passes `R` through unchanged when it contains no {@link ServerOnly} dependency,

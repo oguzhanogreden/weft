@@ -31,7 +31,7 @@ export const ReactiveCounter = (): Node =>
         // `counter-value` is a semantic test hook; layout comes from utilities.
         h.span(
           { class: "counter-value min-w-10 text-center text-[1.4rem] font-semibold tabular-nums" },
-          [Stream.map(count.changes, (n) => String(n))],
+          [Stream.map(SubscriptionRef.changes(count), (n) => String(n))],
         ),
         h.button(
           { type: "button", class: btn, "aria-label": "Increment", onclick: () => increment() },

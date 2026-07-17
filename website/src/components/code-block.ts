@@ -51,10 +51,10 @@ export const CodeBlock = Component.gen(function* (props: CodeBlockProps) {
           yield* SubscriptionRef.set(copied, false);
         }),
       ),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
 
-  const label = Stream.map(copied.changes, (done) => (done ? "Copied" : "Copy"));
+  const label = Stream.map(SubscriptionRef.changes(copied), (done) => (done ? "Copied" : "Copy"));
 
   // `code-block` is a semantic (non-styling) hook: tests select on it and the
   // demo component flush-overrides it. `not-prose` exempts the pane from the

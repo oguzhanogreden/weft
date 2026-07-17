@@ -1,8 +1,8 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Boundary, h } from "@weftui/core";
 import type { AppRpcClient, Node } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
-import { Effect, Exit, Layer, Option, Schema, Stream } from "effect";
+import { Rpc } from "effect/unstable/rpc";
+import { Effect, Exit, Filter, Layer, Result, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { renderToStream } from "./render-to-stream";
 import { renderToString, renderToStringHydratable } from "./render-to-string";
@@ -45,7 +45,7 @@ const provideRpc = (
 const provideStream = (
   stream: Stream.Stream<string, Error, AppRpcClientTag>,
   handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown>>,
-) => Stream.provideLayer(stream, appRpcLayer(handlers));
+) => Stream.provide(stream, appRpcLayer(handlers));
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -55,7 +55,7 @@ const StockKey = Schema.Struct({ id: Schema.Number });
 const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
 type ProductShape = typeof Product.Type;
 
-class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+class LoadError extends Schema.TaggedErrorClass<LoadError>()("LoadError", {
   reason: Schema.String,
 }) {}
 
@@ -80,7 +80,7 @@ const SCRIPT_RE = /<script type="application\/json">(.*?)<\/script>/;
 const SCRIPT_RE_G = /<script type="application\/json">(.*?)<\/script>/g;
 
 const decodeScript = (json: string) =>
-  Effect.runPromise(Schema.decodeUnknown(Product)(JSON.parse(json)));
+  Effect.runPromise(Schema.decodeUnknownEffect(Product)(JSON.parse(json)));
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -219,7 +219,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   };
 
   it("plain SSR shows the fallback with no failure payload (AC-8)", async () => {
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
       [failingBoundary()],
     );
@@ -231,7 +231,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("hydratable emits the failure payload before the fallback, decodable to the error (AC-7)", async () => {
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) },
       [failingBoundary()],
     );
@@ -244,7 +244,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
     assert.ok(match !== null, "expected a data-weft-boundary-failure payload");
     const payload = JSON.parse(match[1] as string) as { index: number; error: unknown };
     assert.equal(payload.index, 0);
-    const decoded = await Effect.runPromise(Schema.decodeUnknown(LoadError)(payload.error));
+    const decoded = await Effect.runPromise(Schema.decodeUnknownEffect(LoadError)(payload.error));
     assert.equal(decoded.reason, "db down");
 
     // Payload precedes the fallback; the fallback is still rendered for no-JS.
@@ -253,11 +253,17 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("relocates the payload to the outer boundary when the inner match returns null (AC-9)", async () => {
-    // Inner `catchSome` declines (Option.none → match null); the failure
+    // Inner `catchFilter` declines (Result.fail → match null); the failure
     // re-propagates without draining, so the outer boundary emits the payload.
-    const node = Boundary.catchAll(
+    const node = Boundary.catch(
       { fallback: (e: LoadError) => h.div({ class: "outer" }, e.reason) },
-      [Boundary.catchSome({ fallback: () => Option.none() }, [failingBoundary()])],
+      [
+        Boundary.catchFilter(
+          Filter.make((e) => Result.fail(e)),
+          () => h.div({}),
+          [failingBoundary()],
+        ),
+      ],
     );
 
     const html = await Effect.runPromise(
@@ -272,7 +278,7 @@ describe("Boundary.rpc — typed-failure replay (server emit, AC-7…AC-9)", () 
   });
 
   it("does not emit a failure payload for an rpc defect (AC-9)", async () => {
-    const node = Boundary.catchAllCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
+    const node = Boundary.catchCause({ fallback: () => h.div({ class: "fallback" }, "boom") }, [
       Boundary.rpc(
         Failing,
         () => ({ id: 1 }),
@@ -334,7 +340,7 @@ describe("Boundary.rpc — payload escaping (XSS-safe)", () => {
     const match = SCRIPT_RE.exec(html);
     assert.ok(match !== null);
     const decoded = await Effect.runPromise(
-      Schema.decodeUnknown(Evil)(JSON.parse(match[1] as string)),
+      Schema.decodeUnknownEffect(Evil)(JSON.parse(match[1] as string)),
     );
     assert.equal(decoded.html, "</script><script>alert(1)</script>");
   });

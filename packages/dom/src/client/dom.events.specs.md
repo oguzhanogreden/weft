@@ -92,7 +92,7 @@ type EventHandler<T, E extends Event> =
 
 - Effect-returning handlers that fail have their errors logged
 - The UI continues to function (catch and log, don't crash)
-- Use `Effect.catchAll` with `Effect.logError` for error reporting
+- Use `Effect.catch` with `Effect.logError` for error reporting
 
 ### Runtime Context
 

@@ -131,7 +131,7 @@ const _staticApp: Node<never, Router> = RouterApp(
 );
 
 // A page requirement flows all the way up into the app node's `R`.
-class Theme extends Context.Tag("@test/Theme")<Theme, string>() {}
+class Theme extends Context.Service<Theme, string>()("@test/Theme") {}
 
 const _themedApp: Node<never, Theme | Router> = RouterApp(
   Router.router(
@@ -199,7 +199,7 @@ const _replace: Effect.Effect<void, never, Router> = replace("/about");
 
 // ── Render-time context seam requiredness (AC2 / AC3) ──────────────────────────
 
-class Other extends Context.Tag("@test/Other")<Other, string>() {}
+class Other extends Context.Service<Other, string>()("@test/Other") {}
 
 const themedDoc = Component.make(() => h.div({}, "doc"));
 

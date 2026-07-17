@@ -262,6 +262,9 @@ describe("AC-H9: unmount", () => {
     const root = await seedServerHtml(app);
 
     const handle = await Effect.runPromise(hydrate(app, root));
+    // Effect 4 forks the reactive-prop subscription lazily, so let it drain the
+    // synchronous stream (settling the id to "b") before unmount tears it down.
+    await waitFor(50);
     await Effect.runPromise(handle.unmount());
     // Second call must be a no-op (idempotent), not throw.
     await Effect.runPromise(handle.unmount());

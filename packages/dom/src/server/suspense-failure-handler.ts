@@ -42,12 +42,12 @@ export interface SuspenseFailureHandler {
 }
 
 /**
- * `Context.Tag` for the {@link SuspenseFailureHandler} seam. Read via
+ * `Context.Service` key for the {@link SuspenseFailureHandler} seam. Read via
  * `Effect.serviceOption` inside the Suspense resolution fiber, so providing it
  * is always optional. Lives in `@weftui/dom` (like `AppRpcClientTag`) so dom
  * never imports its consumers.
  */
-export class SuspenseFailureHandlerTag extends Context.Tag("@weftui/dom/SuspenseFailureHandler")<
+export class SuspenseFailureHandlerTag extends Context.Service<
   SuspenseFailureHandlerTag,
   SuspenseFailureHandler
->() {}
+>()("@weftui/dom/SuspenseFailureHandler") {}

@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, List, getElementDescriptor, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
+import { Rpc } from "effect/unstable/rpc";
 import { Effect, Schema, Stream } from "effect";
 import { describe, it } from "vite-plus/test";
 import { BOUNDARY_FAILURE_ATTR, collectServerBoundaries } from "./boundary-replay";
@@ -103,7 +103,7 @@ describe("collectServerBoundaries — AC-BR3: descends static containers", () =>
   it("descends a failure boundary's children", () => {
     const a = serverBoundary("a");
     const out = collectServerBoundaries(
-      Boundary.catchAll({ fallback: () => h.div({}, "f") }, [a.node]),
+      Boundary.catch({ fallback: () => h.div({}, "f") }, [a.node]),
     );
     assert.deepEqual(out, [a.props]);
   });
@@ -184,7 +184,7 @@ describe("collectServerBoundaries — AC-BR5: symmetry", () => {
     const b = serverBoundary("b");
     const tree: Renderable = h.div({}, [
       a.node,
-      Boundary.catchAll({ fallback: () => h.div({}) }, [b.node]),
+      Boundary.catch({ fallback: () => h.div({}) }, [b.node]),
     ]);
 
     const first = collectServerBoundaries(tree);

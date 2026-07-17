@@ -18,21 +18,21 @@ A component's `E` channel accumulates up the tree. A **failure boundary** is whe
 ```typescript
 import { Boundary, h } from "@weftui/core";
 
-Boundary.catchAll({ fallback: (e) => h.div({ class: "error" }, `Failed: ${e.message}`) }, [
+Boundary.catch({ fallback: (e) => h.div({ class: "error" }, `Failed: ${e.message}`) }, [
   RiskyWidget(),
 ]);
 ```
 
 There are six failure-catch variants, mirroring Effect's own error operators so the mental model transfers directly:
 
-| Variant                  | Catches                                    |
-| ------------------------ | ------------------------------------------ |
-| `catchAll`               | every failure in `E`                       |
-| `catchAllCause`          | the full `Cause` (defects included)        |
-| `catchTag` / `catchTags` | one / several tagged errors by `_tag`      |
-| `catchSome` / `catchIf`  | a selected subset, by `Option` / predicate |
+| Variant                   | Catches                                    |
+| ------------------------- | ------------------------------------------ |
+| `catch`                   | every failure in `E`                       |
+| `catchCause`              | the full `Cause` (defects included)        |
+| `catchTag` / `catchTags`  | one / several tagged errors by `_tag`      |
+| `catchFilter` / `catchIf` | a selected subset, by `Filter` / predicate |
 
-The channel algebra is the whole reason they exist: `catchTag("Foo", …)` removes `Foo` from the children's `E` and adds whatever the fallback needs — so the type of the boundary node reflects exactly which failures are still live and which were handled. An unhandled failure re-raises to the **nearest enclosing** boundary; if none catches it at **mount time**, mounting fails. Boundaries nest, so an inner `catchTag` can handle a specific case while an outer `catchAll` sweeps the rest.
+The channel algebra is the whole reason they exist: `catchTag("Foo", …)` removes `Foo` from the children's `E` and adds whatever the fallback needs — so the type of the boundary node reflects exactly which failures are still live and which were handled. An unhandled failure re-raises to the **nearest enclosing** boundary; if none catches it at **mount time**, mounting fails. Boundaries nest, so an inner `catchTag` can handle a specific case while an outer `catch` sweeps the rest.
 
 ### Post-mount failures with no enclosing boundary
 

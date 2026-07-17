@@ -1,6 +1,5 @@
 import * as assert from "node:assert/strict";
 import {
-  Chunk,
   Deferred,
   Effect,
   Exit,
@@ -13,6 +12,7 @@ import {
 } from "effect";
 import { describe, it } from "vite-plus/test";
 import { NoPropValue, Source } from "~/source/source";
+import * as Subscribable from "~/subscribable";
 import { Cause } from "effect";
 
 // Run an Effect inside a managed Scope (Effect.scoped closes the scope when done).
@@ -39,7 +39,7 @@ describe("Source.toSubscribable", () => {
       const values = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(42);
-          return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
+          return yield* pipe(sub.changes, Stream.runCollect);
         }),
       );
       assert.deepEqual(values, [42]);
@@ -77,7 +77,7 @@ describe("Source.toSubscribable", () => {
       const values = await scoped(
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(Effect.succeed(7));
-          return yield* pipe(sub.changes, Stream.runCollect, Effect.map(Chunk.toReadonlyArray));
+          return yield* pipe(sub.changes, Stream.runCollect);
         }),
       );
       assert.deepEqual(values, [7]);
@@ -96,11 +96,7 @@ describe("Source.toSubscribable", () => {
           // Consume via get twice and via changes once.
           const v1 = yield* sub.get;
           const v2 = yield* sub.get;
-          const items = yield* pipe(
-            sub.changes,
-            Stream.runCollect,
-            Effect.map(Chunk.toReadonlyArray),
-          );
+          const items = yield* pipe(sub.changes, Stream.runCollect);
           assert.equal(v1, "once");
           assert.equal(v2, "once");
           assert.deepEqual(items, ["once"]);
@@ -160,7 +156,7 @@ describe("Source.toSubscribable", () => {
         Effect.gen(function* () {
           const sub = yield* Source.toSubscribable(source);
           // Fork get — it should park because the gate is not yet open.
-          const getFiber = yield* Effect.fork(sub.get);
+          const getFiber = yield* Effect.forkChild(sub.get);
           // Open the gate, supplying the first (and only) value.
           yield* Deferred.succeed(gate, "parked-value");
           return yield* Fiber.join(getFiber);
@@ -218,7 +214,7 @@ describe("Source.toSubscribable", () => {
       assert.ok(Exit.isFailure(exit), "changes surfaces the source failure");
       assert.ok(
         Exit.isFailure(exit) &&
-          Option.exists(Cause.failureOption(exit.cause), (e) => e instanceof Boom),
+          Option.exists(Cause.findErrorOption(exit.cause), (e) => e instanceof Boom),
         "the failure carries the original source error",
       );
     });
@@ -272,13 +268,21 @@ describe("Source.toSubscribable", () => {
 
   describe("AC-9 identity pass-through", () => {
     it("returns the same Subscribable reference when given an existing one", async () => {
-      const existing = await Effect.runPromise(SubscriptionRef.make("x"));
+      const ref = await Effect.runPromise(SubscriptionRef.make("x"));
+      const existing = Subscribable.make({
+        get: SubscriptionRef.get(ref),
+        changes: SubscriptionRef.changes(ref),
+      });
       const result = await scoped(Source.toSubscribable(existing));
       assert.equal(result, existing);
     });
 
     it("forks no fiber for an existing Subscribable (scope stays clean)", async () => {
-      const existing = await Effect.runPromise(SubscriptionRef.make("y"));
+      const ref = await Effect.runPromise(SubscriptionRef.make("y"));
+      const existing = Subscribable.make({
+        get: SubscriptionRef.get(ref),
+        changes: SubscriptionRef.changes(ref),
+      });
       const exit = await Effect.runPromise(
         pipe(
           Effect.scoped(
@@ -314,7 +318,7 @@ describe("Source.toSubscribable", () => {
         ),
       ),
     );
-    const failure = Cause.failureOption(cause);
+    const failure = Cause.findErrorOption(cause);
     assert.ok(Option.isSome(failure));
     assert.ok(failure.value instanceof NoPropValue);
     assert.equal(failure.value.key, "label");

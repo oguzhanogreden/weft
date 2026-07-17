@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { AppRpcClientTag, Boundary, h } from "@weftui/core";
 import type { AppRpcClient, Node } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
+import { Rpc } from "effect/unstable/rpc";
 import { Cause, Effect, Exit, Layer, Schema } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
@@ -70,7 +70,7 @@ const StockKey = Schema.Struct({ id: Schema.Number });
 const Product = Schema.Struct({ name: Schema.String, price: Schema.Number });
 type ProductShape = typeof Product.Type;
 
-class LoadError extends Schema.TaggedError<LoadError>()("LoadError", {
+class LoadError extends Schema.TaggedErrorClass<LoadError>()("LoadError", {
   reason: Schema.String,
 }) {}
 
@@ -309,7 +309,7 @@ describe("Boundary.rpc hydrate — payload divergence", () => {
 describe("Boundary.rpc hydrate — typed-failure replay", () => {
   /** A failing-rpc server boundary under a `catchAll` that renders the error. */
   const makeFailingApp = () =>
-    Boundary.catchAll({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
+    Boundary.catch({ fallback: (e: LoadError) => h.div({ class: "fallback" }, e.reason) }, [
       Boundary.rpc(
         Failing,
         () => ({ id: 1 }),

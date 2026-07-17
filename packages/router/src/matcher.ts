@@ -1,4 +1,4 @@
-import { Either, Option, Schema } from "effect";
+import { Result, Schema } from "effect";
 import type { CompiledLeaf, RouterDef } from "./compile";
 
 /** The resolved match for a URL: a leaf with decoded params/query, or not-found. */
@@ -17,7 +17,7 @@ export type RouteMatch =
     };
 
 /** A string-encodeable schema as carried by an HttpApi endpoint's path/urlParams slot. */
-type ParamSchema = Schema.Schema<Record<string, unknown>, unknown, never>;
+type ParamSchema = Schema.Codec<Record<string, unknown>, unknown, never>;
 
 /**
  * The slice of an `HttpApiEndpoint` the matcher reads. `def.httpApi` is typed
@@ -30,8 +30,10 @@ interface EndpointShape {
   readonly name: string;
   /** Full path template, e.g. `/users/:id` (same as the leaf's `fullPathPattern`). */
   readonly path: string;
-  readonly pathSchema: Option.Option<ParamSchema>;
-  readonly urlParamsSchema: Option.Option<ParamSchema>;
+  /** Path-param schema (v4 `params` slot); `undefined` when the endpoint has none. */
+  readonly params: ParamSchema | undefined;
+  /** Query schema (v4 `query` slot); `undefined` when the endpoint has none. */
+  readonly query: ParamSchema | undefined;
 }
 
 /** Structural view of the compiled `HttpApi`: its `"pages"` group of leaf endpoints. */
@@ -124,8 +126,8 @@ export function compileMatchers(def: RouterDef): readonly MatcherEntry[] {
       leaf,
       regex: patternToRegex(endpoint.path),
       paramNames: paramNamesOf(endpoint.path),
-      pathSchema: Option.getOrElse(endpoint.pathSchema, () => emptySchema),
-      querySchema: Option.getOrElse(endpoint.urlParamsSchema, () => emptySchema),
+      pathSchema: endpoint.params ?? emptySchema,
+      querySchema: endpoint.query ?? emptySchema,
     });
   }
 
@@ -184,21 +186,21 @@ export function match(def: RouterDef, url: string): RouteMatch {
       if (raw !== undefined) rawParams[name] = decodeURIComponent(raw);
     });
 
-    const decodedPath = Schema.decodeUnknownEither(entry.pathSchema)(rawParams);
-    if (Either.isLeft(decodedPath)) continue;
+    const decodedPath = Schema.decodeUnknownResult(entry.pathSchema)(rawParams);
+    if (Result.isFailure(decodedPath)) continue;
 
     // M8: a query decode failure (a declared query field whose value violates its
     // schema, e.g. `?page=abc` for `NumberFromString`) is a no-match, like a path
     // decode failure — not a thrown error. Excess/undeclared query keys are
     // ignored by `Schema.Struct`, so only declared-but-invalid values 404.
-    const decodedQuery = Schema.decodeUnknownEither(entry.querySchema)(parseQuery(search));
-    if (Either.isLeft(decodedQuery)) continue;
+    const decodedQuery = Schema.decodeUnknownResult(entry.querySchema)(parseQuery(search));
+    if (Result.isFailure(decodedQuery)) continue;
 
     return {
       _tag: "Matched",
       leaf: entry.leaf,
-      path: decodedPath.right,
-      query: decodedQuery.right,
+      path: decodedPath.success,
+      query: decodedQuery.success,
       url: normalizedUrl,
     };
   }

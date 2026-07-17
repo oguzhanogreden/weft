@@ -8,6 +8,15 @@ import { Router } from "~/index";
 const Page = (label: string) => () => h.div({}, label);
 const NotFound = () => h.h1({}, "404");
 
+// Effect 4's `NumberFromString` maps a non-numeric string to `NaN` rather than
+// failing, so add a finite check: an invalid `:id` (e.g. "abc") is then a real
+// decode failure the matcher treats as a no-match (M7).
+const IdParam = Schema.NumberFromString.pipe(
+  Schema.check(
+    Schema.makeFilter((n) => (Number.isFinite(n) ? undefined : "expected a finite number")),
+  ),
+);
+
 /** A passthrough layout `component`: renders the injected outlet directly. */
 const passthrough = Component.gen(function* () {
   const outlet = yield* Router.Outlet;
@@ -19,7 +28,7 @@ function fixture() {
     Router.layout({ component: passthrough }, [
       Router.route("about", { component: Page("about") }),
       Router.route("users/new", { component: Page("new") }),
-      Router.route("users/:id", { path: { id: Schema.NumberFromString }, component: Page("user") }),
+      Router.route("users/:id", { path: { id: IdParam }, component: Page("user") }),
       Router.route("search", {
         query: { q: Schema.optional(Schema.String) },
         component: Page("search"),

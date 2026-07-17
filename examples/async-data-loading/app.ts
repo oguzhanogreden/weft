@@ -54,7 +54,7 @@ const UserCard = ({ id }: { id: number }) =>
     Stream.fromEffect(
       fetchUser(id).pipe(
         Effect.flatMap((user) => h.div({ class: "user-card" }, [h.h3(user.name), h.p(user.email)])),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           h.div({ class: "error" }, `Error loading user ${id}: ${error.message}`),
         ),
       ),

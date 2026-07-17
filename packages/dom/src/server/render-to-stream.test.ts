@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { Boundary, h } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
-import { Chunk, Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
+import { Deferred, Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import { describe, it } from "vite-plus/test";
 import {
   renderToStream as _renderToStream,
@@ -12,9 +12,9 @@ import { NoRpc } from "../__tests__/rpc-stub";
 
 // These tests render boundary-free trees; the render fns require an AppRpcClientTag
 // unconditionally, so shadow them with the no-op `NoRpc` layer pre-provided.
-const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStream = (n: Renderable) => Stream.provide(_renderToStream(n), NoRpc);
 const renderToStreamHydratable = (n: Renderable) =>
-  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+  Stream.provide(_renderToStreamHydratable(n), NoRpc);
 const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 const run = (node: Renderable) => Effect.runPromise(Stream.mkString(renderToStream(node)));
@@ -53,7 +53,7 @@ describe("renderToStream - serialization parity", () => {
 
   it("AC-R4: a non-terminating reactive attribute resolves to its current value without hanging", async () => {
     const ref = await Effect.runPromise(SubscriptionRef.make("live"));
-    assert.equal(await run(h.div({ id: ref.changes })), '<div id="live"></div>');
+    assert.equal(await run(h.div({ id: SubscriptionRef.changes(ref) })), '<div id="live"></div>');
   });
 
   it("renders void elements without a closing tag", async () => {
@@ -80,20 +80,13 @@ describe("renderToStream - streaming behavior", () => {
     const chunks = await Effect.runPromise(
       Stream.runCollect(renderToStream(h.div({}, [h.span({}, "a"), "b"]))),
     );
-    assert.deepEqual(Chunk.toReadonlyArray(chunks), [
-      "<div>",
-      "<span>",
-      "a",
-      "</span>",
-      "b",
-      "</div>",
-    ]);
+    assert.deepEqual(chunks, ["<div>", "<span>", "a", "</span>", "b", "</div>"]);
   });
 
   it("AC-ST2: empty/boolean/null nodes contribute no chunks", async () => {
     for (const node of [null, undefined, true, false] as Renderable[]) {
       const chunks = await Effect.runPromise(Stream.runCollect(renderToStream(node)));
-      assert.equal(Chunk.size(chunks), 0);
+      assert.equal(chunks.length, 0);
     }
   });
 
@@ -112,7 +105,7 @@ describe("renderToStream - streaming behavior", () => {
 
         const node = h.div({}, [h.span({}, "shell"), slow]);
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(renderToStream(node), (chunk) =>
             Effect.sync(() => {
               collected.push(chunk);
@@ -166,7 +159,7 @@ describe("renderToStream - streaming behavior", () => {
           Effect.sync(() => {
             html += chunk;
           }).pipe(
-            Effect.zipRight(
+            Effect.andThen(
               OBSERVE ? Effect.log(`+${JSON.stringify(chunk)} | so far: ${html}`) : Effect.void,
             ),
           ),
@@ -274,7 +267,7 @@ describe("renderToStream - Suspense SSR", () => {
 
         const chunks: string[] = [];
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(
             renderToStream(
               h.div({}, [Boundary.suspend({ fallback: h.span({}, "loading") }, [GatedChild()])]),
@@ -348,7 +341,7 @@ describe("renderToStream - Suspense SSR", () => {
         const SlowB = makeGatedComponent(gateB, h.p({}, "branch B"));
 
         const html = yield* Effect.gen(function* () {
-          const fiberHtml = yield* Effect.fork(
+          const fiberHtml = yield* Effect.forkChild(
             Stream.mkString(
               renderToStream(
                 h.fragment([
@@ -415,7 +408,7 @@ describe("renderToStream - Suspense SSR", () => {
 
         const chunks: string[] = [];
 
-        const fiber = yield* Effect.fork(
+        const fiber = yield* Effect.forkChild(
           Stream.runForEach(
             renderToStream(
               Boundary.suspend({ fallback: h.span({}, "forever loading") }, [NeverChild()]),
@@ -434,8 +427,8 @@ describe("renderToStream - Suspense SSR", () => {
         assert.ok(html.includes("<span>forever loading</span>"), "fallback emitted");
         assert.ok(html.includes("<!-- suspense-end-1 -->"), "end marker emitted");
 
-        const poll = yield* Fiber.poll(fiber);
-        assert.ok(poll._tag === "None", "stream still open — patch not yet emitted");
+        const poll = fiber.pollUnsafe();
+        assert.ok(poll === undefined, "stream still open — patch not yet emitted");
         assert.ok(!html.includes("<template"), "no patch emitted yet");
 
         yield* Fiber.interrupt(fiber);

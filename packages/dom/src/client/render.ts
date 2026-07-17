@@ -3,21 +3,17 @@ import {
   Context,
   Deferred,
   Effect,
-  ExecutionStrategy,
   Exit,
   Fiber,
-  FiberRef,
   HashMap,
   HashSet,
   Layer,
-  LogLevel,
   ManagedRuntime,
   Option,
   Ref,
   Schema,
   Scope,
   Stream,
-  Subscribable,
   SubscriptionRef,
   pipe,
 } from "effect";
@@ -30,6 +26,7 @@ import {
   LIST,
   SERVER_BOUNDARY,
   Source,
+  Subscribable,
   SUSPENSE_BOUNDARY,
   toStream,
 } from "@weftui/core";
@@ -106,8 +103,8 @@ export function setElementProps(
         continue;
       }
 
-      if (key === "ref" && typeof value === "object" && Ref.RefTypeId in value) {
-        yield* Ref.set(value, Option.some(element));
+      if (key === "ref" && typeof value === "object" && SubscriptionRef.isSubscriptionRef(value)) {
+        yield* SubscriptionRef.set(value, Option.some(element));
         continue;
       }
 
@@ -275,7 +272,7 @@ function handleStyle(
             // Set new styles
             for (const [key, styleValue] of Object.entries(val)) {
               if (styleValue !== undefined && styleValue !== null) {
-                element.style.setProperty(camelToKebab(key), String(styleValue));
+                element.style.setProperty(camelToKebab(key), String(styleValue as string | number));
               }
             }
           }
@@ -343,8 +340,7 @@ function camelToKebab(str: string): string {
  *
  * With an enclosing Boundary, failure causes are routed to
  * `BoundaryContext.reportError` (unchanged behavior). Without one, the exit is
- * left unobserved so the Effect runtime reports the failure itself
- * ("Fiber terminated with an unhandled error") — raised to LogLevel.Error and
+ * observed here and a failure is logged at the `"Error"` level via `Effect.logError`,
  * annotated with `weft.region` so it is visible and attributable by default.
  * Interruption (unmount teardown) is never reported.
  *
@@ -356,23 +352,28 @@ function forkSupervised<A, E, R>(
   effect: Effect.Effect<A, E, R>,
   scope: Scope.Scope,
   errorContext: string,
-): Effect.Effect<Fiber.RuntimeFiber<A, E>, never, R> {
+): Effect.Effect<Fiber.Fiber<A, E>, never, R> {
   return Effect.gen(function* () {
     const boundaryCtx = yield* Effect.serviceOption(BoundaryContext);
     if (Option.isNone(boundaryCtx)) {
-      // Fork-time fiber refs are inherited by the child and never restored, so
-      // the raised level + annotation survive to the runtime's reportExitValue.
-      // The effect *body* runs with the ambient level restored: fibers the
-      // stream machinery forks internally inherit that ambient (default Debug)
-      // level instead of the raised one, so a failure is reported exactly once
-      // — by the subscription fiber itself, whose body-local ref is restored to
-      // the raised fork-time value before it exits.
-      const ambientLevel = yield* FiberRef.get(FiberRef.unhandledErrorLogLevel);
-      return yield* pipe(
-        Effect.forkIn(Effect.withUnhandledErrorLogLevel(effect, ambientLevel), scope),
-        Effect.withUnhandledErrorLogLevel(Option.some(LogLevel.Error)),
-        Effect.annotateLogs("weft.region", errorContext),
+      // No enclosing Boundary: observe the forked fiber's exit ourselves and
+      // report an unhandled failure at the `"Error"` level, annotated with
+      // `weft.region` so it is visible and attributable by default. Interruption
+      // (unmount teardown) is never reported. Effect 4 removed the
+      // unhandled-error-log-level FiberRef (and `withUnhandledErrorLogLevel`), so
+      // the report is explicit here rather than deferred to the runtime — which
+      // mirrors the with-Boundary branch below and is deterministic (exactly once).
+      const fiber = yield* Effect.forkIn(effect, scope);
+      yield* pipe(
+        Fiber.await(fiber),
+        Effect.flatMap((exit) =>
+          Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)
+            ? pipe(Effect.logError(exit.cause), Effect.annotateLogs("weft.region", errorContext))
+            : Effect.void,
+        ),
+        Effect.forkIn(scope),
       );
+      return fiber;
     }
     const fiber = yield* Effect.forkIn(effect, scope);
     yield* pipe(
@@ -445,7 +446,7 @@ function setEventHandler(
           context.runtime.runFork(
             pipe(
               result as Effect.Effect<void, unknown, never>,
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 if (process.env.NODE_ENV !== "development") {
                   return Effect.void;
                 }
@@ -488,8 +489,8 @@ function setEventHandler(
 function boundaryRecoveryEffect(
   props: Boundary.FailureProps,
   errorDeferred: Deferred.Deferred<void, Cause.Cause<unknown>>,
-  subtreeScope: Scope.CloseableScope,
-  parentBoundary: Option.Option<BoundaryContext["Type"]>,
+  subtreeScope: Scope.Closeable,
+  parentBoundary: Option.Option<BoundaryContext["Service"]>,
   startMarker: Comment,
   endMarker: Comment,
 ): Effect.Effect<
@@ -502,7 +503,7 @@ function boundaryRecoveryEffect(
     // flip's residual success-as-error path is dead — discharge it.
     const cause = yield* Deferred.await(errorDeferred).pipe(
       Effect.flip,
-      Effect.catchAll(() => Effect.interrupt),
+      Effect.catch(() => Effect.interrupt),
     );
     const fallbackNode = props.match(cause);
     yield* Scope.close(subtreeScope, Exit.void);
@@ -555,12 +556,12 @@ function renderBoundary(
     const startMarker = document.createComment(boundaryStartText(id));
     const endMarker = document.createComment(boundaryEndText(id));
 
-    const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const subtreeScope = yield* Scope.fork(context.scope, "sequential");
     const subtreeContext = { ...context, scope: subtreeScope };
 
     const errorDeferred = yield* Deferred.make<void, import("effect").Cause.Cause<unknown>>();
 
-    const boundaryService: BoundaryContext["Type"] = {
+    const boundaryService: BoundaryContext["Service"] = {
       reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
     };
 
@@ -569,7 +570,7 @@ function renderBoundary(
       Effect.provideService(BoundaryContext, boundaryService),
       Effect.provideService(RenderContext, subtreeContext),
       Effect.provideService(Scope.Scope, subtreeScope),
-      Effect.catchAllCause((cause) => {
+      Effect.catchCause((cause) => {
         const fallbackNode = props.match(cause);
         if (fallbackNode === null) return Effect.failCause(cause);
         return pipe(
@@ -648,11 +649,17 @@ function renderSuspenseBoundary(
           ? (rawChildren as readonly Renderable[])
           : [rawChildren as Renderable];
 
-    // Wrap direct Effect/Stream children in function-component descriptors so
-    // they go through renderComponent and register/settle with this boundary.
-    // Static element nodes ({type, props}) are passed through unchanged.
+    // Wrap direct *reactive* Effect/Stream children in function-component
+    // descriptors so they go through renderComponent and register/settle with
+    // this boundary. Static-markup Nodes carry a descriptor (and are Effects too,
+    // iterable under Effect 4) — pass them through so renderNode renders them
+    // synchronously; wrapping them would defer to an async fiber that no longer
+    // completes at mount, and they never suspend anyway.
     const suspenseChildren = childArray.map((child): Renderable => {
-      if (Effect.isEffect(child) || isStream(child)) {
+      if (
+        getElementDescriptor(child) === undefined &&
+        (Effect.isEffect(child) || isStream(child))
+      ) {
         const fn = (): Renderable => child;
         return { type: fn, props: {} };
       }
@@ -801,7 +808,7 @@ function renderServerBoundary(
         }
       }
     }).pipe(
-      Effect.catchAllCause((cause) =>
+      Effect.catchCause((cause) =>
         Effect.logError(
           `[weft] Boundary.rpc "${props.tag}" mount failed to resolve; fallback left in place.`,
           cause,
@@ -850,12 +857,19 @@ export function renderNode(
         return yield* renderNode(descriptor);
       }
       // Untagged Effect: probe for synchronous resolution (e.g. a synchronous
-      // Component.gen used directly as a child) so it renders inline. A genuinely
-      // async Effect resolves to a failure exit (AsyncFiberException) and falls
-      // through to the fork + stream-marker path below.
+      // Component.gen used directly as a child) so it renders inline. The probe
+      // runs under the *ambient* context (Effect 4's runSyncExit otherwise uses a
+      // bare runtime with no services, so a component that reads a service — e.g. a
+      // route leaf reading `Router` — would fail the probe and be forced onto the
+      // async stream-marker path, breaking in-place reuse against a later static
+      // render). A genuinely async Effect resolves to a failure exit
+      // (AsyncFiberException) and falls through to the fork + stream-marker path.
       if (Effect.isEffect(node)) {
+        const services = yield* Effect.context<never>();
         // @effect-diagnostics-next-line runEffectInsideEffect:off -- intentional sync probe
-        const exit = Effect.runSyncExit(node as Effect.Effect<Renderable, never, never>);
+        const exit = Effect.runSyncExitWith(services)(
+          node as Effect.Effect<Renderable, never, never>,
+        );
         if (Exit.isSuccess(exit)) {
           return yield* renderNode(exit.value);
         }
@@ -966,8 +980,14 @@ function renderChildren(
     const nodes: Node[] = [];
 
     for (const child of children) {
-      // Check if child is a stream/effect and handle specially
-      if (isStream(child) || Effect.isEffect(child)) {
+      // Reactive stream/effect children render through the async stream path.
+      // Static-markup Nodes are Effects too (and iterable under Effect 4), but
+      // carry a descriptor — render them synchronously via renderNode so they
+      // are in the DOM at mount rather than deferred behind stream markers.
+      if (
+        getElementDescriptor(child) === undefined &&
+        (isStream(child) || Effect.isEffect(child))
+      ) {
         const stream = toStream<Renderable>(child);
         const markers = yield* handleStreamChild(stream);
         nodes.push(...markers);
@@ -1035,8 +1055,14 @@ function renderElement(
       const childArray = Array.isArray(children) ? children : [children];
 
       for (const child of childArray) {
-        // Check if child is a stream/effect
-        if (isStream(child) || Effect.isEffect(child)) {
+        // Check if child is a *reactive* stream/effect. Static-markup Nodes are
+        // Effects too (and, in Effect 4, iterable), but they carry a descriptor
+        // and must render synchronously via renderNode — routing them through the
+        // async stream path would leave them unrendered when mount resolves.
+        if (
+          getElementDescriptor(child) === undefined &&
+          (isStream(child) || Effect.isEffect(child))
+        ) {
           const stream = toStream<Renderable>(child);
           const markers = yield* handleStreamChild(stream);
           for (const marker of markers) {
@@ -1084,7 +1110,7 @@ function renderComponent(
       // (spawned via Effect.forkScoped inside toSubscribable) are tied to this
       // component instance and not to the mount-level scope. The instance scope
       // is a child of context.scope — closing context.scope closes it too.
-      const instanceScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const instanceScope = yield* Scope.fork(context.scope, "sequential");
       const instanceContext = { ...context, scope: instanceScope };
 
       // Check whether this component is inside a Suspense boundary.
@@ -1148,7 +1174,7 @@ function handleStreamChild(
 
     // Mutable slot: the content scope from the most recent emission.
     // Closed before each new emission so nested fibers don't accumulate.
-    let currentContentScope: Scope.CloseableScope | null = null;
+    let currentContentScope: Scope.Closeable | null = null;
 
     // AC20: Set up subscription — one fiber per stream, content scope per emission.
     const effect = Stream.runForEach(stream, (value) =>
@@ -1158,7 +1184,7 @@ function handleStreamChild(
           yield* Scope.close(currentContentScope, Exit.void);
         }
         // Fork a fresh child scope for this emission from the enclosing scope.
-        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        currentContentScope = yield* Scope.fork(context.scope, "sequential");
         const contentContext = { ...context, scope: currentContentScope };
 
         // Render under the content scope: RenderContext.scope and Scope.Scope
@@ -1460,7 +1486,7 @@ interface ItemRecord {
   /** The reconciliation key (compared via Effect `Equal`, hashed via `Hash`). */
   readonly key: unknown;
   /** Per-item scope, forked from the region scope; persists across emissions. */
-  readonly scope: Scope.CloseableScope;
+  readonly scope: Scope.Closeable;
   /** This item's opening comment marker (` list-item-start-<id> `). */
   readonly startMarker: Comment;
   /** This item's closing comment marker (` list-item-end-<id> `). */
@@ -1512,7 +1538,7 @@ function renderList(
     // Region scope: parent of every per-item scope and of the `of` pump fiber.
     // Forked from the enclosing scope so region teardown (SC3) cascades to all
     // item scopes when the enclosing render scope closes.
-    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const regionScope = yield* Scope.fork(context.scope, "sequential");
 
     // Normalize `of` (static Iterable / Effect / Stream / Subscribable) and
     // subscribe to its `.changes`. The pump fiber lives in the region scope.
@@ -1588,7 +1614,7 @@ function reconcileList(
   prev: ListState,
   regionScope: Scope.Scope,
   regionEnd: Comment,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
 ): Effect.Effect<
   ListState,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
@@ -1683,14 +1709,14 @@ function renderItem(
   index: number,
   render: (item: unknown, index: number) => Renderable,
   regionScope: Scope.Scope,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
 ): Effect.Effect<
   ItemRecord,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
   RenderContext
 > {
   return Effect.gen(function* () {
-    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemScope = yield* Scope.fork(regionScope, "sequential");
     const itemContext = { ...context, scope: itemScope };
 
     const itemId = yield* nextStreamId();
@@ -1898,7 +1924,7 @@ export function mount(
     };
 
     // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
-    const cleanup = Effect.zipRight(
+    const cleanup = Effect.andThen(
       Scope.close(scope, Exit.void),
       Effect.promise(() => runtime.dispose()),
     );
@@ -2058,7 +2084,7 @@ export function hydrate(
     seedStreamIdCounter(root, context.streamIdCounter);
 
     // AC28: Cleanup effect — runs only on failure to avoid leaking runtime/scope
-    const cleanup = Effect.zipRight(
+    const cleanup = Effect.andThen(
       Scope.close(scope, Exit.void),
       Effect.promise(() => runtime.dispose()),
     );
@@ -2344,13 +2370,13 @@ function hydrateReactive(
     const settleOnce = makeSettleOnce(context.hydrationReady);
 
     let isFirst = true;
-    let currentContentScope: Scope.CloseableScope | null = null;
+    let currentContentScope: Scope.Closeable | null = null;
     const effect = Stream.runForEach(stream, (value) =>
       Effect.gen(function* () {
         if (currentContentScope !== null) {
           yield* Scope.close(currentContentScope, Exit.void);
         }
-        currentContentScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+        currentContentScope = yield* Scope.fork(context.scope, "sequential");
         const contentContext = { ...context, scope: currentContentScope };
 
         yield* Effect.gen(function* () {
@@ -2477,7 +2503,7 @@ function hydrateSubstitutedSuspense(
       payload = yield* Effect.try({
         try: () => JSON.parse(raw) as unknown,
         catch: (cause) => cause,
-      }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+      }).pipe(Effect.catch(() => Effect.succeed(null)));
     }
 
     if (payload === null || typeof payload !== "object" || !("error" in payload)) {
@@ -2546,7 +2572,7 @@ function findMatchingSuspenseEnd(startMarker: Comment): Comment | null {
  *   `<script type="application/json" data-weft-boundary-failure>` the server
  *   emitted (carrying `{ index, error }`). The client does **not** run `load`: it
  *   locates the `index`-th statically-reachable {@link Boundary.server} in
- *   `props.children`, `Schema.decode`s `error` via **that** boundary's `failure`
+ *   `props.children`, `Schema.decodeUnknownEffect`s `error` via **that** boundary's `failure`
  *   schema, `Cause.fail`s the rebuilt typed error, and feeds it to `props.match`
  *   to obtain the **same** fallback the server rendered — hydrating it against the
  *   adopted DOM at `script.nextSibling` and removing the script.
@@ -2574,11 +2600,11 @@ function hydrateFailureBoundary(
       const context = yield* RenderContext;
       const parentBoundary = yield* Effect.serviceOption(BoundaryContext);
 
-      const subtreeScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+      const subtreeScope = yield* Scope.fork(context.scope, "sequential");
       const subtreeContext = { ...context, scope: subtreeScope };
 
       const errorDeferred = yield* Deferred.make<void, Cause.Cause<unknown>>();
-      const boundaryService: BoundaryContext["Type"] = {
+      const boundaryService: BoundaryContext["Service"] = {
         reportError: (cause) => Deferred.fail(errorDeferred, cause).pipe(Effect.asVoid),
       };
 
@@ -2642,10 +2668,10 @@ function hydrateFailureBoundary(
       if (owner === undefined) {
         return null;
       }
-      const decoded = yield* Schema.decodeUnknown(owner.errorSchema)(payload.error);
+      const decoded = yield* Schema.decodeUnknownEffect(owner.errorSchema)(payload.error);
       return props.match(Cause.fail(decoded));
     }).pipe(
-      Effect.catchAll((cause) => {
+      Effect.catch((cause) => {
         console.error(
           `[weft] hydrate: boundary failure payload at ${path} failed to decode; cannot replay.`,
           cause,
@@ -2682,7 +2708,7 @@ function hydrateFailureBoundary(
 interface ServerBoundaryProps {
   readonly tag: string;
   readonly payload: () => unknown;
-  readonly successSchema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Codec<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
   readonly fallback?: Renderable;
 }
@@ -2748,10 +2774,19 @@ function makeClientResource(
     });
 
     return {
-      value: valueRef as Subscribable.Subscribable<unknown>,
+      value: Subscribable.make({
+        get: SubscriptionRef.get(valueRef),
+        changes: SubscriptionRef.changes(valueRef),
+      }),
       refetch,
-      pending: pendingRef as Subscribable.Subscribable<boolean>,
-      error: errorRef as Subscribable.Subscribable<Option.Option<unknown>>,
+      pending: Subscribable.make({
+        get: SubscriptionRef.get(pendingRef),
+        changes: SubscriptionRef.changes(pendingRef),
+      }),
+      error: Subscribable.make({
+        get: SubscriptionRef.get(errorRef),
+        changes: SubscriptionRef.changes(errorRef),
+      }),
     };
   });
 }
@@ -2815,8 +2850,8 @@ function hydrateServerBoundary(
       try: () => JSON.parse(raw) as unknown,
       catch: (cause) => cause,
     }).pipe(
-      Effect.flatMap((encoded) => Schema.decodeUnknown(props.successSchema)(encoded)),
-      Effect.catchAll((cause) => {
+      Effect.flatMap((encoded) => Schema.decodeUnknownEffect(props.successSchema)(encoded)),
+      Effect.catch((cause) => {
         console.error(
           `[weft] hydrate: server boundary payload at ${path} failed to decode; cannot replay.`,
           cause,
@@ -2955,7 +2990,7 @@ function hydrateList(
 
     // Region scope: parent of every per-item scope and of the `of` pump fiber
     // (mirrors renderList). Closing the enclosing scope cascades teardown.
-    const regionScope = yield* Scope.fork(context.scope, ExecutionStrategy.sequential);
+    const regionScope = yield* Scope.fork(context.scope, "sequential");
     const subscribable = yield* Source.toSubscribable(of).pipe(
       Effect.provideService(Scope.Scope, regionScope),
     );
@@ -3078,7 +3113,7 @@ function hydrateFirstListEmission(
   regionScope: Scope.Scope,
   regionStart: Comment,
   regionEnd: Comment,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
   path: string,
 ): Effect.Effect<ListState, HydrateError, RenderContext> {
   return Effect.gen(function* () {
@@ -3143,11 +3178,11 @@ function hydrateItem(
   render: (item: unknown, index: number) => Renderable,
   adopted: AdoptedItem,
   regionScope: Scope.Scope,
-  context: RenderContext["Type"],
+  context: RenderContext["Service"],
   path: string,
 ): Effect.Effect<ItemRecord, HydrateError, RenderContext> {
   return Effect.gen(function* () {
-    const itemScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const itemScope = yield* Scope.fork(regionScope, "sequential");
     const itemContext = { ...context, scope: itemScope };
     const node = render(item, index);
 
@@ -3185,7 +3220,7 @@ function hydrateItem(
       `[weft] hydrate: list item at ${path} diverged from server output (${divergence}); patching.`,
     );
     yield* Scope.close(itemScope, Exit.void);
-    const freshScope = yield* Scope.fork(regionScope, ExecutionStrategy.sequential);
+    const freshScope = yield* Scope.fork(regionScope, "sequential");
     const freshContext = { ...context, scope: freshScope };
 
     removeNodesBetweenMarkers(adopted.startMarker, adopted.endMarker);

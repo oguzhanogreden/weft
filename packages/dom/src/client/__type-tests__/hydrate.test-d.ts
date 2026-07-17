@@ -7,7 +7,7 @@
 // `core/.../__type-tests__/rpc.test-d.ts` for the underlying
 // `AssertNoServerOnly` behaviour this relies on.
 import { Boundary, ServerTag, h, type Node } from "@weftui/core";
-import { Rpc } from "@effect/rpc";
+import { Rpc } from "effect/unstable/rpc";
 import { Effect, Schema } from "effect";
 import { hydrate } from "../render";
 

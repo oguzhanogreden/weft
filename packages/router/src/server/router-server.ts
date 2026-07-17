@@ -1,20 +1,19 @@
-import { AppRpcClientTag, type Node } from "@weftui/core";
+import { AppRpcClientTag, type Node, Subscribable } from "@weftui/core";
 import {
   renderToHydratableShell,
   renderToStringHydratable,
   SuspenseFailureHandlerTag,
   type SuspenseFailureHandler,
 } from "@weftui/dom/server";
+import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import {
-  HttpApiBuilder,
-  HttpApiEndpoint,
-  HttpApiGroup,
+  HttpRouter,
   HttpServer,
   HttpServerRequest,
   HttpServerResponse,
-} from "@effect/platform";
-import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "@effect/rpc";
-import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream, Subscribable } from "effect";
+} from "effect/unstable/http";
+import { type RpcGroup, RpcSerialization, RpcServer, RpcTest } from "effect/unstable/rpc";
+import { Cause, Effect, Exit, Layer, Option, Schema, Scope, Stream } from "effect";
 import type { RouterDef } from "../compile";
 import { isRouterNotFound, RouterNotFound } from "../errors";
 import type { RouteMatch } from "../matcher";
@@ -128,7 +127,7 @@ export namespace RouterServer {
   }
 
   /** Builds the fixed per-request `Router` from an already-resolved match; `navigate` is a no-op on the server. */
-  function serverRouter(matched: RouteMatch): Router["Type"] {
+  function serverRouter(matched: RouteMatch): Router["Service"] {
     // Server render is buffered, so navigation state is a client-only concern: a
     // constant `Idle` keeps the service shape sound on both sides (AC-N10).
     const idle: NavState = { _tag: "Idle" };
@@ -171,7 +170,7 @@ export namespace RouterServer {
         }),
       );
     }
-    return Layer.scoped(
+    return Layer.effect(
       AppRpcClientTag,
       Effect.map(
         // The group is `RpcGroup<any>` (runtime-assembled by the app); the flat
@@ -194,7 +193,7 @@ export namespace RouterServer {
   function renderDocument(
     options: RenderOptions,
     app: Node<never, never>,
-    router: Router["Type"],
+    router: Router["Service"],
   ): Effect.Effect<string, Error> {
     const document = Effect.provideService(options.document({}), Router.Outlet, app);
     return renderToStringHydratable(document).pipe(
@@ -273,7 +272,7 @@ export namespace RouterServer {
   function notFoundSuspenseHandler(def: RouterDef): SuspenseFailureHandler {
     return {
       handle: (cause) => {
-        const failure = Cause.failureOption(cause);
+        const failure = Cause.findErrorOption(cause);
         return Option.isSome(failure) && isRouterNotFound(failure.value)
           ? Option.some({
               content: def.compiled.notFound() as Node<never, never>,
@@ -311,7 +310,7 @@ export namespace RouterServer {
         // Same render-time provide seam as the buffered path (renderDocument): the
         // shell walk and every leaf drain in this context, so app-wide services reach them.
         Effect.provide(options.context ?? Layer.empty),
-        Scope.extend(scope),
+        Scope.provide(scope),
         Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause))),
       );
       const body = Stream.make(`<!DOCTYPE html>\n${shell}`).pipe(
@@ -376,7 +375,7 @@ export namespace RouterServer {
     const fallbackGroup = HttpApiGroup.make("fallback").add(
       // `"*"` (platform's match-any path) is not a `/${string}` literal; the cast is
       // the same loosening `buildHttpApi` uses for concrete leaf patterns.
-      HttpApiEndpoint.get("catchAll", "*" as `/${string}`).addSuccess(Schema.String),
+      HttpApiEndpoint.get("catchAll", "*" as `/${string}`, { success: Schema.String }),
     );
     // oxlint-disable-next-line typescript/no-explicit-any
     const api = (def.httpApi as any).add(fallbackGroup);
@@ -394,8 +393,8 @@ export namespace RouterServer {
               leafRenderer(def, options, {
                 _tag: "Matched",
                 leaf,
-                path: request.path as Record<string, unknown>,
-                query: request.urlParams as Record<string, unknown>,
+                path: request.params as Record<string, unknown>,
+                query: request.query as Record<string, unknown>,
                 url: (request.request as HttpServerRequest.HttpServerRequest).url,
               }),
             ),
@@ -412,29 +411,32 @@ export namespace RouterServer {
           renderNoMatch(def, options, (request.request as HttpServerRequest.HttpServerRequest).url),
         ),
     );
-    // oxlint-disable-next-line typescript/no-explicit-any
-    const apiLayer: Layer.Layer<any, never, never> = builder
-      .api(api)
-      .pipe(Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)));
-    const { handler: pageHandler } = HttpApiBuilder.toWebHandler(
-      Layer.mergeAll(apiLayer, HttpServer.layerContext),
+    // Register the HttpApi page routes into the ambient `HttpRouter`, provided
+    // with the page + fallback group handlers.
+    const apiRoutes = HttpApiBuilder.layer(api).pipe(
+      Layer.provide(Layer.mergeAll(pagesLayer, fallbackLayer)),
     );
 
-    // `Boundary.rpc` data is served out-of-band from the page routes: an rpc web
-    // handler over the app's merged `RpcGroup` + JSON serialization, claiming
-    // `POST /_eui/rpc`. The combined handler delegates that path to rpc and every
-    // other URL to the HttpApi page dispatch above. With no `rpc` configured the
-    // path is not claimed — `/_eui/rpc` falls through to page dispatch (404).
+    // `Boundary.rpc` data is served in-band: the app's merged `RpcGroup` (+ JSON
+    // serialization) registers an rpc route at `POST /_eui/rpc` on the same
+    // `HttpRouter` as the page routes; the router dispatches by path, so the rpc
+    // route wins over the catch-all page dispatch. With no `rpc` configured the
+    // route is not registered and `/_eui/rpc` falls through to page dispatch (404).
     const rpc = options.rpc;
-    let handler = pageHandler;
-    if (rpc !== undefined) {
-      const { handler: rpcHandler } = RpcServer.toWebHandler(rpc.group, {
-        // oxlint-disable-next-line typescript/no-explicit-any
-        layer: Layer.mergeAll(rpc.handlers, RpcSerialization.layerJson) as any,
-      });
-      handler = (request: Request): Promise<Response> =>
-        new URL(request.url).pathname === RPC_PATH ? rpcHandler(request) : pageHandler(request);
-    }
+    const rpcRoutes =
+      rpc !== undefined
+        ? RpcServer.layerHttp({ group: rpc.group, path: RPC_PATH, protocol: "http" }).pipe(
+            // oxlint-disable-next-line typescript/no-explicit-any
+            Layer.provide(Layer.mergeAll(rpc.handlers, RpcSerialization.layerNdjson) as any),
+          )
+        : Layer.empty;
+
+    // A single buffered web handler over the merged router (page + rpc routes)
+    // plus the platform services those layers require.
+    const { handler } = HttpRouter.toWebHandler(
+      // oxlint-disable-next-line typescript/no-explicit-any
+      Layer.mergeAll(apiRoutes, rpcRoutes, HttpServer.layerServices) as any,
+    );
 
     perDef.set(options.document, handler);
     return handler;

@@ -46,3 +46,6 @@ packages/*/docs/
 # Graphify
 graphify-out/cost.json
 graphify-out/cache/
+
+# migrations
+effect-smol

@@ -5,7 +5,7 @@ import { Effect, Stream } from "effect";
  * requirements channels so it matches streams regardless of `E`/`R`.
  */
 export function isStream(value: unknown): value is Stream.Stream<unknown, any, any> {
-  return typeof value === "object" && value != null && Stream.StreamTypeId in value;
+  return typeof value === "object" && value != null && Stream.TypeId in value;
 }
 
 /**

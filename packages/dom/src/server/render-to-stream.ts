@@ -7,22 +7,12 @@ import {
   NoPropValue,
   SERVER_BOUNDARY,
   Source,
+  Subscribable,
   SUSPENSE_BOUNDARY,
   type Renderable,
 } from "@weftui/core";
 import { getElementDescriptor, isStream, toStream } from "@weftui/core";
-import {
-  Cause,
-  Effect,
-  Exit,
-  Option,
-  Queue,
-  Ref,
-  Schema,
-  Scope,
-  Stream,
-  Subscribable,
-} from "effect";
+import { Cause, Effect, Exit, Option, Queue, Ref, Schema, Scope, Stream } from "effect";
 import {
   listItemEndText,
   listItemStartText,
@@ -80,7 +70,7 @@ interface ServerSuspenseCtx {
   /**
    * Single-slot collector for a `Boundary.server` **load failure** being
    * relocated to its enclosing failure `Boundary` (typed-failure replay). A
-   * failing server boundary `Schema.encode`s its error and stashes
+   * failing server boundary `Schema.encodeEffect`s its error and stashes
    * `{ owner, encoded }` here, then re-fails the original cause; the enclosing
    * failure boundary drains it (after its `match` handles the cause) to emit the
    * `data-weft-boundary-failure` payload before its fallback. `null` on the plain
@@ -93,7 +83,7 @@ interface ServerSuspenseCtx {
 interface ServerBoundaryFailure {
   /** The failing `Boundary.server`'s live `props` (matched by reference for its index). */
   readonly owner: ServerBoundaryReplayProps;
-  /** The `Schema.encode`d typed `ELoad` error, ready to embed in the payload. */
+  /** The `Schema.encodeEffect`d typed `ELoad` error, ready to embed in the payload. */
   readonly encoded: unknown;
 }
 
@@ -216,8 +206,8 @@ function renderSuspenseSSRInline(
         // ambient SuspenseFailureHandler. Absent seam / Option.none keeps the
         // swallow default (AC-ST8); a failing substitute render degrades to it
         // via the trailing Effect.ignore (AC-FH6).
-        Effect.catchAllCause((cause) =>
-          Cause.isInterruptedOnly(cause)
+        Effect.catchCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
             ? Effect.failCause(cause)
             : Effect.gen(function* () {
                 const handler = yield* Effect.serviceOption(SuspenseFailureHandlerTag);
@@ -302,10 +292,10 @@ function renderBoundarySSR(
         : (props.children as Renderable[])
   ) as Renderable;
 
-  return Stream.unwrapScoped(
+  return Stream.unwrap(
     Effect.gen(function* () {
       const childrenHtml = yield* Stream.mkString(renderFn(childrenNode)).pipe(
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           Effect.gen(function* () {
             const fallbackNode = props.match(cause);
             // Not handled here: re-fail without draining so any stashed failure
@@ -348,18 +338,18 @@ function renderBoundarySSR(
 interface ServerBoundarySSRProps {
   readonly tag: string;
   readonly payload: () => unknown;
-  readonly successSchema: Schema.Schema<unknown, unknown>;
-  readonly errorSchema: Schema.Schema<unknown, unknown>;
+  readonly successSchema: Schema.Codec<unknown, unknown>;
+  readonly errorSchema: Schema.Codec<unknown, unknown>;
   readonly render: (resource: Boundary.Resource<unknown>) => Renderable;
 }
 
 /**
- * On an rpc **failure** during a hydratable pass, `Schema.encode`s the resolved
+ * On an rpc **failure** during a hydratable pass, `Schema.encodeEffect`s the resolved
  * error via `props.errorSchema` and stashes `{ owner, encoded }` in
  * `failureCollector` for the enclosing failure `Boundary` to relocate, then
  * re-fails the **original** cause so `match` still sees it unchanged. No-ops
  * (re-fails unchanged) on the plain passes (`failureCollector === null`), on a
- * defect (no `Cause.failureOption`), or if the encode itself fails (e.g. a
+ * defect (no `Cause.findErrorOption`), or if the encode itself fails (e.g. a
  * transport defect against an rpc with no `error` schema, where `errorSchema` is
  * `Never`) — all of which fall back to a server fallback + client mismatch.
  */
@@ -371,11 +361,11 @@ function stashServerBoundaryFailure(
   if (failureCollector === null) {
     return Effect.failCause(cause);
   }
-  const error = Cause.failureOption(cause);
+  const error = Cause.findErrorOption(cause);
   if (Option.isNone(error)) {
     return Effect.failCause(cause);
   }
-  return Schema.encode(props.errorSchema)(error.value).pipe(
+  return Schema.encodeEffect(props.errorSchema)(error.value).pipe(
     Effect.flatMap((encoded) => Ref.set(failureCollector, Option.some({ owner: props, encoded }))),
     // Whether the encode succeeds or fails, re-raise the original cause so the
     // enclosing boundary's `match` sees the unchanged failure.
@@ -440,13 +430,13 @@ function renderServerBoundarySSR(
       const data = yield* (
         client.call(props.tag, props.payload()) as Effect.Effect<unknown, Error>
       ).pipe(
-        Effect.catchAllCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
+        Effect.catchCause((cause) => stashServerBoundaryFailure(props, failureCollector, cause)),
       );
       const childrenHtml = renderFn(props.render(staticResource(data)));
       if (!emitPayload) {
         return childrenHtml;
       }
-      const encoded = yield* Schema.encode(props.successSchema)(data);
+      const encoded = yield* Schema.encodeEffect(props.successSchema)(data);
       const payload = `<script type="application/json">${serializeJsonForScript(encoded)}</script>`;
       return Stream.make(payload).pipe(Stream.concat(childrenHtml));
     }),
@@ -822,7 +812,7 @@ export const renderToStreamFallbackOnly = (
  * after all pending boundaries have emitted their patch.
  */
 export const renderToStream = (node: Renderable): Stream.Stream<string, Error, AppRpcClientTag> =>
-  Stream.unwrapScoped(
+  Stream.unwrap(
     Effect.gen(function* () {
       const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
       const pendingCount = yield* Ref.make(0);
@@ -885,6 +875,12 @@ export const makeHydratableSSR = (
 }> =>
   Effect.gen(function* () {
     const patchQueue = yield* Queue.unbounded<Option.Option<string>>();
+    // If the scope closes while resolution fibers are still pending (consumer
+    // disconnect, AC-SH6), those fibers are interrupted before they can offer
+    // the terminal None — so the patch stream would hang. Offer None on scope
+    // close so the stream always terminates; harmless after a normal close (the
+    // last-settling boundary already offered None).
+    yield* Scope.addFinalizer(scope, Effect.asVoid(Queue.offer(patchQueue, Option.none())));
     const pendingCount = yield* Ref.make(0);
     const idCounter = { current: 0 };
     const failureCollector: FailureCollector = yield* Ref.make(
@@ -921,7 +917,7 @@ export const makeHydratableSSR = (
 export const renderToStreamHydratable = (
   node: Renderable,
 ): Stream.Stream<string, Error, AppRpcClientTag> =>
-  Stream.unwrapScoped(
+  Stream.unwrap(
     Effect.gen(function* () {
       const scope = yield* Effect.scope;
       const { mainStream, patches } = yield* makeHydratableSSR(node, scope);

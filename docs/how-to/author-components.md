@@ -43,7 +43,7 @@ const Counter = () =>
     const count = yield* SubscriptionRef.make(0);
 
     return yield* h.div([
-      h.span([count.changes]),
+      h.span([SubscriptionRef.changes(count)]),
       h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
     ]);
   });
@@ -63,10 +63,10 @@ so it is already in context when you need it.
 This matters the moment a component starts **background work** — a subscription, an
 observer of a `ref`, a polling timer, anything you `fork`. The rule:
 
-> Fork background work with **`Effect.forkScoped`**, never a bare `Effect.fork`.
+> Fork background work with **`Effect.forkScoped`**, never a bare `Effect.forkChild`.
 
 `Effect.forkScoped` attaches the fiber to the instance scope, so it keeps running for
-the component's lifetime and is interrupted on unmount. A bare `Effect.fork` instead
+the component's lifetime and is interrupted on unmount. A bare `Effect.forkChild` instead
 attaches the fiber to the component-body fiber — the one that runs your `Effect.gen` to
 produce the tree. That fiber completes the instant the gen returns its node, so the
 forked work is cancelled almost immediately.
@@ -82,12 +82,12 @@ const AutoFocusInput = () =>
     const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
     yield* pipe(
-      inputRef.changes,
+      SubscriptionRef.changes(inputRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((el) => Effect.sync(() => el.value.focus())),
       Effect.forkScoped, // ✅ tied to the instance scope — survives until unmount
-      // Effect.fork,     // ❌ tied to the body fiber — interrupted when the gen returns
+      // Effect.forkChild, // ❌ tied to the body fiber — interrupted when the gen returns
     );
 
     return yield* h.input({ ref: inputRef, type: "text" });

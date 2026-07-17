@@ -9,7 +9,7 @@ description: Capture a DOM element with the ref prop into a SubscriptionRef<Opti
 
 **Goal:** get a handle to a real DOM element — to focus it, measure it, or call an imperative browser API on it.
 
-Declare a `SubscriptionRef<Option<HTMLElement>>`, attach it with the `ref` prop, and either **react** to the element appearing (a scoped observer on `.changes`) or **read** it later inside a handler.
+Declare a `SubscriptionRef<Option<HTMLElement>>`, attach it with the `ref` prop, and either **react** to the element appearing (a scoped observer on `SubscriptionRef.changes(ref)`) or **read** it later inside a handler.
 
 ```typescript
 import { h } from "@weftui/core";
@@ -21,7 +21,7 @@ const AutoFocusInput = () =>
 
     // Observe the element becoming available, once, and focus it.
     yield* pipe(
-      inputRef.changes,
+      SubscriptionRef.changes(inputRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
       Stream.runForEach((el) => Effect.sync(() => el.value.focus())),
@@ -35,8 +35,8 @@ const AutoFocusInput = () =>
 ## How it works
 
 - **The `ref` prop** takes a `SubscriptionRef<Option<T>>`. The renderer sets it to `Option.some(element)` **once**, when the element is created — so the ref is an `Option`: `None` until mount, `Some(el)` after.
-- **React to mount** by observing `ref.changes`: `Stream.filter(Option.isSome)` waits for the element, `Stream.take(1)` takes just the first appearance, and `Stream.runForEach` does the imperative work. This is the equivalent of a mount effect.
-- **Use `Effect.forkScoped`, not `Effect.fork`.** `forkScoped` ties the observer fiber to the component's **instance scope** (the ambient `Scope` the renderer provides), so it lives as long as the component is mounted. A bare `Effect.fork` binds to the transient component-body fiber and is interrupted the instant the generator returns — the observer would never fire.
+- **React to mount** by observing `SubscriptionRef.changes(ref)`: `Stream.filter(Option.isSome)` waits for the element, `Stream.take(1)` takes just the first appearance, and `Stream.runForEach` does the imperative work. This is the equivalent of a mount effect.
+- **Use `Effect.forkScoped`, not `Effect.forkChild`.** `forkScoped` ties the observer fiber to the component's **instance scope** (the ambient `Scope` the renderer provides), so it lives as long as the component is mounted. A bare `Effect.forkChild` binds to the transient component-body fiber and is interrupted the instant the generator returns — the observer would never fire.
 
 ## Read a ref imperatively
 
@@ -58,6 +58,6 @@ const scroll = () =>
 
 ## See also
 
-- [Reactive Primitives](../explanation/reactive-primitives.md) — `SubscriptionRef` and `.changes`
+- [Reactive Primitives](../explanation/reactive-primitives.md) — `SubscriptionRef` and `SubscriptionRef.changes`
 - [Author Components](./author-components.md) — instance scope and `Effect.forkScoped`
 - [examples/element-ref](../../examples/element-ref) — auto-focus, element measurement, and imperative scroll via refs

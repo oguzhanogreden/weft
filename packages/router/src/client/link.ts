@@ -1,4 +1,4 @@
-import { Effect, Runtime, type Scope } from "effect";
+import { Effect, type Scope } from "effect";
 import type { RouterDef } from "../compile";
 import { match } from "../matcher";
 
@@ -19,7 +19,7 @@ export function installLinkInterceptor(
   navigate: (to: string) => Effect.Effect<void>,
 ): Effect.Effect<void, never, Scope.Scope> {
   return Effect.gen(function* () {
-    const runtime = yield* Effect.runtime<never>();
+    const services = yield* Effect.context<never>();
 
     const onClick = (event: MouseEvent): void => {
       // L2: ignore non-plain clicks.
@@ -73,7 +73,7 @@ export function installLinkInterceptor(
       if (match(def, to)._tag !== "Matched") return;
 
       event.preventDefault();
-      Runtime.runFork(runtime)(navigate(to));
+      Effect.runForkWith(services)(navigate(to));
     };
 
     yield* Effect.acquireRelease(

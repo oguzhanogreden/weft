@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { Cause, Data, Deferred, Effect, Option, pipe, Stream } from "effect";
+import { Cause, Data, Deferred, Effect, Filter, pipe, Result, Stream } from "effect";
 import { Boundary, h, List } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
 import { JSDOM } from "jsdom";
@@ -111,7 +111,7 @@ describe("AC1: construction-time error handled synchronously", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+      Boundary.catchCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
         throwsAtConstruction(new Error("boom")),
       ]),
       root,
@@ -129,7 +129,7 @@ describe("AC1: construction-time error handled synchronously", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+      Boundary.catchCause({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
         throwsAtConstruction(new Error("boom")),
       ]),
       root,
@@ -153,7 +153,7 @@ describe("AC11: construction-time match returns null → mount fails", () => {
 
     await assert.rejects(
       runMount(
-        Boundary.catchAll({ fallback: () => h.span({}, "err") }, [
+        Boundary.catch({ fallback: () => h.span({}, "err") }, [
           throwsAtConstruction(new Error("unhandled")),
         ]),
         root,
@@ -180,7 +180,7 @@ describe("AC15: unhandled post-mount error is surfaced, not swallowed", () => {
     );
 
     const { handle, entries } = await runMountCapturingErrors(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [dyingStream]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "fb") }, [dyingStream]),
       root,
     );
 
@@ -209,7 +209,7 @@ describe("AC16: boundary comment markers in DOM", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [h.div({ class: "ok" }, "hello")]),
+      Boundary.catch({ fallback: () => h.span({}, "err") }, [h.div({ class: "ok" }, "hello")]),
       root,
     );
 
@@ -242,7 +242,7 @@ describe("AC2: post-mount stream failure → DOM swap to fallback", () => {
     );
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "stream error") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "stream error") }, [
         failingStream,
       ]),
       root,
@@ -266,7 +266,7 @@ describe("AC2: post-mount stream failure → DOM swap to fallback", () => {
     );
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "caught") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "caught") }, [
         h.div({ class: "wrapper" }, [failingStream]),
       ]),
       root,
@@ -288,7 +288,7 @@ describe("AC2: post-mount stream failure → DOM swap to fallback", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
         Effect.fail(new FooError({ msg: "boom" })),
       ]),
       root,
@@ -313,7 +313,7 @@ describe("AC5: BoundaryContext provided; inner boundary shadows outer", () => {
     let outerTriggered = false;
 
     const handle = await runMount(
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: () => {
             outerTriggered = true;
@@ -321,7 +321,7 @@ describe("AC5: BoundaryContext provided; inner boundary shadows outer", () => {
           },
         },
         [
-          Boundary.catchAll({ fallback: () => h.span({ class: "inner-fallback" }, "inner") }, [
+          Boundary.catch({ fallback: () => h.span({ class: "inner-fallback" }, "inner") }, [
             Effect.fail(new FooError({ msg: "inner" })),
           ]),
         ],
@@ -350,7 +350,7 @@ describe("AC6: catchTag re-raise propagates to parent", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer caught") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "outer-fallback" }, "outer caught") }, [
         Boundary.catchTag(
           { tag: "Foo", fallback: () => h.span({ class: "inner-fallback" }, "inner") },
           [failWith("Bar")],
@@ -380,9 +380,7 @@ describe("AC19: markers remain after swap", () => {
     const controlledStream = Stream.fromEffect(Deferred.await(failSignal));
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
-        controlledStream,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [controlledStream]),
       root,
     );
 
@@ -403,18 +401,20 @@ describe("AC19: markers remain after swap", () => {
   });
 });
 
-// ── catchSome / catchIf with non-matching predicate re-raise ──────────────────
+// ── catchFilter / catchIf with non-matching predicate re-raise ──────────────────
 
-describe("edge: catchSome non-matching re-raises to parent", () => {
-  it("outer boundary catches when catchSome returns none", async () => {
+describe("edge: catchFilter non-matching re-raises to parent", () => {
+  it("outer boundary catches when catchFilter declines", async () => {
     createTestDOM();
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
-        Boundary.catchSome({ fallback: () => Option.none() }, [
-          Effect.fail(new FooError({ msg: "e" })),
-        ]),
+      Boundary.catch({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
+        Boundary.catchFilter(
+          Filter.make((e) => Result.fail(e)),
+          () => h.span({}),
+          [Effect.fail(new FooError({ msg: "e" }))],
+        ),
       ]),
       root,
     );
@@ -433,7 +433,7 @@ describe("edge: catchIf false re-raises to parent", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAll({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "outer-fallback" }, "outer") }, [
         Boundary.catchIf({ predicate: () => false, fallback: () => h.span({}, "inner") }, [
           Effect.fail(new FooError({ msg: "e" })),
         ]),
@@ -459,7 +459,7 @@ describe("AC3: event handler errors are NOT caught by boundary", () => {
     let fallbackRendered = false;
 
     const handle = await runMount(
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: () => {
             fallbackRendered = true;
@@ -503,7 +503,7 @@ describe("nested: inner catches, outer not triggered", () => {
     let outerCalled = false;
 
     const handle = await runMount(
-      Boundary.catchAll(
+      Boundary.catch(
         {
           fallback: () => {
             outerCalled = true;
@@ -511,7 +511,7 @@ describe("nested: inner catches, outer not triggered", () => {
           },
         },
         [
-          Boundary.catchAll({ fallback: () => h.span({ class: "inner-fb" }, "inner") }, [
+          Boundary.catch({ fallback: () => h.span({ class: "inner-fb" }, "inner") }, [
             Effect.fail(new FooError({ msg: "inner" })),
           ]),
           h.span({ class: "sibling" }, "sibling"),
@@ -538,7 +538,7 @@ describe("nested: inner re-raises, outer catches", () => {
     const root = createRoot();
 
     const handle = await runMount(
-      Boundary.catchAllCause({ fallback: () => h.span({ class: "outer-fb" }, "outer") }, [
+      Boundary.catchCause({ fallback: () => h.span({ class: "outer-fb" }, "outer") }, [
         Boundary.catchTag({ tag: "Bar", fallback: () => h.span({ class: "inner-fb" }, "inner") }, [
           failWith("Foo"),
         ]),
@@ -558,7 +558,7 @@ describe("nested: inner re-raises, outer catches", () => {
 // ── AC8: no boundary — failure exit left unobserved, runtime reports it ───────
 // With no enclosing Boundary the subscription fiber's failure exit is left
 // unobserved; the Effect runtime logs "Fiber terminated with an unhandled
-// error" at LogLevel.Error (raised from the default Debug), annotated with
+// error" at the "Error" level (raised from the default "Debug"), annotated with
 // `weft.region` identifying the failing region/prop. Interruption stays silent.
 
 describe("AC8: no boundary — runtime reports unhandled subscription failure", () => {
@@ -682,7 +682,7 @@ describe("AC8: no boundary — runtime reports unhandled subscription failure", 
     );
 
     const { handle, entries } = await runMountCapturingErrors(
-      Boundary.catchAllCause({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failing]),
+      Boundary.catchCause({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failing]),
       root,
     );
 

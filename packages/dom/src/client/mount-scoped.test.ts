@@ -52,7 +52,9 @@ const renderToStringHydratable = (n: Renderable) =>
   Effect.provide(_renderToStringHydratable(n), NoRpc);
 
 /** A hand-rolled scoped service whose acquire/release we can observe. */
-class Probe extends Context.Tag("test/mount-scoped/Probe")<Probe, { readonly value: number }>() {}
+class Probe extends Context.Service<Probe, { readonly value: number }>()(
+  "test/mount-scoped/Probe",
+) {}
 
 // ============================================================================
 // AC-S2: ambient scope close unmounts (subscriptions interrupted, DOM retained)
@@ -67,7 +69,7 @@ describe("AC-S2: ambient scope close unmounts", () => {
     await Effect.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
-          yield* mountScoped(h.div({}, [region.changes]), root);
+          yield* mountScoped(h.div({}, [SubscriptionRef.changes(region)]), root);
           yield* tickE;
           assert.equal(root.textContent, "first");
           yield* SubscriptionRef.set(region, "second");
@@ -98,7 +100,7 @@ describe("AC-S3: scoped layer outside the region stays alive", () => {
     let acquired = false;
     let released = false;
 
-    const ProbeLive = Layer.scoped(
+    const ProbeLive = Layer.effect(
       Probe,
       Effect.acquireRelease(
         Effect.sync(() => {
@@ -135,7 +137,7 @@ describe("AC-S4: teardown ordering", () => {
     const root = createRoot();
     const events: string[] = [];
 
-    const LayerLive = Layer.scoped(
+    const LayerLive = Layer.effect(
       Probe,
       Effect.acquireRelease(Effect.succeed({ value: 1 }), () =>
         Effect.sync(() => void events.push("layer-teardown")),
@@ -219,7 +221,7 @@ describe("AC-S6: failing render", () => {
     );
 
     assert.ok(Exit.isFailure(exit), "region fails");
-    const err = Exit.isFailure(exit) ? Option.getOrNull(Cause.failureOption(exit.cause)) : null;
+    const err = Exit.isFailure(exit) ? Option.getOrNull(Cause.findErrorOption(exit.cause)) : null;
     assert.ok(err instanceof UnsupportedNodeTypeError, "fails with UnsupportedNodeTypeError");
     assert.equal(probe, 1, "scope still tears down cleanly (finalizer runs once)");
   });
@@ -235,7 +237,7 @@ describe("hydrateScoped parity", () => {
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("srv"));
 
-    const app = h.div({}, [region.changes]);
+    const app = h.div({}, [SubscriptionRef.changes(region)]);
     const html = await Effect.runPromise(renderToStringHydratable(app));
     root.innerHTML = html;
 
@@ -271,7 +273,7 @@ describe("AC-S9: hardening — plain mount/hydrate honor an ambient scope", () =
     await Effect.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
-          yield* mount(h.div({}, [region.changes]), root);
+          yield* mount(h.div({}, [SubscriptionRef.changes(region)]), root);
           yield* tickE;
           assert.equal(root.textContent, "first");
         }),
@@ -288,7 +290,7 @@ describe("AC-S9: hardening — plain mount/hydrate honor an ambient scope", () =
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("srv"));
 
-    const app = h.div({}, [region.changes]);
+    const app = h.div({}, [SubscriptionRef.changes(region)]);
     const html = await Effect.runPromise(renderToStringHydratable(app));
     root.innerHTML = html;
 
@@ -320,7 +322,9 @@ describe("AC-S8: no-scope regression — plain mount via bare runPromise", () =>
     const root = createRoot();
     const region = await Effect.runPromise(SubscriptionRef.make<Renderable>("first"));
 
-    const handle = await Effect.runPromise(mount(h.div({}, [region.changes]), root));
+    const handle = await Effect.runPromise(
+      mount(h.div({}, [SubscriptionRef.changes(region)]), root),
+    );
     await tick();
     assert.equal(root.textContent, "first");
 

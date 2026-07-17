@@ -16,7 +16,8 @@
 
 import { getElementDescriptor } from "@weftui/core";
 import type { Renderable } from "@weftui/core";
-import { Effect, Exit, Subscribable } from "effect";
+import { Effect, Exit } from "effect";
+import { Subscribable } from "@weftui/core";
 import type { RouteMatch } from "./matcher";
 import { Router } from "./router-service";
 
@@ -59,8 +60,8 @@ export interface ResolvedCommitSlot {
  * Overwrites any stale entry — latest-wins already guarantees only the newest
  * navigation reaches the commit step (AC-R6).
  */
-export function setResolvedCommit(router: Router["Type"], entry: ResolvedCommitEntry): void {
-  (router as Router["Type"] & ResolvedCommitSlot)[ResolvedCommit] = entry;
+export function setResolvedCommit(router: Router["Service"], entry: ResolvedCommitEntry): void {
+  (router as Router["Service"] & ResolvedCommitSlot)[ResolvedCommit] = entry;
 }
 
 /**
@@ -71,10 +72,10 @@ export function setResolvedCommit(router: Router["Type"], entry: ResolvedCommitE
  * invocation in `renderLevel`.
  */
 export function takeResolvedCommit(
-  router: Router["Type"],
+  router: Router["Service"],
   url: string,
 ): ResolvedCommitEntry | undefined {
-  const slot = router as Router["Type"] & ResolvedCommitSlot;
+  const slot = router as Router["Service"] & ResolvedCommitSlot;
   const entry = slot[ResolvedCommit];
   if (entry === undefined || entry.url !== url) {
     return undefined;
@@ -93,7 +94,7 @@ export function takeResolvedCommit(
  * service, so reactive subscriptions — which occur at render/mount time,
  * post-commit — observe the committed match onward.
  */
-export function stageMatch(router: Router["Type"], target: RouteMatch): Router["Type"] {
+export function stageMatch(router: Router["Service"], target: RouteMatch): Router["Service"] {
   return {
     ...router,
     currentMatch: Subscribable.make({
@@ -115,7 +116,7 @@ export function stageMatch(router: Router["Type"], target: RouteMatch): Router["
  * the pre-run possible at all (Feasibility §1).
  */
 export function preRunLeaf(
-  router: Router["Type"],
+  router: Router["Service"],
   target: RouteMatch,
 ): Effect.Effect<Exit.Exit<Renderable, unknown>> {
   return Effect.suspend(() => {

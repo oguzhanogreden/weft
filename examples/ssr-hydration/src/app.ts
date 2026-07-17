@@ -2,7 +2,7 @@
  * The shared isomorphic App.
  *
  * Rendered to hydratable HTML on the server (`entry-server.ts`) and hydrated in
- * the browser (`entry-client.ts`) from that same markup. The `count.changes`
+ * the browser (`entry-client.ts`) from that same markup. The `SubscriptionRef.changes(count)`
  * region is the flash-free region: the server's first emission (`3`) matches the
  * client's first emission (`3`), so `hydrate` adopts the existing node in place
  * without re-rendering — node identity is preserved, no flicker.
@@ -29,7 +29,7 @@ export const App = (props: { initialValue: number }) =>
         h.code("3"),
         " before any JavaScript runs; once hydrated, the buttons work and the count node resumes in place — no flash.",
       ]),
-      h.div({ class: "count" }, [count.changes]),
+      h.div({ class: "count" }, [SubscriptionRef.changes(count)]),
       h.button({ type: "button", onclick: () => decrement() }, "-"),
       h.button({ type: "button", onclick: () => increment() }, "+"),
 

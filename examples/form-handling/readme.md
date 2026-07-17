@@ -25,7 +25,7 @@ const ReactiveInput = () =>
         type: "text",
         oninput: (e) => SubscriptionRef.set(value, e.currentTarget.value),
       }),
-      h.div(["You typed: ", value.changes]),
+      h.div(["You typed: ", SubscriptionRef.changes(value)]),
     ]);
   });
 ```
@@ -34,7 +34,7 @@ const ReactiveInput = () =>
 
 1. `SubscriptionRef.make(initial)` creates reactive state for each field
 2. `oninput` handler updates the ref on every keystroke
-3. `.changes` streams the current value into the UI reactively
+3. `SubscriptionRef.changes(ref)` streams the current value into the UI reactively
 4. Derived streams compute validation, character counts, etc.
 5. Form submit handlers can return Effects for async operations
 
@@ -59,27 +59,27 @@ h.input({
 });
 
 // Show current value reactively
-h.div(["You typed: ", value.changes]);
+h.div(["You typed: ", SubscriptionRef.changes(value)]);
 ```
 
 ### Schema Validation
 
 ```typescript
-import { Schema, Either } from "effect";
+import { Result, Schema } from "effect";
 
 const Email = Schema.String.pipe(
-  Schema.filter((s) => s.includes("@"), { message: () => "Must contain @" }),
-  Schema.filter((s) => s.includes("."), { message: () => "Must have domain" }),
+  Schema.check(Schema.makeFilter((s) => (s.includes("@") ? undefined : "Must contain @"))),
+  Schema.check(Schema.makeFilter((s) => (s.includes(".") ? undefined : "Must have domain"))),
 );
 
 const email = yield * SubscriptionRef.make("");
 
-const validationStream = Stream.map(email.changes, (value) => {
+const validationStream = Stream.map(SubscriptionRef.changes(email), (value) => {
   if (!value) return null;
-  const result = Schema.decodeUnknownEither(Email)(value);
-  return Either.match(result, {
-    onLeft: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
-    onRight: () => null,
+  const result = Schema.decodeUnknownResult(Email)(value);
+  return Result.match(result, {
+    onFailure: (e) => e.message.split(":").pop()?.trim() ?? "Invalid",
+    onSuccess: () => null,
   });
 });
 
@@ -94,7 +94,7 @@ Stream.map(validationStream, (err) => (err ? h.span({ class: "error" }, err) : n
 
 ```typescript
 const text = yield * SubscriptionRef.make("");
-const countStream = Stream.map(text.changes, (t) => t.length);
+const countStream = Stream.map(SubscriptionRef.changes(text), (t) => t.length);
 const remainingStream = Stream.map(countStream, (c) => 100 - c);
 
 h.textarea({

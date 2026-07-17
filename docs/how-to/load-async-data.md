@@ -2,14 +2,14 @@
 title: Load Async Data
 order: 9
 section: how-to
-description: Show a loading state then resolved content with Stream.concat, and turn a failed fetch into a fallback node with Effect.catchAll — all client-side.
+description: Show a loading state then resolved content with Stream.concat, and turn a failed fetch into a fallback node with Effect.catch — all client-side.
 ---
 
 # Load Async Data
 
 **Goal:** render a loading placeholder, then the fetched content, and a fallback if the fetch fails — for data that loads **on the client**.
 
-Return a `Stream<Node>` that emits the loading node first and the resolved node second, sequenced with `Stream.concat`. Handle failure inside the effect with `Effect.catchAll`, which maps the error to a fallback node.
+Return a `Stream<Node>` that emits the loading node first and the resolved node second, sequenced with `Stream.concat`. Handle failure inside the effect with `Effect.catch`, which maps the error to a fallback node.
 
 ```typescript
 import { h } from "@weftui/core";
@@ -34,7 +34,7 @@ const UserCard = ({ id }: { id: number }) =>
     Stream.fromEffect(
       fetchUser(id).pipe(
         Effect.flatMap((user) => h.div({ class: "user-card" }, [h.h3(user.name), h.p(user.email)])),
-        Effect.catchAll((error) => h.div({ class: "error" }, `Error: ${error.message}`)),
+        Effect.catch((error) => h.div({ class: "error" }, `Error: ${error.message}`)),
       ),
     ),
   );
@@ -44,7 +44,7 @@ const UserCard = ({ id }: { id: number }) =>
 
 - **`Stream.concat`** sequences two streams: `Stream.make(loadingNode)` emits once immediately, then `Stream.fromEffect(effect)` emits the resolved node when the effect completes. The renderer swaps the DOM in place on the second emission.
 - **`Effect.flatMap((data) => h.div(...))`** builds the content node from the data — `h.*` returns a `Node`, which is an `Effect`, so it composes directly in the pipeline.
-- **`Effect.catchAll((error) => node)`** converts the error channel into a fallback node, so the stream always yields something renderable. The failure never escapes to the mount.
+- **`Effect.catch((error) => node)`** converts the error channel into a fallback node, so the stream always yields something renderable. The failure never escapes to the mount.
 - **Parallel loading is automatic:** place several async components as siblings and their fetches run concurrently — no orchestration needed.
 
 ## When to reach for a boundary instead

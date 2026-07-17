@@ -4,8 +4,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "@weftui/core": "workspace:*",
     "@weftui/dom": "workspace:*",
     "@weftui/router": "workspace:*",

@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { Component, h } from "@weftui/core";
-import { Effect, Exit, Option, Schema, Stream, Subscribable } from "effect";
+import { Component, h, Subscribable } from "@weftui/core";
+import { Effect, Exit, Option, Schema, Stream } from "effect";
 import { describe, test } from "vite-plus/test";
 import { Router, RouterParamsError } from "~/index";
 import { match, type RouteMatch } from "~/matcher";
@@ -29,7 +29,7 @@ const def = Router.router(
 );
 
 /** A fixed-match `Router` service over a resolved match. */
-const routerFor = (m: RouteMatch): Router["Type"] =>
+const routerFor = (m: RouteMatch): Router["Service"] =>
   Router.of({
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: () => Effect.void,

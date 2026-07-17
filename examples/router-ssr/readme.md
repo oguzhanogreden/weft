@@ -97,7 +97,7 @@ carries the product id as a real payload (one `GetStock` rpc, not a per-entity i
 The co-located `refetch.browser.test.ts` drives the full round-trip in a real
 browser, delegating the same-origin `POST /_eui/rpc` to `RouterServer.toWebHandler`.
 
-### `@effect/platform` + `@effect/rpc` are the spine
+### `effect/unstable/httpapi` + `effect/unstable/rpc` are the spine
 
 The sealed `App` owns its authoritative `HttpApi` (`App.httpApi`, built by
 `buildHttpApi` during `Router.router(...)`): a `pages` group with a GET endpoint per

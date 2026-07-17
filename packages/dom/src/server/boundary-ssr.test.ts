@@ -13,9 +13,9 @@ import { NoRpc } from "../__tests__/rpc-stub";
 // These failure/suspense boundary trees contain no `Boundary.rpc`; shadow the
 // render fns with the no-op `NoRpc` layer pre-provided (the render fns require an
 // AppRpcClientTag unconditionally).
-const renderToStream = (n: Renderable) => Stream.provideLayer(_renderToStream(n), NoRpc);
+const renderToStream = (n: Renderable) => Stream.provide(_renderToStream(n), NoRpc);
 const renderToStreamHydratable = (n: Renderable) =>
-  Stream.provideLayer(_renderToStreamHydratable(n), NoRpc);
+  Stream.provide(_renderToStreamHydratable(n), NoRpc);
 const renderToString = (n: Renderable) => Effect.provide(_renderToString(n), NoRpc);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ class FooError extends Data.TaggedError("Foo")<{ msg: string }> {}
 describe("AC22 non-hydratable: children succeed — boundary is transparent", () => {
   it("renders children HTML inline with no boundary markers", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [
         h.div({ class: "content" }, "hello"),
       ]),
     );
@@ -45,9 +45,7 @@ describe("AC22 non-hydratable: children succeed — boundary is transparent", ()
 
   it("renderToString: renders children inline with no markers", async () => {
     const html = await runString(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "err") }, [
-        h.p({}, "text"),
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "err") }, [h.p({}, "text")]),
     );
     assert.equal(html, "<p>text</p>");
   });
@@ -60,9 +58,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [failingChild]),
     );
     assert.ok(html.includes("fallback"), `Expected fallback in: ${html}`);
     assert.ok(html.includes("error!"), `Expected error text in: ${html}`);
@@ -72,9 +68,7 @@ describe("AC22 non-hydratable: children fail — fallback HTML emitted inline", 
     const failingChild = Effect.fail(new FooError({ msg: "oops" }));
 
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "error!") }, [
-        failingChild,
-      ]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "error!") }, [failingChild]),
     );
     assert.ok(!html.includes("boundary"), `Unexpected boundary marker in: ${html}`);
   });
@@ -102,7 +96,7 @@ describe("AC22 non-hydratable: match returns null → stream failure", () => {
 describe("AC24 hydratable: children succeed — boundary transparent", () => {
   it("no boundary markers emitted when children succeed", async () => {
     const html = await runHydratable(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [h.div({ class: "content" }, "ok")]),
+      Boundary.catch({ fallback: () => h.span({}, "err") }, [h.div({ class: "content" }, "ok")]),
     );
     assert.ok(!html.includes("boundary"), `Unexpected boundary marker in: ${html}`);
     assert.ok(html.includes("content"), `Expected content in: ${html}`);
@@ -119,7 +113,7 @@ describe("AC25 hydratable: children fail — fallback emitted inline", () => {
     const failingChild = Effect.fail(new FooError({ msg: "err" }));
 
     const html = await runHydratable(
-      Boundary.catchAll({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failingChild]),
+      Boundary.catch({ fallback: () => h.span({ class: "fallback" }, "fb") }, [failingChild]),
     );
     assert.ok(html.includes("fallback"), `Expected fallback in: ${html}`);
     assert.ok(html.includes("fb"), `Expected fallback text in: ${html}`);
@@ -151,8 +145,8 @@ describe("AC26 hydratable: match returns null → stream failure", () => {
 describe("AC27: boundary renders inline (no markers to track)", () => {
   it("multiple nested boundaries each render their children inline", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({}, "outer-err") }, [
-        Boundary.catchAll({ fallback: () => h.span({}, "inner-err") }, [
+      Boundary.catch({ fallback: () => h.span({}, "outer-err") }, [
+        Boundary.catch({ fallback: () => h.span({}, "inner-err") }, [
           h.div({ class: "deep" }, "nested"),
         ]),
       ]),
@@ -167,7 +161,7 @@ describe("AC27: boundary renders inline (no markers to track)", () => {
 describe("stream child inside boundary on server", () => {
   it("renders first emission of stream child inline", async () => {
     const html = await run(
-      Boundary.catchAll({ fallback: () => h.span({}, "err") }, [Stream.make(h.strong({}, "live"))]),
+      Boundary.catch({ fallback: () => h.span({}, "err") }, [Stream.make(h.strong({}, "live"))]),
     );
     assert.ok(html.includes("<strong>live</strong>"), `Expected stream content in: ${html}`);
   });

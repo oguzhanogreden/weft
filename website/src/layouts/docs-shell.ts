@@ -222,7 +222,7 @@ export const DocsShell = Component.gen(function* () {
   // grid then splits `main` + the right-hand TOC. The `top-[4.75rem]` offset =
   // 3.25rem topbar + 1.5rem body top padding, so nothing jumps on scroll.
   return yield* h.div({ class: "docs-shell" }, [
-    TopBar({ open: open.changes, onToggle: toggle }),
+    TopBar({ open: SubscriptionRef.changes(open), onToggle: toggle }),
     h.div(
       {
         class: ["drawer md:drawer-open", "mx-auto w-full max-w-[84rem] md:gap-8"].join(" "),
@@ -232,7 +232,7 @@ export const DocsShell = Component.gen(function* () {
           id: "docs-drawer",
           type: "checkbox",
           class: "drawer-toggle",
-          checked: Stream.map(open.changes, (o) => o),
+          checked: Stream.map(SubscriptionRef.changes(open), (o) => o),
           "aria-hidden": "true",
           tabindex: -1,
         }),

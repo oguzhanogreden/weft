@@ -121,4 +121,4 @@ In both cases the tell is the same: nothing in the composition keeps a scope ope
 - [Layer lifetime at the mount](../explanation/services-and-context.md#layer-lifetime-at-the-mount) — why the mount effect resolving early matters for scoped layers
 - [Services and Context](../explanation/services-and-context.md) — how `R` accumulates and discharges at the mount
 - [`mountScoped` / `hydrateScoped` reference](../reference/dom.md#mountscoped) — signatures and error unions
-- [examples/effect-atom](../../examples/effect-atom) — a real scoped layer (`Registry.layer`) mounted with this composition
+- [examples/effect-atom](../../examples/effect-atom) — a real scoped layer (`AtomRegistry.layer` from `effect/unstable/reactivity`) mounted with this composition

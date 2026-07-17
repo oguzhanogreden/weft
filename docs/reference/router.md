@@ -19,7 +19,7 @@ Three entry points mirror `@weftui/dom`:
 
 ## `Router`
 
-`Router` is both an Effect `Context.Tag` and the authoring namespace; the two roles merge by declaration. `yield* Router` reads the per-render service; `Router.route(…)` authors a tree.
+`Router` is both an Effect `Context.Service` key and the authoring namespace; the two roles merge by declaration. `yield* Router` reads the per-render service; `Router.route(…)` authors a tree.
 
 The service value carries:
 
@@ -96,7 +96,7 @@ See the [Split Routes Lazily](../how-to/split-routes-lazily.md) how-to and `pack
 
 ### `Router.Outlet`
 
-A `Context.Tag` whose value is the node to splice for the next level down. A layout (or the server document shell) reads it with `const outlet = yield* Router.Outlet`. Typed **opaque** as `Node<never, never>`, and discharged by the router at render time, so it never appears in a reader's aggregate requirement channel.
+A `Context.Service` key whose value is the node to splice for the next level down. A layout (or the server document shell) reads it with `const outlet = yield* Router.Outlet`. Typed **opaque** as `Node<never, never>`, and discharged by the router at render time, so it never appears in a reader's aggregate requirement channel.
 
 ### `Router.params` / `Router.query`
 
@@ -224,7 +224,7 @@ RouterLive(
 ): Layer.Layer<Router | AppRpcClientTag>;
 ```
 
-The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@weftui/dom` can resolve a [`Boundary.rpc`](../reference/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `@effect/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
+The client `Router` layer, backed by the History API. Seeds a `SubscriptionRef` from `window.location`, listens for `popstate`, installs the same-origin link-click interceptor, and derives the `HttpApiClient` exposed as `Router.httpApiClient` (over `FetchHttpClient`; `baseUrl` defaults to same-origin). Alongside `Router` it also provides the core [`AppRpcClientTag`](../reference/core.md#apprpcclienttag) seam — a **network** flat rpc client over the app's merged `RpcGroup` (`RpcClient.make` → `POST /_eui/rpc`) — so `@weftui/dom` can resolve a [`Boundary.rpc`](../reference/core.md#boundaryrpc) (hydrated refetch and client-first SPA mount) without depending on this package or `effect/unstable/rpc`. Pass the same merged `group` the server wires into [`RouterServer`](#routerserver). **Scoped** — it must outlive the mount, so provide it through a `ManagedRuntime`:
 
 ```typescript
 const runtime = ManagedRuntime.make(RouterLive(App, { rpc: { group: StockRpcs } }));
@@ -294,11 +294,11 @@ Dispatch runs through the `def.httpApi` spine via `HttpApiBuilder`: platform own
 
 ### `RouterNotFound`
 
-`Schema.TaggedError` with an optional `path: string`. Raised by [`notFound`](#notfound) or when no route matches. Caught by the router's internal not-found boundary; export it to place your own `Boundary.catchTag("RouterNotFound", …)` (a nearer user boundary wins).
+`Schema.TaggedErrorClass` with an optional `path: string`. Raised by [`notFound`](#notfound) or when no route matches. Caught by the router's internal not-found boundary; export it to place your own `Boundary.catchTag("RouterNotFound", …)` (a nearer user boundary wins).
 
 ### `RouterParamsError`
 
-`Schema.TaggedError` with `source: "path" | "query"` and `keys: readonly string[]`. Raised by `Router.params` / `Router.query` when the live match doesn't satisfy the requested fields. Bubbles into the tree's aggregate error channel.
+`Schema.TaggedErrorClass` with `source: "path" | "query"` and `keys: readonly string[]`. Raised by `Router.params` / `Router.query` when the live match doesn't satisfy the requested fields. Bubbles into the tree's aggregate error channel.
 
 ### `notFound`
 

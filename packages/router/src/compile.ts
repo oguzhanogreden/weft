@@ -1,5 +1,5 @@
 import type { Node } from "@weftui/core";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { Schema } from "effect";
 import { RouterNotFound } from "./errors";
 import type { ComponentSlot, LayoutNode, RouteNode, TreeE, TreeNode, TreeR } from "./route-tree";
@@ -38,7 +38,7 @@ export interface CompiledLeaf {
    * `HttpApiEndpoint.setPath` constraint without an `as any` cast — param schemas
    * round-trip strings, so the `Schema.Struct` value is asserted to this shape.
    */
-  readonly pathSchema: Schema.Schema<
+  readonly pathSchema: Schema.Codec<
     Record<string, unknown>,
     Readonly<Record<string, string | undefined>>
   >;
@@ -47,7 +47,7 @@ export interface CompiledLeaf {
    * (`Record<string, string | ReadonlyArray<string> | undefined>`) so it satisfies
    * platform's `HttpApiEndpoint.setUrlParams` constraint without a cast.
    */
-  readonly querySchema: Schema.Schema<
+  readonly querySchema: Schema.Codec<
     Record<string, unknown>,
     Readonly<Record<string, string | ReadonlyArray<string> | undefined>>
   >;
@@ -80,7 +80,7 @@ export interface RouterDef<E = any, R = any> {
    * nesting/render metadata platform's flat API can't represent. Built by
    * {@link buildHttpApi} during {@link makeRouter}.
    */
-  readonly httpApi: HttpApi.HttpApi.Any;
+  readonly httpApi: HttpApi.Any;
   /**
    * Phantom marker for the tree's aggregate error channel. Covariant (stores `E`
    * directly) so a fully-static `RouterDef<never, never>` stays assignable to the
@@ -155,8 +155,8 @@ interface LeafWork {
   /** Full path parts from the root (only routes contribute parts). */
   readonly parts: readonly string[];
   /** Path-param schemas declared on this leaf (and any ancestor route). */
-  readonly pathFields: Record<string, Schema.Schema.Any>;
-  readonly query: Record<string, Schema.Schema.Any>;
+  readonly pathFields: Record<string, Schema.Top>;
+  readonly query: Record<string, Schema.Top>;
   /** Ancestor layout nodes, root → parent. */
   readonly ancestors: readonly LayoutNode<any, any>[];
 }
@@ -177,7 +177,7 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
   const walk = (
     node: TreeNode,
     parentParts: readonly string[],
-    parentPathFields: Record<string, Schema.Schema.Any>,
+    parentPathFields: Record<string, Schema.Top>,
     ancestors: readonly LayoutNode<any, any>[],
   ): void => {
     if (node._tag === "Layout") {
@@ -192,8 +192,8 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
     leafWorks.push({
       node,
       parts: [...parentParts, ...splitSegment(node.segment)],
-      pathFields: { ...parentPathFields, ...(node.path as Record<string, Schema.Schema.Any>) },
-      query: node.query as Record<string, Schema.Schema.Any>,
+      pathFields: { ...parentPathFields, ...(node.path as Record<string, Schema.Top>) },
+      query: node.query as Record<string, Schema.Top>,
       ancestors,
     });
   };
@@ -224,7 +224,7 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
   for (const work of leafWorks) {
     const fullPathPattern = toPattern(work.parts);
     const paramNames = extractParams(work.parts);
-    const pathFields: Record<string, Schema.Schema.Any> = {};
+    const pathFields: Record<string, Schema.Top> = {};
     for (const name of paramNames) {
       pathFields[name] = work.pathFields[name] ?? Schema.String;
     }
@@ -261,18 +261,19 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
  * merged `RpcGroup` over the ambient `AppRpcClient` (`POST /_eui/rpc`), wired
  * explicitly into `RouterServer`/`RouterLive`. The matcher reads only `"pages"`.
  */
-export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.HttpApi.Any {
+export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.Any {
   // The group/endpoint types accumulate per-endpoint; a precise static type is not
   // expressible across a runtime loop, so the assembly is intentionally loose.
   const group = leaves.reduce(
     // oxlint-disable-next-line typescript/no-explicit-any
     (g: any, leaf) =>
       g.add(
-        HttpApiEndpoint.get(leaf.id, leaf.fullPathPattern as `/${string}`)
-          .setPath(leaf.pathSchema)
-          .setUrlParams(leaf.querySchema)
-          .addSuccess(Schema.String)
-          .addError(RouterNotFound, { status: 404 }),
+        HttpApiEndpoint.get(leaf.id, leaf.fullPathPattern as `/${string}`, {
+          params: leaf.pathSchema,
+          query: leaf.querySchema,
+          success: Schema.String,
+          error: RouterNotFound.pipe(HttpApiSchema.status(404)),
+        }),
       ),
     HttpApiGroup.make("pages"),
   );

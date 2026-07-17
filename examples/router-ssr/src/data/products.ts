@@ -68,7 +68,7 @@ export const PRODUCTS: readonly Product[] = [
 ];
 
 /** The supported listing sort orders. `undefined` ⇒ catalog (id) order. */
-export const SortValue = Schema.Literal("price-asc", "price-desc", "name");
+export const SortValue = Schema.Literals(["price-asc", "price-desc", "name"]);
 
 /** Decoded sort value. */
 export type SortValue = typeof SortValue.Type;

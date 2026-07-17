@@ -1,7 +1,13 @@
 // oxlint-disable no-unused-vars
-import { Boundary, ServerTag, type AssertNoServerOnly, type Node } from "@weftui/core";
-import { Effect, Option, Schema, Subscribable } from "effect";
-import { Rpc } from "@effect/rpc";
+import {
+  Boundary,
+  ServerTag,
+  Subscribable,
+  type AssertNoServerOnly,
+  type Node,
+} from "@weftui/core";
+import { Effect, Option, Schema } from "effect";
+import { Rpc } from "effect/unstable/rpc";
 
 // ── Type equality helpers ─────────────────────────────────────────────────────
 
@@ -12,7 +18,7 @@ type CtxOf<T> = [T] extends [Effect.Effect<any, any, infer R>] ? R : never;
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
-class FooError extends Schema.TaggedError<FooError>()("Foo", { msg: Schema.String }) {}
+class FooError extends Schema.TaggedErrorClass<FooError>()("Foo", { msg: Schema.String }) {}
 
 const StockKey = Schema.Struct({ id: Schema.Number });
 const Stock = Schema.Struct({ units: Schema.Number });

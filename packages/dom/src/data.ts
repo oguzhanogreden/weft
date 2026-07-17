@@ -46,13 +46,13 @@ export class HydrationMismatchError extends Data.TaggedError("HydrationMismatchE
  * Inner boundaries shadow the outer service via `Effect.provideService`, so
  * errors are always reported to the innermost enclosing boundary.
  */
-export class BoundaryContext extends Context.Tag("BoundaryContext")<
+export class BoundaryContext extends Context.Service<
   BoundaryContext,
   {
     /** Report a rendering-path error to this boundary. */
     readonly reportError: (cause: Cause.Cause<unknown>) => Effect.Effect<void>;
   }
->() {}
+>()("BoundaryContext") {}
 
 /**
  * Optional service provided by a suspense boundary (`Boundary.suspend`) to its
@@ -66,7 +66,7 @@ export class BoundaryContext extends Context.Tag("BoundaryContext")<
  * Inner suspense boundaries shadow the outer service for their own subtree
  * via `Effect.provideService`, so children register with the innermost boundary.
  */
-export class SuspenseContext extends Context.Tag("SuspenseContext")<
+export class SuspenseContext extends Context.Service<
   SuspenseContext,
   {
     /** Increment the boundary's pending count. */
@@ -74,7 +74,7 @@ export class SuspenseContext extends Context.Tag("SuspenseContext")<
     /** Decrement the pending count; triggers the swap when it reaches zero. */
     readonly settle: Effect.Effect<void>;
   }
->() {}
+>()("SuspenseContext") {}
 
 /**
  * The value produced by rendering a single Renderable: a single DOM node, an
@@ -115,7 +115,7 @@ export type HydrationReady = {
  * Service for managing rendering context including runtime, scope, and stream IDs
  */
 
-export class RenderContext extends Context.Tag("RenderContext")<
+export class RenderContext extends Context.Service<
   RenderContext,
   {
     readonly runtime: ManagedRuntime.ManagedRuntime<never, never>;
@@ -135,4 +135,4 @@ export class RenderContext extends Context.Tag("RenderContext")<
      */
     readonly hydrationReady?: HydrationReady;
   }
->() {}
+>()("RenderContext") {}

@@ -18,10 +18,9 @@ import { h } from "@weftui/core";
 import { mount } from "@weftui/dom/client";
 import { Context, Effect, Layer, pipe } from "effect";
 
-class Logger extends Context.Tag("Logger")<
-  Logger,
-  { log: (message: string) => Effect.Effect<void> }
->() {}
+class Logger extends Context.Service<Logger, { log: (message: string) => Effect.Effect<void> }>()(
+  "Logger",
+) {}
 
 const LoggerLive = Layer.succeed(Logger, {
   log: (message) => Effect.sync(() => console.log(message)),

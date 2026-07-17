@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
-import { h } from "@weftui/core";
-import { Effect, Option, Schema, Stream, Subscribable } from "effect";
+import { h, Subscribable } from "@weftui/core";
+import { Effect, Option, Schema, Stream } from "effect";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, test, vi } from "vite-plus/test";
 import { back, forward, navigate, patchQuery, push, replace, setQuery } from "~/client/navigation";
@@ -28,7 +28,7 @@ const def = Router.router(
 let calls: Array<{ to: string; options: NavigateOptions | undefined }>;
 
 /** A `Router` whose `navigate` records its args and whose `currentMatch` is `match(def, url)`. */
-const routerFor = (m: RouteMatch): Router["Type"] =>
+const routerFor = (m: RouteMatch): Router["Service"] =>
   Router.of({
     currentMatch: Subscribable.make({ get: Effect.succeed(m), changes: Stream.make(m) }),
     navigate: (to, options) =>

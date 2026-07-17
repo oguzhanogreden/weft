@@ -65,10 +65,10 @@ export const App = () =>
 
       // Reactive prop — a stream flows into the custom element's attribute in place.
       h.section({ class: "reactive" }, [
-        h["greeting-badge"]({ name: name.changes }),
+        h["greeting-badge"]({ name: SubscriptionRef.changes(name) }),
         h.input({
           class: "name-input",
-          value: name.changes,
+          value: SubscriptionRef.changes(name),
           oninput: (e) => SubscriptionRef.set(name, (e.target as HTMLInputElement).value),
         }),
       ]),
