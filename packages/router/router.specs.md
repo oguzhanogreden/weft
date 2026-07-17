@@ -258,10 +258,10 @@ sourced from this pipeline — there is **no render-time status side-channel**
 - **S4** `makeRouter(...)` stamps `RouterDef.httpApi` — built by `buildHttpApi` from
   the compiled leaves — with one `"pages"` group whose endpoints are GET endpoints,
   one per leaf, named by the leaf `id` (the `httpApi ↔ compiled` join key), at each
-  leaf's `fullPathPattern`, with `setPath(pathSchema)`, `setUrlParams(querySchema)`,
+  leaf's `fullPathPattern`, with `params: pathSchema`, `query: querySchema`,
   a `Schema.String` success, and a `RouterNotFound → 404` error. The leaf
   `pathSchema`/`querySchema` encoded sides are typed string-encodeable, so the
-  `setPath`/`setUrlParams` bridge carries **no `as any`** casts.
+  `params`/`query` bridge carries **no `as any`** casts.
 
 ### Streaming SSR (`RouterServer.toStreamingWebHandler`)
 

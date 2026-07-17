@@ -13,8 +13,8 @@ catalogs:
       specifier: 4.1.9
       version: 4.1.9
     effect:
-      specifier: 4.0.0-beta.93
-      version: 4.0.0-beta.93
+      specifier: 4.0.0-beta.98
+      version: 4.0.0-beta.98
     tsx:
       specifier: ^4.22.4
       version: 4.22.4
@@ -83,7 +83,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -105,7 +105,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -127,7 +127,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -149,7 +149,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -171,7 +171,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -193,7 +193,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -215,7 +215,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -237,7 +237,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -259,7 +259,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -281,7 +281,7 @@ importers:
         version: link:../../packages/router
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -309,7 +309,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -328,7 +328,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -356,7 +356,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -375,7 +375,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -403,7 +403,7 @@ importers:
         version: link:../../packages/dom
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.2
@@ -422,7 +422,7 @@ importers:
         version: 3.2.3
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
       tsx:
         specifier: 'catalog:'
         version: 4.22.4
@@ -450,7 +450,7 @@ importers:
         version: 25.9.2
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -484,7 +484,7 @@ importers:
         version: 25.9.2
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -515,7 +515,7 @@ importers:
         version: link:../core
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -536,7 +536,7 @@ importers:
         version: link:../packages/router
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.93
+        version: 4.0.0-beta.98
     devDependencies:
       '@radix-ui/colors':
         specifier: ^3.0.0
@@ -1913,8 +1913,8 @@ packages:
   duplexer2@0.1.4:
     resolution: {integrity: sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA==}
 
-  effect@4.0.0-beta.93:
-    resolution: {integrity: sha512-wNS5MKFa3C42uBfIDik2oJ78lhpoYz2hN4oBR0229BeeDCIrkg/FiOvoiPGdCVlWa7MEKxEL5I0f8AILVHSD9A==}
+  effect@4.0.0-beta.98:
+    resolution: {integrity: sha512-oz+bsG5h+6RNrw4t5GMfQrk/xBS8ROoqkYsuvRhBr5O7mCOrpvH/hbw+QrDzvKIpX4HJClwm86F94c87W0sJxg==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -1986,8 +1986,8 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
-  fast-check@4.8.0:
-    resolution: {integrity: sha512-GOJ158CUMnN6cSahsv4+ExARvIDuzzinFjkp0E9WtiBa5zcVeLozVkWaE4IzFcc+Y48Wp1EDlUZsXRyAztQcSg==}
+  fast-check@4.9.0:
+    resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
     engines: {node: '>=12.17.0'}
 
   fast-content-type-parse@3.0.0:
@@ -2576,8 +2576,8 @@ packages:
   msgpackr@2.0.4:
     resolution: {integrity: sha512-o1C5KRmuRt+apqMr1HuGSqWStZoRBUpEsCsl15uM9VdAF1qHLtvMOU2En747EnTyEl6c4pzPewRMFF31s1CNbA==}
 
-  multipasta@0.2.7:
-    resolution: {integrity: sha512-KPA58d68KgGil15oDqXjkUBEBYc00XvbPj5/X+dyzeo/lWm9Nc25pQRlf1D+gv4OpK7NM0J1odrbu9JNNGvynA==}
+  multipasta@0.2.8:
+    resolution: {integrity: sha512-ZPWuMKyv0cSO29f7hozp+k6+crZbQijV8ipMvxNxRf2SwtYGTX1ZX89Kd20VV4H9Znonx+EQn+iy1wGQsJ+b+Q==}
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
@@ -4518,15 +4518,15 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
-  effect@4.0.0-beta.93:
+  effect@4.0.0-beta.98:
     dependencies:
       '@standard-schema/spec': 1.1.0
-      fast-check: 4.8.0
+      fast-check: 4.9.0
       find-my-way-ts: 0.1.6
       ini: 7.0.0
       kubernetes-types: 1.30.0
       msgpackr: 2.0.4
-      multipasta: 0.2.7
+      multipasta: 0.2.8
       toml: 4.1.2
       uuid: 14.0.1
       yaml: 2.9.0
@@ -4629,7 +4629,7 @@ snapshots:
 
   extend@3.0.2: {}
 
-  fast-check@4.8.0:
+  fast-check@4.9.0:
     dependencies:
       pure-rand: 8.4.1
 
@@ -5369,7 +5369,7 @@ snapshots:
     optionalDependencies:
       msgpackr-extract: 3.0.4
 
-  multipasta@0.2.7: {}
+  multipasta@0.2.8: {}
 
   mz@2.7.0:
     dependencies:

@@ -22,7 +22,7 @@ import { lazyComponent, makeLayout, makeRoute } from "./route-tree";
  */
 /**
  * The platform `HttpApiClient` derived from a router's `HttpApi` spine. Typed
- * opaquely (`Client<any, …>`) because the spine is `HttpApi.Any` — its
+ * opaquely (`Client<any, …>`) because the spine is `HttpApi.Top` — its
  * group/endpoint shapes are assembled in a runtime loop by `buildHttpApi`, so a
  * precise client type is not recoverable. Present (`Option.some`) on the client
  * (`RouterLive`), absent (`Option.none`) on the server, which is itself the origin.

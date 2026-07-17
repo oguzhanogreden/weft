@@ -35,7 +35,7 @@ export interface CompiledLeaf {
   /**
    * Path-param schema. Its **encoded** side is typed string-encodeable
    * (`Record<string, string | undefined>`) so it satisfies platform's
-   * `HttpApiEndpoint.setPath` constraint without an `as any` cast — param schemas
+   * `HttpApiEndpoint` `params` constraint without an `as any` cast — param schemas
    * round-trip strings, so the `Schema.Struct` value is asserted to this shape.
    */
   readonly pathSchema: Schema.Codec<
@@ -45,7 +45,7 @@ export interface CompiledLeaf {
   /**
    * Query schema. Its **encoded** side is typed string-encodeable
    * (`Record<string, string | ReadonlyArray<string> | undefined>`) so it satisfies
-   * platform's `HttpApiEndpoint.setUrlParams` constraint without a cast.
+   * platform's `HttpApiEndpoint` `query` constraint without a cast.
    */
   readonly querySchema: Schema.Codec<
     Record<string, unknown>,
@@ -80,7 +80,7 @@ export interface RouterDef<E = any, R = any> {
    * nesting/render metadata platform's flat API can't represent. Built by
    * {@link buildHttpApi} during {@link makeRouter}.
    */
-  readonly httpApi: HttpApi.Any;
+  readonly httpApi: HttpApi.Top;
   /**
    * Phantom marker for the tree's aggregate error channel. Covariant (stores `E`
    * directly) so a fully-static `RouterDef<never, never>` stays assignable to the
@@ -248,20 +248,20 @@ export function compile(def: { root: TreeNode; notFound: () => Node<any, any> })
 /**
  * Builds the authoritative `HttpApi` for a compiled tree (S4): a single `"pages"`
  * group whose endpoints are GET endpoints — one per leaf — at each leaf's full path
- * pattern, carrying `setPath(pathSchema)`, `setUrlParams(querySchema)`, a
+ * pattern, carrying `params: pathSchema`, `query: querySchema`, a
  * `Schema.String` (text/HTML) success, and a `RouterNotFound → 404` error. The tree
  * (not `HttpApi`) is the authoring surface; this is the single source of truth the
  * server dispatch (`HttpApiBuilder`) and the client matcher / derived `HttpApiClient`
  * read from, so both sides agree on paths and schemas.
  *
  * Each leaf's `pathSchema`/`querySchema` are typed string-encodeable (see
- * {@link CompiledLeaf}), so `setPath`/`setUrlParams` need no `as any` casts.
+ * {@link CompiledLeaf}), so the `params`/`query` options need no `as any` casts.
  *
  * `Boundary.rpc` data no longer rides this spine: it resolves through the app's
  * merged `RpcGroup` over the ambient `AppRpcClient` (`POST /_eui/rpc`), wired
  * explicitly into `RouterServer`/`RouterLive`. The matcher reads only `"pages"`.
  */
-export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.Any {
+export function buildHttpApi(leaves: readonly CompiledLeaf[]): HttpApi.Top {
   // The group/endpoint types accumulate per-endpoint; a precise static type is not
   // expressible across a runtime loop, so the assembly is intentionally loose.
   const group = leaves.reduce(

@@ -14,8 +14,10 @@ We assume you know [Effect](https://effect.website/docs/getting-started/introduc
 ## Install
 
 ```bash
-npm install @weftui/core @weftui/dom effect
+npm install @weftui/core @weftui/dom effect@beta
 ```
+
+Weft tracks Effect 4's beta line. This release is built and tested against `effect@4.0.0-beta.98`; the peer range accepts newer 4.0 betas, which may contain upstream breaking changes.
 
 `@weftui/core` gives you the element builders and combinators; `@weftui/dom` renders them (its `./client` entry mounts in the browser). `effect` is the peer everything is built on.
 

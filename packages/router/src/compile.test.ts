@@ -117,7 +117,7 @@ interface HttpApiView {
       readonly endpoints: Record<
         string,
         {
-          readonly name: string;
+          readonly identifier: string;
           readonly path: string;
           readonly method: string;
           readonly params: Schema.Codec<unknown, unknown> | undefined;
@@ -152,9 +152,9 @@ describe("httpApi spine", () => {
     ]);
   });
 
-  test("endpoint names are the compiled leaf ids (httpApi ↔ index join key)", () => {
+  test("endpoint identifiers are the compiled leaf ids (httpApi ↔ index join key)", () => {
     assert.deepEqual(
-      endpoints.map((e) => e.name).sort(),
+      endpoints.map((e) => e.identifier).sort(),
       def.compiled.leaves.map((l) => l.id).sort(),
     );
   });
