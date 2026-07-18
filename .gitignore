@@ -47,5 +47,5 @@ packages/*/docs/
 graphify-out/cost.json
 graphify-out/cache/
 
-# migrations
-effect-smol
+# effect 4 source reference clone (see CLAUDE.md "Effect 4 Reference")
+effect-src
