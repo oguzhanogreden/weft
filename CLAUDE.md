@@ -229,22 +229,22 @@ Invariants:
 
 - Use specific imports, avoid `import * as X`
 
-## Effect 4 Reference (`effect-smol/`)
+## Effect 4 Reference (`effect-src/`)
 
-A shallow clone of [Effect-TS/effect-smol](https://github.com/Effect-TS/effect-smol) (the Effect 4 development repo) lives at `./effect-smol` as a **local docs/source reference** for AI agents. It is gitignored and not part of the workspace.
+A shallow clone of [Effect-TS/effect](https://github.com/Effect-TS/effect) lives at `./effect-src` as a **local docs/source reference** for AI agents. It is gitignored and not part of the workspace. Effect 4 development merged back into this canonical repo (the old `effect-smol` repo is archived): `main` is Effect 4 (v4); v3 lives on the `v3` branch. Cloning the default branch gets you v4.
 
-- Use it to look up Effect 4 APIs, semantics, and migration guidance instead of guessing or relying on Effect 3 knowledge. Most useful entry points:
-  - `effect-smol/packages/effect/src/` — actual source of every module (authoritative for signatures and JSDoc)
-  - `effect-smol/MIGRATION.md` — Effect 3 → 4 migration notes
-  - `effect-smol/AGENTS.md` and `effect-smol/LLMS.md` — repo guidance written for AI agents
-- If `./effect-smol` is missing, fetch it first:
+- Use it to look up Effect 4 APIs and semantics instead of guessing or relying on Effect 3 knowledge. Most useful entry points:
+  - `effect-src/packages/effect/src/` — actual source of every module (authoritative for signatures and JSDoc)
+  - `effect-src/AGENTS.md` and `effect-src/LLMS.md` — repo guidance written for AI agents
+  - `effect-src/MIGRATION.md` exists but is **known-stale** for the beta line — prefer the installed `effect` dist (`node_modules/.pnpm/effect@<version>/…/dist/*.d.ts`) as the authoritative source for any API claim.
+- If `./effect-src` is missing, fetch it first:
 
   ```bash
-  git clone --depth 1 https://github.com/Effect-TS/effect-smol.git effect-smol
+  git clone --depth 1 https://github.com/Effect-TS/effect.git effect-src
   ```
 
-- To refresh an existing clone: `git -C effect-smol pull --depth 1`
-- Never edit files in `effect-smol/`, import from it in workspace code, or include it in builds/tests — it is read-only reference material.
+- To refresh an existing clone: `git -C effect-src pull --depth 1`
+- Never edit files in `effect-src/`, import from it in workspace code, or include it in builds/tests — it is read-only reference material.
 
 ## Meta Rules
 
