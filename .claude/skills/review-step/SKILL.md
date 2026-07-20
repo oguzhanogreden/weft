@@ -19,7 +19,7 @@ Review the full diff for correctness and spec conformance; loop until clean. Com
    - Default: run the `code-review` skill at **medium** effort (fewer, high-confidence findings, fast loop).
    - Escalate to **high** when the diff touches `packages/core` or the public API surface of `packages/dom` (exports reachable from `@weftui/dom`, `./client`, or `./server`).
 
-2. **Run the code-review skill** on the working diff at the chosen level.
+2. **Run the code-review skill** on the working diff at the chosen level, pinned to **Sonnet 5** (`model: sonnet`) regardless of the session's currently selected model. This step fans out several sub-agents; pinning keeps token cost predictable instead of inheriting a pricier model.
 
 3. **Spec-conformance check (always, regardless of effort level).** Independently of the skill's findings, verify:
    - The implementation satisfies every acceptance criterion in the co-located `specs.md`.
