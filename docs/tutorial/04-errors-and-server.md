@@ -7,63 +7,82 @@ description: Catch rendering-path failures with Boundary, then render on the ser
 
 # Errors and Server Rendering
 
-The final step. [We can now](./03-services-and-async.md) use services and async. Here we handle what happens when async work **fails**, and how the same tree renders on the server.
+The final step. [We can now](./03-services-and-async.md) use services and async. Here we make the fact panel's fetch fail on purpose, catch it with a boundary, and render the whole counter on the server.
 
 ## Error boundaries
 
-A component's failures accumulate on its `E` channel. Wrap a subtree in a `Boundary.*` variant to intercept them and render a fallback instead of failing the mount:
+A component's failures accumulate on its `E` channel. Wrap a subtree in a `Boundary.*` variant to intercept them and render a fallback instead of failing the mount. In `src/app.ts`, make `fetchFact` fail for `n === 3`, the value the counter's fact panel actually requests:
 
 ```typescript
 import { Boundary, h } from "@weftui/core";
 import { Data, Effect } from "effect";
 
-class ApiError extends Data.TaggedError("ApiError")<{ status: number }> {}
+class FactError extends Data.TaggedError("FactError")<{ n: number }> {}
 
-const SafeWidget = () =>
-  Boundary.catch({ fallback: (e) => h.div({ class: "error" }, `Request failed: ${e.status}`) }, [
-    Effect.fail(new ApiError({ status: 503 })),
-  ]);
+const fetchFact = (n: number): Effect.Effect<string, FactError> =>
+  Effect.gen(function* () {
+    yield* Effect.sleep("800 millis");
+    if (n === 3) return yield* Effect.fail(new FactError({ n }));
+    return `${n} is ${n % 2 === 0 ? "even" : "odd"}.`;
+  });
 ```
 
-There are six failure-catch variants, mirroring Effect's own error operators: `catch`, `catchCause`, `catchTag`, `catchTags`, `catchFilter`, `catchIf`. A failure that a boundary does not match re-raises to the **nearest enclosing** boundary. If none catches it, the mount fails.
+Wrap the fact panel where it's placed in `App`:
 
-The conceptual model (and why the boundary's type reflects exactly which failures are handled) is [Boundaries and Suspense](../explanation/boundaries-and-suspense.md).
+```typescript
+Boundary.catch(
+  { fallback: (e) => h.p({ class: "error" }, `Couldn't load a fact about ${e.n}.`) },
+  [NumberFact({ n: 3 })],
+),
+```
+
+There are six failure-catch variants, mirroring Effect's own error operators: `catch`, `catchCause`, `catchTag`, `catchTags`, `catchFilter`, `catchIf`. `Boundary.catch` here fully consumes `FactError` from the subtree's `E`; the app's aggregate `E` stays `never`. A failure a boundary doesn't match re-raises to the **nearest enclosing** boundary; if none catches it, the mount fails. The conceptual model (and why the boundary's type reflects exactly which failures are handled) is [Boundaries and Suspense](../explanation/boundaries-and-suspense.md).
+
+Reload and the fact panel shows "Couldn't load a fact about 3." instead of hanging or crashing the mount.
 
 ## Render on the server
 
-The same component tree renders to HTML on the server and **hydrates in place** on the client: no re-render, no flash. The server produces markup (plus inline data). `hydrate` adopts that existing DOM and resumes reactivity:
+The same component tree renders to HTML on the server and **hydrates in place** on the client: no re-render, no flash. `hydrate` adopts the server's existing DOM and resumes reactivity. Split `main.ts` into two entries that both import the same side-effect-free `App`:
 
 ```typescript
-// server entry
+// src/entry-server.ts
+import { AppRpcClientTag } from "@weftui/core";
 import { renderToStringHydratable } from "@weftui/dom/server";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { App } from "./app";
 
-export const render = () => Effect.runPromise(renderToStringHydratable(App()));
+// This tree has no `Boundary.rpc`, but the SSR renderer always requires an
+// AppRpcClientTag in context, so discharge it with a no-op.
+const NoRpc = Layer.succeed(AppRpcClientTag, {
+  call: () => Effect.die(new Error("no rpc in this app")),
+});
+
+export const render = (): Promise<string> =>
+  Effect.runPromise(Effect.provide(renderToStringHydratable(App()), NoRpc));
 ```
 
 ```typescript
-// client entry
+// src/entry-client.ts
 import { WeftApp } from "@weftui/dom/client";
 import { Effect } from "effect";
-import { App } from "./app";
+import { App, LoggerLive } from "./app";
 
-const app = WeftApp.make();
-void Effect.runPromise(WeftApp.hydrate(app, App(), document.getElementById("root")!));
+const root = document.getElementById("root");
+if (root === null) {
+  throw new Error("#root not found");
+}
+
+const app = WeftApp.make(LoggerLive);
+void Effect.runPromise(WeftApp.hydrate(app, App(), root));
 ```
 
-The same side-effect-free `App` is imported by both entries.
+Splice `render()`'s HTML into your server template's `#root`, and point `index.html`'s script tag at `entry-client.ts` instead of `main.ts`. `AppRpcClientTag` and the `NoRpc` no-op only matter here because `renderToStringHydratable` requires that seam unconditionally; a tree using [`Boundary.rpc`](../how-to/load-data-with-rpc.md) would provide a real one instead, typically via `@weftui/router`'s `RouterServer`.
 
-For server-resolved data that replays into the client without a second request, `Boundary.rpc` extends this model:
-
-1. Resolve an rpc on the server.
-2. Serialize its result into the HTML.
-3. Replay it on hydrate.
-4. Keep the region live for refetch.
+For server-resolved data that replays into the client without a second request, `Boundary.rpc` extends this model: resolve an rpc on the server, serialize its result into the HTML, replay it on hydrate, and keep the region live for refetch.
 
 ## You're done
 
-You have built up every core idea: components and `h`, reactive state and streams, services and async, boundaries and SSR. Where to go next depends on what you are doing:
+You've built up every core idea: components and `h`, reactive state and streams, services and async, boundaries and SSR, all in one counter. Where to go next depends on what you're doing:
 
 - **Understand the model** → [The Rendering Model](../explanation/rendering-model.md), [The Combinator API](../explanation/combinator-api.md), [Reactive Primitives](../explanation/reactive-primitives.md)
 - **Get a task done** → [Author Components](../how-to/author-components.md), [Render on the Server](../how-to/render-on-the-server.md), [Load Data with RPC](../how-to/load-data-with-rpc.md), [Add Routing](../how-to/add-routing.md)
