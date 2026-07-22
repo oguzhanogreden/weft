@@ -18,6 +18,8 @@ The package mirrors `@weftui/dom`: a shared (universal) root, a `./client` entry
 npm install @weftui/router
 ```
 
+Two complete, copy/paste examples are below: a [client-only app](#client-only-app) and a [full SSR app](#full-ssr-example). Skip to whichever matches your setup, or read on for the concepts first.
+
 ## The mental model
 
 A route's **component is its handler**. A page is a component that renders, and its `component` slot is invoked at render time on whichever side the request arrives. Server-resolved data stays with [`Boundary.rpc`](./load-data-with-rpc.md); client-side async stays with `Boundary.suspend`.
@@ -97,9 +99,29 @@ const UserShell = Component.gen(function* () {
 
 `Router.params(fields)` / `Router.query(fields)` read the live match and pick the requested `fields` keys (already decoded by the matcher, so no re-validation). They return the typed values. When no route matches, they fail with a tagged [`RouterParamsError`](#errors) carrying `source: "path" | "query"` and the requested `keys`.
 
-That error bubbles into the app node's aggregate `E`, so a user may recover it with `Boundary.catchTag("RouterParamsError", …)`.
+That error bubbles into the app node's aggregate `E`, so a user may recover it with `Boundary.catchTag(…)`.
 
-> **Reactive accessors.** `Router.paramsStream(fields)` / `Router.queryStream(fields)` are the reactive counterparts. Each resolves a `Subscribable` derived from `currentMatch.changes`. A component can render `[(yield* Router.queryStream(sortQuery)).changes]` and update **in place** even when the same leaf stays mounted (the query-only case `Router.query` would miss). See [Programmatic navigation](#programmatic-navigation).
+### Reactive accessors: `paramsStream` / `queryStream`
+
+`Router.paramsStream(fields)` / `Router.queryStream(fields)` are the reactive counterparts of `params` / `query`. Each resolves a `Subscribable` derived from `currentMatch.changes`, so a component can update **in place** even when the same leaf stays mounted, the case a query-only navigation (`setQuery` / `patchQuery`, see [Programmatic navigation](#programmatic-navigation)) produces and a snapshot `Router.query` would miss:
+
+```typescript
+import { Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
+import { Schema, Stream } from "effect";
+
+const sortQuery = { sort: Schema.optional(Schema.String) };
+
+const ProductsPage = Component.gen(function* () {
+  const query = yield* Router.queryStream(sortQuery);
+  return yield* h.section([
+    h.h2("Products"),
+    h.p(["sort: ", Stream.map(query.changes, (q) => q.sort ?? "none")]),
+  ]);
+});
+```
+
+A `NotFound` match yields the empty subset rather than failing, so the stream stays live across navigations.
 
 ## Layouts and the outlet
 
@@ -121,7 +143,30 @@ A layout owns **no `segment` or `path`**; all path structure lives on routes. A 
 
 ### Layout persistence
 
-Each nesting level renders as a reactive stream child keyed by `(pattern + the param values that level depends on)` and `dedupe`d. An unchanged ancestor layout therefore **stays mounted** across a navigation that only changes a deeper level. Its DOM identity and any local state (a `SubscriptionRef`, a scroll position) survive while only the inner outlet swaps.
+Each nesting level renders as a reactive stream child keyed by `(pattern + the param values that level depends on)` and `dedupe`d. An unchanged ancestor layout therefore **stays mounted** across a navigation that only changes a deeper level: its DOM identity and any local state (a `SubscriptionRef`, a scroll position) survive while only the inner outlet swaps.
+
+```typescript
+import { Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
+import { Clock } from "effect";
+
+// UserShell's body runs once per distinct `:id`. Navigating between
+// /users/1/settings and /users/1/posts doesn't change `:id`, so this
+// instance (and `sessionStart`) is never recreated: only `outlet` swaps.
+const UserShell = Component.gen(function* () {
+  const { id } = yield* Router.params(idParam);
+  const outlet = yield* Router.Outlet;
+  const sessionStart = yield* Clock.currentTimeMillis;
+
+  return yield* h.div({ class: "user" }, [
+    h.p(`shell mounted at ${sessionStart}`),
+    h.h1(`User ${id}`),
+    outlet,
+  ]);
+});
+```
+
+Navigate from `/users/1/settings` to `/users/1/posts` and the mounted timestamp stays the same; navigate to `/users/2/settings` and it re-renders, since `:id` changed.
 
 ## Sealing the tree
 
@@ -175,7 +220,7 @@ Router.route("users/:id", {
 });
 ```
 
-`RouterNotFound` is exported, so a `Boundary.catchTag("RouterNotFound", …)` placed inside a subtree overrides the app-level fallback for that subtree. The router's internal boundary is outermost, so a nearer user boundary wins.
+`RouterNotFound` is exported, so a `Boundary.catchTag(…)` placed inside a subtree overrides the app-level fallback for that subtree. The router's internal boundary is outermost, so a nearer user boundary wins.
 
 > **`Schema.NumberFromString` gotcha.** Decoding no longer fails on a non-numeric segment: `/users/abc` decodes `id` to `NaN` instead of missing the route. A leaf that guards a numeric param must check `Number.isFinite(id)` itself (as above). Relying on the schema alone to 404 non-numeric input no longer works.
 
@@ -183,21 +228,98 @@ Router.route("users/:id", {
 
 On the client, provide the `Router` via `RouterLive(def)` and render `RouterApp(def)`. `RouterLive` is a **scoped layer**: it owns the `popstate` listener and the same-origin link-click interceptor, so it must outlive the mount.
 
-Give it to `WeftApp.make`. The app runtime owns it for the app's lifetime, built lazily on first hydrate and released only at `WeftApp.dispose`. Do not wrap `Effect.provide` around the mount/hydrate call; services come exclusively from the app layer.
+Give it to `WeftApp.make`. The app runtime owns it for the app's lifetime, built lazily on first mount/hydrate and released only at `WeftApp.dispose`. Do not wrap `Effect.provide` around the mount/hydrate call; services come exclusively from the app layer. `RouterLive`'s only required argument is the sealed `App`; a second `options` argument adds an rpc group or a custom `baseUrl` when needed (see [`Boundary.rpc` interplay](#boundaryrpc-interplay)).
+
+### Client-only app
+
+A complete, no-SSR app: three routes under one `Shell` layout, mounted directly into an empty `#root`. This is the whole file set, copy/paste runnable in a `vite` + `@weftui/router` project.
+
+```html
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weft routing demo</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+```
 
 ```typescript
-// entry-client.ts
+// src/app.ts
+/**
+ * Client-only routing demo: a Shell layout with Home, About, and a dynamic
+ * User page, sealed into a single RouterDef. Side-effect-free (no mount call),
+ * so `main.ts` and any test can import `App` directly.
+ */
+import { Component, h } from "@weftui/core";
+import { href, notFound, Router } from "@weftui/router";
+import { Schema } from "effect";
+
+const idParam = { id: Schema.NumberFromString };
+
+const homeRoute = Router.route("", {
+  component: Component.make(() => h.section({ id: "page" }, [h.h2("Home")])),
+});
+
+const aboutRoute = Router.route("about", {
+  component: Component.make(() => h.section({ id: "page" }, [h.h2("About")])),
+});
+
+const userRoute = Router.route("users/:id", {
+  path: idParam,
+  component: ({ path }) => {
+    if (!Number.isFinite(path.id) || path.id < 0) return notFound();
+    return h.section({ id: "page" }, [h.h2(`User ${path.id}`)]);
+  },
+});
+
+const Shell = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* h.div({ id: "app" }, [
+    h.nav([
+      h.a({ href: href(homeRoute) }, "Home"),
+      " · ",
+      h.a({ href: href(aboutRoute) }, "About"),
+      " · ",
+      h.a({ href: href(userRoute, { path: { id: 1 } }) }, "User 1"),
+    ]),
+    h.main([outlet]),
+  ]);
+});
+
+export const App = Router.router(
+  Router.layout({ component: Shell }, [homeRoute, aboutRoute, userRoute]),
+  { notFound: () => h.section({ id: "page" }, [h.h2("404: page not found")]) },
+);
+```
+
+```typescript
+// src/main.ts
+/**
+ * Browser entry: mounts the routing demo into `#root`. No server render to
+ * hydrate, so this uses `WeftApp.mount`, not `hydrate`.
+ */
 import { WeftApp } from "@weftui/dom/client";
 import { RouterApp, RouterLive } from "@weftui/router/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
-const root = document.getElementById("root")!;
+const root = document.getElementById("root");
+if (root === null) {
+  throw new Error("#root not found");
+}
+
 const app = WeftApp.make(RouterLive(App));
-void Effect.runPromise(WeftApp.hydrate(app, RouterApp(App), root));
+void Effect.runPromise(WeftApp.mount(app, RouterApp(App), root));
 ```
 
-For a client-only app (no SSR), swap `WeftApp.hydrate` for `WeftApp.mount`; everything else is identical.
+`WeftApp.mount(app, node, root)` clears `root` and renders `node` fresh, in contrast to `hydrate`, which adopts existing server-rendered DOM (see [Full SSR example](#full-ssr-example) below). Everything else, the layout, `href`, params, navigation, is identical between the two setups.
 
 ### Link interception
 
@@ -265,10 +387,92 @@ On the server, `RouterServer`:
 - renders `RouterApp` to hydratable HTML inside a **document shell**
 - reports a status (404 when no route matches or a page raises `RouterNotFound`)
 
-The document shell is itself a `ComponentSlot` that splices the app via `yield* Router.Outlet`, exactly like a layout receives its outlet:
+The document shell is itself a `ComponentSlot` that splices the app via `yield* Router.Outlet`, exactly like a layout receives its outlet.
+
+### Full SSR example
+
+The same three routes as the [client-only app](#client-only-app), rendered on the server as hydratable HTML and hydrated in the browser. This is the whole file set (drop it alongside a dev server that bridges `entry-server.ts`'s `handler` into Vite or any Web-platform server; see [`examples/router-ssr/server.ts`](../../examples/router-ssr/server.ts) for a working one).
 
 ```typescript
-// entry-server.ts
+// src/app.ts
+/**
+ * Shared, isomorphic router app: three pages under one persistent Shell
+ * layout. Side-effect-free: it never mounts or serves. `entry-server.ts`
+ * renders the matched route on the server; `entry-client.ts` hydrates over it.
+ */
+import { Component, h } from "@weftui/core";
+import { href, notFound, Router } from "@weftui/router";
+import { Schema } from "effect";
+
+const idParam = { id: Schema.NumberFromString };
+
+export const homeRoute = Router.route("", {
+  component: Component.make(() => h.section({ id: "page" }, [h.h2("Home")])),
+});
+
+export const aboutRoute = Router.route("about", {
+  component: Component.make(() => h.section({ id: "page" }, [h.h2("About")])),
+});
+
+export const userRoute = Router.route("users/:id", {
+  path: idParam,
+  component: ({ path }) => {
+    if (!Number.isFinite(path.id) || path.id < 0) return notFound();
+    return h.section({ id: "page" }, [h.h2(`User ${path.id}`)]);
+  },
+});
+
+const Shell = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* h.div({ id: "app" }, [
+    h.nav([
+      h.a({ href: href(homeRoute) }, "Home"),
+      " · ",
+      h.a({ href: href(aboutRoute) }, "About"),
+    ]),
+    h.main([outlet]),
+  ]);
+});
+
+export const App = Router.router(
+  Router.layout({ component: Shell }, [homeRoute, aboutRoute, userRoute]),
+  { notFound: () => h.section({ id: "page" }, [h.h2("404: page not found")]) },
+);
+```
+
+```typescript
+// src/entry-client.ts
+/**
+ * Client entry: hydrates the server-rendered markup in `#root`.
+ *
+ * `RouterApp(App)` is the universal router root; `RouterLive(App)` provides
+ * the History-API-backed `Router` (seeded from `window.location`, with the
+ * same-origin link click interceptor installed). `hydrate` adopts the server
+ * DOM in place and resumes the reactive outlet.
+ */
+import { WeftApp } from "@weftui/dom/client";
+import { RouterApp, RouterLive } from "@weftui/router/client";
+import { Effect } from "effect";
+import { App } from "./app";
+
+const root = document.getElementById("root");
+if (root === null) {
+  throw new Error("#root not found");
+}
+
+const app = WeftApp.make(RouterLive(App));
+void Effect.runPromise(WeftApp.hydrate(app, RouterApp(App), root));
+```
+
+```typescript
+// src/entry-server.ts
+/**
+ * Server entry: renders the matched route to a hydratable HTML document.
+ *
+ * `documentShell` splices the app via `yield* Router.Outlet` (injected per
+ * request by `RouterServer`). `render` drives it for a single `url`; `handler`
+ * is a Web `fetch`-style handler ready to bridge into Vite or any Web server.
+ */
 import { Component, h } from "@weftui/core";
 import { Router } from "@weftui/router";
 import { RouterServer } from "@weftui/router/server";
@@ -287,14 +491,16 @@ const documentShell = Component.gen(function* () {
 });
 
 // { html, status }: `<!DOCTYPE html>` is prepended for you.
-export const render = (url: string) =>
+export const render = (url: string): Promise<{ html: string; status: number }> =>
   Effect.runPromise(RouterServer.render(App, { document: documentShell, url }));
 
-// Or a Web fetch-style handler, ready to bridge into Vite or any Web server.
+// A Web fetch-style handler, ready to bridge into Vite or any Web server.
 export const handler = RouterServer.toWebHandler(App, { document: documentShell });
 ```
 
-`render` provides both `Router.Outlet` (the app, per request) and `Router` (so the shell may read params). It renders through `renderToStringHydratable` so the client can `hydrate` in place.
+`render` provides both `Router.Outlet` (the app, per request) and `Router` (so the shell may read params). It renders through `renderToStringHydratable` so the client can `hydrate` in place. Neither `RouterLive` nor `RouterServer` needs an `rpc` option here: it's optional and only required once a page uses [`Boundary.rpc`](#boundaryrpc-interplay).
+
+`handler` still needs a server to call it. [`examples/router-ssr/server.ts`](../../examples/router-ssr/server.ts) shows the shape: a Node HTTP server that runs Vite in middleware mode, converts each request to a Web `Request`, calls `handler`, and runs HTML responses through `vite.transformIndexHtml` for HMR (non-HTML responses, like a `Boundary.rpc` refetch, are forwarded untouched). See that file and its co-located [`vite.config.ts`](../../examples/router-ssr/vite.config.ts) for the full dev-server wiring; it's the same shape in production behind any Web-platform host.
 
 ### `effect/unstable/httpapi` is the spine
 
@@ -307,12 +513,34 @@ The result is a single `"pages"` group with one GET endpoint per leaf at its ful
 
 ## Errors
 
-| Error               | Raised by                                                             | Recover with                                                                |
-| ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `RouterNotFound`    | `notFound()`, or no route matched                                     | `Boundary.catchTag("RouterNotFound", …)` (or the app-level `notFound` page) |
-| `RouterParamsError` | `Router.params` / `Router.query` on a missing/invalid key or no match | `Boundary.catchTag("RouterParamsError", …)`                                 |
+| Error               | Raised by                                                             | Recover with                                              |
+| ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| `RouterNotFound`    | `notFound()`, or no route matched                                     | `Boundary.catchTag(…)` (or the app-level `notFound` page) |
+| `RouterParamsError` | `Router.params` / `Router.query` on a missing/invalid key or no match | `Boundary.catchTag(…)`                                    |
 
 Both are modeled as `Schema.TaggedErrorClass`, so they encode/decode across the wire the same way `Boundary.rpc` replays typed failures.
+
+Recover locally by wrapping just the subtree that can fail, rather than relying on the app-level `notFound` page for everything:
+
+```typescript
+import { Boundary, Component, h } from "@weftui/core";
+import { Router } from "@weftui/router";
+
+const UserShell = Component.gen(function* () {
+  const outlet = yield* Router.Outlet;
+  return yield* h.div({ class: "user" }, [
+    Boundary.catchTag(
+      {
+        tag: "RouterParamsError",
+        fallback: () => h.p({ class: "error" }, "Couldn't read this page's params."),
+      },
+      [outlet],
+    ),
+  ]);
+});
+```
+
+The matched tag is removed from the boundary's output `E`; an unmatched error (e.g. `RouterNotFound`) re-raises to the nearest parent boundary, which is the router's own not-found boundary if nothing closer catches it.
 
 ## `Boundary.rpc` interplay
 
@@ -320,12 +548,12 @@ Initial SSR navigation works end to end: the server resolves the rpc and inlines
 
 **Client-side** navigation into a page containing a `Boundary.rpc` has no SSR payload, so the boundary performs a **client-first mount**. It renders the boundary's `fallback`, forks the rpc call over `POST /_eui/rpc`, and swaps in the result.
 
-`@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server). The same rpc backs SSR-replay, refetch, and client-first mount. See the [rpc data boundaries guide](./load-data-with-rpc.md).
+`@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server). The same rpc backs SSR-replay, refetch, and client-first mount. Both `RouterLive` and `RouterServer` take an optional `{ rpc: { group } }` (server also needs `handlers`) to wire it: see the [rpc data boundaries guide](./load-data-with-rpc.md) and [`examples/router-ssr`](../../examples/router-ssr) for the full contract/handler split.
 
 ## See also
 
 - [`@weftui/router` API reference](../reference/router.md)
-- [examples/router-ssr](../../examples/router-ssr): a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, and programmatic navigation over the `effect/unstable/httpapi` spine
+- [examples/router-ssr](../../examples/router-ssr): a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, `Boundary.rpc`, and programmatic navigation over the `effect/unstable/httpapi` spine
 - [Component Authoring](./author-components.md): `Component.make` / `Component.gen`, the idiomatic way to write route components
 - [Server-Side Rendering](./render-on-the-server.md): `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
 - [RPC Data Boundaries](./load-data-with-rpc.md): `Boundary.rpc`, the `Resource` handle, and the four lifecycles
