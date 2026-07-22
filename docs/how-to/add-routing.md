@@ -9,22 +9,33 @@ description: "@weftui/router: universal nested routing, Router.route / Router.la
 
 `@weftui/router` is a universal (server + client) nested router for Weft. It maps a URL to a rendered `Node` tree on both sides:
 
-- **Server**: matches an incoming request path, renders the matched nested page to hydratable HTML, and responds with `text/html` (HTTP 404 for not-found).
-- **Client**: matches `window.location`, swaps pages reactively via the History API, and keeps unchanged ancestor layouts mounted across navigations.
+- **Server**: matches an incoming request path, renders to hydratable HTML.
+- **Client**: matches reactively via the History API.
 
-The package mirrors `@weftui/dom`: a shared (universal) root, a `./client` entry, and a `./server` entry.
+The package exports a shared (universal) root, a `./client` entry, and a `./server` entry.
 
 ```bash
 npm install @weftui/router
 ```
 
-Two complete, copy/paste examples are below: a [client-only app](#client-only-app) and a [full SSR app](#full-ssr-example). Skip to whichever matches your setup, or read on for the concepts first.
-
 ## The mental model
 
-A route's **component is its handler**. A page is a component that renders, and its `component` slot is invoked at render time on whichever side the request arrives. Server-resolved data stays with [`Boundary.rpc`](./load-data-with-rpc.md); client-side async stays with `Boundary.suspend`.
+A route's **component is its handler**. A page is a component that renders, and its `component` slot is invoked at render time.
 
-You author an **explicit nested route tree** with three namespaced combinators (mirroring the `h.div` / `Component.gen` / `Boundary.catchTag` surface) and seal it once:
+```typescript
+const homeRoute = Router.route("", { component: Home });
+const aboutRoute = Router.route("about", { component: About });
+const userRoute = Router.route("users/:id", {
+  path: { id: Schema.NumberFromString },
+  component: ({ path }) => h.h1(`User ${path.id}`),
+});
+
+const App = Router.router(Router.layout({ component: Shell }, [homeRoute, aboutRoute, userRoute]), {
+  notFound: () => h.h1("404"),
+});
+```
+
+You author a **nested route tree** with namespaced combinators and seal it once:
 
 | Combinator                                            | Builds                                                           |
 | ----------------------------------------------------- | ---------------------------------------------------------------- |
@@ -36,7 +47,7 @@ The tree is the source of truth. The same sealed `RouterDef` drives both server 
 
 ## Authoring routes
 
-Every `component` slot is a **`ComponentSlot`**: a callable producing a `Node`, passed **uncalled**. Use [`Component.make` / `Component.gen`](./author-components.md) (or a plain `() => Node` thunk). The router invokes it at render time, which lets `href(…)` resolve after the tree is compiled.
+Every **`ComponentSlot`** produces a `Node` when called. Use [`Component.make` / `Component.gen`](./author-components.md) (or a plain `() => Node` thunk). The router invokes it at render time, which lets `href(…)` resolve after the tree is compiled.
 
 ```typescript
 import { Component, h } from "@weftui/core";
@@ -56,10 +67,13 @@ const User = Router.route("users/:id", {
 });
 ```
 
-- **`segment`** is relative to the parent and may contain `:name` path-param placeholders (e.g. `"users/:id"`). A leading/trailing `/` is tolerated. Each leaf carries its full relative path (e.g. `"users/:id/settings"`).
-- **`path` / `query`** are `Schema.Struct.Fields` (a record of `name → Schema`), declared **only on routes**. The compiler covers every `:name` placeholder in `pathSchema`, defaulting to `Schema.String` when a placeholder has no declared field. Query fields are optional by default.
+- **`segment`** is relative to the parent and may contain `:name` path-param placeholders (e.g. `"users/:id"`). A leading/trailing `/` is tolerated.
 
-> Authoring components with `Component.make` / `Component.gen` keeps every slot fully typed: the router never sees a `Node<any, any>`. Each component's `E`/`R` channels aggregate up through `Router.layout` / `Router.router` into the sealed `RouterDef`.
+Each leaf carries its full relative path (e.g. `"users/:id/settings"`).
+
+**`path` / `query`** are `Schema.Struct.Fields` (a record of `name → Schema`), declared **only on routes**. The compiler covers every `:name` placeholder in `pathSchema`, defaulting to `Schema.String` when a placeholder has no declared field. Query fields are optional by default.
+
+> Authoring components with `Component.make` / `Component.gen` keeps every slot fully typed: Each component's `E`/`R` channels aggregate up through `Router.layout` / `Router.router` into the sealed `RouterDef`.
 
 ## Reading the match: handler-arg props vs. injection
 
@@ -230,6 +244,11 @@ On the client, provide the `Router` via `RouterLive(def)` and render `RouterApp(
 
 Give it to `WeftApp.make`. The app runtime owns it for the app's lifetime, built lazily on first mount/hydrate and released only at `WeftApp.dispose`. Do not wrap `Effect.provide` around the mount/hydrate call; services come exclusively from the app layer. `RouterLive`'s only required argument is the sealed `App`; a second `options` argument adds an rpc group or a custom `baseUrl` when needed (see [`Boundary.rpc` interplay](#boundaryrpc-interplay)).
 
+```typescript
+const app = WeftApp.make(RouterLive(App));
+void Effect.runPromise(WeftApp.mount(app, RouterApp(App), root));
+```
+
 ### Client-only app
 
 A complete, no-SSR app: three routes under one `Shell` layout, mounted directly into an empty `#root`. This is the whole file set, copy/paste runnable in a `vite` + `@weftui/router` project.
@@ -331,6 +350,11 @@ A plain `h.a({ href })` to a same-origin, route-matching URL performs SPA naviga
 - same-document (hash-only) navigations
 - hrefs that don't resolve to a route
 
+```typescript
+h.a({ href: "/about" }, "About"); // intercepted: SPA navigation, no reload
+h.a({ href: "/about", target: "_blank" }, "About"); // native: falls through
+```
+
 You don't wire anything up. `RouterLive` installs the delegated listener for the layer's lifetime and removes it on teardown.
 
 ## Programmatic navigation
@@ -388,6 +412,12 @@ On the server, `RouterServer`:
 - reports a status (404 when no route matches or a page raises `RouterNotFound`)
 
 The document shell is itself a `ComponentSlot` that splices the app via `yield* Router.Outlet`, exactly like a layout receives its outlet.
+
+```typescript
+const { html, status } = await Effect.runPromise(
+  RouterServer.render(App, { document: documentShell, url }),
+);
+```
 
 ### Full SSR example
 
@@ -511,6 +541,15 @@ The result is a single `"pages"` group with one GET endpoint per leaf at its ful
 - **Server**: `RouterServer` dispatches through `HttpApiBuilder` (platform owns request→leaf matching, path/query decode, and the 404 status).
 - **Client**: `RouterLive` derives a real `HttpApiClient` from the same `def.httpApi` (exposed as `Router.httpApiClient`) for network work. SPA URL→leaf resolution stays **local**; there is no public client-side "match this URL against my `HttpApi`" utility in platform. It is fed from the same endpoint definitions, so it never drifts from the server.
 
+```typescript
+import { Option } from "effect";
+
+App.httpApi; // HttpApi.Top: one "pages" group, a GET endpoint per leaf
+
+const { httpApiClient } = yield * Router;
+Option.isSome(httpApiClient); // true under RouterLive, false under RouterServer
+```
+
 ## Errors
 
 | Error               | Raised by                                                             | Recover with                                              |
@@ -550,10 +589,20 @@ Initial SSR navigation works end to end: the server resolves the rpc and inlines
 
 `@weftui/router` provides the `AppRpcClientTag` seam on both sides (network client on the client, in-process on the server). The same rpc backs SSR-replay, refetch, and client-first mount. Both `RouterLive` and `RouterServer` take an optional `{ rpc: { group } }` (server also needs `handlers`) to wire it: see the [rpc data boundaries guide](./load-data-with-rpc.md) and [`examples/router-ssr`](../../examples/router-ssr) for the full contract/handler split.
 
+```typescript
+// client (entry-client.ts): network rpc client over the shared group
+const app = WeftApp.make(RouterLive(App, { rpc: { group: StockRpcs } }));
+
+// server (entry-server.ts): same group, plus its handler Layer
+const rpc = { group: StockRpcs, handlers: StockLive };
+export const handler = RouterServer.toWebHandler(App, { document: documentShell, rpc });
+```
+
 ## See also
 
 - [`@weftui/router` API reference](../reference/router.md)
 - [examples/router-ssr](../../examples/router-ssr): a runnable SSR + hydration app with nested layouts, persistent layout state, type-safe `href`s, handler-arg props, `Boundary.rpc`, and programmatic navigation over the `effect/unstable/httpapi` spine
+- [examples/router-client](../../examples/router-client): the client-only counterpart, no server, no SSR, no `Boundary.rpc`
 - [Component Authoring](./author-components.md): `Component.make` / `Component.gen`, the idiomatic way to write route components
 - [Server-Side Rendering](./render-on-the-server.md): `renderToStringHydratable`, `hydrate`, and `Boundary.rpc`
 - [RPC Data Boundaries](./load-data-with-rpc.md): `Boundary.rpc`, the `Resource` handle, and the four lifecycles

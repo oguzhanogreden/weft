@@ -38,6 +38,13 @@ Rules of engagement:
 - **Cross-link across quadrants** rather than duplicating: how-tos link to reference for full signatures and to explanation for the why; tutorials link onward to how-tos.
 - Example `readme.md` files and package READMEs live outside `docs/` and keep their own mandated structures (above). Do not force Diátaxis headings onto them, but the same mode-discipline applies within each section.
 
+### How-to page requirements (`docs/how-to/*`)
+
+- Code above the fold: the first code block appears within ~20 lines of the page top, before any conceptual prose beyond a short intro.
+- Every `##` section contains at least one short snippet (3-15 lines, real verified API). Add one to a `###` subsection only where it carries real signal; a purely behavioral subsection with no API surface may stay prose.
+- At least one fully working copy/paste example: the complete file set needed to run (entry file, app file, `index.html` or server file as applicable), all imports included, no elided `...` bodies.
+- Existing how-to pages are upgraded to these requirements opportunistically when next touched, not in a bulk sweep.
+
 ## Communication Style
 
 - Write for a competent TypeScript/Effect developer: precise, confident, and concise. Avoid filler, hype, and marketing fluff.
@@ -52,6 +59,11 @@ Rules of engagement:
 - Prefer bullets/steps over prose when listing >2 items.
 - No hedging ("generally," "in most cases") unless the exception actually matters here.
 - Metaphor/voice allowed as one short sentence where it aids understanding; no extended analogy paragraphs. Exception: weft/loom/threads/fibers metaphors are part of the library's identity and may run longer.
+- No navigational fluff or forward-pointers ("Two complete examples are below, skip to whichever..."). Headings and anchors already do that job.
+- No comparative asides between packages or API surfaces ("mirrors `@weftui/dom`", "mirroring the `h.div` surface").
+- No detail restated that another section already owns; state a fact where it belongs and cross-link.
+- No redundant qualifiers ("explicit", "three", "on whichever side the request arrives") and no type-system flexes ("the router never sees a `Node<any, any>`").
+- Definitions in simple active voice: "Every `ComponentSlot` produces a `Node` when called", not "Every `component` slot is a `ComponentSlot`: a callable producing a `Node`, passed uncalled".
 
 ## Formatting & Conventions
 
