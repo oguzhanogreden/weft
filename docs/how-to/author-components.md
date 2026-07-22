@@ -7,11 +7,11 @@ description: Plain functions vs. Component.gen / Component.make, instance scope,
 
 # Component Authoring
 
-Weft components are plain TypeScript functions that return a `Node<E, R>`. This guide covers the two ways to define them and when to choose each.
+**Goal:** write a Weft component, a plain function returning a `Node<E, R>`, and pick the right authoring style for its complexity.
 
 ## Plain functions
 
-The simplest component is just a function:
+Static props, no internal state: write and call a plain function.
 
 ```typescript
 import { h } from "@weftui/core";
@@ -20,19 +20,18 @@ function Greeting({ name }: { name: string }) {
   return h.p(`Hello, ${name}!`);
 }
 
-// Call it like a function
-Greeting({ name: "World" });
+Greeting({ name: "World" }); // called directly, no JSX, no deferred descriptor
 ```
 
-Use a plain function when:
+Reach for this when:
 
-- Props are all static (strings, numbers, plain functions)
-- The component has no internal state
-- You don't need the caller's reactive prop types to propagate
+- Props are all static (strings, numbers, plain functions).
+- The component has no internal state.
+- You don't need the caller's reactive prop types to propagate into the return type.
 
 ## Components with internal state
 
-When a component needs reactive state, use `Effect.gen` to set it up before building the tree. The component function still runs once. The setup happens at mount time:
+Set up reactive state with `Effect.gen` before building the tree. The component function still runs once; the setup happens at mount time:
 
 ```typescript
 import { h } from "@weftui/core";
@@ -49,32 +48,103 @@ const Counter = () =>
   });
 ```
 
-The return type here is `Effect.Effect<Node, never, never>`, itself a valid `Node`, so it composes naturally with other tree-building calls.
+`Effect.Effect<Node, never, never>` is itself a valid `Node`, so it composes with any other tree-building call.
 
-As soon as such a component is reused or takes props, wrap the same generator in [`Component.gen`](#componentgen--componentmake-for-reusable-components) (below). That way the caller's reactive prop and children channels flow into its node type.
+Once a component like this is reused or takes props, wrap the same generator in `Component.gen` (below) so the caller's reactive prop and children channels flow into its node type.
 
-## Component scope and background effects
+## `Component.gen` / `Component.make`
 
-Every component instance is rendered under its own **instance scope**, a child of the
-mount scope created fresh for that instance. Anything bound to the instance scope lives
-exactly as long as the component is mounted. It is torn down automatically when the
-component unmounts (or when its root unmounts via `RootHandle.unmount()`).
+Both build a component whose returned `Node`'s `E`/`R` include the caller's reactive prop and children channels, not just the body's own:
 
-The renderer provides this scope as the ambient `Scope.Scope` while it evaluates the
-component body, so it is already in context when you need it.
+- **`Component.make`**: body is a plain function returning any `Effect`. Use for one-liners and pipe compositions.
+- **`Component.gen`**: body is a generator. Use when you need `yield*` for local state or services.
 
-This matters the moment a component starts **background work**: a subscription, an
-observer of a `ref`, a polling timer, anything you `fork`. The rule:
+```typescript
+import { Component, h, Source } from "@weftui/core";
 
-> Fork background work with **`Effect.forkScoped`**, never a bare `Effect.forkChild`.
+interface CardProps {
+  title: Source.Source<string>;
+  body?: Source.Source<string>;
+}
 
-`Effect.forkScoped` attaches the fiber to the instance scope, so it keeps running for
-the component's lifetime and is interrupted on unmount. A bare `Effect.forkChild` instead
-attaches the fiber to the component-body fiber, the one that runs your `Effect.gen` to
-produce the tree. That fiber completes the instant the gen returns its node, so the
-forked work is cancelled almost immediately.
+const Card = Component.make((props: CardProps) =>
+  h.div({ class: "card" }, [
+    h.h3({ class: "card-title" }, [props.title]),
+    props.body ? h.p({ class: "card-body" }, [props.body]) : null,
+  ]),
+);
+```
 
-Concretely, an observer that runs an effect when a `ref`'s element mounts:
+```typescript
+declare const titleStream: Stream.Stream<string, never, I18nService>;
+
+// Node<never, I18nService>: I18nService flows out from the prop the caller passed
+const card = Card({ title: titleStream });
+```
+
+Without a `Component` factory, a plain function's return type is fixed at definition time and can't reflect what the caller actually passes.
+
+- The body's `E`/`R` come from whatever effects it yields or returns.
+- Caller prop channels and children channels are unioned on top at the call site.
+- Static prop values (`string`, `number`, plain functions) contribute `never`.
+
+### Children: array or function
+
+```typescript
+type Component.Children<Input = never> =
+  | readonly Renderable[]
+  | ((input: Input) => readonly Renderable[]);
+```
+
+The function form is the render-prop / slot pattern. The component calls it with whatever `input` it chooses, and the returned array's `E`/`R` propagate out:
+
+```typescript
+const ItemList = Component.make(
+  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
+    h.ul(props.items.flatMap(renderItem)),
+);
+
+ItemList({ items: ["a", "b"] }, (item) => [h.li(item)]);
+```
+
+## Props typing with `Source`
+
+Type a prop that accepts both static and reactive values as `Source.Source<T>` instead of hand-writing the union:
+
+```typescript
+import { Source } from "@weftui/core";
+
+interface ButtonProps {
+  label: Source.Source<string>; // static or reactive text
+  disabled?: Source.Source<boolean>; // static or reactive boolean
+  onclick?: () => void | Effect.Effect<void>; // plain or Effect-returning handler
+}
+```
+
+`Source.Source<T>` **is** the union `T | Stream<T> | Effect<T> | Subscribable<T>`. A plain string contributes `never` to the node's channels; a `Stream<string, never, SomeService>` contributes `SomeService` to `R`. The extraction is `Source.Success` / `Source.Error` / `Source.Context`.
+
+Splicing a `Source` straight into `h` (`[props.label]`) is enough when the body only places it in the tree. Reach for `Source.toSubscribable` when the body needs to **read or derive** from it:
+
+```typescript
+import { Component, h, Source } from "@weftui/core";
+import { Stream } from "effect";
+
+const LoudLabel = Component.gen(function* (props: { label: Source.Source<string> }) {
+  const label = yield* Source.toSubscribable(props.label); // Subscribable<string>
+  return yield* h.strong([Stream.map(label.changes, (text) => text.toUpperCase())]);
+});
+```
+
+- An existing `Subscribable` prop is threaded through by reference, no new fiber.
+- A `Stream` prop is pumped by a fiber scoped to the component's instance scope.
+- An `Effect` prop is memoized, so it runs at most once.
+- A static value emits once.
+
+## Instance scope and background effects
+
+Every component instance renders under its own **instance scope**, a child of the mount scope created fresh per instance. It closes on unmount (or when its root unmounts via `RootHandle.unmount()`). The renderer supplies it as the ambient `Scope.Scope` while your body runs, so it's already in context.
+
+Fork background work (a subscription, a ref observer, a polling timer) with **`Effect.forkScoped`**, never a bare `Effect.forkChild`:
 
 ```typescript
 import { h } from "@weftui/core";
@@ -97,120 +167,12 @@ const AutoFocusInput = () =>
   });
 ```
 
-You do not manage the scope yourself: you do not create it, close it, or pass it
-around. `forkScoped` reads it from context, and unmount closes it for you. If you ever
-fork outside a component body (rare), you must supply a `Scope.Scope` yourself. The
-type system will tell you, because `forkScoped` carries a `Scope.Scope` requirement.
+- `Effect.forkScoped` attaches the fiber to the instance scope, so it keeps running for the component's lifetime and is interrupted on unmount.
+- `Effect.forkChild` attaches to the component-body fiber instead, the one that runs your generator to produce the tree. That fiber completes the instant the body returns its node, so a bare fork is cancelled almost immediately.
 
-See `examples/element-ref` for the auto-focus, measure, and canvas recipes built on
-this pattern.
+You never create, close, or pass the scope yourself: `forkScoped` reads it from context, and unmount closes it for you. Forking outside a component body (rare) requires supplying a `Scope.Scope`, and `forkScoped`'s own `Scope.Scope` requirement makes the type system tell you.
 
-## `Component.gen` / `Component.make` for reusable components
-
-When you want the caller's reactive prop types to flow into the returned node's type, use one of the `Component` factories. Both have the same call semantics; pick the body style that fits:
-
-- **`Component.make`**: body is a plain function returning any `Effect` (typically a `Node`). Use for one-liners and pipe compositions.
-- **`Component.gen`**: body is a generator. Use when you need `yield*` to set up local state or pull from services.
-
-```typescript
-import { Component, h, Source } from "@weftui/core";
-
-interface CardProps {
-  title: Source.Source<string>;
-  body?: Source.Source<string>;
-}
-
-const Card = Component.make((props: CardProps) =>
-  h.div({ class: "card" }, [
-    h.h3({ class: "card-title" }, [props.title]),
-    props.body ? h.p({ class: "card-body" }, [props.body]) : null,
-  ]),
-);
-```
-
-`Source.Source<string>` is Weft's caller-facing prop vocabulary: a single type covering a static `string`, a `Stream<string>`, an `Effect<string>`, or a `Subscribable<string>`. You don't hand-write `string | Stream.Stream<string> | …` on every prop.
-
-Passing a `Source` straight to `h` (as above) is all you need when the value is just spliced into the tree. The renderer normalizes it.
-
-Now the caller's stream types are visible in the returned node:
-
-```typescript
-declare const titleStream: Stream.Stream<string, never, I18nService>;
-
-// Node<never, I18nService>: I18nService requirement flows out
-const card = Card({ title: titleStream });
-```
-
-Without a `Component` factory, a plain function's return type is fixed at definition time and won't reflect the caller's reactive prop types.
-
-### Body `E`/`R` inference
-
-You don't declare the body's `E`/`R` channels explicitly. They're inferred from the returned (or yielded) effect:
-
-- The body's `E`/`R` come from whatever effects appear inside.
-- The caller's reactive prop channels and reactive children channels are unioned on top at the call site.
-- Static prop values (`string`, `number`, plain functions) contribute `never`.
-
-### Children: array or function
-
-Both factories accept an optional second `children` argument, typed as:
-
-```typescript
-type Component.Children<Input = never> =
-  | readonly Renderable[]
-  | ((input: Input) => readonly Renderable[]);
-```
-
-The function form is the render-prop / slot pattern. The component invokes the function with whatever input it chooses, and the returned array's `E`/`R` propagate out:
-
-```typescript
-const ItemList = Component.make(
-  (props: { items: readonly string[] }, renderItem: (item: string) => readonly Renderable[]) =>
-    h.ul(props.items.flatMap(renderItem)),
-);
-
-ItemList({ items: ["a", "b"] }, (item) => [h.li(item)]);
-```
-
-## Props typing
-
-For a prop that accepts both static and reactive values, type it as [`Source.Source<T>`](../reference/core.md#source-namespace) rather than hand-writing the union. `Source.Source<T>` **is** that union: `T | Stream<T> | Effect<T> | Subscribable<T>`. The caller can pass a plain value or any reactive shape interchangeably, and you write it once:
-
-```typescript
-import { Source } from "@weftui/core";
-
-interface ButtonProps {
-  label: Source.Source<string>; // static or reactive text
-  disabled?: Source.Source<boolean>; // static or reactive boolean
-  onclick?: () => void | Effect.Effect<void>; // plain or Effect-returning handler
-}
-```
-
-When a caller passes a plain string, the component's node type has `never` for that prop's channels. When they pass a `Stream.Stream<string, never, SomeService>`, `SomeService` appears in the `R` channel. The extraction is exactly `Source.Success` / `Source.Error` / `Source.Context`.
-
-### Reading a `Source` in the body
-
-Splicing a `Source` straight into `h` (`[props.label]`) is enough when you only place it in the tree. When the body needs to **read or derive** from the value (combine two props, feed a stream operator, drive logic), normalize it first with [`Source.toSubscribable`](../reference/core.md#sourcetosubscribablesource-key). It turns any `Source<A>` into an await-first, hot `Subscribable<A>`:
-
-```typescript
-import { Component, h, Source } from "@weftui/core";
-import { Stream } from "effect";
-
-const LoudLabel = Component.gen(function* (props: { label: Source.Source<string> }) {
-  const label = yield* Source.toSubscribable(props.label); // Subscribable<string>
-  // Now derive from it like any Subscribable: static, Effect, and Stream inputs all work.
-  return yield* h.strong([Stream.map(label.changes, (text) => text.toUpperCase())]);
-});
-```
-
-`toSubscribable` is scoped:
-
-- A `Stream` prop is pumped by a fiber that terminates with the component's instance scope.
-- An `Effect` prop is memoized.
-- An existing `Subscribable` is threaded through by reference.
-- A static value emits once.
-
-It is the same normalization the renderer applies to props internally. Reach for it whenever you need the value as a `Subscribable` instead of leaving it opaque.
+See [Use Element Refs](./use-element-refs.md) for the auto-focus, measure, and canvas recipes built on this pattern.
 
 ## Composing components
 
@@ -228,11 +190,11 @@ function App() {
 }
 ```
 
-Children arrays accumulate `E`/`R` from all their members. The parent node's type reflects the union of all children's channels.
+Children arrays accumulate `E`/`R` from all their members; the parent node's type reflects the union.
 
 ## Components that require services
 
-If a component's render function uses a service via `yield*`, that service appears in the component's `CompR` parameter:
+A service read via `yield*` inside the body appears in the component's `R` channel, regardless of what the caller passes:
 
 ```typescript
 import { Component, h } from "@weftui/core";
@@ -243,11 +205,11 @@ const UserAvatar = Component.gen(function* (props: { userId: string }) {
   return yield* h.img({ src: user.avatarUrl, alt: user.name });
 });
 
-// Node<never, UserService>: regardless of what the caller passes
+// Node<never, UserService>
 const avatar = UserAvatar({ userId: "123" });
 ```
 
-Give the service to the app layer:
+Give the service to the app layer, not to the mount call:
 
 ```typescript
 import { WeftApp } from "@weftui/dom/client";
@@ -257,9 +219,11 @@ const app = WeftApp.make(UserServiceLive);
 void Effect.runPromise(WeftApp.mount(app, App(), document.getElementById("root")!));
 ```
 
+See [Provide Services](./provide-services.md) for scoped layers, `memoMap` sharing, and why wrapping `Effect.provide` around the mount call doesn't work.
+
 ## Returning fragments
 
-When a component needs to return multiple sibling elements without a wrapper, use `h.fragment`:
+Return multiple sibling elements without a wrapper using `h.fragment`:
 
 ```typescript
 import { h } from "@weftui/core";
@@ -268,11 +232,13 @@ const TableCells = ({ row }: { row: Row }) =>
   h.fragment([h.td(row.name), h.td(row.value), h.td(row.status)]);
 ```
 
-`h.fragment` returns a `Node<E, R>` that accumulates channels from all its children.
+`h.fragment` returns a `Node<E, R>` that accumulates channels from all its children, same as any other `h.*` call.
 
 ## See also
 
 - [The Combinator API](../explanation/combinator-api.md): `h`, `h.fragment`, and how `E`/`R` accumulate
 - [Reactive Primitives](../explanation/reactive-primitives.md): the `Source` vocabulary props accept
+- [Use Element Refs](./use-element-refs.md): `ref` props and scoped mount observers
+- [Provide Services](./provide-services.md): app layers, scoped layers, and `memoMap`
 - [Add Routing](./add-routing.md): route components are `Component` slots
 - [`@weftui/core` reference](../reference/core.md): `Component`, `Source`, and the full surface
