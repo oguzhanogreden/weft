@@ -86,11 +86,11 @@ h.div({ style: styleStream });
 
 ```typescript
 h.div({
-  style: {
-    ...dynamicStream, // reactive: spread each emitted object
-    position: "absolute", // static
+  style: Stream.map(dynamicStream, (s) => ({
+    ...s, // fold the emitted object's own properties in
+    position: "absolute", // static, reapplied on every emit
     transition: "all 0.3s",
-  },
+  })),
 });
 ```
 
