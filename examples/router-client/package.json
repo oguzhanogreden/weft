@@ -1,0 +1,17 @@
+{
+  "name": "router-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@weftui/core": "workspace:*",
+    "@weftui/dom": "workspace:*",
+    "@weftui/router": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
