@@ -126,12 +126,12 @@ interface ButtonProps {
 Splicing a `Source` straight into `h` (`[props.label]`) is enough when the body only places it in the tree. Reach for `Source.toSubscribable` when the body needs to **read or derive** from it:
 
 ```typescript
-import { Component, h, Source } from "@weftui/core";
+import { Component, h, Source, Subscribable } from "@weftui/core";
 import { Stream } from "effect";
 
 const LoudLabel = Component.gen(function* (props: { label: Source.Source<string> }) {
   const label = yield* Source.toSubscribable(props.label); // Subscribable<string>
-  return yield* h.strong([Stream.map(label.changes, (text) => text.toUpperCase())]);
+  return yield* h.strong([Stream.map(Subscribable.changes(label), (text) => text.toUpperCase())]);
 });
 ```
 
