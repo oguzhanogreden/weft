@@ -7,7 +7,14 @@ description: How h, h.fragment, and Component.gen / Component.make work; why Nod
 
 # The Combinator API
 
-Weft builds UI trees by calling builder functions. Because component return types stay as generic `Effect.Effect<ElementDescriptor, E, R>`, the error channel (`E`) and requirements channel (`R`) propagate through the entire tree: visible to the type checker, satisfiable at the mount boundary.
+Weft builds UI trees by calling builder functions, not by writing markup. There is no JSX runtime and no `h(Component)` overload: a component is a plain function you call, and its result goes straight into the tree.
+
+```typescript
+// No JSX, no deferred element. Header/Main/Footer already ran; these are Nodes.
+const tree = h.div({ class: "app" }, [Header(), Main(), Footer()]);
+```
+
+Because a component's return type stays a concrete `Effect.Effect<ElementDescriptor, E, R>`, its error channel (`E`) and requirement channel (`R`) propagate through the whole tree. Both are visible to the type checker and satisfiable exactly once, at the mount boundary.
 
 JSX collapses every component's return type to an opaque `JSX.Element`, erasing both channels. The combinator API exists specifically to keep them intact.
 
@@ -110,7 +117,7 @@ const TableRow = ({ user }: { user: User }) =>
 
 ## Custom components with `Component.gen` / `Component.make`
 
-Plain functions work fine for simple components, but the `Component` factories provide type-level wiring so the caller's reactive prop types contribute their `E`/`R` to the returned node. Pick `Component.make` for a plain-function body and `Component.gen` for a generator body (when you need `yield*` to set up local state or pull from services).
+Plain functions work fine for simple components. The `Component` factories add type-level wiring: the caller's actual reactive prop types contribute their `E`/`R` to the node returned at that call site, not just the types you wrote in the signature. Pick `Component.make` for a plain-function body, `Component.gen` for a generator body (when you need `yield*` for local state or a service).
 
 ```typescript
 import { Component, h } from "@weftui/core";
@@ -132,30 +139,29 @@ declare const labelStream: Stream.Stream<string, never, I18nService>;
 const btn = Button({ label: labelStream });
 ```
 
-Components also accept an optional `children` argument, either as `readonly Renderable[]` or as a `(input) => readonly Renderable[]` function (render-prop pattern). `E`/`R` from children, including the array returned by a function-children call, accumulate on the resulting node.
+Components also accept an optional `children` argument: either `readonly Renderable[]`, or a `(input) => readonly Renderable[]` function for the render-prop pattern. Either way, the children's `E`/`R` accumulate onto the resulting node, including the array a function-children call returns.
 
-Without `Component`, a plain function's return type is fixed at definition time and does not reflect the caller's reactive prop types.
+A plain function without `Component` has its return type fixed at definition time. It reflects only the prop types you wrote, never a specific caller's reactive prop types.
 
-See [component-authoring.md](../how-to/author-components.md) for a full walkthrough.
+See [Author Components](../how-to/author-components.md) for a full walkthrough.
 
-## Suspense boundaries
+## Boundaries accumulate channels too
 
-`Boundary.suspend` wraps async children and shows a fallback until all of them have emitted their first value:
+`Boundary.suspend`, `Boundary.catch`, and the rest of the `Boundary` namespace are Nodes, not a separate concept. A boundary wraps children and its own type is `Node<ChildrenE, ChildrenR>`, so the same accumulation rules apply:
 
 ```typescript
 import { Boundary, h } from "@weftui/core";
 
+// Node<ChildrenE, ChildrenR>: transparent to E/R, like a plain h.* parent
 Boundary.suspend({ fallback: h.div({ class: "spinner" }, "Loading...") }, [
   AsyncCard({ id: 1 }),
   AsyncCard({ id: 2 }),
 ]);
 ```
 
-The fallback is replaced atomically: either all children are visible or none are. This prevents partial flicker when multiple async siblings resolve at different times. The boundary's node type is `Node<ChildrenE, ChildrenR>`: the children's `E`/`R` channels accumulate onto it, exactly as they would for a plain `h.*` parent.
+A boundary changes _when_ and _whether_ its children's output reaches the DOM, not what its type carries. `Boundary.catchTag` is the one exception: it removes the matched tag from `E`, since that's the failure it discharges.
 
-On the server, `renderToStreamHydratable` emits the fallback inline and appends patch scripts as children resolve. On the client, `hydrate` sees through `Boundary.suspend` boundaries and adopts the already-resolved DOM directly.
-
-`Boundary.suspend` is one of the boundary combinators. See the [core reference](../reference/core.md#boundarysuspend) for the full `Boundary.*` surface, including the failure-catch variants and `Boundary.rpc`.
+See [Boundaries and Suspense](./boundaries-and-suspense.md) for what each boundary variant does, and the [core reference](../reference/core.md#boundary-namespace) for the full `Boundary.*` surface.
 
 ## See also
 

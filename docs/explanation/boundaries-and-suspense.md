@@ -40,15 +40,28 @@ An unhandled failure re-raises to the **nearest enclosing** boundary; if none ca
 
 ### Post-mount failures with no enclosing boundary
 
-The routing above describes what happens while a node is being built. Once mounted, a reactive region (an attribute, child, or list stream, or a hydrated equivalent) keeps running for the lifetime of its scope. It can still fail later: a `Stream` backing a `Boundary.rpc` resource might raise `RouterNotFound` after a client-side navigation. If a `BoundaryContext` encloses the region, the failure routes to it exactly as above, and the boundary's fallback swaps in.
+The routing above describes what happens while a node is being built. Once mounted, a reactive region keeps running for the lifetime of its scope: an attribute, a child, a list stream, or a hydrated equivalent. It can still fail later, e.g. a `Boundary.rpc` resource's refetch stream raising after a client-side navigation.
 
-If no boundary encloses it, there is nothing to swap to. Weft does not synthesize one. The region's DOM keeps its last rendered content, and a watcher fiber (forked into the same scope alongside the subscription itself) observes its exit directly.
+If a boundary encloses the region, the failure routes to it exactly as above and its fallback swaps in. If none does, there is nothing to swap to. Weft does not synthesize one: the region's DOM keeps its last rendered content, and a watcher fiber (forked alongside the subscription itself) observes the exit instead.
 
-When that exit is a failure whose cause is not interruption-only, Weft reports it explicitly via `Effect.logError(exit.cause)`. The log is annotated with `weft.region` to identify the failing region by kind and identity (e.g. `attribute:class`, `child:stream-3`, `list:stream-2`, `hydrate:stream-1 (/products/42)`). This fires for typed failures and defects alike, in both dev and prod, exactly once per failing region, at the `"Error"` level. Interruption (the ordinary case of unmount tearing down the region's scope) is never reported; only genuine failures are.
+An exit whose cause is not interruption-only publishes an `UnhandledError` (`cause`, `region`, `root`) to the app's unhandled-error hub, exposed as `WeftApp.errors(app)`. `region` names the failing spot: `attribute:class`, `child:stream-3`, or `boundary:outermost` for a failure that escapes even the outermost boundary. Subscribe to observe every occurrence yourself:
 
-This is deliberate. Rather than leave the failure to whatever the Effect runtime would do with an unobserved fiber exit, Weft observes and logs it itself. Visibility is therefore controlled by the same knobs any Effect program uses: `References.MinimumLogLevel` (provided via `Effect.provideService`) to filter it, or a custom `Logger` to route it elsewhere.
+```typescript
+import { WeftApp } from "@weftui/dom/client";
+import { Effect, Stream } from "effect";
 
-A stream that can fail and has no enclosing boundary is a stream whose failures you've chosen not to route into the UI. The log is what tells you that decision has consequences at runtime.
+Effect.runFork(
+  Stream.runForEach(WeftApp.errors(app), (error) =>
+    Effect.log(`unhandled in ${error.region}`, error.cause),
+  ),
+);
+```
+
+With zero subscribers, each unhandled error instead runs a default `Effect.logError(cause)` annotated with `weft.region`, exactly once per occurrence, in dev and prod alike. Subscribing suppresses that fallback for as long as at least one subscriber stays attached.
+
+This is deliberate: rather than leave an unobserved fiber exit to the runtime, Weft always surfaces it, either to your subscriber or to the log. Interruption (ordinary unmount teardown) is never published or logged; only genuine failures are.
+
+A stream that can fail with no enclosing boundary is a stream whose failures you've chosen not to route into the UI. `WeftApp.errors` (and the log fallback) is what tells you that decision has consequences at runtime. Full contract: [`WeftApp.errors` / `UnhandledError`](../reference/dom.md#weftapperrors).
 
 ## Suspense boundaries
 
@@ -100,11 +113,28 @@ Its channel behavior is also distinct. The rpc's typed `error` schema joins the 
 
 The unifying idea: failure, async pending state, and server data are not three separate subsystems bolted onto the renderer. They are three **boundary nodes** in the one tree, each intercepting a different thing flowing through it. Each has channel behavior you can read off its type.
 
-That is why they nest freely. A `Boundary.catchTag` can wrap a `Boundary.rpc` to catch its typed failure. A `Boundary.suspend` can wrap async siblings that themselves contain rpc boundaries.
+That is why they nest freely. A `Boundary.catchTag` can wrap a `Boundary.rpc` to catch its typed failure, and a `Boundary.suspend` can wrap async siblings that themselves contain rpc boundaries:
+
+```typescript
+import { Boundary, h, Subscribable } from "@weftui/core";
+import { Stream } from "effect";
+
+Boundary.catchTag({ tag: "StockRpcError", fallback: () => h.p("Couldn't load stock.") }, [
+  Boundary.rpc(
+    GetStock,
+    () => ({ id: productId }),
+    (resource) =>
+      h.span([Stream.map(Subscribable.changes(resource.value), (s) => String(s.units))]),
+  ),
+]);
+```
+
+Each layer only sees the channel its own kind produces: `catchTag` narrows `E`, `Boundary.rpc` widens it by the rpc's error schema. Neither cares how the other renders.
 
 ## See also
 
 - [The Rendering Model](./rendering-model.md): why a boundary is just a node in a static tree
 - [`Boundary` API reference](../reference/core.md#boundary-namespace): every variant's signature and channel algebra
+- [`WeftApp.errors` / `UnhandledError`](../reference/dom.md#weftapperrors): the unhandled-error hub for post-mount failures with no enclosing boundary
 - [Load Data with RPC](../how-to/load-data-with-rpc.md): the full `Boundary.rpc` walkthrough and its four lifecycles
 - [Render on the Server](../how-to/render-on-the-server.md): how suspense and rpc boundaries stream and hydrate

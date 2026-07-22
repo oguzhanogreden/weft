@@ -7,16 +7,14 @@ description: The Source<A, E, R> vocabulary; Stream, Effect, and Subscribable as
 
 # Reactive Primitives
 
-The unified `Source` vocabulary lets static values, Effects, Streams, and Subscribables be used interchangeably. Props, children, and style values all accept the same type.
+Weft accepts a `Source` for any prop value, any child, and any style value: one vocabulary, four kinds, used interchangeably wherever reactivity is supported.
 
-Weft accepts a `Source` for prop values and children. Any of these is valid wherever reactivity is supported:
-
-- A plain static value (`string`, `number`, `boolean`, ...)
-- An `Effect.Effect<A, E, R>`: runs once and resolves to a value
-- A `Stream.Stream<A, E, R>`: each emission replaces the previous value
-- A `Subscribable<A, E, R>`: like a hot stream; already has a "current value"
-
-The `Source<A, E, R>` type captures this union:
+| Kind                                                      | Behavior                                  |
+| --------------------------------------------------------- | ----------------------------------------- |
+| a plain static value (`string`, `number`, `boolean`, ...) | set once, never updates                   |
+| `Effect.Effect<A, E, R>`                                  | runs once, resolves to a value            |
+| `Stream.Stream<A, E, R>`                                  | each emission replaces the previous value |
+| `Subscribable<A, E, R>`                                   | a hot stream: already has a current value |
 
 ```typescript
 type Source<A, E, R> = A | Effect.Effect<A, E, R> | Stream.Stream<A, E, R> | Subscribable<A, E, R>;
@@ -141,11 +139,15 @@ h.div({
 
 ## NoPropValue
 
-When a `Stream` prop ends before emitting, the renderer raises a `NoPropValue` tagged error. This carries an optional `key` field identifying which prop triggered it:
+A finite `Stream` prop can end without ever emitting, e.g. `Stream.empty` or `Stream.take(0, stream)`. When it does, the renderer raises a `NoPropValue` tagged error carrying an optional `key` that identifies the prop:
 
 ```typescript
-// Handle at the mount boundary if needed. `Effect.catchTag` matches the error
-// by its string tag, so no `NoPropValue` import is required here.
+h.span([Stream.empty]); // completes without emitting: raises NoPropValue
+```
+
+`Effect.catchTag` matches by the string tag, so handling it at the mount boundary needs no `NoPropValue` import:
+
+```typescript
 pipe(
   WeftApp.mount(app, App(), root),
   Effect.catchTag("NoPropValue", (e) =>
@@ -154,7 +156,7 @@ pipe(
 );
 ```
 
-In practice you only encounter `NoPropValue` when a finite `Stream` prop ends before emitting (e.g., `Stream.empty` or `Stream.take(0, stream)`). Most usage with `SubscriptionRef.changes` or infinite streams never raises it.
+`SubscriptionRef.changes` and other infinite streams always emit before completing, so most usage never raises it.
 
 ## See also
 

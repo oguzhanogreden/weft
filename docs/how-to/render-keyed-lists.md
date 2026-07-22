@@ -7,9 +7,7 @@ description: Render a reactive collection with List.each so reordering, insertin
 
 # Render Keyed Lists
 
-**Goal:** render a list whose items reorder, insert, or remove over time, without rebuilding the whole region (which would lose focus, scroll, and input state in the surviving rows).
-
-Use [`List.each`](../reference/core.md#listeach), the keyed-list combinator. It renders each item **once per key** and reconciles across emissions. A reorder _moves_ existing DOM nodes, an insert adds one, a remove drops one, and untouched rows are left entirely alone.
+**Goal:** render a list that reorders, inserts, or removes items over time, without rebuilding the whole region and losing focus, scroll, or input state in the surviving rows.
 
 ```typescript
 import { h, List, Subscribable } from "@weftui/core";
@@ -25,18 +23,32 @@ h.ul([
 ]);
 ```
 
-- **`of`** is the list source: any `Stream`, `Effect`, or `Subscribable` of an `Iterable`. Each emission is materialized to an array to fix order, then reconciled by key.
-- **`by`** projects each item to its reconciliation key, compared via Effect's `Equal`/`Hash`. Omit it and the item itself is the key (structural for `Data`, by reference otherwise).
+[`List.each`](../reference/core.md#listeach) renders each item **once per key** and reconciles across emissions. A reorder moves existing DOM nodes, an insert adds one, a remove drops one, and untouched rows are left alone.
 
-## Why not `map`?
+## Options
 
-Mapping items by hand (`Stream.map(Subscribable.changes(rows), (rs) => rs.map(r => h.li(r.name)))`) produces a **new children array on every emission**. The renderer then rebuilds the whole region: every row's DOM node is recreated even if only one item moved.
+```typescript
+interface List.Options<S, K> {
+  readonly of: S; // Iterable<T>, or an Effect/Stream/Subscribable of one
+  readonly by?: (item: ItemOf<S>, index: number) => K; // reconciliation key
+}
+```
 
-`List.each` reconciles by key instead, so DOM identity (and the focus/scroll/typed-input state attached to it) survives across updates.
+- **`of`**: the list source. Each emission is materialized to an array to fix order, then reconciled by key.
+- **`by`**: projects each item to its reconciliation key, compared via Effect's `Equal`/`Hash`. Omit it and the item itself is the key (structural for `Data`, by reference otherwise).
+
+## Why not `map`
+
+```typescript
+// Rebuilds every row on every emission: a new children array each time.
+Stream.map(Subscribable.changes(rows), (rs) => rs.map((r) => h.li(r.name)));
+```
+
+The renderer diffs children by position, so a new array means every row's DOM node is recreated, even the ones that didn't move. `List.each` reconciles by key instead, so DOM identity (and the focus/scroll/typed-input state attached to it) survives across updates.
 
 ## Refresh a row's content
 
-Because `render` runs **exactly once per key**, reconciliation never re-runs it for a kept row, so it never refreshes that row's content on its own. To make a row's content reactive, thread a `Stream` **inside** the row rather than expecting a re-render:
+`render` runs **exactly once per key**, so reconciliation never re-runs it for a kept row. To make a row's content reactive, thread a `Stream` **inside** the row instead of expecting a re-render:
 
 ```typescript
 List.each({ of: Subscribable.changes(rows), by: (row) => row.id }, (row) =>
@@ -44,7 +56,101 @@ List.each({ of: Subscribable.changes(rows), by: (row) => row.id }, (row) =>
 );
 ```
 
-> **⚠️ Index-key footgun.** Keying by index (`by: (_, i) => i`) reuses rows positionally, so after a reorder each position keeps its old content and you see stale rows. Prefer a stable identity key (`by: (item) => item.id`).
+## Index-key footgun
+
+```typescript
+// Wrong: reuses rows positionally. After a reorder, each position keeps its
+// old content, so the visible rows are stale.
+List.each({ of: Subscribable.changes(rows), by: (_row, i) => i }, renderRow);
+
+// Right: a stable identity key follows the item, not its position.
+List.each({ of: Subscribable.changes(rows), by: (row) => row.id }, renderRow);
+```
+
+## Complete example
+
+A shuffleable row list. Each row starts a per-row tick counter and renders an uncontrolled `<input>`; shuffling moves rows instead of recreating them, so counters keep counting and typed input keeps its value and focus.
+
+```html
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keyed list demo</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+```
+
+```typescript
+// src/app.ts
+/**
+ * Keyed list demo: List.each moves existing rows on shuffle instead of
+ * rebuilding them, so each row's own tick counter keeps running and its
+ * input keeps focus and value. Side-effect-free (no mount call), so
+ * `main.ts` and any test can import `App` directly.
+ */
+import { h, List } from "@weftui/core";
+import { Effect, Schedule, Stream, SubscriptionRef } from "effect";
+
+interface Row {
+  readonly id: number;
+  readonly name: string;
+}
+
+const renderRow = (row: Row) => {
+  // Created once per key: starts a single time and keeps running across
+  // every later shuffle of this row.
+  const ticks = Stream.iterate(0, (n) => n + 1).pipe(Stream.schedule(Schedule.spaced("1 second")));
+
+  return h.li({ id: `row-${row.id}` }, [
+    h.span(row.name),
+    h.input({ placeholder: "type here…" }),
+    h.span(["ticks: ", ticks]),
+  ]);
+};
+
+export const App = () =>
+  Effect.gen(function* () {
+    const rows = yield* SubscriptionRef.make<ReadonlyArray<Row>>([
+      { id: 1, name: "Ada" },
+      { id: 2, name: "Babbage" },
+      { id: 3, name: "Curie" },
+    ]);
+
+    const shuffle = SubscriptionRef.update(rows, (current) =>
+      [...current].sort(() => Math.random() - 0.5),
+    );
+
+    return yield* h.div([
+      h.button({ onclick: () => shuffle }, "Shuffle"),
+      h.ul([List.each({ of: SubscriptionRef.changes(rows), by: (row) => row.id }, renderRow)]),
+    ]);
+  });
+```
+
+```typescript
+// src/main.ts
+/**
+ * Browser entry: mounts the keyed list demo into #root.
+ */
+import { WeftApp } from "@weftui/dom/client";
+import { Effect } from "effect";
+import { App } from "./app";
+
+const root = document.getElementById("root");
+if (root === null) {
+  throw new Error("#root not found");
+}
+
+const app = WeftApp.make();
+void Effect.runPromise(WeftApp.mount(app, App(), root));
+```
 
 ## See also
 
