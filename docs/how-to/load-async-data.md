@@ -115,10 +115,7 @@ import { WeftApp } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 const app = WeftApp.make();
 void Effect.runPromise(WeftApp.mount(app, App(), root));
