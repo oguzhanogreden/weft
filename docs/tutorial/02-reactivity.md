@@ -7,54 +7,53 @@ description: Add component-local state with SubscriptionRef and weave its stream
 
 # Reactivity
 
-[Previously](./01-your-first-app.md) we mounted a static component. Now we make it change over time. This is the defining move in Weft: **weave a stream through the tree, and only that point updates.**
+[Previously](./01-your-first-app.md) you mounted a static counter shell. Now wire it up. This is the defining move in Weft: **weave a stream through the tree, and only that point updates.**
 
-## Local state with `SubscriptionRef`
+## Wire up the counter
 
-Use Effect's `SubscriptionRef` for component-local state. `SubscriptionRef.changes(ref)` returns a `Stream` that emits the current value and then every update. Pass that stream as a child or prop and the DOM at that spot becomes live:
+Use Effect's `SubscriptionRef` for component-local state. `SubscriptionRef.changes(ref)` returns a `Stream` that emits the current value and then every update. Pass that stream (or a derived stream) as a child and the DOM at that spot becomes live. Replace `src/app.ts`:
 
 ```typescript
+// src/app.ts
 import { h } from "@weftui/core";
-import { WeftApp } from "@weftui/dom/client";
-import { Effect, SubscriptionRef } from "effect";
+import { Effect, Stream, SubscriptionRef } from "effect";
 
-const Counter = () =>
+export const App = () =>
   Effect.gen(function* () {
     const count = yield* SubscriptionRef.make(0);
+    const label = Stream.map(SubscriptionRef.changes(count), (n) => `Count: ${n}`);
 
-    return yield* h.div([
-      h.span([SubscriptionRef.changes(count)]),
-      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n + 1) }, "+"),
-      h.button({ onclick: () => SubscriptionRef.update(count, (n) => n - 1) }, "-"),
+    return yield* h.div({ class: "app" }, [
+      h.h1("Weft Counter"),
+      h.p({ class: "count" }, [label]),
+      h.div({ class: "controls" }, [
+        h.button(
+          { type: "button", onclick: () => SubscriptionRef.update(count, (n) => n - 1) },
+          "−",
+        ),
+        h.button(
+          { type: "button", onclick: () => SubscriptionRef.update(count, (n) => n + 1) },
+          "+",
+        ),
+      ]),
     ]);
   });
-
-const app = WeftApp.make();
-void Effect.runPromise(WeftApp.mount(app, Counter(), document.getElementById("root")!));
 ```
 
-`Effect.gen` lets you `yield*` the `SubscriptionRef` to set up state **before** building the tree. Because a `Node` is an `Effect`, the component body is an ordinary generator: no hooks, no dependency arrays.
+`main.ts` and `index.html` don't change. Reload and the buttons work.
 
-## The key idea: the body runs once
+## Why this works
 
-The `Counter` function runs **exactly once**. It creates the ref, builds the tree, and returns. After that, nothing re-invokes it. The only thing that changes the DOM is the `SubscriptionRef.changes(count)` stream woven into the `h.span`.
+`App`'s body runs **exactly once**: it creates the ref, builds the tree, and returns. Nothing re-invokes it afterward. The only thing that changes the DOM is the `label` stream woven into `h.p`.
 
-When you click `+`, `SubscriptionRef.update` pushes a new value, the stream emits, and the renderer patches _just that span's text_ in place. No diff, no re-render, no sibling touched.
+Click `+` and `SubscriptionRef.update` pushes a new value, `label` emits `"Count: 1"`, and the renderer patches _just that paragraph's text_ in place. No diff, no re-render, no sibling touched.
 
-This is what "streams are the weft" means in practice: reactivity is local to exactly where you thread a stream. Everything else is static. The full model is [The Rendering Model](../explanation/rendering-model.md); the vocabulary of stream-shaped values is [Reactive Primitives](../explanation/reactive-primitives.md).
+`label` also shows **deriving values**: because `SubscriptionRef.changes(count)` is a `Stream`, you shape reactive text with ordinary stream operators (`Stream.map` here) instead of a templating syntax. Anywhere you'd compute a derived value, map the stream.
 
-> **Note.** In `[SubscriptionRef.changes(count)]` the stream is passed as a child array. Static values (`"Hello"`, `5`) work in the same position and simply never change. The rule is uniform: a plain value is static, a stream-shaped value is reactive.
+> **Note.** A stream-shaped child or prop is reactive; a static value (`"Hello"`, `5`) is not and never changes. `h.h1("Weft Counter")` above is static for exactly that reason. The rule is uniform across the whole tree.
 
-## Deriving values
-
-Because `SubscriptionRef.changes(count)` returns a `Stream`, you shape reactive text with ordinary stream operators:
-
-```typescript
-h.span([Stream.map(SubscriptionRef.changes(count), (n) => `Count: ${n}`)]);
-```
-
-Anywhere you would compute a derived value, map the stream instead. The derivation stays reactive.
+The full model is [The Rendering Model](../explanation/rendering-model.md); the vocabulary of stream-shaped values is [Reactive Primitives](../explanation/reactive-primitives.md).
 
 ## Next
 
-- [Services and Async →](./03-services-and-async.md): pull dependencies from the environment and render async loading states
+- [Services and Async →](./03-services-and-async.md): read services from a button handler and load data asynchronously
