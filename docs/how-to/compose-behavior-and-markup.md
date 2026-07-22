@@ -81,13 +81,13 @@ Type an inline handler's event explicitly (`(ev: MouseEvent)` above). `merge` do
 
 ## Per-key rules
 
-| Key           | Rule                                                                                          |
-| ------------- | ---------------------------------------------------------------------------------------------- |
-| `on*`         | Chained left to right. Both bodies run; failures from both sides are aggregated.               |
-| `class`       | Concatenated. All-static stays a `string`; either side reactive makes it a `Stream<string>`.   |
-| `style`       | Two per-property objects merge per key, right wins. Any other shape is last-wins.              |
-| `ref`         | Fan out: concatenates into an array, and every ref receives the element.                       |
-| anything else | Last-wins.                                                                                      |
+| Key           | Rule                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| `on*`         | Chained left to right. Both bodies run; failures from both sides are aggregated.             |
+| `class`       | Concatenated. All-static stays a `string`; either side reactive makes it a `Stream<string>`. |
+| `style`       | Two per-property objects merge per key, right wins. Any other shape is last-wins.            |
+| `ref`         | Fan out: concatenates into an array, and every ref receives the element.                     |
+| anything else | Last-wins.                                                                                   |
 
 ```ts
 Props.merge({ style: { color: "red" } }, { style: { fontWeight: "bold" } });

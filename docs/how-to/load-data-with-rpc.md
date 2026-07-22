@@ -105,7 +105,7 @@ In a **router-less mount** there is no `AppRpcClientTag`, so a `Boundary.rpc` re
 ## The four lifecycles
 
 | Lifecycle              | Trigger                                 | What happens                                                                                                                                         |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **SSR**                | server render                           | Resolve the rpc in-process, `successSchema`-encode the result inline as `<script type="application/json">`, render `render(seededResource)` to HTML. |
 | **Hydrate**            | `hydrate` on the client                 | Read the inline payload at the cursor, `successSchema`-decode it, seed the `Resource`, adopt the DOM. **Never re-calls the rpc** (replay).           |
 | **Refetch**            | `resource.refetch`                      | Call the rpc again over `POST /_eui/rpc` (re-runs the handler on the server), patch the subtree in place (stale-on-error).                           |
@@ -124,7 +124,7 @@ Boundary.rpc(GetStock, () => ({ id: product.id }), render, {
 `render` receives a [`Resource<A>`](../reference/core.md#resourcea) (`A` = the rpc's decoded success), not a bare value. After hydrate the region is live:
 
 | Field     | What it gives you                                                                                   |
-| --------- | ----------------------------------------------------------------------------------------------------- |
+| --------- | --------------------------------------------------------------------------------------------------- |
 | `value`   | A `Subscribable` of the current data: seeded with the SSR payload, updated on a successful refetch. |
 | `refetch` | An `Effect<void>` that re-resolves the rpc with a fresh `payload()` and pushes the new `value`.     |
 | `pending` | A `Subscribable<boolean>`: `true` while a refetch is in flight.                                     |
@@ -178,8 +178,10 @@ The nearest enclosing **failure `Boundary`** renders its fallback. On the client
 
 ```typescript
 Boundary.catchTag({ tag: "OutOfStock", fallback: (e) => h.p({ class: "error" }, e.reason) }, [
-  Boundary.rpc(GetStock, () => ({ id: product.id }), (resource) =>
-    h.p([Stream.map(Subscribable.changes(resource.value), (s) => String(s.units))]),
+  Boundary.rpc(
+    GetStock,
+    () => ({ id: product.id }),
+    (resource) => h.p([Stream.map(Subscribable.changes(resource.value), (s) => String(s.units))]),
   ),
 ]);
 ```
