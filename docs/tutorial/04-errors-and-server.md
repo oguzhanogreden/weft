@@ -67,10 +67,7 @@ import { WeftApp } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App, LoggerLive } from "./app";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 const app = WeftApp.make(LoggerLive);
 void Effect.runPromise(WeftApp.hydrate(app, App(), root));

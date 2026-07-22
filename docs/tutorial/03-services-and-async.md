@@ -21,7 +21,7 @@ class Logger extends Context.Service<Logger, { log: (message: string) => Effect.
 ) {}
 
 const LoggerLive = Layer.succeed(Logger, {
-  log: (message) => Effect.sync(() => console.log(message)),
+  log: (message) => Effect.log(message),
 });
 ```
 
@@ -73,7 +73,7 @@ export class Logger extends Context.Service<
 >()("Logger") {}
 
 export const LoggerLive = Layer.succeed(Logger, {
-  log: (message) => Effect.sync(() => console.log(message)),
+  log: (message) => Effect.log(message),
 });
 
 const fetchFact = (n: number) =>
@@ -120,10 +120,7 @@ import { WeftApp } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { App, LoggerLive } from "./app";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 const app = WeftApp.make(LoggerLive);
 void Effect.runPromise(WeftApp.mount(app, App(), root));

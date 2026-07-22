@@ -19,10 +19,7 @@ import { App } from "./app";
 import { DocsLive } from "./lib/docs-live";
 import { trackPageviews } from "./lib/goatcounter";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 // `RouterLive` is a scoped layer (it owns the popstate listener + link click
 // interceptor), so it must outlive `hydrate`. The app runtime owns it: built on

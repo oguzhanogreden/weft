@@ -310,10 +310,7 @@ import { Effect } from "effect";
 import { App } from "./app";
 import { StockRpcs } from "./data/inventory";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 const app = WeftApp.make(RouterLive(App, { rpc: { group: StockRpcs } }));
 void Effect.runPromise(WeftApp.hydrate(app, RouterApp(App), root));

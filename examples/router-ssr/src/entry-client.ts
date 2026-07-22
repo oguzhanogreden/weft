@@ -14,10 +14,7 @@ import { Effect } from "effect";
 import { App } from "./app";
 import { StockRpcs } from "./data/inventory";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 // `RouterLive` is a scoped layer (it owns the popstate listener + link click
 // interceptor), so it must outlive `hydrate`. The app runtime owns it: built on

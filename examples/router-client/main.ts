@@ -12,10 +12,7 @@ import { RouterApp, RouterLive } from "@weftui/router/client";
 import { Effect } from "effect";
 import { App } from "./app";
 
-const root = document.getElementById("root");
-if (root === null) {
-  throw new Error("#root not found");
-}
+const root = document.getElementById("root")!;
 
 const app = WeftApp.make(RouterLive(App));
 void Effect.runPromise(WeftApp.mount(app, RouterApp(App), root));
