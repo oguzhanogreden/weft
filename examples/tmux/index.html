@@ -44,6 +44,49 @@
         white-space: pre;
         min-height: 1.25em;
       }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+        font-size: 12px;
+      }
+
+      .controls .label {
+        color: #6b7280;
+        margin-left: 0.5rem;
+      }
+
+      .controls .label:first-child {
+        margin-left: 0;
+      }
+
+      .level {
+        background: #0d1017;
+        color: #b3b1ad;
+        border: 1px solid #1c2230;
+        border-radius: 3px;
+        padding: 0.15rem 0.5rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+      }
+
+      .level:hover {
+        border-color: #39bae6;
+      }
+
+      .meter {
+        margin-left: 0.5rem;
+        color: #39bae6;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .terminal-pane {
+        outline: none;
+      }
     </style>
   </head>
   <body>

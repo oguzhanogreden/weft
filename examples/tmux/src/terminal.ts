@@ -1,14 +1,14 @@
 /**
- * A single terminal pane rendered with Weft's reactive DOM.
+ * Terminal rendering + input for the tmux example.
  *
- * State is one `SubscriptionRef<Row>` per screen row. The PTY output stream feeds
- * the pure parser in a scope-bound fiber; after each chunk only the rows whose
- * copy-on-write reference actually changed are `set`, so an untouched row never
- * re-renders. Keystrokes flow back out through `session.write`.
+ * State is one `SubscriptionRef<Row>` per screen row (`makeGrid`). `pump` feeds a
+ * byte stream through the pure parser in a scope-bound fiber and `set`s only the
+ * rows whose copy-on-write reference changed, reporting the count so a meter can
+ * track update throughput. `renderRows` renders those refs as reactive text.
  *
- * This baseline renders each row as a reactive text child (monochrome). Styled
- * per-run `<span>` rendering (Mode B) and the per-cell mode (Mode A) layer on top
- * of the same per-row ref structure (see `src/specs.md`, AC-RENDER).
+ * The render "strategy" is just how many reactive text nodes each row is split
+ * into: 1 (whole line), a handful, or one per cell. That node/subscription count
+ * is the variable the perf meter measures (see `src/specs.md`, AC-RENDER).
  */
 
 import { h } from "@weftui/core";
@@ -17,15 +17,93 @@ import { Effect, type Scope, Stream, SubscriptionRef } from "effect";
 import { feed, initParser } from "./ansi/parser";
 import { blankRow, type Row } from "./grid";
 
-/** Default grid size. Kept fixed for the demo/tests; a real pane measures its box. */
 export const DEFAULT_COLS = 80;
 export const DEFAULT_ROWS = 24;
 
-/** Render a row's cells as a plain string, preserving blanks for stable layout. */
-const rowToLine = (row: Row): string => row.map((cell) => cell.char).join("");
+/** One `SubscriptionRef<Row>` per screen row, all initially blank. */
+export function makeGrid(
+  cols: number,
+  rows: number,
+): Effect.Effect<SubscriptionRef.SubscriptionRef<Row>[]> {
+  return Effect.all(Array.from({ length: rows }, () => SubscriptionRef.make<Row>(blankRow(cols))));
+}
+
+/**
+ * Fork a scoped fiber that pumps `input` through the parser into `rowRefs`,
+ * updating only changed rows and reporting how many changed per chunk.
+ */
+export function pump(
+  rowRefs: ReadonlyArray<SubscriptionRef.SubscriptionRef<Row>>,
+  cols: number,
+  rows: number,
+  input: Stream.Stream<Uint8Array>,
+  onRowsChanged: (n: number) => void,
+): Effect.Effect<void, never, Scope.Scope> {
+  return Effect.gen(function* () {
+    let parser = initParser(cols, rows);
+    let previous = parser.term.lines;
+    const decoder = new TextDecoder();
+
+    const onChunk = (bytes: Uint8Array) =>
+      Effect.gen(function* () {
+        if (bytes.length === 0) return;
+        parser = feed(parser, decoder.decode(bytes, { stream: true }));
+        const lines = parser.term.lines;
+        let changed = 0;
+        for (let i = 0; i < rows; i++) {
+          if (lines[i] !== previous[i]) {
+            const ref = rowRefs[i];
+            if (ref) {
+              yield* SubscriptionRef.set(ref, lines[i] ?? blankRow(cols));
+              changed++;
+            }
+          }
+        }
+        previous = lines;
+        if (changed > 0) onRowsChanged(changed);
+      });
+
+    yield* Effect.forkScoped(Stream.runForEach(input, onChunk));
+  });
+}
+
+/** Text of the `s`-th of `segments` slices of a row (blanks preserved). */
+function segmentText(row: Row, s: number, segments: number): string {
+  const size = Math.ceil(row.length / segments);
+  const start = s * size;
+  const end = Math.min(row.length, start + size);
+  let out = "";
+  for (let i = start; i < end; i++) out += row[i]?.char ?? " ";
+  return out;
+}
+
+/** Render one row as `segments` reactive text nodes fed by its ref. */
+function renderRow(
+  ref: SubscriptionRef.SubscriptionRef<Row>,
+  segments: number,
+): Node<never, never> {
+  const changes = SubscriptionRef.changes(ref);
+  return h.div(
+    { class: "term-row" },
+    Array.from({ length: segments }, (_unused, s) =>
+      Stream.map(changes, (row) => segmentText(row, s, segments)),
+    ),
+  );
+}
+
+/** Render the whole grid at a given per-row segment count. */
+export function renderRows(
+  rowRefs: ReadonlyArray<SubscriptionRef.SubscriptionRef<Row>>,
+  segments: number,
+): Node<never, never> {
+  return h.div(
+    { class: "term" },
+    rowRefs.map((ref) => renderRow(ref, segments)),
+  );
+}
 
 /** Map a keyboard event to the bytes a PTY expects, or "" to ignore it. */
-const encodeKey = (event: KeyboardEvent): string => {
+export function encodeKey(event: KeyboardEvent): string {
   switch (event.key) {
     case "Enter":
       return "\r";
@@ -51,59 +129,4 @@ const encodeKey = (event: KeyboardEvent): string => {
     if (code >= 97 && code <= 122) return String.fromCharCode(code - 96); // Ctrl-a .. Ctrl-z
   }
   return event.key.length === 1 ? event.key : "";
-};
-
-export interface TerminalOptions {
-  readonly cols?: number;
-  readonly rows?: number;
 }
-
-/** Build one terminal pane bound to a live `PaneSession`. */
-export const Terminal = (
-  session: {
-    readonly output: Stream.Stream<Uint8Array>;
-    readonly write: (data: string) => Effect.Effect<void>;
-  },
-  options: TerminalOptions = {},
-): Node<never, Scope.Scope> =>
-  Effect.gen(function* () {
-    const cols = options.cols ?? DEFAULT_COLS;
-    const rows = options.rows ?? DEFAULT_ROWS;
-
-    const rowRefs = yield* Effect.all(
-      Array.from({ length: rows }, () => SubscriptionRef.make<Row>(blankRow(cols))),
-    );
-
-    // Parser + last-rendered lines live in this fiber only (no concurrency).
-    let parser = initParser(cols, rows);
-    let previous = parser.term.lines;
-    const decoder = new TextDecoder();
-
-    const onChunk = (bytes: Uint8Array) =>
-      Effect.gen(function* () {
-        parser = feed(parser, decoder.decode(bytes, { stream: true }));
-        const lines = parser.term.lines;
-        for (let i = 0; i < rows; i++) {
-          // Reference identity: copy-on-write means only changed rows differ.
-          if (lines[i] !== previous[i]) {
-            const ref = rowRefs[i];
-            if (ref) yield* SubscriptionRef.set(ref, lines[i] ?? blankRow(cols));
-          }
-        }
-        previous = lines;
-      });
-
-    yield* Effect.forkScoped(Stream.runForEach(session.output, onChunk));
-
-    const onkeydown = (event: KeyboardEvent): Effect.Effect<void> => {
-      const data = encodeKey(event);
-      if (data === "") return Effect.void;
-      event.preventDefault();
-      return session.write(data);
-    };
-
-    const renderRow = (ref: SubscriptionRef.SubscriptionRef<Row>) =>
-      h.div({ class: "term-row" }, [Stream.map(SubscriptionRef.changes(ref), rowToLine)]);
-
-    return yield* h.pre({ class: "term", tabindex: "0", onkeydown }, rowRefs.map(renderRow));
-  });

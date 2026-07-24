@@ -90,8 +90,9 @@ chmod +x examples/tmux/server/node_modules/node-pty/prebuilds/darwin-arm64/spawn
 
 Reach for this example when you want to see Weft under sustained, high-frequency reactive load,
 or to reason about the ceiling of per-node reactivity before building a data-dense UI (grids,
-dashboards, editors). For most apps the takeaway is Mode B: coalesce updates to the coarsest
-unit that still needs to react, and let keyed reconciliation move the rest.
+dashboards, editors). Flip the strategy and load levels and watch the FPS meter: the takeaway
+for most apps is the `med` level, coalesce updates to the coarsest unit that still needs to
+react rather than binding every cell.
 
 ## Status
 
@@ -105,8 +106,12 @@ Implemented and validated on Node 26:
 - Real PTY over WebSocket, end to end: the backend integration test round-trips a real shell
   (`server/server.test.ts`), and a live browser run rendered real shell output through
   `transport-ws.ts`.
+- Perf harness (`perf.ts`): live FPS and rows/sec meters, three render levels (low/med/high =
+  1/8/one-per-cell reactive text nodes per row), and a synthetic load generator
+  (off/low/med/high). Switch strategy against load to find where reactivity caps out. Covered
+  by the browser test.
 
-Not yet built (next phases): the three perf render modes (A node-per-cell, B reactive span-list,
-C innerHTML) and the FPS/updates readout, and the multiplexer (panes, windows, prefix
-keybindings). The current renderer is the browser-light baseline (per-row text), so the
-perf-ceiling comparison is still future work. See `src/specs.md` for the per-criterion status.
+Not yet built (next phases): the multiplexer (panes, windows, prefix keybindings), and styled
+per-cell colour (the grid model already carries style, so rendering colour is additive; the
+perf harness is intentionally monochrome to isolate node count). See `src/specs.md` for the
+per-criterion status.

@@ -51,12 +51,16 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
 - `PtyTransportMockLive` emits a scripted byte `Stream` and records `write`s (tests/dev, no
   `node-pty` in CI).
 
-### AC-RENDER — three switchable render modes (`src/terminal.ts`) 🚧
+### AC-RENDER — three switchable render levels (`src/terminal.ts`, `src/perf.ts`) ✅
 
-- Mode A: one reactive DOM node per cell (max engine stress).
-- Mode B: one `SubscriptionRef<Row>` per row → a reactive list of coalesced `<span>` runs.
-- Mode C: one subscription per row → `innerHTML` string (browser-bound baseline).
-- A runtime switch flips modes; changed-only rows update (unchanged rows keep node + subs).
+- The level sets how many reactive text nodes each row is split into, isolating the real perf
+  variable (live subscriptions firing per row change): `low` = 1 (whole line), `med` = 8
+  segments, `high` = one per cell.
+- One `SubscriptionRef<Row>` per row is the single source of truth. Switching level rebuilds
+  only the render (a `List.each` keyed on the level); the parser pump feeding the refs persists.
+- Changed-only rows update (untouched rows keep their ref and their segment subscriptions).
+- Rendering is monochrome text; styled per-cell colour is deferred (the grid model already
+  carries style, so it is additive later).
 
 ### AC-INPUT — keystrokes to the terminal ✅
 
@@ -70,9 +74,13 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   machine over a global `keydown` stream.
 - Focused pane shown via a reactive border class; layout ratios bound reactively.
 
-### AC-PERF — instrumentation (`src/perf.ts`) 🚧
+### AC-PERF — instrumentation (`src/perf.ts`) ✅
 
-- A visible FPS + updates/sec readout; a `flood` stress command; recorded ceilings per mode.
+- A live FPS meter (`requestAnimationFrame`, sampled every 500ms) and a rows/sec meter in the
+  control bar.
+- A synthetic load generator merged into the same parser pump, with off/low/med/high levels
+  (~0/10/60/250 full-screen repaints per second), so any render level can be measured at any
+  load. Changing the level takes effect immediately.
 
 ### AC-TEST 🚧 (unit + backend + hermetic browser done; mux assertions pending)
 
@@ -80,9 +88,11 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
   round-trips a typed command over `ws` ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
-  output renders into the grid and a keystroke reaches the mock write log ✅. The `Ctrl-b %`
-  two-pane assertion lands with AC-MUX. A live real-PTY browser run (real shell → `transport-ws`
-  → reactive DOM) was validated manually; not kept in CI, since it needs the backend.
+  output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
+  selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. The
+  `Ctrl-b %` two-pane assertion lands with AC-MUX. A live real-PTY browser run (real shell →
+  `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
+  backend.
 
 ### Skips
 

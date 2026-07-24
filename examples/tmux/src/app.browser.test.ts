@@ -2,9 +2,9 @@
  * End-to-end browser test for the tmux example.
  *
  * Mounts the real `App` in Chromium with the mock transport (`PtyTransportMock`),
- * so it is hermetic (no `node-pty` backend). Asserts the two headline behaviours
- * of the single-terminal milestone: streamed PTY output renders into the reactive
- * grid, and keystrokes flow back out through `session.write`.
+ * so it is hermetic (no `node-pty` backend). Covers the single-terminal milestone
+ * (streamed output renders, keystrokes flow back) and the perf harness (FPS and
+ * rows/sec meters, load-driven updates, strategy switching).
  */
 
 import { WeftApp } from "@weftui/dom/client";
@@ -38,6 +38,9 @@ const mountWith = async (chunks: readonly string[]) => {
   return { term, writes: mock.writes };
 };
 
+const meterValue = (selector: string): number =>
+  Number((container.querySelector(selector)?.textContent ?? "").replace(/\D/g, "") || "0");
+
 describe("tmux example", () => {
   it("renders streamed PTY output into the reactive grid", async () => {
     const { term } = await mountWith(["hello world\r\n$ "]);
@@ -54,5 +57,42 @@ describe("tmux example", () => {
     term.dispatchEvent(new KeyboardEvent("keydown", { key: "s", bubbles: true }));
     term.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     await vi.waitFor(() => expect(writes.join("")).toBe("ls\r"));
+  });
+
+  it("shows live FPS and rows/sec meters", async () => {
+    await mountWith(["ready\r\n"]);
+    await vi.waitFor(
+      () => {
+        expect(container.querySelector(".meter.fps")?.textContent).toMatch(/fps: \d+/);
+        expect(container.querySelector(".meter.rows")?.textContent).toMatch(/rows\/s: \d+/);
+      },
+      { timeout: 3000 },
+    );
+  });
+
+  it("drives grid updates when a load level is selected (rows/s > 0)", async () => {
+    await mountWith(["\r\n"]);
+    const highLoad = await vi.waitFor(() => {
+      const button = container.querySelector<HTMLButtonElement>('[data-load="high"]');
+      expect(button).not.toBeNull();
+      return button!;
+    });
+    highLoad.click();
+    await vi.waitFor(() => expect(meterValue(".meter.rows")).toBeGreaterThan(0), { timeout: 4000 });
+  });
+
+  it("switches render strategy without losing the grid", async () => {
+    await mountWith(["hi\r\n"]);
+    const highStrategy = await vi.waitFor(() => {
+      const button = container.querySelector<HTMLButtonElement>('[data-strategy="high"]');
+      expect(button).not.toBeNull();
+      return button!;
+    });
+    highStrategy.click();
+    await vi.waitFor(() => {
+      const rows = container.querySelectorAll(".term-row");
+      expect(rows.length).toBe(24);
+      expect(rows[0]?.textContent).toContain("hi");
+    });
   });
 });
