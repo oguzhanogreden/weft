@@ -14,9 +14,19 @@
 
 import { h, List } from "@weftui/core";
 import type { Node } from "@weftui/core";
-import { Effect, type Scope, Stream, SubscriptionRef } from "effect";
+import { Effect, Option, pipe, type Scope, Stream, SubscriptionRef } from "effect";
 import { type LoadLevel, makeFpsMeter, makeLoadStream, makeRateMeter, type Strategy } from "./perf";
-import { encodeKey, makeGrid, pump, renderRows } from "./terminal";
+import {
+  computePixelLock,
+  encodeKey,
+  makeGrid,
+  measureCellWhenLaidOut,
+  type PixelLock,
+  pixelLockStyle,
+  PROBE_TEXT,
+  pump,
+  renderRows,
+} from "./terminal";
 import { PtyTransport, type TransportError } from "./transport";
 
 const COLS = 80;
@@ -69,6 +79,8 @@ export const App = (): Node<TransportError, PtyTransport | Scope.Scope> =>
     const rowRefs = yield* makeGrid(COLS, ROWS);
     const strategyRef = yield* SubscriptionRef.make<Strategy>("low");
     const loadRef = yield* SubscriptionRef.make<LoadLevel>("off");
+    const probeRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
+    const lockRef = yield* SubscriptionRef.make<Option.Option<PixelLock>>(Option.none());
 
     const fps = makeFpsMeter();
     const rate = makeRateMeter();
@@ -77,6 +89,33 @@ export const App = (): Node<TransportError, PtyTransport | Scope.Scope> =>
     // Real PTY output plus the synthetic load stream feed one parser pump.
     const input = Stream.merge(session.output, makeLoadStream(loadRef, COLS, ROWS));
     yield* pump(rowRefs, COLS, ROWS, input, rate.bump);
+
+    // Measure one cell on mount, then lock the grid to whole device pixels (AC-PIXELGRID).
+    // The probe ref fires the tick the element connects, before layout has given
+    // it a box (the font may still be resolving), so a synchronous measure reads
+    // a 0-width rect. Wait for a real box, then compute the lock once.
+    yield* pipe(
+      SubscriptionRef.changes(probeRef),
+      Stream.filter(Option.isSome),
+      Stream.take(1),
+      Stream.runForEach((probe) =>
+        Effect.gen(function* () {
+          const metrics = yield* measureCellWhenLaidOut(probe.value);
+          yield* SubscriptionRef.set(
+            lockRef,
+            Option.some(computePixelLock(metrics, window.devicePixelRatio)),
+          );
+        }),
+      ),
+      Effect.forkScoped,
+    );
+
+    // The measured lock cascades from the stable pane to every render strategy.
+    const paneStyle = SubscriptionRef.changes(lockRef).pipe(
+      Stream.map((lock) =>
+        Option.match(lock, { onNone: (): Record<string, string> => ({}), onSome: pixelLockStyle }),
+      ),
+    );
 
     const onkeydown = (event: KeyboardEvent): Effect.Effect<void> => {
       const data = encodeKey(event);
@@ -96,6 +135,9 @@ export const App = (): Node<TransportError, PtyTransport | Scope.Scope> =>
 
     return yield* h.div({ class: "tmux-app" }, [
       controlBar(strategyRef, loadRef, fps.stream, rate.stream),
-      h.div({ class: "terminal-pane", tabindex: "0", onkeydown }, [body]),
+      h.div({ class: "terminal-pane", tabindex: "0", onkeydown, style: paneStyle }, [
+        h.span({ ref: probeRef, class: "term-probe", "aria-hidden": "true" }, PROBE_TEXT),
+        body,
+      ]),
     ]);
   });

@@ -29,8 +29,6 @@
         border: 1px solid #1c2230;
         border-radius: 4px;
         padding: 0.5rem 0.75rem;
-        font-size: 13px;
-        line-height: 1.25;
         white-space: pre;
         overflow: auto;
         outline: none;
@@ -42,7 +40,6 @@
 
       .term-row {
         white-space: pre;
-        min-height: 1.25em;
       }
 
       .controls {
@@ -85,7 +82,18 @@
       }
 
       .terminal-pane {
+        font-size: 13px;
         outline: none;
+      }
+
+      /* Hidden probe: measured once on mount to pixel-lock the grid (AC-PIXELGRID). */
+      .term-probe {
+        position: absolute;
+        visibility: hidden;
+        pointer-events: none;
+        white-space: pre;
+        top: 0;
+        left: 0;
       }
     </style>
   </head>

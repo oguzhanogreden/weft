@@ -23,6 +23,83 @@ import { segmentsFor, type Strategy } from "./perf";
 export const DEFAULT_COLS = 80;
 export const DEFAULT_ROWS = 24;
 
+// ── Pixel-locked cell metrics (AC-PIXELGRID) ─────────────────────────────────
+// The grid renders on fractional device pixels (measured ~7.83px cell advance,
+// 16.25px row at the 13px font), so glyphs land off pixel boundaries and read
+// soft. These snap cell advance and row height to whole device pixels; the lock
+// cascades to every strategy via an inherited container style. Size stays 80x24
+// (viewport-fitting is AC-RESIZE). `computePixelLock` is pure (unit-tested);
+// `measureCell` reads the DOM once on mount (the `element-ref` pattern).
+
+/** A measured monospace cell, in CSS pixels (from `getBoundingClientRect`). */
+export interface CellMetrics {
+  /** Natural horizontal advance of one cell, in CSS pixels. */
+  readonly advance: number;
+  /** Natural height of one row, in CSS pixels. */
+  readonly height: number;
+}
+
+/** CSS values that snap the grid to whole device pixels. */
+export interface PixelLock {
+  /** Locked cell advance (CSS px); `cellWidth × devicePixelRatio` is a whole number. */
+  readonly cellWidth: number;
+  /** Locked row height (CSS px); `rowHeight × devicePixelRatio` is a whole number. */
+  readonly rowHeight: number;
+  /** Per-cell `letter-spacing` (CSS px) that widens `advance` to `cellWidth`. */
+  readonly letterSpacing: number;
+}
+
+/** Repeated-glyph probe run; its measured width over its length is the cell advance. */
+export const PROBE_TEXT = "0".repeat(80);
+
+/** Snap a CSS-pixel length to the nearest whole device pixel. */
+function snapToDevicePx(value: number, devicePixelRatio: number): number {
+  return Math.round(value * devicePixelRatio) / devicePixelRatio;
+}
+
+/**
+ * Snap measured metrics to whole device pixels. Pure, no DOM: cell advance rounds
+ * to the nearest device pixel (realised as `letterSpacing`), row height likewise.
+ */
+export function computePixelLock(metrics: CellMetrics, devicePixelRatio: number): PixelLock {
+  const cellWidth = snapToDevicePx(metrics.advance, devicePixelRatio);
+  const rowHeight = snapToDevicePx(metrics.height, devicePixelRatio);
+  return { cellWidth, rowHeight, letterSpacing: cellWidth - metrics.advance };
+}
+
+/** Natural cell advance + row height read from a mounted `PROBE_TEXT` probe element. */
+export function measureCell(probe: HTMLElement): CellMetrics {
+  const rect = probe.getBoundingClientRect();
+  return { advance: rect.width / PROBE_TEXT.length, height: rect.height };
+}
+
+/**
+ * `measureCell`, deferred until the probe has a layout box. The ref fires the
+ * tick the element connects, before layout (the font may still be resolving), so
+ * an immediate measure reads a 0-width rect. Poll until the probe has width, then
+ * measure. Gives up after `attempts` and returns the last (possibly zero) reading
+ * rather than blocking forever.
+ */
+export function measureCellWhenLaidOut(
+  probe: HTMLElement,
+  attempts = 60,
+  intervalMillis = 16,
+): Effect.Effect<CellMetrics> {
+  return Effect.gen(function* () {
+    let metrics = measureCell(probe);
+    for (let i = 0; i < attempts && metrics.advance <= 0; i++) {
+      yield* Effect.sleep(intervalMillis);
+      metrics = measureCell(probe);
+    }
+    return metrics;
+  });
+}
+
+/** A `PixelLock` as an inline style object for the grid container (cascades to every cell). */
+export function pixelLockStyle(lock: PixelLock): Record<string, string> {
+  return { letterSpacing: `${lock.letterSpacing}px`, lineHeight: `${lock.rowHeight}px` };
+}
+
 /** One `SubscriptionRef<Row>` per screen row, all initially blank. */
 export function makeGrid(
   cols: number,

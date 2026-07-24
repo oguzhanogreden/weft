@@ -112,7 +112,12 @@ Implemented and validated on Node 26:
   by the browser test.
 - Per-cell SGR colour at the `high` level (fg/bg/bold/italic/underline/inverse, 256-colour);
   `low`/`med` stay monochrome as the cheap node-count baselines.
+- Pixel-locked grid: one monospace cell is measured at runtime, then cell advance and row height
+  snap to whole device pixels so glyphs render crisp. The lock applies to the grid container, so
+  every render strategy inherits it. Covered by unit and browser tests.
 
 Not yet built: DEC line-drawing charset (`ESC(0`) and scroll regions (`ESC[r`), the remaining
-fidelity for real `tmux`/`vim` to render fully. Note you run the real programs over the PTY, so
-there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.
+fidelity for real `tmux`/`vim` to render fully. The grid is still a fixed 80x24; fitting the
+window with more cells (dynamic resize) is the density follow-on. Note you run the real programs
+over the PTY, so there is no need for a Weft-native multiplexer. See `next-steps.md` for the full
+roadmap.

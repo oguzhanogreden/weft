@@ -13,6 +13,8 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
 - Real PTY over WebSocket, end to end (backend integration test + a manual live browser run).
 - Perf harness: FPS and rows/sec meters, strategy level (low/med/high) times load level
   (off/low/med/high).
+- Pixel-locked grid: one cell is measured at runtime, then cell advance and row height snap to
+  whole device pixels (every strategy inherits the lock). Grid size stays a fixed 80x24.
 
 Rendering is monochrome and single-pane. The items below are ordered roughly by value.
 
@@ -47,10 +49,12 @@ Done when: `vim`/`htop` render with their colours in the live example.
 
 ## 3. Dynamic sizing / resize
 
-Grid is fixed at 80x24.
+Grid is fixed at 80x24. The pixel-lock already measures one monospace cell at runtime
+(`measureCell` / `getBoundingClientRect`, the `examples/element-ref` pattern), so the
+measurement half exists; this item adds the density half on top of it.
 
-- Measure one monospace cell (`getBoundingClientRect`, the `examples/element-ref` pattern),
-  compute cols/rows from the pane box, call `session.resize`, and re-init the grid on change.
+- Reuse the measured cell metrics to compute cols/rows from the pane box, call `session.resize`,
+  and re-init the grid on change.
 
 Done when: resizing the window reflows the shell (`$COLUMNS`/`$LINES` update, `htop` reflows).
 

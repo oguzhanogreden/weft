@@ -38,7 +38,31 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   (consumed, not rendered).
 - **Acceptance gate for milestone 2:** must render `bash`, `vim`, and `htop` legibly.
 - ⏭ Deferred: insert/delete line/char (`L`/`M`/`P`/`@`), scroll regions (`r`), mouse modes,
-  full charset switching. Documented, not silent.
+  G1 + locking shifts (SO/SI, `0x0E`/`0x0F`). G0 DEC Special Graphics is now handled
+  (see AC-CHARSET). Documented, not silent.
+
+### AC-CHARSET — G0 DEC Special Graphics (`src/ansi/parser.ts`) 🚧
+
+The reason real `tmux`/`vim`/`ncurses` borders currently render as literal `q`/`x`/`l` letters:
+the parser swallows the charset designation and passes the letters through. This makes G0
+line-drawing legible. Scope is G0 only, which is provably sufficient: the backend advertises
+`xterm-256color`, whose `smacs`/`rmacs` are `ESC(0`/`ESC(B` (G0 designation, no SO/SI, no G1).
+
+- `ESC(0` designates the DEC Special Graphics set for G0; `ESC(B` restores ASCII. Both are
+  consumed (never rendered) and toggle a `g0` charset field on `Parser`.
+- While G0 is graphics, printable bytes `0x5F`–`0x7E` are translated to their Unicode glyph via
+  the standard VT100 table (`q`→`─`, `x`→`│`, `l`/`k`/`m`/`j`→`┌`/`┐`/`└`/`┘`,
+  `t`/`u`/`v`/`w`→`├`/`┤`/`┴`/`┬`, `n`→`┼`, `a`→`▒`, `` ` ``→`◆`, ...). Bytes `0x20`–`0x5E`
+  pass through unchanged even in graphics mode.
+- The translated glyph is stored resolved in `Cell.char`. The grid model and renderer stay
+  charset-agnostic (zero diff): `rowToText` of a border row yields box-drawing glyphs.
+- Chunk-safe: `g0` lives on `Parser` and is preserved in `feed`'s return, so `ESC(0` in one
+  `feed` call and `qqq` in the next renders `───`, identical to feeding the whole string. This
+  extends the AC-ANSI chunk-safety invariant to charset state.
+- `initParser` starts in ASCII (`g0: "ascii"`). Designation persists across screen clears and
+  alternate-screen switches until re-designated (matches VT: no implicit reset).
+- ⏭ Out of scope (still deferred, see AC-ANSI): G1, locking shifts SO/SI (`0x0E`/`0x0F`), other
+  94-char sets.
 
 ### AC-TRANSPORT — I/O as an Effect Service (`src/transport.ts`) ✅
 
@@ -63,6 +87,29 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   underline/inverse, 16 + 256-colour) plus a reactive char, so it carries full colour at max
   node count. `low`/`med` stay monochrome text, the cheaper node-count baselines.
 
+### AC-PIXELGRID — pixel-locked cell metrics (`src/terminal.ts`, `index.html`) ✅
+
+The grid renders on fractional device pixels. Measured at the example's 13px monospace font
+(`dpr` 1): cell advance `7.83px`, row height `16.25px` (`line-height: 1.25`). Columns do line up
+row to row (measured cross-row spread `0`), so this is not a drift bug. The cost is that glyphs
+land off pixel boundaries, so the whole grid reads soft, not crisp. This is the foundational
+half of the "denser and pixel-sharp" goal (see `next-steps.md`); the density/resize half is
+AC-RESIZE (feature B). Static size (80x24) is unchanged here.
+
+- Cell advance is a whole number of device pixels: `cellAdvanceCss × devicePixelRatio` rounds to
+  an integer (tolerance < 0.05px), for the example's monospace stack, at `dpr` 1 and 2.
+- Row height is a whole number of device pixels: `rowHeightCss × devicePixelRatio` rounds to an
+  integer. (Replaces `line-height: 1.25`, which yields fractional `16.25px`.)
+- The lock is derived by measuring one rendered monospace cell at runtime (the
+  `examples/element-ref` `getBoundingClientRect` pattern), not hardcoded, so it holds if the font
+  stack resolves to a different monospace.
+- All three render strategies (`low`/`med`/`high`) inherit the lock, since it is a
+  font-metric/layout property applied to the grid container, not a per-strategy concern.
+- Non-regression: columns still align across rows (cross-row spread stays `0`) and the grid
+  stays 80x24. Alignment is the invariant that must not break, not the thing being fixed.
+- The lock computation is a pure helper (`measured metrics + dpr → integer-device-px cell/row`),
+  unit-testable without a browser; the applied result is asserted in the browser (AC-TEST).
+
 ### AC-INPUT — keystrokes to the terminal ✅
 
 - Key events on the terminal call `session.write` with the encoded bytes (`encodeKey` maps
@@ -85,13 +132,21 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
 
 ### AC-TEST 🚧 (unit + backend + hermetic browser done; mux assertions pending)
 
-- Unit (`vp run test`): grid model ✅, ANSI parser ✅. Keybinding state machine lands with AC-MUX.
+- Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
+  (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
+  Graphics charset (table-driven: translation, pass-through, reset, chunk-split) 🚧 with
+  AC-CHARSET. Keybinding state machine lands with AC-MUX.
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
   round-trips a typed command over `ws` ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
-  selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. The
-  `Ctrl-b %` two-pane assertion lands with AC-MUX. A live real-PTY browser run (real shell →
+  selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
+  scripted `ESC(0`…`ESC(B` byte sequence renders box-drawing glyphs in the DOM 🚧 (AC-CHARSET,
+  hermetic via the mock transport). Rendered cell advance and row height are whole device pixels
+  (`× devicePixelRatio` is integer) once the grid is mounted ✅ (AC-PIXELGRID; the probe logic
+  inverted to assert integrality, across all three strategies). The `Ctrl-b %` two-pane
+  assertion lands with AC-MUX. A live
+  real-PTY browser run (real shell →
   `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
   backend.
 
@@ -99,6 +154,10 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
 
 - **type-tests: not applicable.** The example exposes no generic/type-level public API worth a
   TSTyche assertion; its contracts are runtime behaviours covered by unit + browser tests.
+  - AC-PIXELGRID specifically: `CellMetrics`/`PixelLock` are plain concrete interfaces and
+    `computePixelLock`/`measureCell`/`pixelLockStyle` are non-generic fixed-signature functions.
+    No generics, overloads, or conditional/inferred types, so the main typecheck already enforces
+    the whole surface; a TSTyche assertion would only restate the signatures.
 
 ## Notes / accepted deviations
 
