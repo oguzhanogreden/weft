@@ -146,16 +146,16 @@ describe("pixel-locked grid (AC-PIXELGRID)", () => {
     expect(letterSpacing).toBeLessThan(1);
   });
 
-  it("locks cell advance and row height to whole device pixels (default 'low' strategy)", async () => {
+  it("locks cell advance and row height to whole device pixels (default 'high' strategy)", async () => {
     const pane = await mountLocked();
     assertLocked(pane);
   });
 
   it("holds the lock across all three render strategies", async () => {
     const pane = await mountLocked();
-    assertLocked(pane); // low (default)
+    assertLocked(pane); // high (default)
 
-    for (const strategy of ["med", "high"] as const) {
+    for (const strategy of ["low", "med"] as const) {
       const button = container.querySelector<HTMLButtonElement>(`[data-strategy="${strategy}"]`);
       expect(button).not.toBeNull();
       button!.click();

@@ -77,7 +77,10 @@ export const App = (): Node<TransportError, PtyTransport | Scope.Scope> =>
     const session = yield* transport.spawn({ cols: COLS, rows: ROWS });
 
     const rowRefs = yield* makeGrid(COLS, ROWS);
-    const strategyRef = yield* SubscriptionRef.make<Strategy>("low");
+    // Default to `high`: the coloured, per-cell view, so real programs render in
+    // colour out of the box (a menu's reverse-video selection band, a status bar).
+    // `low`/`med` are opt-in monochrome perf baselines from the control bar (AC-RENDER).
+    const strategyRef = yield* SubscriptionRef.make<Strategy>("high");
     const loadRef = yield* SubscriptionRef.make<LoadLevel>("off");
     const probeRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
     const lockRef = yield* SubscriptionRef.make<Option.Option<PixelLock>>(Option.none());

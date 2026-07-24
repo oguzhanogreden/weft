@@ -83,12 +83,13 @@ describe("tmux example", () => {
 
   it("switches render strategy without losing the grid", async () => {
     await mountWith(["hi\r\n"]);
-    const highStrategy = await vi.waitFor(() => {
-      const button = container.querySelector<HTMLButtonElement>('[data-strategy="high"]');
+    // `high` is the default now, so switching to `low` is the meaningful switch.
+    const lowStrategy = await vi.waitFor(() => {
+      const button = container.querySelector<HTMLButtonElement>('[data-strategy="low"]');
       expect(button).not.toBeNull();
       return button!;
     });
-    highStrategy.click();
+    lowStrategy.click();
     await vi.waitFor(() => {
       const rows = container.querySelectorAll(".term-row");
       expect(rows.length).toBe(24);
@@ -96,20 +97,17 @@ describe("tmux example", () => {
     });
   });
 
-  it("renders per-cell colour in the high strategy", async () => {
-    await mountWith(["\x1b[31mRED\x1b[0m plain\r\n"]);
-    const highStrategy = await vi.waitFor(() => {
-      const button = container.querySelector<HTMLButtonElement>('[data-strategy="high"]');
-      expect(button).not.toBeNull();
-      return button!;
-    });
-    highStrategy.click();
+  it("renders per-cell colour by default (the real-use view opens coloured)", async () => {
+    // A reverse-video run is how a menu draws its selection band. With `high` the
+    // default, it must render as a coloured cell without switching strategy first.
+    await mountWith(["\x1b[7mSEL\x1b[0m plain\r\n"]);
     await vi.waitFor(
       () => {
         const firstRow = container.querySelector(".term-row");
         const spans = [...(firstRow?.querySelectorAll("span") ?? [])] as HTMLElement[];
-        // The "RED" cells carry an inline colour; trailing cells do not.
-        expect(spans.some((span) => span.style.color !== "")).toBe(true);
+        expect(spans.length).toBeGreaterThan(0); // per-cell spans prove `high` is the default
+        // The reverse-video "SEL" cells carry a background (the band); plain cells do not.
+        expect(spans.some((span) => span.style.backgroundColor !== "")).toBe(true);
       },
       { timeout: 3000 },
     );

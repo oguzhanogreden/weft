@@ -18,7 +18,8 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
 - Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 
-Rendering is monochrome and single-pane. The items below are ordered roughly by value.
+Rendering is single-pane. Colour renders per cell at the `high` strategy, now the default, so real
+programs open in colour. The items below are ordered roughly by value.
 
 ## 1. Run real tmux (fidelity, not reinvention)
 
@@ -35,7 +36,8 @@ erase-character now land, so `tmux attach` no longer bleeds the status bar into 
   parked AC-CHARSET spec).
 - Insert/delete line (`L`/`M`): vim and some TUIs shift lines this way. Absent from the tmux
   capture, so lower priority.
-- Colour (item 2) for the status bar and content.
+- 24-bit truecolor (`48;2;r;g;b`): collapsed to the terminal default today, so a truecolor
+  selection band or theme colour goes missing. Map it to a CSS colour (part of item 2).
 
 These overlap with item 4 (ANSI fidelity); together they are what make real `tmux` legible.
 
@@ -43,15 +45,19 @@ A Weft-native multiplexer (panes as Weft components, one PTY per pane via `PtyTr
 `Ctrl-b` prefix over a global `keydown` stream) stays an option if you want browser-native
 splitting (per-pane scrollback, HTML overlays). It is no longer the priority.
 
-## 2. Styled per-cell colour
+## 2. Styled per-cell colour — landed, refinements open
 
-The grid model already carries `fg`/`bg`/`bold`/`underline`/`inverse`; the renderer drops it.
+The `high` strategy renders the grid model's `fg`/`bg`/`bold`/`italic`/`underline`/`inverse` as one
+`<span>` per cell with inline colour, and `high` is now the default. So real programs open in
+colour, including a menu's reverse-video selection band. `low`/`med` stay monochrome as the
+node-count baselines (colour is a property of the real-use view, not the benchmark).
 
-- Render coalesced same-style runs as `<span>`s with inline colour for the real terminal view.
-- Keep the perf harness monochrome (it isolates node count on purpose); colour is a property of
-  the "use it for real" view, not the benchmark.
+Open refinements:
 
-Done when: `vim`/`htop` render with their colours in the live example.
+- 24-bit truecolor (`48;2;r;g;b`) is collapsed to the terminal default; map it to a CSS colour so
+  truecolor selection bands and themes render.
+- Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
+  becomes a bottleneck.
 
 ## 3. Dynamic sizing / resize
 

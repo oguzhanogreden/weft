@@ -115,6 +115,9 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - `high` renders one `<span>` per cell with a reactive `style` prop (SGR fg/bg/bold/italic/
   underline/inverse, 16 + 256-colour) plus a reactive char, so it carries full colour at max
   node count. `low`/`med` stay monochrome text, the cheaper node-count baselines.
+- The app opens in `high`, the coloured real-use view, so real programs render in colour out of
+  the box (a menu's reverse-video selection band, a status bar). `low`/`med` are opt-in perf
+  baselines selected from the control bar.
 
 ### AC-PIXELGRID — pixel-locked cell metrics (`src/terminal.ts`, `index.html`) ✅
 

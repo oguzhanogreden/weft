@@ -112,6 +112,10 @@ Implemented and validated on Node 26:
   by the browser test.
 - Per-cell SGR colour at the `high` level (fg/bg/bold/italic/underline/inverse, 256-colour);
   `low`/`med` stay monochrome as the cheap node-count baselines.
+- The app opens in the `high` (coloured) strategy, so real programs render in colour by default,
+  including the reverse-video selection band as you move it through a menu. `low`/`med` are opt-in
+  monochrome baselines you switch to from the control bar for benchmarking. 24-bit truecolor
+  backgrounds are collapsed to the terminal default for now.
 - Pixel-locked grid: one monospace cell is measured at runtime, then cell advance and row height
   snap to whole device pixels so glyphs render crisp. The lock applies to the grid container, so
   every render strategy inherits it. Covered by unit and browser tests.
