@@ -37,9 +37,9 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   save/restore (`s`/`u`, `ESC 7`/`ESC 8`), alternate screen (`ESC[?1049h/l`), and OSC strings
   (consumed, not rendered).
 - **Acceptance gate for milestone 2:** must render `bash`, `vim`, and `htop` legibly.
-- ⏭ Deferred: insert/delete line/char (`L`/`M`/`P`/`@`), scroll regions (`r`), mouse modes,
-  G1 + locking shifts (SO/SI, `0x0E`/`0x0F`). G0 DEC Special Graphics is now handled
-  (see AC-CHARSET). Documented, not silent.
+- ⏭ Deferred: insert/delete line/char (`L`/`M`/`P`/`@`), mouse modes, G1 + locking shifts
+  (SO/SI, `0x0E`/`0x0F`). Scroll regions (`r`) + `ECH` (`X`) now handled (see AC-SCROLLREGION);
+  G0 DEC Special Graphics see AC-CHARSET. Documented, not silent.
 
 ### AC-CHARSET — G0 DEC Special Graphics (`src/ansi/parser.ts`) 🚧
 
@@ -63,6 +63,35 @@ line-drawing legible. Scope is G0 only, which is provably sufficient: the backen
   alternate-screen switches until re-designated (matches VT: no implicit reset).
 - ⏭ Out of scope (still deferred, see AC-ANSI): G1, locking shifts SO/SI (`0x0E`/`0x0F`), other
   94-char sets.
+
+### AC-SCROLLREGION — scroll regions + ECH (`src/grid.ts`, `src/ansi/parser.ts`) ✅
+
+`tmux attach` (and any TUI that pins a status row) currently bleeds: the pinned row scrolls into
+the content and cleared cells keep stale glyphs. Root cause, from the PTY capture
+(`/tmp/pty-capture-*.log`): the emulator drops `DECSTBM` (748x, including `ESC[1;23r` reserving
+row 24 for the tmux status bar) and `ECH` (3863x), and scrolls the whole screen instead of the
+region. Honoring both makes dynamic redraws render correctly. Scope is targeted to the bleed.
+
+- **DECSTBM (`ESC[Ps;Ps r`)** sets the scroll region as top/bottom margins on `TerminalState`
+  (1-based inclusive params, converted to 0-based). `ESC[r` with no params resets to full screen.
+  An invalid region (top >= bottom, or out of range) resets to full screen. Setting the region
+  homes the cursor to origin (0,0), per VT with origin mode off.
+- **Region-aware scroll:** `scrollUp`/`scrollDown(n)` shift content only within
+  `[scrollTop, scrollBottom]`, filling vacated lines with blank rows. Rows outside the region
+  keep their exact array reference (the copy-on-write identity the reactive renderer skips on);
+  only in-region rows get new references.
+- **`lineFeed`** scrolls the region when the cursor is on the bottom margin
+  (`cursorRow === scrollBottom`); otherwise it moves the cursor down, clamped. With the region at
+  full screen this is identical to the previous whole-screen scroll (non-regression).
+- **ECH (`ESC[Ps X`)** blanks `Ps` cells (default 1) from the cursor without moving it, fills
+  with the current SGR style (matching `eraseInLine`), clamped to the row width, one-row
+  copy-on-write.
+- **SU/SD (`ESC[Ps S`/`T`)** scroll the region up/down by `Ps`, reusing the same helpers (a
+  near-free correctness add; SU seen 1x, SD 0x in the capture).
+- **Non-regression:** AC-GRID / AC-ANSI behavior is unchanged when no region is set, and the
+  copy-on-write row identity holds for every row a scroll does not touch.
+- ⏭ Out of scope (capture-proven absent): insert/delete line (`L`/`M`), `IND`/`RI`/`NEL`
+  (`ESC D`/`M`/`E`), DEC charset, origin mode (`?6`). Documented, not silent.
 
 ### AC-TRANSPORT — I/O as an Effect Service (`src/transport.ts`) ✅
 
@@ -135,14 +164,19 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
   (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
   Graphics charset (table-driven: translation, pass-through, reset, chunk-split) 🚧 with
-  AC-CHARSET. Keybinding state machine lands with AC-MUX.
+  AC-CHARSET. Scroll regions + ECH (table-driven: DECSTBM set/reset/invalid + cursor home,
+  region scroll preserving out-of-region refs, region-aware `lineFeed`, `eraseChars`, and the
+  distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Keybinding state machine lands
+  with AC-MUX.
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
   round-trips a typed command over `ws` ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
   selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
   scripted `ESC(0`…`ESC(B` byte sequence renders box-drawing glyphs in the DOM 🚧 (AC-CHARSET,
-  hermetic via the mock transport). Rendered cell advance and row height are whole device pixels
+  hermetic via the mock transport). A captured scroll-region sequence (`ESC[1;23r` + scrolling)
+  replayed via the mock transport keeps the status row in place with no bleed ✅
+  (AC-SCROLLREGION). Rendered cell advance and row height are whole device pixels
   (`× devicePixelRatio` is integer) once the grid is mounted ✅ (AC-PIXELGRID; the probe logic
   inverted to assert integrality, across all three strategies). The `Ctrl-b %` two-pane
   assertion lands with AC-MUX. A live
@@ -158,6 +192,9 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
     `computePixelLock`/`measureCell`/`pixelLockStyle` are non-generic fixed-signature functions.
     No generics, overloads, or conditional/inferred types, so the main typecheck already enforces
     the whole surface; a TSTyche assertion would only restate the signatures.
+  - AC-SCROLLREGION specifically: `setScrollRegion`/`scrollUp`/`scrollDown`/`eraseChars` and the
+    new `dispatchCsi` cases are non-generic fixed-signature functions over `TerminalState`; no
+    type-level surface to assert.
 
 ## Notes / accepted deviations
 

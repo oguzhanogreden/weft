@@ -38,6 +38,10 @@ export interface TerminalState {
   readonly cursorRow: number;
   readonly cursorCol: number;
   readonly style: Style;
+  /** Top row of the scroll region (0-based, inclusive); default 0. */
+  readonly scrollTop: number;
+  /** Bottom row of the scroll region (0-based, inclusive); default `rows - 1`. */
+  readonly scrollBottom: number;
   readonly savedCursor: { readonly row: number; readonly col: number } | null;
   /** True while the alternate screen buffer is active (vim/htop). */
   readonly alt: boolean;
@@ -75,6 +79,8 @@ export function emptyState(cols: number, rows: number): TerminalState {
     cursorRow: 0,
     cursorCol: 0,
     style: DEFAULT_STYLE,
+    scrollTop: 0,
+    scrollBottom: rows - 1,
     savedCursor: null,
     alt: false,
     saved: null,
@@ -124,19 +130,54 @@ export function putChar(state: TerminalState, char: string): TerminalState {
   return { ...next, lines, cursorCol: next.cursorCol + 1 };
 }
 
-/** Scroll the whole screen up by one line, adding a blank line at the bottom. */
-function scrollUp(state: TerminalState): TerminalState {
-  const lines = state.lines.slice(1);
-  lines.push(blankRow(state.cols));
+/**
+ * Scroll the scroll region up by `n` lines, filling the bottom margin with blanks.
+ * Rows outside `[scrollTop, scrollBottom]` keep their exact array reference (the
+ * copy-on-write identity the reactive renderer skips on).
+ */
+export function scrollUp(state: TerminalState, n = 1): TerminalState {
+  const lines = state.lines.slice();
+  for (let r = state.scrollTop; r <= state.scrollBottom; r++) {
+    const src = r + n;
+    lines[r] = src <= state.scrollBottom ? getRow(state, src) : blankRow(state.cols);
+  }
   return { ...state, lines };
 }
 
-/** Move down one row (LF), scrolling if already on the last row. */
+/** Scroll the scroll region down by `n` lines, filling the top margin with blanks. */
+export function scrollDown(state: TerminalState, n = 1): TerminalState {
+  const lines = state.lines.slice();
+  for (let r = state.scrollBottom; r >= state.scrollTop; r--) {
+    const src = r - n;
+    lines[r] = src >= state.scrollTop ? getRow(state, src) : blankRow(state.cols);
+  }
+  return { ...state, lines };
+}
+
+/** Move down one row (LF); scroll the region when on the bottom margin. */
 export function lineFeed(state: TerminalState): TerminalState {
-  if (state.cursorRow >= state.rows - 1) {
+  if (state.cursorRow === state.scrollBottom) {
     return scrollUp(state);
   }
+  if (state.cursorRow >= state.rows - 1) {
+    return state;
+  }
   return { ...state, cursorRow: state.cursorRow + 1 };
+}
+
+/**
+ * Set the scroll region to rows `[top, bottom]` (0-based, inclusive) and home the
+ * cursor to origin. An invalid or empty range resets the region to the full screen.
+ */
+export function setScrollRegion(state: TerminalState, top: number, bottom: number): TerminalState {
+  const valid = top >= 0 && bottom < state.rows && top < bottom;
+  return {
+    ...state,
+    scrollTop: valid ? top : 0,
+    scrollBottom: valid ? bottom : state.rows - 1,
+    cursorRow: 0,
+    cursorCol: 0,
+  };
 }
 
 /** Carriage return: cursor to column 0. */
@@ -172,6 +213,16 @@ export function eraseInDisplay(state: TerminalState, mode: number): TerminalStat
   return { ...state, lines };
 }
 
+/** Erase `count` cells from the cursor (min 1), cursor unchanged, current-style fill. */
+export function eraseChars(state: TerminalState, count: number): TerminalState {
+  const row = (state.lines[state.cursorRow] ?? blankRow(state.cols)).slice();
+  const end = Math.min(state.cols, state.cursorCol + Math.max(1, count));
+  for (let c = state.cursorCol; c < end; c++) row[c] = { char: " ", style: state.style };
+  const lines = state.lines.slice();
+  lines[state.cursorRow] = row;
+  return { ...state, lines };
+}
+
 /** Resize the grid, preserving overlapping content (clips or pads). */
 export function resize(state: TerminalState, cols: number, rows: number): TerminalState {
   const lines: Row[] = Array.from({ length: rows }, (_, r) => {
@@ -189,6 +240,8 @@ export function resize(state: TerminalState, cols: number, rows: number): Termin
     lines,
     cursorRow: clamp(state.cursorRow, 0, rows - 1),
     cursorCol: clamp(state.cursorCol, 0, cols - 1),
+    scrollTop: 0,
+    scrollBottom: rows - 1,
   };
 }
 

@@ -15,6 +15,8 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   (off/low/med/high).
 - Pixel-locked grid: one cell is measured at runtime, then cell advance and row height snap to
   whole device pixels (every strategy inherits the lock). Grid size stays a fixed 80x24.
+- Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
+  region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 
 Rendering is monochrome and single-pane. The items below are ordered roughly by value.
 
@@ -23,12 +25,16 @@ Rendering is monochrome and single-pane. The items below are ordered roughly by 
 The backend spawns a real shell over a real PTY, so you can just run `tmux` (or `vim`, `htop`)
 inside it. Real tmux draws its own splits, status bar, and prefix keys, emitting VT output that
 our terminal renders. A Weft-native multiplexer is therefore not required for the headline goal.
-What is required is terminal fidelity so real tmux renders correctly:
+Terminal fidelity is what makes real tmux render correctly. Scroll regions (DECSTBM) and
+erase-character now land, so `tmux attach` no longer bleeds the status bar into the content
+(AC-SCROLLREGION). What remains:
 
 - DEC special-graphics charset (`ESC(0` / `ESC(B`): ncurses and tmux draw pane borders with
   line-drawing glyphs selected via this charset. We currently swallow the designation and pass
-  the letters through, so borders show as `q`/`x` letters. Translate the DEC graphics set.
-- Scroll regions (`ESC[r`) and insert/delete line (`L`/`M`): tmux and vim scroll within regions.
+  the letters through, so borders show as `q`/`x` letters. Translate the DEC graphics set (the
+  parked AC-CHARSET spec).
+- Insert/delete line (`L`/`M`): vim and some TUIs shift lines this way. Absent from the tmux
+  capture, so lower priority.
 - Colour (item 2) for the status bar and content.
 
 These overlap with item 4 (ANSI fidelity); together they are what make real `tmux` legible.
@@ -60,9 +66,10 @@ Done when: resizing the window reflows the shell (`$COLUMNS`/`$LINES` update, `h
 
 ## 4. ANSI parser fidelity
 
-Deferred v1 gaps (documented in `src/specs.md`, AC-ANSI): insert/delete line/char
-(`L`/`M`/`P`/`@`), scroll regions (`r`), mouse reporting, charset switching. Needed for full
-`vim`/`tmux`-in-`tmux` fidelity. Add table-driven parser unit tests as each lands.
+Scroll regions (`r`) and erase-character (`X`) now land (AC-SCROLLREGION). Deferred gaps that
+remain (documented in `src/specs.md`, AC-ANSI): insert/delete line/char (`L`/`M`/`P`/`@`), mouse
+reporting, G1/locking-shift charset switching. Needed for full `vim`/`tmux`-in-`tmux` fidelity.
+Add table-driven parser unit tests as each lands.
 
 ## 5. Browser-suite bundling flakiness (tooling, not this example)
 

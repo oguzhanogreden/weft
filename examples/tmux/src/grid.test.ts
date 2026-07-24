@@ -3,6 +3,7 @@ import { describe, it } from "vite-plus/test";
 import {
   blankRow,
   emptyState,
+  eraseChars,
   eraseInLine,
   getRow,
   lineFeed,
@@ -10,6 +11,7 @@ import {
   resize,
   rowToText,
   setCursor,
+  setScrollRegion,
 } from "./grid";
 
 describe("grid model", () => {
@@ -77,5 +79,69 @@ describe("grid model", () => {
     assert.equal(s.rows, 2);
     assert.equal(rowToText(getRow(s, 0)), "ab");
     assert.deepEqual(getRow(s, 1), blankRow(2));
+  });
+});
+
+describe("scroll region + ECH (AC-SCROLLREGION)", () => {
+  it("setScrollRegion sets 0-based inclusive margins and homes the cursor", () => {
+    const s = setScrollRegion(setCursor(emptyState(10, 6), 3, 5), 1, 4);
+    assert.equal(s.scrollTop, 1);
+    assert.equal(s.scrollBottom, 4);
+    assert.equal(s.cursorRow, 0);
+    assert.equal(s.cursorCol, 0);
+  });
+
+  it("setScrollRegion with an invalid range resets to the full screen", () => {
+    const s = setScrollRegion(emptyState(10, 6), 4, 2);
+    assert.equal(s.scrollTop, 0);
+    assert.equal(s.scrollBottom, 5);
+  });
+
+  it("lineFeed at the bottom margin scrolls only within the region", () => {
+    let s = emptyState(3, 3);
+    s = setCursor(s, 2, 0);
+    s = putChar(s, "S"); // row 2 = pinned status, outside the region
+    s = setScrollRegion(s, 0, 1); // region rows 0..1; homes the cursor
+    s = putChar(s, "a"); // row 0 = "a"
+    s = setCursor(s, 1, 0);
+    s = putChar(s, "b"); // row 1 = "b"
+    s = setCursor(s, 1, 0);
+    s = lineFeed(s); // cursor at scrollBottom -> scroll the region only
+    assert.equal(rowToText(getRow(s, 0)), "b");
+    assert.equal(rowToText(getRow(s, 1)), "");
+    assert.equal(rowToText(getRow(s, 2)), "S"); // status row preserved
+  });
+
+  it("region scroll keeps the exact array reference of out-of-region rows", () => {
+    let s = emptyState(3, 4);
+    s = setCursor(s, 3, 0);
+    s = putChar(s, "S");
+    const statusRef = getRow(s, 3);
+    s = setScrollRegion(s, 0, 2);
+    s = setCursor(s, 2, 0);
+    s = lineFeed(s); // scroll region [0,2]
+    assert.equal(getRow(s, 3), statusRef); // untouched row keeps its reference (COW skip)
+  });
+
+  it("eraseChars blanks N cells from the cursor without moving it", () => {
+    let s = emptyState(6, 1);
+    for (const c of "abcdef") s = putChar(s, c);
+    s = setCursor(s, 0, 1);
+    s = eraseChars(s, 3);
+    assert.equal(
+      getRow(s, 0)
+        .map((cell) => cell.char)
+        .join(""),
+      "a   ef",
+    );
+    assert.equal(s.cursorCol, 1);
+  });
+
+  it("eraseChars clamps the count to the row width", () => {
+    let s = emptyState(4, 1);
+    for (const c of "abcd") s = putChar(s, c);
+    s = setCursor(s, 0, 2);
+    s = eraseChars(s, 100);
+    assert.equal(rowToText(getRow(s, 0)), "ab");
   });
 });

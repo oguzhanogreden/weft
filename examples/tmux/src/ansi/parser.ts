@@ -16,12 +16,16 @@ import {
   DEFAULT_STYLE,
   emptyState,
   enterAlt,
+  eraseChars,
   eraseInDisplay,
   eraseInLine,
   leaveAlt,
   lineFeed,
   putChar,
+  scrollDown,
+  scrollUp,
   setCursor,
+  setScrollRegion,
   type Style,
   type TerminalState,
 } from "../grid";
@@ -133,8 +137,20 @@ function dispatchCsi(
     case "l":
       if (priv && params === "1049") return leaveAlt(term);
       return term;
+    case "r": {
+      if (priv) return term; // private `ESC[?Nr` (XTRESTORE) is not DECSTBM
+      // DECSTBM: 1-based inclusive margins; empty params reset to the full screen.
+      const [top = 1, bottom = term.rows] = nums(params, 1);
+      return setScrollRegion(term, top - 1, bottom - 1);
+    }
+    case "X":
+      return eraseChars(term, nums(params, 1)[0]!);
+    case "S":
+      return scrollUp(term, nums(params, 1)[0]!);
+    case "T":
+      return scrollDown(term, nums(params, 1)[0]!);
     default:
-      // Unhandled (scroll region `r`, insert/delete `L`/`M`/`P`/`@`, mouse modes, ...).
+      // Unhandled (insert/delete line/char `L`/`M`/`P`/`@`, mouse modes, ...).
       return term;
   }
 }
