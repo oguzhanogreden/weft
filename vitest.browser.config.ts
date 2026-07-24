@@ -27,6 +27,12 @@ const config: ViteUserConfig = {
   define: {
     __WEFT_VERSION__: JSON.stringify("browser-test"),
   },
+  // Pre-bundle effect as one optimized dep. Without this, above ~31 browser test
+  // files Rolldown re-chunks it per file and trips a duplicate-export collision on
+  // effect's `OpenApi` namespace re-export (pulled in via @weftui/router).
+  optimizeDeps: {
+    include: ["effect"],
+  },
   test: {
     include: ["**/*.browser.test.{ts,tsx}"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],

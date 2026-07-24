@@ -1,0 +1,208 @@
+/**
+ * Pure VT/ANSI parser: a byte-stream state machine that drives the grid model.
+ *
+ * Deliberately a pragmatic subset (documented in `src/specs.md`, AC-ANSI): SGR
+ * colour/attributes, cursor movement, erase, alternate-screen, and cursor
+ * save/restore, enough to render `bash`, `vim`, and `htop`. Insert/delete
+ * line/char (`L`/`M`/`P`/`@`) and scroll regions are out of scope for v1.
+ *
+ * Scan state (mode, params, pending) lives in `Parser`, not `TerminalState`, so
+ * an escape sequence split across two PTY chunks still parses. `feed` is pure:
+ * feed the whole stream or feed it a chunk at a time, the result is identical.
+ */
+
+import {
+  carriageReturn,
+  DEFAULT_STYLE,
+  emptyState,
+  enterAlt,
+  eraseInDisplay,
+  eraseInLine,
+  leaveAlt,
+  lineFeed,
+  putChar,
+  setCursor,
+  type Style,
+  type TerminalState,
+} from "../grid";
+
+type Mode = "ground" | "esc" | "csi" | "osc" | "charset";
+
+/** Parser = the grid plus the in-flight escape-scan state. */
+export interface Parser {
+  readonly term: TerminalState;
+  readonly mode: Mode;
+  readonly params: string;
+  readonly priv: boolean;
+  /** True when an OSC string is waiting for the `\` of a two-byte ST. */
+  readonly oscEsc: boolean;
+}
+
+/** A fresh parser over a cleared `cols`×`rows` grid. */
+export function initParser(cols: number, rows: number): Parser {
+  return { term: emptyState(cols, rows), mode: "ground", params: "", priv: false, oscEsc: false };
+}
+
+const ESC = 0x1b;
+const BEL = 0x07;
+const BS = 0x08;
+const TAB = 0x09;
+const LF = 0x0a;
+const CR = 0x0d;
+
+/** Parse the CSI parameter buffer into numbers, `fallback` for empty slots. */
+function nums(params: string, fallback: number): number[] {
+  if (params === "") return [fallback];
+  return params.split(";").map((p) => (p === "" ? fallback : Number.parseInt(p, 10)));
+}
+
+function applySgr(style: Style, params: string): Style {
+  const codes =
+    params === "" ? [0] : params.split(";").map((p) => (p === "" ? 0 : Number.parseInt(p, 10)));
+  let next = style;
+  for (let i = 0; i < codes.length; i++) {
+    const c = codes[i]!;
+    if (c === 0) next = DEFAULT_STYLE;
+    else if (c === 1) next = { ...next, bold: true };
+    else if (c === 22) next = { ...next, bold: false };
+    else if (c === 3) next = { ...next, italic: true };
+    else if (c === 23) next = { ...next, italic: false };
+    else if (c === 4) next = { ...next, underline: true };
+    else if (c === 24) next = { ...next, underline: false };
+    else if (c === 7) next = { ...next, inverse: true };
+    else if (c === 27) next = { ...next, inverse: false };
+    else if (c >= 30 && c <= 37) next = { ...next, fg: c - 30 };
+    else if (c >= 90 && c <= 97) next = { ...next, fg: c - 90 + 8 };
+    else if (c === 39) next = { ...next, fg: null };
+    else if (c >= 40 && c <= 47) next = { ...next, bg: c - 40 };
+    else if (c >= 100 && c <= 107) next = { ...next, bg: c - 100 + 8 };
+    else if (c === 49) next = { ...next, bg: null };
+    else if (c === 38 || c === 48) {
+      // Extended colour: `38;5;n` (256) or `38;2;r;g;b` (truecolor, mapped to null).
+      const kind = codes[i + 1];
+      if (kind === 5) {
+        const idx = codes[i + 2] ?? null;
+        next = c === 38 ? { ...next, fg: idx } : { ...next, bg: idx };
+        i += 2;
+      } else if (kind === 2) {
+        next = c === 38 ? { ...next, fg: null } : { ...next, bg: null };
+        i += 4;
+      }
+    }
+  }
+  return next;
+}
+
+function dispatchCsi(
+  term: TerminalState,
+  params: string,
+  priv: boolean,
+  final: string,
+): TerminalState {
+  switch (final) {
+    case "H":
+    case "f": {
+      const [row = 1, col = 1] = nums(params, 1);
+      return setCursor(term, row - 1, col - 1);
+    }
+    case "A":
+      return setCursor(term, term.cursorRow - nums(params, 1)[0]!, term.cursorCol);
+    case "B":
+      return setCursor(term, term.cursorRow + nums(params, 1)[0]!, term.cursorCol);
+    case "C":
+      return setCursor(term, term.cursorRow, term.cursorCol + nums(params, 1)[0]!);
+    case "D":
+      return setCursor(term, term.cursorRow, term.cursorCol - nums(params, 1)[0]!);
+    case "G":
+      return setCursor(term, term.cursorRow, nums(params, 1)[0]! - 1);
+    case "d":
+      return setCursor(term, nums(params, 1)[0]! - 1, term.cursorCol);
+    case "J":
+      return eraseInDisplay(term, nums(params, 0)[0]!);
+    case "K":
+      return eraseInLine(term, nums(params, 0)[0]!);
+    case "m":
+      return { ...term, style: applySgr(term.style, params) };
+    case "s":
+      return { ...term, savedCursor: { row: term.cursorRow, col: term.cursorCol } };
+    case "u":
+      return term.savedCursor ? setCursor(term, term.savedCursor.row, term.savedCursor.col) : term;
+    case "h":
+      if (priv && params === "1049") return enterAlt(term);
+      return term;
+    case "l":
+      if (priv && params === "1049") return leaveAlt(term);
+      return term;
+    default:
+      // Unhandled (scroll region `r`, insert/delete `L`/`M`/`P`/`@`, mouse modes, ...).
+      return term;
+  }
+}
+
+/** Feed a decoded string through the parser, returning the next parser. */
+export function feed(parser: Parser, text: string): Parser {
+  let term = parser.term;
+  let mode = parser.mode;
+  let params = parser.params;
+  let priv = parser.priv;
+  let oscEsc = parser.oscEsc;
+
+  for (const ch of text) {
+    const code = ch.codePointAt(0)!;
+    switch (mode) {
+      case "ground":
+        if (code === ESC) mode = "esc";
+        else if (code === CR) term = carriageReturn(term);
+        else if (code === LF) term = lineFeed(term);
+        else if (code === BS) term = setCursor(term, term.cursorRow, term.cursorCol - 1);
+        else if (code === TAB)
+          term = setCursor(term, term.cursorRow, (Math.floor(term.cursorCol / 8) + 1) * 8);
+        else if (code === BEL) {
+          // bell: ignore
+        } else if (code >= 0x20) term = putChar(term, ch);
+        break;
+      case "esc":
+        if (ch === "[") {
+          mode = "csi";
+          params = "";
+          priv = false;
+        } else if (ch === "]") {
+          mode = "osc";
+          oscEsc = false;
+        } else if (ch === "(" || ch === ")") mode = "charset";
+        else if (ch === "7") {
+          term = { ...term, savedCursor: { row: term.cursorRow, col: term.cursorCol } };
+          mode = "ground";
+        } else if (ch === "8") {
+          term = term.savedCursor
+            ? setCursor(term, term.savedCursor.row, term.savedCursor.col)
+            : term;
+          mode = "ground";
+        } else if (ch === "M") {
+          term = setCursor(term, term.cursorRow - 1, term.cursorCol);
+          mode = "ground";
+        } else mode = "ground";
+        break;
+      case "csi":
+        if (ch === "?" && params === "") priv = true;
+        else if ((code >= 0x30 && code <= 0x39) || ch === ";") params += ch;
+        else if (code >= 0x40 && code <= 0x7e) {
+          term = dispatchCsi(term, params, priv, ch);
+          mode = "ground";
+        }
+        // intermediate bytes (0x20-0x2f) are collected/ignored
+        break;
+      case "osc":
+        if (code === BEL) mode = "ground";
+        else if (code === ESC) oscEsc = true;
+        else if (oscEsc && ch === "\\") mode = "ground";
+        else oscEsc = false;
+        break;
+      case "charset":
+        mode = "ground";
+        break;
+    }
+  }
+
+  return { term, mode, params, priv, oscEsc };
+}
