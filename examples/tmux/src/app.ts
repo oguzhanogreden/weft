@@ -15,14 +15,7 @@
 import { h, List } from "@weftui/core";
 import type { Node } from "@weftui/core";
 import { Effect, type Scope, Stream, SubscriptionRef } from "effect";
-import {
-  type LoadLevel,
-  makeFpsMeter,
-  makeLoadStream,
-  makeRateMeter,
-  segmentsFor,
-  type Strategy,
-} from "./perf";
+import { type LoadLevel, makeFpsMeter, makeLoadStream, makeRateMeter, type Strategy } from "./perf";
 import { encodeKey, makeGrid, pump, renderRows } from "./terminal";
 import { PtyTransport, type TransportError } from "./transport";
 
@@ -98,7 +91,7 @@ export const App = (): Node<TransportError, PtyTransport | Scope.Scope> =>
         of: SubscriptionRef.changes(strategyRef).pipe(Stream.map((s) => [s] as const)),
         by: (s: Strategy) => s,
       },
-      (s: Strategy) => renderRows(rowRefs, segmentsFor(s, COLS)),
+      (s: Strategy) => renderRows(rowRefs, s, COLS),
     );
 
     return yield* h.div({ class: "tmux-app" }, [

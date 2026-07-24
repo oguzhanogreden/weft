@@ -106,12 +106,13 @@ Implemented and validated on Node 26:
 - Real PTY over WebSocket, end to end: the backend integration test round-trips a real shell
   (`server/server.test.ts`), and a live browser run rendered real shell output through
   `transport-ws.ts`.
-- Perf harness (`perf.ts`): live FPS and rows/sec meters, three render levels (low/med/high =
-  1/8/one-per-cell reactive text nodes per row), and a synthetic load generator
+- Perf harness (`perf.ts`): live FPS and rows/sec meters, three render levels (low = 1 text
+  node/row, med = 8, high = one coloured `<span>` per cell), and a synthetic load generator
   (off/low/med/high). Switch strategy against load to find where reactivity caps out. Covered
   by the browser test.
+- Per-cell SGR colour at the `high` level (fg/bg/bold/italic/underline/inverse, 256-colour);
+  `low`/`med` stay monochrome as the cheap node-count baselines.
 
-Not yet built (next phases): the multiplexer (panes, windows, prefix keybindings), and styled
-per-cell colour (the grid model already carries style, so rendering colour is additive; the
-perf harness is intentionally monochrome to isolate node count). See `src/specs.md` for the
-per-criterion status.
+Not yet built: DEC line-drawing charset (`ESC(0`) and scroll regions (`ESC[r`), the remaining
+fidelity for real `tmux`/`vim` to render fully. Note you run the real programs over the PTY, so
+there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.

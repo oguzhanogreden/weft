@@ -58,9 +58,10 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   segments, `high` = one per cell.
 - One `SubscriptionRef<Row>` per row is the single source of truth. Switching level rebuilds
   only the render (a `List.each` keyed on the level); the parser pump feeding the refs persists.
-- Changed-only rows update (untouched rows keep their ref and their segment subscriptions).
-- Rendering is monochrome text; styled per-cell colour is deferred (the grid model already
-  carries style, so it is additive later).
+- Changed-only rows update (untouched rows keep their ref and their subscriptions).
+- `high` renders one `<span>` per cell with a reactive `style` prop (SGR fg/bg/bold/italic/
+  underline/inverse, 16 + 256-colour) plus a reactive char, so it carries full colour at max
+  node count. `low`/`med` stay monochrome text, the cheaper node-count baselines.
 
 ### AC-INPUT — keystrokes to the terminal ✅
 

@@ -95,4 +95,23 @@ describe("tmux example", () => {
       expect(rows[0]?.textContent).toContain("hi");
     });
   });
+
+  it("renders per-cell colour in the high strategy", async () => {
+    await mountWith(["\x1b[31mRED\x1b[0m plain\r\n"]);
+    const highStrategy = await vi.waitFor(() => {
+      const button = container.querySelector<HTMLButtonElement>('[data-strategy="high"]');
+      expect(button).not.toBeNull();
+      return button!;
+    });
+    highStrategy.click();
+    await vi.waitFor(
+      () => {
+        const firstRow = container.querySelector(".term-row");
+        const spans = [...(firstRow?.querySelectorAll("span") ?? [])] as HTMLElement[];
+        // The "RED" cells carry an inline colour; trailing cells do not.
+        expect(spans.some((span) => span.style.color !== "")).toBe(true);
+      },
+      { timeout: 3000 },
+    );
+  });
 });
