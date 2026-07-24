@@ -15,13 +15,29 @@
  * `startServer` is exported so the integration test can bind an ephemeral port.
  */
 
+import { appendFileSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
+import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node-pty";
 import { WebSocketServer } from "ws";
 
 const SHELL = process.env.SHELL ?? "bash";
+
+// Diagnostic: set CAPTURE_PTY=<file> to record the raw PTY output stream (exactly
+// what the browser emulator receives) for offline analysis / test fixtures. Each
+// connection writes its own timestamped file derived from the base, so panes and
+// reconnects (e.g. `tmux attach`) never clobber each other. Off by default, so it
+// costs nothing when unset.
+const CAPTURE_PTY = process.env.CAPTURE_PTY || null;
+
+/** A per-connection capture path: the CAPTURE_PTY base with a sortable timestamp inserted. */
+function captureFile(base: string): string {
+	const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+	const ext = extname(base) || ".log";
+	return join(dirname(base), `${basename(base, ext)}-${stamp}${ext}`);
+}
 
 /** A running backend: its bound port and a graceful shutdown. */
 export interface PtyServer {
@@ -39,6 +55,12 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 		const cols = clampDim(url.searchParams.get("cols"), 80);
 		const rows = clampDim(url.searchParams.get("rows"), 24);
 
+		const capturePath = CAPTURE_PTY ? captureFile(CAPTURE_PTY) : null;
+		if (capturePath) {
+			// oxlint-disable-next-line no-console
+			console.log(`capturing PTY output to ${capturePath}`);
+		}
+
 		const shell = spawn(SHELL, [], {
 			name: "xterm-256color",
 			cols,
@@ -48,6 +70,7 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 		});
 
 		shell.onData((data) => {
+			if (capturePath) appendFileSync(capturePath, data);
 			if (socket.readyState === socket.OPEN) socket.send(Buffer.from(data, "utf8"));
 		});
 		shell.onExit(() => socket.close());
