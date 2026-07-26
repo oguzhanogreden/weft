@@ -185,6 +185,10 @@ automatic viewport-fitting on window resize stays AC-RESIZE.
 
 - The control bar gains a `size` group of five preset buttons: 80x24, 120x40, 160x48, 200x50,
   240x60. Clicking one switches the grid with no page reload.
+- The app opens at 160x48 (7,680 cells), the densest preset that still reads comfortably on a
+  laptop display. The ladder still starts at the classic 80x24; that is the bottom rung, not the
+  landing point. The default must be one of the presets, or the opening grid would match no
+  button.
 - Switching size fully re-inits: fresh row refs (`makeGrid`), a fresh parser pump at the new
   dimensions, and a fresh synthetic load stream sized to match. The previous size's refs, pump
   fiber, and every per-cell subscription are torn down before the new ones are built.

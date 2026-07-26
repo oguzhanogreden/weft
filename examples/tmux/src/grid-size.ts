@@ -17,8 +17,14 @@ export interface GridSize {
   readonly rows: number;
 }
 
-/** The classic terminal default, and the size the app opens at. */
-export const DEFAULT_GRID_SIZE: GridSize = { cols: 80, rows: 24 };
+/**
+ * The size the app opens at: 7,680 cells, the densest preset that still reads
+ * comfortably on a laptop display. The ladder below still starts at the classic
+ * 80x24, this is just where the app lands first.
+ *
+ * Must be one of {@link GRID_SIZES}, or the opening grid would match no button.
+ */
+export const DEFAULT_GRID_SIZE: GridSize = { cols: 160, rows: 48 };
 
 /**
  * Upper bound on a URL-supplied size. Bounds a typo (`?cols=99999`) to something
@@ -34,9 +40,9 @@ export const GRID_SIZE_MAX: GridSize = { cols: 400, rows: 200 };
  * to be punishing rather than usable.
  */
 export const GRID_SIZES: ReadonlyArray<GridSize> = [
-  DEFAULT_GRID_SIZE,
+  { cols: 80, rows: 24 },
   { cols: 120, rows: 40 },
-  { cols: 160, rows: 48 },
+  DEFAULT_GRID_SIZE,
   { cols: 200, rows: 50 },
   { cols: 240, rows: 60 },
 ];

@@ -94,7 +94,8 @@ const measureAdvance = (row: Element): number =>
 const mountLocked = async () => {
   const mock = makeMockTransport([RULER]);
   app = WeftApp.make(mock.layer);
-  await Effect.runPromise(WeftApp.mount(app, App(), container));
+  // Pinned to 80x24: the RULER fixture is exactly 24 rows.
+  await Effect.runPromise(WeftApp.mount(app, App({ cols: 80, rows: 24 }), container));
   const pane = await vi.waitFor(() => {
     const el = container.querySelector<HTMLElement>(".terminal-pane");
     expect(el).not.toBeNull();

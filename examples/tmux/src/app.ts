@@ -33,7 +33,7 @@ import {
 } from "./terminal";
 import { PtyTransport, type TransportError } from "./transport";
 
-/** Initial grid size for a mounted app. Omitted dimensions fall back to 80x24. */
+/** Initial grid size for a mounted app. Omitted dimensions fall back to 160x48. */
 export interface AppOptions {
   readonly cols?: number;
   readonly rows?: number;
@@ -111,7 +111,7 @@ const controlBar = (
 /**
  * The application root: one shell wired to the perf harness. `options` sets the
  * _initial_ grid size (`main.ts` seeds it from the query string); the control
- * bar's size buttons drive it from there. Defaults to 80x24.
+ * bar's size buttons drive it from there. Defaults to 160x48.
  */
 export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport | Scope.Scope> =>
   Effect.gen(function* () {

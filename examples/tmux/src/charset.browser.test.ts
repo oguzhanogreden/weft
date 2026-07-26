@@ -38,7 +38,9 @@ afterEach(async () => {
 const mountWith = async (chunks: readonly string[]) => {
   const mock = makeMockTransport(chunks);
   app = WeftApp.make(mock.layer);
-  await Effect.runPromise(WeftApp.mount(app, App(), container));
+  // Pinned to 80x24: this file asserts a 24-row grid, so it must not move when the
+  // app default does (and the smaller grid keeps the run cheap).
+  await Effect.runPromise(WeftApp.mount(app, App({ cols: 80, rows: 24 }), container));
   await vi.waitFor(() => {
     expect(container.querySelectorAll(".term-row").length).toBe(24);
   });

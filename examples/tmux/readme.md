@@ -78,7 +78,7 @@ cd examples/tmux/server && npm start   # ws://localhost:8787
 cd examples/tmux && vp run dev          # http://localhost:5173/
 ```
 
-The grid opens at 80x24. Switch it from the `size` buttons in the control bar, or start at any
+The grid opens at 160x48. Switch it from the `size` buttons in the control bar, or start at any
 size with `?cols=200&rows=50` (the only way to reach a size that is not a preset, clamped to
 400x200). Clicking a preset writes it back to the URL, so a reload keeps it.
 

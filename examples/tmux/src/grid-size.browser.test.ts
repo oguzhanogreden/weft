@@ -39,7 +39,11 @@ const mountWith = async (chunks: readonly string[], options?: AppOptions) => {
   const mock = makeMockTransport(chunks);
   app = WeftApp.make(mock.layer);
   await Effect.runPromise(WeftApp.mount(app, App(options), container));
-  await vi.waitFor(() => expect(container.querySelector(".term")).not.toBeNull());
+  // Generous: building the default 7,680 cells overruns waitFor's 1s default in
+  // headless Chromium, and the top preset is nearly twice that again.
+  await vi.waitFor(() => expect(container.querySelector(".term")).not.toBeNull(), {
+    timeout: 15_000,
+  });
   return mock;
 };
 
@@ -58,18 +62,25 @@ const clickSize = async (label: string) => {
   button.click();
 };
 
+/**
+ * The cheapest preset. Every case that is not specifically about the opening
+ * size starts here, so the suite is not paying for 7,680 cells to assert a
+ * switch, and so these cases do not move when the app default does.
+ */
+const SMALL: AppOptions = { cols: 80, rows: 24 };
+
 describe("grid size axis (AC-GRIDSIZE)", () => {
   it("renders a button for every preset", async () => {
-    await mountWith(["ready\r\n"]);
+    await mountWith(["ready\r\n"], SMALL);
     const labels = [...container.querySelectorAll("[data-size]")].map((el) =>
       el.getAttribute("data-size"),
     );
     expect(labels).toEqual(GRID_SIZES.map(gridSizeLabel));
   });
 
-  it("opens at 80x24", async () => {
+  it("opens at 160x48", async () => {
     await mountWith(["ready\r\n"]);
-    await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 24, cols: 80 }));
+    await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 48, cols: 160 }), { timeout: 5000 });
   });
 
   it("honours an initial size from AppOptions (the URL path main.ts uses)", async () => {
@@ -78,7 +89,7 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
   });
 
   it("re-inits the grid and tells the PTY when a preset is clicked", async () => {
-    const mock = await mountWith(["ready\r\n"]);
+    const mock = await mountWith(["ready\r\n"], SMALL);
     await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 24, cols: 80 }));
 
     await clickSize("120x40");
@@ -92,7 +103,7 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
     // The heaviest step, and the one the spec calls punishing. "Slow" and
     // "structurally broken" are different claims, so assert the structure holds
     // even where the frame rate will not.
-    const mock = await mountWith(["ready\r\n"]);
+    const mock = await mountWith(["ready\r\n"], SMALL);
     await clickSize("240x60");
     await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 60, cols: 240 }), {
       timeout: 20_000,
@@ -101,11 +112,12 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
   });
 
   it("mirrors the chosen size into the query string", async () => {
-    await mountWith(["ready\r\n"]);
-    await clickSize("160x48");
+    // Deliberately not the default size, so this asserts a real switch.
+    await mountWith(["ready\r\n"], SMALL);
+    await clickSize("200x50");
     await vi.waitFor(() => {
       const params = new URLSearchParams(window.location.search);
-      expect([params.get("cols"), params.get("rows")]).toEqual(["160", "48"]);
+      expect([params.get("cols"), params.get("rows")]).toEqual(["200", "50"]);
     });
   });
 
@@ -113,7 +125,7 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
     // The AC-RENDER invariant the nesting exists to protect. A rebuild of the
     // size-keyed item would call session.resize again, so a stable resize log is
     // the signal that survives the mock's replay-on-resubscribe.
-    const mock = await mountWith(["hi\r\n"]);
+    const mock = await mountWith(["hi\r\n"], SMALL);
     await clickSize("120x40");
     await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 40, cols: 120 }), { timeout: 5000 });
     const afterResize = mock.resizes.length;
@@ -132,7 +144,7 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
   it("keeps the pixel-lock across a size switch", async () => {
     // The probe lives on the stable pane, outside the size-keyed region, so the
     // measured lock must survive a re-init rather than being remeasured to zero.
-    await mountWith(["ready\r\n"]);
+    await mountWith(["ready\r\n"], SMALL);
     const pane = container.querySelector<HTMLElement>(".terminal-pane")!;
     await vi.waitFor(() => expect(Number.parseFloat(pane.style.lineHeight)).toBeGreaterThan(0));
     const locked = pane.style.lineHeight;

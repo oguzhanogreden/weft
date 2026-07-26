@@ -13,8 +13,8 @@ const FALLBACK: GridSize = { cols: 80, rows: 24 };
 const cells = (size: GridSize) => size.cols * size.rows;
 
 describe("grid size presets (AC-GRIDSIZE)", () => {
-  it("opens at the classic 80x24", () => {
-    assert.deepEqual(DEFAULT_GRID_SIZE, { cols: 80, rows: 24 });
+  it("opens at 160x48", () => {
+    assert.deepEqual(DEFAULT_GRID_SIZE, { cols: 160, rows: 48 });
   });
 
   it("caps a URL-supplied size at 400x200", () => {
@@ -32,8 +32,14 @@ describe("grid size presets (AC-GRIDSIZE)", () => {
     ]);
   });
 
-  it("starts the ladder at the default size", () => {
-    assert.deepEqual(GRID_SIZES[0], DEFAULT_GRID_SIZE);
+  it("starts the ladder at the classic 80x24", () => {
+    assert.deepEqual(GRID_SIZES[0], { cols: 80, rows: 24 });
+  });
+
+  it("includes the default size in the ladder", () => {
+    // The opening size keys the size-list; a default outside the ladder would
+    // render a grid that matches no button.
+    assert.ok(GRID_SIZES.includes(DEFAULT_GRID_SIZE));
   });
 
   it("ascends by cell count, so the ladder reads as a cost curve", () => {

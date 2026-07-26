@@ -32,7 +32,9 @@ afterEach(async () => {
 const mountWith = async (chunks: readonly string[]) => {
   const mock = makeMockTransport(chunks);
   app = WeftApp.make(mock.layer);
-  await Effect.runPromise(WeftApp.mount(app, App(), container));
+  // Pinned to 80x24: the sequences below address row 24 explicitly, so this test
+  // is meaningless at any other height.
+  await Effect.runPromise(WeftApp.mount(app, App({ cols: 80, rows: 24 }), container));
   await vi.waitFor(() => {
     expect(container.querySelectorAll(".term-row").length).toBe(24);
   });
