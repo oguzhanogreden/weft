@@ -36,7 +36,8 @@ three render modes and lets you switch between them at runtime:
 
 An FPS and updates-per-second readout turns the demo into the repository's first benchmark. Grid
 size is switchable at runtime too, so the same readout can be swept against cell count: 80x24 is
-1,920 cells, 240x60 is 14,400.
+1,920 cells, 240x60 is 14,400. The grid opens fitted to your window, so pin a preset before
+benchmarking, or you are measuring a size that depends on how wide the browser happens to be.
 
 ## How It Works
 
@@ -78,9 +79,14 @@ cd examples/tmux/server && npm start   # ws://localhost:8787
 cd examples/tmux && vp run dev          # http://localhost:5173/
 ```
 
-The grid opens at 160x48. Switch it from the `size` buttons in the control bar, or start at any
-size with `?cols=200&rows=50` (the only way to reach a size that is not a preset, clamped to
-400x200). Clicking a preset writes it back to the URL, so a reload keeps it.
+The grid fits itself to the window and re-fits when you resize or rotate. Clicking a `size` preset
+pins that size and stops the tracking; `auto` resumes it. Start at any size with
+`?cols=200&rows=50`, which is the only way to choose a non-preset size deliberately (clamped to
+400x200) and is itself a pin. A pinned size is written back to the URL, so a reload keeps it.
+
+On a phone, tap the grid to bring up the keyboard. The accessory row above it supplies the keys a
+soft keyboard lacks: Esc, Tab, arrows, and a sticky Ctrl (tap `ctrl`, then a letter, for Ctrl-C
+and friends). The harness controls collapse behind `≡ controls` on narrow screens.
 
 The browser test uses `PtyTransportMockLive` and needs no backend.
 
@@ -143,7 +149,14 @@ so a glyph goes missing and the rest of that row shifts one cell left. It predat
 work and is item 3 in `next-steps.md`. It scales with cell count, so it is far more visible at
 the larger presets: roughly 3 cells at 80x24, roughly 22 at 240x60.
 
+- Auto-fit: the grid derives its size from the viewport on load and on every debounced resize,
+  clamped to the top preset so a large display cannot open on 26,000 cells. Pinning a preset stops
+  the tracking; `auto` resumes it.
+- Touch input: a hidden textarea summons the soft keyboard, an accessory row supplies Esc, Tab and
+  arrows, and a sticky Ctrl makes `Ctrl-C` reachable. Printable characters arrive as `input`
+  events, the path a phone takes when `keydown` reports `Unidentified`.
+
 Not yet built: insert/delete line and mouse reporting, the remaining fidelity for full
-`vim`/`tmux`-in-`tmux` rendering. Grid size is switchable by preset but does not yet fit itself
-to the window; automatic resize is the density follow-on. Note you run the real programs over the
-PTY, so there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.
+`vim`/`tmux`-in-`tmux` rendering. The mobile path is browser-tested but not yet exercised on a
+real handset. Note you run the real programs over the PTY, so there is no need for a Weft-native
+multiplexer. See `next-steps.md` for the full roadmap.

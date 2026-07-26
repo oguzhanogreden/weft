@@ -1,6 +1,12 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { computePixelLock, pixelLockStyle } from "./terminal";
+import {
+  ACCESSORY_KEYS,
+  computePixelLock,
+  controlByte,
+  encodeKey,
+  pixelLockStyle,
+} from "./terminal";
 import type { CellMetrics, PixelLock } from "./terminal";
 
 /** True when `cssPx × dpr` lands on a whole device pixel (AC-PIXELGRID tolerance). */
@@ -66,5 +72,69 @@ describe("pixelLockStyle (AC-PIXELGRID)", () => {
     const style = pixelLockStyle(lock);
     assert.equal(style.letterSpacing, "0.2px");
     assert.equal(style.lineHeight, "16px");
+  });
+});
+
+// `encodeKey` only reads `key`/`ctrlKey`, so a literal stands in for a real
+// event and these stay node tests with no DOM.
+const keyEvent = (key: string, ctrlKey = false) => ({ key, ctrlKey }) as unknown as KeyboardEvent;
+
+describe("controlByte (AC-MOBILE)", () => {
+  it("maps a letter to its control byte, either case", () => {
+    assert.equal(controlByte("c"), "\x03");
+    assert.equal(controlByte("C"), "\x03");
+    assert.equal(controlByte("a"), "\x01");
+    assert.equal(controlByte("z"), "\x1a");
+  });
+
+  it("covers the bytes a shell actually needs", () => {
+    assert.equal(controlByte("c"), "\x03"); // interrupt
+    assert.equal(controlByte("d"), "\x04"); // EOF
+    assert.equal(controlByte("b"), "\x02"); // tmux prefix
+  });
+
+  it("agrees with encodeKey's ctrl handling", () => {
+    // Two paths to the same byte: a hardware Ctrl-c, and an armed sticky ctrl
+    // applied to a soft-keyboard "c". They must not drift.
+    for (const letter of ["a", "c", "d", "z"]) {
+      assert.equal(controlByte(letter), encodeKey(keyEvent(letter, true)), letter);
+    }
+  });
+
+  it("returns empty for anything without a control byte", () => {
+    for (const char of ["1", "", "[", "ab", " "]) assert.equal(controlByte(char), "");
+  });
+});
+
+describe("ACCESSORY_KEYS (AC-MOBILE)", () => {
+  it("offers esc, tab, and the four arrows", () => {
+    assert.deepEqual(
+      ACCESSORY_KEYS.map((key) => key.label),
+      ["esc", "tab", "↑", "↓", "←", "→"],
+    );
+  });
+
+  it("omits ctrl, which is a modifier rather than a key that sends bytes", () => {
+    assert.ok(!ACCESSORY_KEYS.some((key) => key.label === "ctrl"));
+  });
+
+  it("sends exactly what the hardware key would", () => {
+    // The accessory row is a second route into the PTY; if it drifts from
+    // `encodeKey`, a phone and a keyboard stop agreeing on what Tab means.
+    const equivalent: Record<string, string> = {
+      esc: "Escape",
+      tab: "Tab",
+      "↑": "ArrowUp",
+      "↓": "ArrowDown",
+      "←": "ArrowLeft",
+      "→": "ArrowRight",
+    };
+    for (const key of ACCESSORY_KEYS) {
+      assert.equal(key.bytes, encodeKey(keyEvent(equivalent[key.label]!)), key.label);
+    }
+  });
+
+  it("never sends an empty byte string", () => {
+    for (const key of ACCESSORY_KEYS) assert.ok(key.bytes.length > 0, key.label);
   });
 });

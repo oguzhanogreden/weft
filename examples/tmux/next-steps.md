@@ -17,6 +17,10 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   whole device pixels (every strategy inherits the lock).
 - Grid size as a third harness axis: five presets (80x24 to 240x60) switch at runtime, tearing
   down the old refs/pump/subscriptions and calling `session.resize`. Unit- and browser-tested.
+- Auto-fit: the grid derives its size from the viewport on load and on every debounced resize,
+  clamped to the top preset. A preset click pins it; `auto` resumes tracking.
+- Touch input: a hidden textarea summons the soft keyboard, an accessory row supplies
+  Esc/Tab/arrows, and a sticky Ctrl makes `Ctrl-C` reachable. Controls collapse on narrow screens.
 - Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 - G0 DEC Special Graphics (`ESC(0`/`ESC(B`): pane borders draw as `┌─┐│└┘├┤┬┴┼`, not `lqk`
@@ -40,7 +44,7 @@ glyphs instead of `q`/`x` letters (AC-CHARSET). What remains:
 - 24-bit truecolor (`48;2;r;g;b`): collapsed to the terminal default today, so a truecolor
   selection band or theme colour goes missing. Map it to a CSS colour (part of item 2).
 
-These overlap with item 5 (ANSI fidelity); together they are what make real `tmux` legible.
+These overlap with item 6 (ANSI fidelity); together they are what make real `tmux` legible.
 Item 3 is the one that now limits how legible the result actually looks.
 
 A Weft-native multiplexer (panes as Weft components, one PTY per pane via `PtyTransport.spawn`,
@@ -95,31 +99,50 @@ path in `@weftui/dom`.
 Done when: a browser test mounts a full 80x24 screen of content and finds zero empty cell regions,
 repeatedly.
 
-## 4. Fit the grid to the window (automatic resize)
+## 4. Mobile and resize: landed, verification open
 
-Manual preset sizes landed as AC-GRIDSIZE: the control bar switches between 80x24 and 240x60, and
-each switch re-inits the grid and calls `session.resize`. So the re-init machinery and the PTY
-notification both exist and are tested. What remains is deriving the size instead of choosing it.
+Auto-fit (AC-RESIZE) and touch input (AC-MOBILE) both landed. The grid fits the viewport on load
+and on every debounced resize, a preset click pins it and stops tracking, and `auto` resumes.
+Touch input rides a hidden textarea plus an accessory row with a sticky Ctrl. Both are
+browser-tested.
 
-The pixel-lock already measures one monospace cell at runtime (`measureCell` /
-`getBoundingClientRect`, the `examples/element-ref` pattern), so the measurement half exists too.
-This item is now mostly wiring the two together.
+What is not yet verified is the part a headless browser cannot show:
 
-- Compute cols/rows from the pane box using the measured cell metrics, and drive the existing
-  size ref from a resize observer rather than only from the preset buttons.
-- Decide precedence when both apply. Presets are a benchmarking control, auto-fit is the
-  real-world behaviour; likely auto-fit by default, with a preset click pinning an override.
+- **Run it on a real phone.** Chromium at a narrow viewport is not a soft keyboard. The things to
+  check are whether the keyboard opens on tap, whether sticky Ctrl survives the keyboard's own
+  event handling, and whether the keyboard's `resize` re-init is as unobtrusive as expected.
+- **Landscape.** ~101 columns at 13px, so a rotation crosses many cell boundaries and triggers a
+  full re-init. Worth confirming that feels acceptable rather than janky.
+- **Consider a font-size control.** A phone fits ~43 columns at 13px and ~57 at 10px. Several
+  TUIs need more than 43 to be usable at all, so a smaller font may matter more than any of the
+  above.
 
-Done when: resizing the window reflows the shell (`$COLUMNS`/`$LINES` update, `htop` reflows).
+Done when: a real phone can drive a shell, including `Ctrl-C`, without a hardware keyboard.
 
-## 5. ANSI parser fidelity
+## 5. Two `@weftui/core` HTML-attribute defects (found from this example)
+
+Both surfaced wiring the mobile textarea (AC-MOBILE), and both are core issues, so they were
+worked around in the example rather than fixed in passing.
+
+- **`spellcheck` is typed as a string but assigned as a boolean.** Core types it
+  `HTMLAttributeSource<"true" | "false">`, but the renderer assigns it to the boolean IDL
+  property, so the documented value `"false"` is a truthy string and turns spellcheck **on**. The
+  element renders as `spellcheck="true"`. Any prop whose IDL property is boolean while the type
+  is a string union has the same problem, so the fix is probably in the property/attribute
+  decision in `packages/dom`, not in the one type. Worked around by setting it through the ref.
+- **`HTMLAutocomplete` has no `"off"`.** The union lists field-name tokens only, so the
+  spec-legal `autocomplete="off"` does not typecheck. Worked around by omitting it.
+
+Done when: both can be expressed declaratively, and the example's workarounds are removed.
+
+## 6. ANSI parser fidelity
 
 Scroll regions (`r`) and erase-character (`X`) now land (AC-SCROLLREGION). Deferred gaps that
 remain (documented in `src/specs.md`, AC-ANSI): insert/delete line/char (`L`/`M`/`P`/`@`), mouse
 reporting, G1/locking-shift charset switching. Needed for full `vim`/`tmux`-in-`tmux` fidelity.
 Add table-driven parser unit tests as each lands.
 
-## 6. Browser-suite bundling flakiness (tooling, not this example)
+## 7. Browser-suite bundling flakiness (tooling, not this example)
 
 `vp run test:browser` occasionally fails with `Duplicate export of 'OpenApi'`, a Rolldown
 chunk-merge collision on `effect`'s httpapi namespace (pulled in via `@weftui/router`). It
@@ -131,7 +154,7 @@ surfaces above ~31 browser test files and is order/resource sensitive. Mitigated
 
 Done when: the full browser suite is green across many consecutive runs under load.
 
-## 7. Real-PTY browser test in CI (gated)
+## 8. Real-PTY browser test in CI (gated)
 
 The live "real shell to reactive DOM" browser run was validated manually and not kept, because
 it needs the backend and `node-pty` (absent from browser CI).
@@ -139,13 +162,13 @@ it needs the backend and `node-pty` (absent from browser CI).
 - Add an opt-in job that boots `server/` then runs a live `*.browser.test.ts` against it, gated
   behind an env flag so the default hermetic suite stays backend-free.
 
-## 8. `DEVELOPMENT.md`
+## 9. `DEVELOPMENT.md`
 
 Written this cycle on a separate local branch (`worktree-agent-...`), not merged. Decide whether
 to bring it onto this branch / `main`. It documents Node 26 via asdf, the no-corepack situation,
 the `vp` install, the pack caveat, and Playwright setup.
 
-## 9. Perf harness polish
+## 10. Perf harness polish
 
 - Record and display the FPS ceiling per strategy times load in a small results table.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.

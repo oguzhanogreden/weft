@@ -13,17 +13,31 @@
  * parser pump, so changing it tears both down and rebuilds at the new dimensions.
  * Strategy sits inside and only rebuilds the render, so switching it leaves the
  * grid content standing. See `src/specs.md`, AC-GRIDSIZE / AC-RENDER.
+ *
+ * Size is auto-fitted to the viewport by default and re-fits on resize; clicking
+ * a preset pins it and stops tracking (AC-RESIZE). Touch input rides a hidden
+ * textarea plus an accessory row, since a soft keyboard has no Esc/Tab/Ctrl or
+ * arrows (AC-MOBILE).
  */
 
 import { h, List } from "@weftui/core";
 import type { Node } from "@weftui/core";
 import { Effect, Option, pipe, type Scope, Stream, SubscriptionRef } from "effect";
-import { DEFAULT_GRID_SIZE, GRID_SIZES, type GridSize, gridSizeLabel } from "./grid-size";
+import {
+  DEFAULT_GRID_SIZE,
+  fitGridSize,
+  GRID_SIZES,
+  type GridSize,
+  gridSizeLabel,
+} from "./grid-size";
 import { type LoadLevel, makeFpsMeter, makeLoadStream, makeRateMeter, type Strategy } from "./perf";
 import {
+  ACCESSORY_KEYS,
   computePixelLock,
+  controlByte,
   encodeKey,
   makeGrid,
+  measureAvailableBox,
   measureCellWhenLaidOut,
   type PixelLock,
   pixelLockStyle,
@@ -33,25 +47,50 @@ import {
 } from "./terminal";
 import { PtyTransport, type TransportError } from "./transport";
 
-/** Initial grid size for a mounted app. Omitted dimensions fall back to 160x48. */
+/**
+ * Initial grid size for a mounted app. Supplying either dimension also *pins*
+ * the size, turning auto-fit off: it is an explicit choice, the same way a
+ * `?cols=` URL is. Omit both to open in auto-fit (AC-RESIZE).
+ */
 export interface AppOptions {
   readonly cols?: number;
   readonly rows?: number;
 }
 
+/** How long a resize must settle before re-fitting; each re-fit rebuilds the grid. */
+const RESIZE_SETTLE = "150 millis";
+
 const STRATEGIES: ReadonlyArray<Strategy> = ["low", "med", "high"];
 const LOADS: ReadonlyArray<LoadLevel> = ["off", "low", "med", "high"];
 
+/** Keep the hidden textarea focused, so tapping a key does not dismiss the soft keyboard. */
+const keepFocus = (event: Event): Effect.Effect<void> => Effect.sync(() => event.preventDefault());
+
+/** A boolean ref as a reactive attribute value ("true"/"false"). */
+const boolAttr = (ref: SubscriptionRef.SubscriptionRef<boolean>): Stream.Stream<string> =>
+  Stream.map(SubscriptionRef.changes(ref), String);
+
+interface ControlBarProps {
+  readonly strategyRef: SubscriptionRef.SubscriptionRef<Strategy>;
+  readonly loadRef: SubscriptionRef.SubscriptionRef<LoadLevel>;
+  readonly sizeRef: SubscriptionRef.SubscriptionRef<GridSize>;
+  readonly trackingRef: SubscriptionRef.SubscriptionRef<boolean>;
+  readonly openRef: SubscriptionRef.SubscriptionRef<boolean>;
+  readonly fps: Stream.Stream<number>;
+  readonly rowsPerSec: Stream.Stream<number>;
+}
+
 /**
- * Select a grid size and mirror it into the URL, so a reload keeps the size and
- * the address bar stays shareable mid-benchmark (AC-GRIDSIZE).
+ * Pin a grid size: set it and stop auto-fit tracking, then mirror it into the
+ * URL so a reload keeps it and the address bar stays shareable mid-benchmark.
  */
-const selectSize = (
-  sizeRef: SubscriptionRef.SubscriptionRef<GridSize>,
-  size: GridSize,
-): Effect.Effect<void> =>
+const pinSize = (props: ControlBarProps, size: GridSize): Effect.Effect<void> =>
   Effect.gen(function* () {
-    yield* SubscriptionRef.set(sizeRef, size);
+    // Tracking off first: a re-fit landing between these two would otherwise
+    // clobber the size just picked. `refit` reads `trackingRef` before anything
+    // else, so once it is false the fit is inert.
+    yield* SubscriptionRef.set(props.trackingRef, false);
+    yield* SubscriptionRef.set(props.sizeRef, size);
     yield* Effect.sync(() => {
       const url = new URL(window.location.href);
       url.searchParams.set("cols", String(size.cols));
@@ -60,61 +99,124 @@ const selectSize = (
     });
   });
 
-const controlBar = (
-  strategyRef: SubscriptionRef.SubscriptionRef<Strategy>,
-  loadRef: SubscriptionRef.SubscriptionRef<LoadLevel>,
-  sizeRef: SubscriptionRef.SubscriptionRef<GridSize>,
-  fps: Stream.Stream<number>,
-  rowsPerSec: Stream.Stream<number>,
-): Node<never, never> =>
+/** Resume auto-fit, dropping the pinned size from the URL. */
+const resumeAuto = (props: ControlBarProps): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    yield* Effect.sync(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("cols");
+      url.searchParams.delete("rows");
+      window.history.replaceState(null, "", url);
+    });
+    // Clearing the URL first matters on reload, not here: a leftover `?cols=`
+    // would re-pin on next load and silently undo the resume.
+    yield* SubscriptionRef.set(props.trackingRef, true);
+  });
+
+const controlBar = (props: ControlBarProps): Node<never, never> =>
   h.div({ class: "controls" }, [
-    h.span({ class: "label" }, "strategy"),
-    ...STRATEGIES.map((s) =>
+    h.button(
+      {
+        type: "button",
+        class: "level controls-toggle",
+        "data-controls-toggle": "",
+        onclick: () => SubscriptionRef.update(props.openRef, (open) => !open),
+      },
+      "≡ controls",
+    ),
+    h.div({ class: "control-groups", "data-open": boolAttr(props.openRef) }, [
+      h.span({ class: "label" }, "strategy"),
+      ...STRATEGIES.map((s) =>
+        h.button(
+          {
+            type: "button",
+            class: "level",
+            "data-strategy": s,
+            onclick: () => SubscriptionRef.set(props.strategyRef, s),
+          },
+          s,
+        ),
+      ),
+      h.span({ class: "label" }, "load"),
+      ...LOADS.map((l) =>
+        h.button(
+          {
+            type: "button",
+            class: "level",
+            "data-load": l,
+            onclick: () => SubscriptionRef.set(props.loadRef, l),
+          },
+          l,
+        ),
+      ),
+      h.span({ class: "label" }, "size"),
       h.button(
         {
           type: "button",
           class: "level",
-          "data-strategy": s,
-          onclick: () => SubscriptionRef.set(strategyRef, s),
+          "data-size": "auto",
+          "data-active": boolAttr(props.trackingRef),
+          onclick: () => resumeAuto(props),
         },
-        s,
+        "auto",
       ),
-    ),
-    h.span({ class: "label" }, "load"),
-    ...LOADS.map((l) =>
+      ...GRID_SIZES.map((size) =>
+        h.button(
+          {
+            type: "button",
+            class: "level",
+            "data-size": gridSizeLabel(size),
+            onclick: () => pinSize(props, size),
+          },
+          gridSizeLabel(size),
+        ),
+      ),
+    ]),
+    h.span({ class: "meter fps" }, ["fps: ", Stream.map(props.fps, (n) => String(n))]),
+    h.span({ class: "meter rows" }, ["rows/s: ", Stream.map(props.rowsPerSec, (n) => String(n))]),
+  ]);
+
+/**
+ * The touch accessory row: the keys a soft keyboard does not have. Hidden on
+ * fine-pointer devices by CSS, so desktop is untouched (AC-MOBILE).
+ */
+const accessoryRow = (
+  write: (data: string) => Effect.Effect<void>,
+  ctrlArmedRef: SubscriptionRef.SubscriptionRef<boolean>,
+): Node<never, never> =>
+  h.div({ class: "accessory" }, [
+    ...ACCESSORY_KEYS.map((key) =>
       h.button(
         {
           type: "button",
-          class: "level",
-          "data-load": l,
-          onclick: () => SubscriptionRef.set(loadRef, l),
+          class: "accessory-key",
+          "data-accessory": key.label,
+          onmousedown: keepFocus,
+          onclick: () => write(key.bytes),
         },
-        l,
+        key.label,
       ),
     ),
-    h.span({ class: "label" }, "size"),
-    ...GRID_SIZES.map((size) =>
-      h.button(
-        {
-          type: "button",
-          class: "level",
-          "data-size": gridSizeLabel(size),
-          onclick: () => selectSize(sizeRef, size),
-        },
-        gridSizeLabel(size),
-      ),
+    h.button(
+      {
+        type: "button",
+        class: "accessory-key",
+        "data-accessory": "ctrl",
+        "data-armed": boolAttr(ctrlArmedRef),
+        onmousedown: keepFocus,
+        onclick: () => SubscriptionRef.update(ctrlArmedRef, (armed) => !armed),
+      },
+      "ctrl",
     ),
-    h.span({ class: "meter fps" }, ["fps: ", Stream.map(fps, (n) => String(n))]),
-    h.span({ class: "meter rows" }, ["rows/s: ", Stream.map(rowsPerSec, (n) => String(n))]),
   ]);
 
 /**
  * The application root: one shell wired to the perf harness. `options` sets the
- * _initial_ grid size (`main.ts` seeds it from the query string); the control
- * bar's size buttons drive it from there. Defaults to 160x48.
+ * initial grid size and pins it; omit it to open in auto-fit.
  */
 export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport | Scope.Scope> =>
   Effect.gen(function* () {
+    const pinned = options.cols !== undefined || options.rows !== undefined;
     const initialSize: GridSize = {
       cols: options.cols ?? DEFAULT_GRID_SIZE.cols,
       rows: options.rows ?? DEFAULT_GRID_SIZE.rows,
@@ -129,7 +231,13 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
     const strategyRef = yield* SubscriptionRef.make<Strategy>("high");
     const loadRef = yield* SubscriptionRef.make<LoadLevel>("off");
     const sizeRef = yield* SubscriptionRef.make<GridSize>(initialSize);
+    const trackingRef = yield* SubscriptionRef.make<boolean>(!pinned);
+    const openRef = yield* SubscriptionRef.make<boolean>(false);
+    const ctrlArmedRef = yield* SubscriptionRef.make<boolean>(false);
     const probeRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
+    // `ref` is invariant, so each must match what its tag resolves to.
+    const paneRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
+    const inputRef = yield* SubscriptionRef.make<Option.Option<HTMLTextAreaElement>>(Option.none());
     const lockRef = yield* SubscriptionRef.make<Option.Option<PixelLock>>(Option.none());
 
     const fps = makeFpsMeter();
@@ -156,6 +264,53 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
       Effect.forkScoped,
     );
 
+    // Spellcheck off, imperatively: see the textarea's props for why the
+    // declarative route sets it to the opposite of what is written there.
+    yield* pipe(
+      SubscriptionRef.changes(inputRef),
+      Stream.filter(Option.isSome),
+      Stream.take(1),
+      Stream.runForEach((field) => Effect.sync(() => (field.value.spellcheck = false))),
+      Effect.forkScoped,
+    );
+
+    // Auto-fit (AC-RESIZE). Inert while a size is pinned, and until both the pane
+    // and the measured lock exist: fitting against an unmeasured cell would just
+    // yield the fallback and thrash the grid for nothing.
+    const refit = Effect.gen(function* () {
+      if (!(yield* SubscriptionRef.get(trackingRef))) return;
+      const pane = yield* SubscriptionRef.get(paneRef);
+      const lock = yield* SubscriptionRef.get(lockRef);
+      if (Option.isNone(pane) || Option.isNone(lock)) return;
+      yield* SubscriptionRef.set(sizeRef, fitGridSize(measureAvailableBox(pane.value), lock.value));
+    });
+
+    // Debounced, because every re-fit tears down a whole grid: an undebounced
+    // window drag would rebuild thousands of cells per pixel. A settled size that
+    // crosses no cell boundary is inert anyway (same label, same list key).
+    yield* pipe(
+      Stream.fromEventListener(window, "resize"),
+      Stream.debounce(RESIZE_SETTLE),
+      Stream.runForEach(() => refit),
+      Effect.forkScoped,
+    );
+
+    // Re-fit on every input `refit` reads, not just the one expected to land
+    // last. The lock resolves after the pane today (it polls for a laid-out
+    // probe inside it), but depending on that ordering would leave auto-fit
+    // silently dead if it ever changed.
+    yield* pipe(
+      Stream.merge(
+        Stream.map(SubscriptionRef.changes(lockRef), () => undefined),
+        Stream.merge(
+          Stream.map(SubscriptionRef.changes(paneRef), () => undefined),
+          Stream.map(SubscriptionRef.changes(trackingRef), () => undefined),
+        ),
+      ),
+      Stream.runForEach(() => refit),
+      Effect.forkScoped,
+    );
+
     // The measured lock cascades from the stable pane to every render strategy.
     const paneStyle = SubscriptionRef.changes(lockRef).pipe(
       Stream.map((lock) =>
@@ -163,12 +318,38 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
       ),
     );
 
+    // Hardware keyboard. Every key this encodes is `preventDefault`ed, so the
+    // character never reaches the textarea and no `input` event follows. That is
+    // what keeps the two input paths from double-sending (AC-MOBILE).
     const onkeydown = (event: KeyboardEvent): Effect.Effect<void> => {
       const data = encodeKey(event);
       if (data === "") return Effect.void;
       event.preventDefault();
       return session.write(data);
     };
+
+    // Soft keyboard. Mobile reports `key: "Unidentified"` on keydown, so
+    // `encodeKey` returns "" and the character lands here instead.
+    const oninput = (event: Event): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        const field = event.currentTarget as HTMLTextAreaElement;
+        const text = field.value;
+        field.value = "";
+        if (text === "") return;
+        if (!(yield* SubscriptionRef.get(ctrlArmedRef))) return yield* session.write(text);
+        // Sticky ctrl applies to the next character only, then disarms.
+        yield* SubscriptionRef.set(ctrlArmedRef, false);
+        const byte = controlByte(text[0]!);
+        yield* session.write(byte === "" ? text : byte + text.slice(1));
+      });
+
+    // Tapping the grid summons the soft keyboard. `preventScroll` keeps the pane
+    // from being scrolled out from under it.
+    const onclick = (): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        const field = yield* SubscriptionRef.get(inputRef);
+        if (Option.isSome(field)) field.value.focus({ preventScroll: true });
+      });
 
     // Two nested keyed regions, and the nesting is the point (AC-GRIDSIZE).
     //
@@ -205,10 +386,42 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
     );
 
     return yield* h.div({ class: "tmux-app" }, [
-      controlBar(strategyRef, loadRef, sizeRef, fps.stream, rate.stream),
-      h.div({ class: "terminal-pane", tabindex: "0", onkeydown, style: paneStyle }, [
-        h.span({ ref: probeRef, class: "term-probe", "aria-hidden": "true" }, PROBE_TEXT),
-        body,
-      ]),
+      controlBar({
+        strategyRef,
+        loadRef,
+        sizeRef,
+        trackingRef,
+        openRef,
+        fps: fps.stream,
+        rowsPerSec: rate.stream,
+      }),
+      accessoryRow(session.write, ctrlArmedRef),
+      h.div(
+        {
+          ref: paneRef,
+          class: "terminal-pane",
+          tabindex: "0",
+          onkeydown,
+          onclick,
+          style: paneStyle,
+        },
+        [
+          h.span({ ref: probeRef, class: "term-probe", "aria-hidden": "true" }, PROBE_TEXT),
+          h.textarea({
+            ref: inputRef,
+            class: "term-input",
+            "aria-hidden": "true",
+            // No `autocomplete="off"`: core's `HTMLAutocomplete` union is
+            // field-name tokens only, so "off" does not typecheck.
+            // No `spellcheck` either: core types it `"true" | "false"`, but the
+            // renderer assigns it to the boolean IDL property, where the string
+            // "false" is truthy and turns spellcheck *on*. Set below via the ref.
+            autocapitalize: "off",
+            autocorrect: "off",
+            oninput,
+          }),
+          body,
+        ],
+      ),
     ]);
   });

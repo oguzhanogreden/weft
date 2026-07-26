@@ -18,6 +18,7 @@ import type { Node } from "@weftui/core";
 import { Effect, type Scope, Stream, SubscriptionRef } from "effect";
 import { feed, initParser } from "./ansi/parser";
 import { blankRow, DEFAULT_STYLE, type Row, type Style } from "./grid";
+import type { PaneBox } from "./grid-size";
 import { segmentsFor, type Strategy } from "./perf";
 
 export const DEFAULT_COLS = 80;
@@ -250,6 +251,64 @@ export function renderRows(
     { class: "term" },
     rowRefs.map((ref) => renderRow(ref, strategy, cols)),
   );
+}
+
+/**
+ * The space a grid may occupy, for auto-fit (AC-RESIZE): the viewport less the
+ * body padding and whatever chrome sits above `pane`.
+ *
+ * Deliberately reads `documentElement.clientWidth` rather than the pane's own
+ * width. `#root` is `fit-content`, so the pane is sized *by* the grid inside it,
+ * and measuring it to choose that grid's size would be circular. The pane's
+ * `top` is safe: it depends only on the chrome above, never on the grid.
+ */
+export function measureAvailableBox(pane: HTMLElement): PaneBox {
+  const body = window.getComputedStyle(document.body);
+  const padX = Number.parseFloat(body.paddingLeft) + Number.parseFloat(body.paddingRight);
+  const padBottom = Number.parseFloat(body.paddingBottom);
+  const { top } = pane.getBoundingClientRect();
+  return {
+    width: Math.max(0, document.documentElement.clientWidth - padX),
+    height: Math.max(0, document.documentElement.clientHeight - top - padBottom),
+  };
+}
+
+// ── Touch input (AC-MOBILE) ──────────────────────────────────────────────────
+// A soft keyboard has no Esc, Tab, Ctrl, or arrows, which is most of what
+// driving a shell needs. These are the pure encoding halves; the textarea and
+// the accessory row itself live in `app.ts`.
+
+/** One accessory-row key: what it reads as, and the bytes it sends. */
+export interface AccessoryKey {
+  readonly label: string;
+  readonly bytes: string;
+}
+
+/**
+ * The accessory row, in display order. Ctrl is deliberately absent: it is a
+ * sticky modifier rather than a key that sends bytes, so `app.ts` renders it
+ * separately and applies it via {@link controlByte}.
+ */
+export const ACCESSORY_KEYS: ReadonlyArray<AccessoryKey> = [
+  { label: "esc", bytes: "\x1b" },
+  { label: "tab", bytes: "\t" },
+  { label: "↑", bytes: "\x1b[A" },
+  { label: "↓", bytes: "\x1b[B" },
+  { label: "←", bytes: "\x1b[D" },
+  { label: "→", bytes: "\x1b[C" },
+];
+
+/**
+ * The control byte for a printable character (`c` and `C` both give `\x03`), or
+ * `""` when there is none. Used to apply an armed sticky Ctrl to a character
+ * that arrived through the soft keyboard's `input` event, where `encodeKey` never
+ * sees a `ctrlKey` flag. Covers `a`-`z` only, matching `encodeKey`.
+ */
+export function controlByte(char: string): string {
+  if (char.length !== 1) return "";
+  const code = char.toLowerCase().charCodeAt(0);
+  if (code < 97 || code > 122) return ""; // a-z
+  return String.fromCharCode(code - 96);
 }
 
 /** Map a keyboard event to the bytes a PTY expects, or "" to ignore it. */

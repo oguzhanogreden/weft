@@ -239,6 +239,91 @@ Expected behaviour and edge cases:
   before reading the FPS meter, and reload after zooming, since the pixel-lock reads
   `devicePixelRatio` once at mount.
 
+### AC-RESIZE — auto-fit the grid to the viewport (`src/grid-size.ts`, `src/app.ts`) ✅
+
+The automatic counterpart to AC-GRIDSIZE, and the reason the example works on a phone at all. A
+390px portrait viewport holds about 43 columns at the 13px font; any fixed preset either
+overflows it or wastes it. AC-GRIDSIZE built the re-init machinery and AC-PIXELGRID measures the
+cell, so this criterion is mostly deriving a size instead of choosing one.
+
+- A pure helper turns a pane box plus measured cell metrics into a `GridSize`:
+  `cols = floor(width / cellWidth)`, `rows = floor(height / rowHeight)`. Unit-testable with no
+  DOM, like `computePixelLock`.
+- Measuring the available space must not be circular. `#root` is `fit-content`, so the pane is
+  sized _by_ the grid inside it; measuring the pane's width to choose that grid's width would
+  feed back on itself. `measureAvailableBox` therefore reads `documentElement.clientWidth` (never
+  content-driven) less the body padding, and takes only the pane's `top`, which depends on the
+  chrome above and never on the grid. `#root` also carries `min-width: 100%` so a fitted grid
+  never leaves the root narrower than the viewport.
+- The result is clamped to `AUTO_FIT_MAX`, which is the top preset (240x60). Auto-fit on a 2560px
+  display would otherwise compute ~327x82, roughly 26,800 cells: nearly double the heaviest size
+  proven to build, so the example would open on its own worst case. Past the cap the pane simply
+  stops filling the window. Named constant, so raising it is one line.
+- A floor keeps a tiny viewport from computing a degenerate grid; the size never goes below
+  20x5.
+- Tracking uses `Stream.fromEventListener(window, "resize")`, the primitive already used by
+  `headless-menu` and `transport-ws`. Rotation fires `resize`, so no `orientationchange` handler
+  and no `ResizeObserver` (which would be the codebase's first, and is not needed while the pane
+  tracks the viewport).
+- Resize is debounced (~150ms settle) so dragging a window edge re-inits once, not per pixel.
+  Each re-init tears down a full grid, so an undebounced drag would thrash.
+- **Auto by default, preset pins.** The app starts tracking. Clicking any preset pins that size
+  and stops tracking; an `auto` button, first in the size group, resumes it. A `?cols=`/`?rows=`
+  URL pins on load, since it is an explicit choice.
+- Re-init reuses the AC-GRIDSIZE path unchanged: same size ref, same nested `List.each`, same
+  `session.resize`. Auto-fit only decides _what_ to set, never _how_.
+- `DEFAULT_GRID_SIZE` (160x48) changes role to the pre-measurement fallback: the size shown until
+  the pixel-lock resolves, and the one auto-fit falls back to if measurement fails. It remains
+  the pinned default whenever tracking is off.
+- A computed size equal to the current one must not re-init. The size-keyed list gives this free
+  (same label, same key, no rebuild), but it is an invariant worth asserting: a resize that does
+  not cross a cell boundary should be inert.
+
+### AC-MOBILE — touch input and responsive chrome (`src/app.ts`, `index.html`) ✅
+
+Auto-fit makes the grid _fit_ a phone; this makes it _usable_ on one. A soft keyboard has no Esc,
+Tab, Ctrl, or arrows, which are most of what driving a shell needs, and it does not open at all
+without a focused form control.
+
+- A visually hidden `<textarea>` holds focus and summons the soft keyboard when the pane is
+  tapped. A textarea, not `contenteditable`, following xterm.js: it is the control mobile
+  keyboards behave most predictably with. `autocapitalize` and `autocorrect` are off, and
+  `spellcheck` is false, or the keyboard will capitalise and autocorrect shell input.
+  - Deviation: `autocomplete="off"` is **not** set, though the HTML spec allows it.
+    `@weftui/core`'s `HTMLAutocomplete` union lists field-name tokens only and has no `"off"`, so
+    it does not typecheck. Autofill on an unnamed hidden textarea is not a realistic risk.
+  - Deviation: `spellcheck` is set imperatively through the element ref, not as a prop. Core
+    types it `"true" | "false"`, but the renderer assigns it to the **boolean** IDL property,
+    where the string `"false"` is truthy: the element rendered as `spellcheck="true"`, the exact
+    opposite of what was written. Caught by the browser test, which asserts the IDL property
+    rather than the attribute for precisely this reason.
+  - Both are `packages/core` defects rather than example concerns, so they are worked around
+    here and recorded in `next-steps.md` rather than fixed in passing.
+- Printable input is read from the `input` event, not `keydown`. Mobile keyboards frequently
+  report `key: "Unidentified"` on `keydown`, so `encodeKey` alone would drop most typing. The
+  textarea is cleared after each read. `keydown` still handles the named keys (Enter, Backspace,
+  arrows) that report correctly, so desktop behaviour is unchanged.
+- An accessory row provides `esc`, `tab`, `ctrl`, and the four arrows, sending the same bytes
+  `encodeKey` produces. Shown only under `@media (pointer: coarse)`, so desktop is untouched.
+- `ctrl` is a sticky one-shot modifier: tapping it arms it (visually marked), the next printable
+  character is sent as its control byte (`0x01`-`0x1a`), and it disarms. Tapping it again
+  disarms without sending. This is what makes Ctrl-C, Ctrl-D, and the `Ctrl-b` tmux prefix
+  reachable.
+- On narrow screens the strategy/load/size groups collapse behind a toggle, leaving the toggle
+  and both meters on one line. The meters stay visible because watching them is the point of the
+  harness. Desktop keeps the expanded bar, so existing tests click the same buttons.
+- Pinch zoom stays enabled. The existing `width=device-width` viewport meta is sufficient.
+
+Expected behaviour and edge cases:
+
+- The soft keyboard shrinks the visual viewport, which fires `resize`, which re-fits the grid
+  while typing. Fitting to the shrunken height is correct (the grid really is smaller), but it
+  means opening the keyboard re-inits the grid once. The debounce keeps it to one.
+- Sticky `ctrl` applies to the _next printable character only_, including one arriving via the
+  soft keyboard's `input` event, not just `keydown`.
+- Tapping the pane must not scroll it away under the keyboard; the pane is focused rather than
+  scrolled into view.
+
 ### AC-TEST 🚧 (unit + backend + hermetic browser done; mux assertions pending)
 
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
@@ -248,8 +333,12 @@ Expected behaviour and edge cases:
   alternate screen, and the negative guards that `ESC)0`/`ESC*0`/`ESC+0` do not translate).
   Scroll regions + ECH (table-driven: DECSTBM set/reset/invalid + cursor home,
   region scroll preserving out-of-region refs, region-aware `lineFeed`, `eraseChars`, and the
-  distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Keybinding state machine lands
-  with AC-MUX.
+  distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Grid-size presets, labels, and
+  URL parsing (fallback per dimension, non-integer/zero/negative rejection, clamping) ✅
+  (AC-GRIDSIZE, 19 cases). The auto-fit computation (pane box + cell metrics + cap → `GridSize`,
+  including the cap, the floor, and the inert sub-cell change) ✅ with AC-RESIZE, pure and
+  DOM-free like `computePixelLock`. Touch encoding (`controlByte`, and every accessory key
+  cross-checked against `encodeKey` so the two input routes cannot drift) ✅ with AC-MOBILE. Keybinding state machine lands with AC-MUX.
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
   round-trips a typed command over `ws` ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
@@ -272,8 +361,12 @@ Expected behaviour and edge cases:
   (the AC-RENDER non-regression the nesting exists to protect) and the pixel-lock surviving the
   switch. The top preset is covered explicitly: 240x60 builds all 14,400 cells correctly in about
   3.5s headless, so the step is slow, not structurally broken. Its frame rate under load is the
-  open question, and that needs a real browser. The `Ctrl-b %` two-pane
-  assertion lands with AC-MUX. A live
+  open question, and that needs a real browser. Auto-fit derives a grid from a sized container,
+  re-fits on `resize`, stops tracking once a preset is pinned, and resumes on `auto` ✅
+  (AC-RESIZE). Tapping the pane focuses the hidden textarea, an `input` event reaches
+  `session.write` (the path `keydown` misses on mobile), each accessory key sends its expected
+  bytes, and armed `ctrl` turns the next character into its control byte ✅ (AC-MOBILE). The
+  `Ctrl-b %` two-pane assertion lands with AC-MUX. A live
   real-PTY browser run (real shell →
   `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
   backend.
@@ -289,6 +382,10 @@ Expected behaviour and edge cases:
   - AC-SCROLLREGION specifically: `setScrollRegion`/`scrollUp`/`scrollDown`/`eraseChars` and the
     new `dispatchCsi` cases are non-generic fixed-signature functions over `TerminalState`; no
     type-level surface to assert.
+  - AC-RESIZE / AC-MOBILE specifically: the fit helper is a non-generic
+    `(box, metrics) => GridSize`, and the mobile surface is DOM wiring plus a boolean modifier
+    flag. No generics, overloads, or conditional/inferred types; the behaviour under test is
+    measurement and input routing, both runtime concerns.
   - AC-GRIDSIZE specifically: `GridSize`/`AppOptions` are plain concrete interfaces of `number`
     fields and the presets are a `ReadonlyArray<GridSize>`. No generics, overloads, or
     conditional/inferred types, so the main typecheck already enforces the surface. The behaviour

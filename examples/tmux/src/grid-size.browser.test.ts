@@ -15,7 +15,7 @@ import { WeftApp } from "@weftui/dom/client";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { type AppOptions, App } from "./app";
-import { GRID_SIZES, gridSizeLabel } from "./grid-size";
+import { AUTO_FIT_MAX, AUTO_FIT_MIN, GRID_SIZES, gridSizeLabel } from "./grid-size";
 import { makeMockTransport } from "./transport-mock";
 
 let container: HTMLElement;
@@ -75,17 +75,56 @@ describe("grid size axis (AC-GRIDSIZE)", () => {
     const labels = [...container.querySelectorAll("[data-size]")].map((el) =>
       el.getAttribute("data-size"),
     );
-    expect(labels).toEqual(GRID_SIZES.map(gridSizeLabel));
+    expect(labels).toEqual(["auto", ...GRID_SIZES.map(gridSizeLabel)]);
   });
 
-  it("opens at 160x48", async () => {
+  it("auto-fits to the viewport on open, rather than using the fallback size", async () => {
     await mountWith(["ready\r\n"]);
-    await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 48, cols: 160 }), { timeout: 5000 });
+    await vi.waitFor(() => expect(gridShape().cols).toBeGreaterThan(0), { timeout: 15_000 });
+
+    const shape = gridShape();
+    expect(shape.cols).toBeGreaterThanOrEqual(AUTO_FIT_MIN.cols);
+    expect(shape.cols).toBeLessThanOrEqual(AUTO_FIT_MAX.cols);
+    expect(shape.rows).toBeGreaterThanOrEqual(AUTO_FIT_MIN.rows);
+    // The point of fitting: the grid must not be wider than the space it has.
+    const row = container.querySelector<HTMLElement>(".term-row")!;
+    expect(row.getBoundingClientRect().width).toBeLessThanOrEqual(
+      document.documentElement.clientWidth,
+    );
   });
 
-  it("honours an initial size from AppOptions (the URL path main.ts uses)", async () => {
+  it("marks auto active on open, and inactive once a preset is pinned", async () => {
+    await mountWith(["ready\r\n"]);
+    const auto = container.querySelector<HTMLElement>('[data-size="auto"]')!;
+    await vi.waitFor(() => expect(auto.dataset.active).toBe("true"));
+
+    await clickSize("80x24");
+
+    await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 24, cols: 80 }));
+    expect(auto.dataset.active).toBe("false");
+  });
+
+  it("returns to the fitted size when auto is resumed", async () => {
+    await mountWith(["ready\r\n"]);
+    await vi.waitFor(() => expect(gridShape().cols).toBeGreaterThan(0), { timeout: 15_000 });
+    const fitted = gridShape();
+
+    await clickSize("80x24");
+    await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 24, cols: 80 }));
+
+    container.querySelector<HTMLButtonElement>('[data-size="auto"]')!.click();
+
+    await vi.waitFor(() => expect(gridShape()).toEqual(fitted), { timeout: 15_000 });
+  });
+
+  it("honours an explicit AppOptions size and treats it as a pin", async () => {
+    // The `?cols=` path main.ts uses: an explicit size is a choice, so it both
+    // sets the grid and leaves auto-fit off.
     await mountWith(["ready\r\n"], { cols: 100, rows: 30 });
     await vi.waitFor(() => expect(gridShape()).toEqual({ rows: 30, cols: 100 }));
+    expect(container.querySelector<HTMLElement>('[data-size="auto"]')!.dataset.active).toBe(
+      "false",
+    );
   });
 
   it("re-inits the grid and tells the PTY when a preset is clicked", async () => {

@@ -1,7 +1,11 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import {
+  AUTO_FIT_MAX,
+  AUTO_FIT_MIN,
+  type CellFootprint,
   DEFAULT_GRID_SIZE,
+  fitGridSize,
   GRID_SIZE_MAX,
   GRID_SIZES,
   type GridSize,
@@ -116,5 +120,67 @@ describe("parseGridSize (AC-GRIDSIZE)", () => {
       cols: GRID_SIZE_MAX.cols,
       rows: 50,
     });
+  });
+});
+
+// The measured metrics at the example's 13px font, snapped by the pixel-lock.
+const CELL: CellFootprint = { cellWidth: 7.83, rowHeight: 16.25 };
+const SQUARE: CellFootprint = { cellWidth: 8, rowHeight: 16 };
+
+describe("fitGridSize (AC-RESIZE)", () => {
+  it("fills the box with whole cells", () => {
+    assert.deepEqual(fitGridSize({ width: 800, height: 400 }, SQUARE), { cols: 100, rows: 25 });
+  });
+
+  it("floors a partial cell rather than overflowing the box", () => {
+    assert.deepEqual(fitGridSize({ width: 807, height: 407 }, SQUARE), { cols: 100, rows: 25 });
+  });
+
+  it("ignores a sub-cell change, so a resize that crosses no boundary is inert", () => {
+    // The invariant that keeps a drag from re-initing the grid on every pixel.
+    const a = fitGridSize({ width: 800, height: 400 }, SQUARE);
+    const b = fitGridSize({ width: 803, height: 404 }, SQUARE);
+    assert.deepEqual(a, b);
+  });
+
+  it("fits a portrait phone viewport", () => {
+    // 390px wide less the 1.5rem body padding, and a viewport less the chrome.
+    assert.deepEqual(fitGridSize({ width: 342, height: 550 }, CELL), { cols: 43, rows: 33 });
+  });
+
+  it("clamps a large display to the top preset", () => {
+    // 2560x1340 fits ~326x82 (~26,700 cells), nearly double the heaviest preset.
+    assert.deepEqual(fitGridSize({ width: 2560, height: 1340 }, CELL), AUTO_FIT_MAX);
+  });
+
+  it("clamps a tiny box up to the floor rather than going degenerate", () => {
+    assert.deepEqual(fitGridSize({ width: 50, height: 20 }, SQUARE), AUTO_FIT_MIN);
+  });
+
+  it("falls back to the default when the cell has not been measured", () => {
+    // Dividing by zero would give Infinity and clamp to the maximum, opening the
+    // largest possible grid on exactly the frame where nothing is measured yet.
+    assert.deepEqual(
+      fitGridSize({ width: 800, height: 400 }, { cellWidth: 0, rowHeight: 16 }),
+      DEFAULT_GRID_SIZE,
+    );
+    assert.deepEqual(
+      fitGridSize({ width: 800, height: 400 }, { cellWidth: 8, rowHeight: 0 }),
+      DEFAULT_GRID_SIZE,
+    );
+    assert.deepEqual(
+      fitGridSize({ width: 800, height: 400 }, { cellWidth: -8, rowHeight: 16 }),
+      DEFAULT_GRID_SIZE,
+    );
+  });
+
+  it("caps at the top preset and floors at 20x5", () => {
+    assert.deepEqual(AUTO_FIT_MAX, GRID_SIZES.at(-1));
+    assert.deepEqual(AUTO_FIT_MIN, { cols: 20, rows: 5 });
+  });
+
+  it("never exceeds the URL clamp either", () => {
+    assert.ok(AUTO_FIT_MAX.cols <= GRID_SIZE_MAX.cols);
+    assert.ok(AUTO_FIT_MAX.rows <= GRID_SIZE_MAX.rows);
   });
 });

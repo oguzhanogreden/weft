@@ -56,6 +56,54 @@ export function gridSizeLabel(size: GridSize): string {
   return `${size.cols}x${size.rows}`;
 }
 
+/** Floor for an auto-fitted grid, so a tiny viewport cannot compute a degenerate one. */
+export const AUTO_FIT_MIN: GridSize = { cols: 20, rows: 5 };
+
+/**
+ * Ceiling for an auto-fitted grid: the top preset. A 2560px display would
+ * otherwise fit roughly 327x82 (~26,800 cells), nearly double the heaviest size
+ * proven to build, so the example would open on its own worst case. Past this
+ * the pane stops filling the window.
+ *
+ * Derived from {@link GRID_SIZES} rather than restated, so the cap cannot drift
+ * from the heaviest size the presets actually exercise.
+ */
+export const AUTO_FIT_MAX: GridSize = GRID_SIZES.at(-1)!;
+
+/** The area a grid may occupy, in CSS pixels. */
+export interface PaneBox {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * The pixel-locked footprint of one cell, in CSS pixels. Structurally satisfied
+ * by `PixelLock`, so auto-fit divides by the same snapped metrics the grid
+ * renders at rather than re-deriving them (AC-PIXELGRID).
+ */
+export interface CellFootprint {
+  readonly cellWidth: number;
+  readonly rowHeight: number;
+}
+
+/**
+ * The largest grid that fits `box` at `cell`, clamped to
+ * {@link AUTO_FIT_MIN}/{@link AUTO_FIT_MAX}. Returns {@link DEFAULT_GRID_SIZE}
+ * when the footprint is non-positive, which is the un-measured state: dividing
+ * by it would yield `Infinity` and clamp to the maximum, opening a huge grid on
+ * exactly the frame where nothing has been measured yet.
+ *
+ * Pure and DOM-free, like `computePixelLock`.
+ */
+export function fitGridSize(box: PaneBox, cell: CellFootprint): GridSize {
+  if (cell.cellWidth <= 0 || cell.rowHeight <= 0) return DEFAULT_GRID_SIZE;
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+  return {
+    cols: clamp(Math.floor(box.width / cell.cellWidth), AUTO_FIT_MIN.cols, AUTO_FIT_MAX.cols),
+    rows: clamp(Math.floor(box.height / cell.rowHeight), AUTO_FIT_MIN.rows, AUTO_FIT_MAX.rows),
+  };
+}
+
 /** One dimension: a positive integer clamped to `max`, else `fallback`. */
 function dimension(raw: string | null, fallback: number, max: number): number {
   if (raw === null) return fallback;

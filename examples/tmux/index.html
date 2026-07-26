@@ -21,10 +21,13 @@
 
       /* Grow to the grid rather than capping it. A clipped `.term` still takes the
          DOM writes but the browser skips paint for what it hides, so a capped
-         width makes the FPS meter read better than the truth. */
+         width makes the FPS meter read better than the truth.
+         `min-width: 100%` (not a fixed cap) so an auto-fitted grid never leaves
+         the root narrower than the viewport, which is what keeps the available
+         width measurable independently of the grid inside it. */
       #root {
         width: fit-content;
-        min-width: min(960px, 100%);
+        min-width: 100%;
         margin: 0 auto;
       }
 
@@ -88,6 +91,80 @@
       .terminal-pane {
         font-size: 13px;
         outline: none;
+      }
+
+      /* Groups collapse behind the toggle on narrow screens; the meters stay put,
+         since watching them is the point of the harness (AC-MOBILE). */
+      .control-groups {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .controls-toggle {
+        display: none;
+      }
+
+      @media (max-width: 720px) {
+        .controls-toggle {
+          display: inline-block;
+        }
+
+        .control-groups {
+          display: none;
+          width: 100%;
+        }
+
+        .control-groups[data-open="true"] {
+          display: flex;
+        }
+      }
+
+      /* Touch accessory row: the keys a soft keyboard does not have. Coarse
+         pointers only, so desktop is untouched (AC-MOBILE). */
+      .accessory {
+        display: none;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+      }
+
+      @media (pointer: coarse) {
+        .accessory {
+          display: flex;
+        }
+      }
+
+      .accessory-key {
+        background: #0d1017;
+        color: #b3b1ad;
+        border: 1px solid #1c2230;
+        border-radius: 3px;
+        /* Roomy enough to hit with a thumb. */
+        min-width: 2.75rem;
+        padding: 0.45rem 0.6rem;
+        font-family: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .accessory-key[data-armed="true"] {
+        border-color: #39bae6;
+        color: #39bae6;
+      }
+
+      /* Focus target that summons the soft keyboard. Must stay focusable, so it
+         is transparent rather than `display: none` (AC-MOBILE). */
+      .term-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        border: 0;
+        opacity: 0;
+        resize: none;
+        overflow: hidden;
       }
 
       /* Hidden probe: measured once on mount to pixel-lock the grid (AC-PIXELGRID). */
