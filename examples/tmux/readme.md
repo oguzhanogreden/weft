@@ -122,9 +122,16 @@ Implemented and validated on Node 26:
 - Scroll regions (DECSTBM `ESC[r`) and erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs. So `tmux attach` renders without its status bar bleeding into the
   content. Covered by unit and browser tests.
+- DEC line-drawing charset (`ESC(0` / `ESC(B`): `tmux` and `ncurses` select a graphics charset to
+  draw pane borders, then send plain letters. Those letters now translate to box glyphs, so a
+  border reads as `┌──┐` instead of `lqqk`. All 32 bytes of the table, covered by unit and
+  browser tests.
 
-Not yet built: DEC line-drawing charset (`ESC(0`), plus insert/delete line and mouse reporting,
-the remaining fidelity for full `vim`/`tmux`-in-`tmux` rendering. The grid is still a fixed 80x24;
-fitting the window with more cells (dynamic resize) is the density follow-on. Note you run the real
-programs over the PTY, so there is no need for a Weft-native multiplexer. See `next-steps.md` for
-the full roadmap.
+Known defect: at the `high` strategy roughly 0.15% of cells render with an empty reactive region,
+so a glyph goes missing and the rest of that row shifts one cell left. It predates the charset
+work and is item 3 in `next-steps.md`.
+
+Not yet built: insert/delete line and mouse reporting, the remaining fidelity for full
+`vim`/`tmux`-in-`tmux` rendering. The grid is still a fixed 80x24; fitting the window with more
+cells (dynamic resize) is the density follow-on. Note you run the real programs over the PTY, so
+there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.

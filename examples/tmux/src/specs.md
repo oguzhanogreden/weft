@@ -39,14 +39,16 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
 - **Acceptance gate for milestone 2:** must render `bash`, `vim`, and `htop` legibly.
 - ⏭ Deferred: insert/delete line/char (`L`/`M`/`P`/`@`), mouse modes, G1 + locking shifts
   (SO/SI, `0x0E`/`0x0F`). Scroll regions (`r`) + `ECH` (`X`) now handled (see AC-SCROLLREGION);
-  G0 DEC Special Graphics see AC-CHARSET. Documented, not silent.
+  G0 DEC Special Graphics now handled (see AC-CHARSET). Documented, not silent.
 
-### AC-CHARSET — G0 DEC Special Graphics (`src/ansi/parser.ts`) 🚧
+### AC-CHARSET — G0 DEC Special Graphics (`src/ansi/parser.ts`) ✅
 
-The reason real `tmux`/`vim`/`ncurses` borders currently render as literal `q`/`x`/`l` letters:
-the parser swallows the charset designation and passes the letters through. This makes G0
+The reason real `tmux`/`vim`/`ncurses` borders used to render as literal `q`/`x`/`l` letters:
+the parser swallowed the charset designation and passed the letters through. This makes G0
 line-drawing legible. Scope is G0 only, which is provably sufficient: the backend advertises
 `xterm-256color`, whose `smacs`/`rmacs` are `ESC(0`/`ESC(B` (G0 designation, no SO/SI, no G1).
+Verified locally with `infocmp xterm-256color`, which lists `smacs=\E(0`, `rmacs=\E(B`, and no
+`enacs`. The glyph table is xterm's, cross-checked entry by entry against the unit test's copy.
 
 - `ESC(0` designates the DEC Special Graphics set for G0; `ESC(B` restores ASCII. Both are
   consumed (never rendered) and toggle a `g0` charset field on `Parser`.
@@ -61,8 +63,13 @@ line-drawing legible. Scope is G0 only, which is provably sufficient: the backen
   extends the AC-ANSI chunk-safety invariant to charset state.
 - `initParser` starts in ASCII (`g0: "ascii"`). Designation persists across screen clears and
   alternate-screen switches until re-designated (matches VT: no implicit reset).
-- ⏭ Out of scope (still deferred, see AC-ANSI): G1, locking shifts SO/SI (`0x0E`/`0x0F`), other
-  94-char sets.
+- The table is exposed as `translateG0(char)` so the unit tests can assert it entry by entry
+  rather than only through `feed`.
+- G1/G2/G3 designations (`ESC)`/`ESC*`/`ESC+`) are **consumed, not translated**: the designator
+  byte is swallowed so it never prints as a stray glyph, and G0 is left alone. Without locking
+  shifts those slots can never be invoked, so translating them would be dead code.
+- ⏭ Out of scope (still deferred, see AC-ANSI): locking shifts SO/SI (`0x0E`/`0x0F`) and
+  therefore any use of G1/G2/G3, other 94-char sets.
 
 ### AC-SCROLLREGION — scroll regions + ECH (`src/grid.ts`, `src/ansi/parser.ts`) ✅
 
@@ -91,7 +98,8 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - **Non-regression:** AC-GRID / AC-ANSI behavior is unchanged when no region is set, and the
   copy-on-write row identity holds for every row a scroll does not touch.
 - ⏭ Out of scope (capture-proven absent): insert/delete line (`L`/`M`), `IND`/`RI`/`NEL`
-  (`ESC D`/`M`/`E`), DEC charset, origin mode (`?6`). Documented, not silent.
+  (`ESC D`/`M`/`E`), origin mode (`?6`). Documented, not silent. (DEC charset was out of scope
+  here too; it landed separately as AC-CHARSET.)
 
 ### AC-TRANSPORT — I/O as an Effect Service (`src/transport.ts`) ✅
 
@@ -118,6 +126,9 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - The app opens in `high`, the coloured real-use view, so real programs render in colour out of
   the box (a menu's reverse-video selection band, a status bar). `low`/`med` are opt-in perf
   baselines selected from the control bar.
+- ⚠️ Known defect (not silent): at `high`, roughly 0.15% of cells end up with an empty reactive
+  region, so a glyph is dropped and the rest of the row shifts left by one advance. Found while
+  writing the AC-CHARSET browser test, reproducible before it. See `next-steps.md` item 3.
 
 ### AC-PIXELGRID — pixel-locked cell metrics (`src/terminal.ts`, `index.html`) ✅
 
@@ -166,8 +177,10 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
 
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
   (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
-  Graphics charset (table-driven: translation, pass-through, reset, chunk-split) 🚧 with
-  AC-CHARSET. Scroll regions + ECH (table-driven: DECSTBM set/reset/invalid + cursor home,
+  Graphics charset ✅ (AC-CHARSET; 12 cases, table-driven over all 32 bytes: translation,
+  `0x20`-`0x5E` pass-through, `ESC(B` reset, two chunk splits, persistence across `ED` and the
+  alternate screen, and the negative guards that `ESC)0`/`ESC*0`/`ESC+0` do not translate).
+  Scroll regions + ECH (table-driven: DECSTBM set/reset/invalid + cursor home,
   region scroll preserving out-of-region refs, region-aware `lineFeed`, `eraseChars`, and the
   distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Keybinding state machine lands
   with AC-MUX.
@@ -176,8 +189,13 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
   selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
-  scripted `ESC(0`…`ESC(B` byte sequence renders box-drawing glyphs in the DOM 🚧 (AC-CHARSET,
-  hermetic via the mock transport). A captured scroll-region sequence (`ESC[1;23r` + scrolling)
+  scripted `ESC(0`…`ESC(B` byte sequence renders box-drawing glyphs in the DOM, and the same
+  letters render as letters once `ESC(B` lands ✅ (AC-CHARSET, hermetic via the mock transport).
+  Its companion asserts the example's monospace stack resolves every border glyph at the ASCII
+  cell advance ✅, the AC-PIXELGRID column-alignment risk box-drawing glyphs carry (they are
+  East-Asian-Ambiguous width). It measures a probe span directly rather than grid cells, so it
+  stays a font-metric assertion, unaffected by the AC-RENDER dropped-cell defect.
+  A captured scroll-region sequence (`ESC[1;23r` + scrolling)
   replayed via the mock transport keeps the status row in place with no bleed ✅
   (AC-SCROLLREGION). Rendered cell advance and row height are whole device pixels
   (`× devicePixelRatio` is integer) once the grid is mounted ✅ (AC-PIXELGRID; the probe logic
@@ -198,6 +216,10 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
   - AC-SCROLLREGION specifically: `setScrollRegion`/`scrollUp`/`scrollDown`/`eraseChars` and the
     new `dispatchCsi` cases are non-generic fixed-signature functions over `TerminalState`; no
     type-level surface to assert.
+  - AC-CHARSET specifically: `Charset` is a two-member string-literal union, `Parser.g0` a
+    concrete field of it, and `translateG0` a non-generic `(string) => string`. No generics,
+    overloads, or conditional/inferred types, so the main typecheck already enforces the surface.
+    The behaviour under test is the translation table, which is a runtime concern (unit tests).
 
 ## Notes / accepted deviations
 

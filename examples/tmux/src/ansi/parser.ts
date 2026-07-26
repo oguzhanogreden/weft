@@ -2,13 +2,15 @@
  * Pure VT/ANSI parser: a byte-stream state machine that drives the grid model.
  *
  * Deliberately a pragmatic subset (documented in `src/specs.md`, AC-ANSI): SGR
- * colour/attributes, cursor movement, erase, alternate-screen, and cursor
- * save/restore, enough to render `bash`, `vim`, and `htop`. Insert/delete
- * line/char (`L`/`M`/`P`/`@`) and scroll regions are out of scope for v1.
+ * colour/attributes, cursor movement, erase, alternate-screen, cursor
+ * save/restore, scroll regions, and the G0 DEC line-drawing charset, enough to
+ * render `bash`, `vim`, `htop`, and real `tmux`. Insert/delete line/char
+ * (`L`/`M`/`P`/`@`), mouse reporting, and locking shifts stay out of scope.
  *
- * Scan state (mode, params, pending) lives in `Parser`, not `TerminalState`, so
- * an escape sequence split across two PTY chunks still parses. `feed` is pure:
- * feed the whole stream or feed it a chunk at a time, the result is identical.
+ * Scan state (mode, params, pending, charset) lives in `Parser`, not
+ * `TerminalState`, so an escape sequence split across two PTY chunks still
+ * parses. `feed` is pure: feed the whole stream or feed it a chunk at a time,
+ * the result is identical.
  */
 
 import {
@@ -30,7 +32,10 @@ import {
   type TerminalState,
 } from "../grid";
 
-type Mode = "ground" | "esc" | "csi" | "osc" | "charset";
+type Mode = "ground" | "esc" | "csi" | "osc" | "charset-g0" | "charset-other";
+
+/** The 94-character set a slot is designated to: ASCII, or DEC Special Graphics. */
+export type Charset = "ascii" | "graphics";
 
 /** Parser = the grid plus the in-flight escape-scan state. */
 export interface Parser {
@@ -40,11 +45,71 @@ export interface Parser {
   readonly priv: boolean;
   /** True when an OSC string is waiting for the `\` of a two-byte ST. */
   readonly oscEsc: boolean;
+  /** Set designated to G0 (`ESC(0` graphics, `ESC(B` ASCII); persists across screen clears. */
+  readonly g0: Charset;
+}
+
+/**
+ * DEC Special Graphics: the bytes `0x5F`-`0x7E` and the glyph each renders as
+ * while G0 is designated to it. `q`/`x` and the corner/tee family are what
+ * `tmux` and `ncurses` draw pane borders with; `0x5F` is a blank.
+ */
+const DEC_SPECIAL_GRAPHICS = new Map<string, string>(
+  Object.entries({
+    _: " ",
+    "`": "◆",
+    a: "▒",
+    b: "␉",
+    c: "␌",
+    d: "␍",
+    e: "␊",
+    f: "°",
+    g: "±",
+    h: "␤",
+    i: "␋",
+    j: "┘",
+    k: "┐",
+    l: "┌",
+    m: "└",
+    n: "┼",
+    o: "⎺",
+    p: "⎻",
+    q: "─",
+    r: "⎼",
+    s: "⎽",
+    t: "├",
+    u: "┤",
+    v: "┴",
+    w: "┬",
+    x: "│",
+    y: "≤",
+    z: "≥",
+    "{": "π",
+    "|": "≠",
+    "}": "£",
+    "~": "·",
+  }),
+);
+
+/**
+ * Translate one printable character through the DEC Special Graphics set, the
+ * line-drawing glyphs `tmux`/`ncurses` draw borders with. Characters outside
+ * `0x5F`-`0x7E` pass through unchanged.
+ */
+export function translateG0(char: string): string {
+  return DEC_SPECIAL_GRAPHICS.get(char) ?? char;
 }
 
 /** A fresh parser over a cleared `cols`×`rows` grid. */
 export function initParser(cols: number, rows: number): Parser {
-  return { term: emptyState(cols, rows), mode: "ground", params: "", priv: false, oscEsc: false };
+  return {
+    term: emptyState(cols, rows),
+    mode: "ground",
+    params: "",
+    priv: false,
+    oscEsc: false,
+    g0: "ascii",
+  };
 }
 
 const ESC = 0x1b;
@@ -162,6 +227,7 @@ export function feed(parser: Parser, text: string): Parser {
   let params = parser.params;
   let priv = parser.priv;
   let oscEsc = parser.oscEsc;
+  let g0 = parser.g0;
 
   for (const ch of text) {
     const code = ch.codePointAt(0)!;
@@ -175,7 +241,7 @@ export function feed(parser: Parser, text: string): Parser {
           term = setCursor(term, term.cursorRow, (Math.floor(term.cursorCol / 8) + 1) * 8);
         else if (code === BEL) {
           // bell: ignore
-        } else if (code >= 0x20) term = putChar(term, ch);
+        } else if (code >= 0x20) term = putChar(term, g0 === "graphics" ? translateG0(ch) : ch);
         break;
       case "esc":
         if (ch === "[") {
@@ -185,7 +251,8 @@ export function feed(parser: Parser, text: string): Parser {
         } else if (ch === "]") {
           mode = "osc";
           oscEsc = false;
-        } else if (ch === "(" || ch === ")") mode = "charset";
+        } else if (ch === "(") mode = "charset-g0";
+        else if (ch === ")" || ch === "*" || ch === "+") mode = "charset-other";
         else if (ch === "7") {
           term = { ...term, savedCursor: { row: term.cursorRow, col: term.cursorCol } };
           mode = "ground";
@@ -214,11 +281,19 @@ export function feed(parser: Parser, text: string): Parser {
         else if (oscEsc && ch === "\\") mode = "ground";
         else oscEsc = false;
         break;
-      case "charset":
+      case "charset-g0":
+        // `ESC(0` designates DEC Special Graphics; any other final (`B` ASCII,
+        // `A` UK, ...) is a set we do not translate, so it means plain ASCII.
+        g0 = ch === "0" ? "graphics" : "ascii";
+        mode = "ground";
+        break;
+      case "charset-other":
+        // G1/G2/G3 designations are out of scope (no locking shifts, so they can
+        // never be invoked). Consume the final byte so it is not printed.
         mode = "ground";
         break;
     }
   }
 
-  return { term, mode, params, priv, oscEsc };
+  return { term, mode, params, priv, oscEsc, g0 };
 }

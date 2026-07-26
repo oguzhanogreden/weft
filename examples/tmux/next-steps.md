@@ -17,6 +17,8 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   whole device pixels (every strategy inherits the lock). Grid size stays a fixed 80x24.
 - Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
+- G0 DEC Special Graphics (`ESC(0`/`ESC(B`): pane borders draw as `┌─┐│└┘├┤┬┴┼`, not `lqk`
+  letters. All 32 bytes of the table, unit- and browser-tested.
 
 Rendering is single-pane. Colour renders per cell at the `high` strategy, now the default, so real
 programs open in colour. The items below are ordered roughly by value.
@@ -27,19 +29,17 @@ The backend spawns a real shell over a real PTY, so you can just run `tmux` (or 
 inside it. Real tmux draws its own splits, status bar, and prefix keys, emitting VT output that
 our terminal renders. A Weft-native multiplexer is therefore not required for the headline goal.
 Terminal fidelity is what makes real tmux render correctly. Scroll regions (DECSTBM) and
-erase-character now land, so `tmux attach` no longer bleeds the status bar into the content
-(AC-SCROLLREGION). What remains:
+erase-character land, so `tmux attach` no longer bleeds the status bar into the content
+(AC-SCROLLREGION). The DEC special-graphics charset lands too, so pane borders draw as box
+glyphs instead of `q`/`x` letters (AC-CHARSET). What remains:
 
-- DEC special-graphics charset (`ESC(0` / `ESC(B`): ncurses and tmux draw pane borders with
-  line-drawing glyphs selected via this charset. We currently swallow the designation and pass
-  the letters through, so borders show as `q`/`x` letters. Translate the DEC graphics set (the
-  parked AC-CHARSET spec).
 - Insert/delete line (`L`/`M`): vim and some TUIs shift lines this way. Absent from the tmux
   capture, so lower priority.
 - 24-bit truecolor (`48;2;r;g;b`): collapsed to the terminal default today, so a truecolor
   selection band or theme colour goes missing. Map it to a CSS colour (part of item 2).
 
-These overlap with item 4 (ANSI fidelity); together they are what make real `tmux` legible.
+These overlap with item 5 (ANSI fidelity); together they are what make real `tmux` legible.
+Item 3 is the one that now limits how legible the result actually looks.
 
 A Weft-native multiplexer (panes as Weft components, one PTY per pane via `PtyTransport.spawn`,
 `Ctrl-b` prefix over a global `keydown` stream) stays an option if you want browser-native
@@ -59,7 +59,38 @@ Open refinements:
 - Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
   becomes a bottleneck.
 
-## 3. Dynamic sizing / resize
+## 3. Dropped cells in the `high` render strategy (correctness, blocks the rest)
+
+The default strategy occasionally leaves a cell's reactive region with no text node at all, so a
+glyph is missing and every cell after it on that row shifts left by one advance. Found while
+writing the AC-CHARSET browser test; it is not charset-related.
+
+What is established:
+
+- Affects `high`, the **default** strategy, so it is what users see first.
+- Roughly 0.15% of cells. It hits blank cells as often as written ones, which is why nothing
+  caught it before: a dropped blank is invisible in row text.
+- It **persists**. A later write to the same row does not heal the cell.
+- Pre-existing. Reproduced on `ce2419b` with the AC-CHARSET changes stashed, in pure ASCII
+  (`ESC[2;1HA ESC[2;4HB` renders `A` and no `B`).
+
+Repro: mount `App` with the mock transport, feed one chunk writing 7 characters to rows 1-5, then
+collect `[...row.children].filter((el) => el.textContent === "")` per row. A typical run drops
+row 1 cell 3, row 2 cell 8, row 23 cell 69.
+
+Consequence for anyone writing tests here: no layout assertion over a grid row is reliable until
+this is fixed, because one dropped cell moves the rest of the row by a full cell advance. That is
+why the AC-CHARSET alignment guard measures a probe span's font metrics instead of grid cells.
+
+Start at `renderRowCells` in `src/terminal.ts`: each cell opens two subscriptions on the row's
+`SubscriptionRef.changes` (style + char), so an 80x24 grid holds ~3,840 live subscriptions on 24
+refs. Worth ruling out a lost first emission on a late subscriber before looking at the DOM patch
+path in `@weftui/dom`.
+
+Done when: a browser test mounts a full 80x24 screen of content and finds zero empty cell regions,
+repeatedly.
+
+## 4. Dynamic sizing / resize
 
 Grid is fixed at 80x24. The pixel-lock already measures one monospace cell at runtime
 (`measureCell` / `getBoundingClientRect`, the `examples/element-ref` pattern), so the
@@ -70,14 +101,14 @@ measurement half exists; this item adds the density half on top of it.
 
 Done when: resizing the window reflows the shell (`$COLUMNS`/`$LINES` update, `htop` reflows).
 
-## 4. ANSI parser fidelity
+## 5. ANSI parser fidelity
 
 Scroll regions (`r`) and erase-character (`X`) now land (AC-SCROLLREGION). Deferred gaps that
 remain (documented in `src/specs.md`, AC-ANSI): insert/delete line/char (`L`/`M`/`P`/`@`), mouse
 reporting, G1/locking-shift charset switching. Needed for full `vim`/`tmux`-in-`tmux` fidelity.
 Add table-driven parser unit tests as each lands.
 
-## 5. Browser-suite bundling flakiness (tooling, not this example)
+## 6. Browser-suite bundling flakiness (tooling, not this example)
 
 `vp run test:browser` occasionally fails with `Duplicate export of 'OpenApi'`, a Rolldown
 chunk-merge collision on `effect`'s httpapi namespace (pulled in via `@weftui/router`). It
@@ -89,7 +120,7 @@ surfaces above ~31 browser test files and is order/resource sensitive. Mitigated
 
 Done when: the full browser suite is green across many consecutive runs under load.
 
-## 6. Real-PTY browser test in CI (gated)
+## 7. Real-PTY browser test in CI (gated)
 
 The live "real shell to reactive DOM" browser run was validated manually and not kept, because
 it needs the backend and `node-pty` (absent from browser CI).
@@ -97,13 +128,13 @@ it needs the backend and `node-pty` (absent from browser CI).
 - Add an opt-in job that boots `server/` then runs a live `*.browser.test.ts` against it, gated
   behind an env flag so the default hermetic suite stays backend-free.
 
-## 7. `DEVELOPMENT.md`
+## 8. `DEVELOPMENT.md`
 
 Written this cycle on a separate local branch (`worktree-agent-...`), not merged. Decide whether
 to bring it onto this branch / `main`. It documents Node 26 via asdf, the no-corepack situation,
 the `vp` install, the pack caveat, and Playwright setup.
 
-## 8. Perf harness polish
+## 9. Perf harness polish
 
 - Record and display the FPS ceiling per strategy times load in a small results table.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.

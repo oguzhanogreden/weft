@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
 import { getRow, rowToText } from "../grid";
-import { feed, initParser } from "./parser";
+import { feed, initParser, translateG0 } from "./parser";
 
 const run = (text: string, cols = 20, rows = 6) => feed(initParser(cols, rows), text).term;
 
@@ -125,5 +125,90 @@ describe("scroll region + ECH (AC-SCROLLREGION)", () => {
     p = feed(p, "\x1b[?1r"); // private `r` (XTRESTORE), not DECSTBM: must be a no-op here
     assert.equal(p.term.cursorRow, 4);
     assert.equal(p.term.cursorCol, 4);
+  });
+});
+
+// The DEC Special Graphics set, 0x5F-0x7E, as two aligned strings: source byte
+// to the glyph it renders as. Ground truth is xterm's table (`0x5F` is a blank);
+// `q x l k m j t u v w n` are the ones `tmux`/`ncurses` draw borders with.
+const G0_SOURCE = "_`abcdefghijklmnopqrstuvwxyz{|}~";
+const G0_GLYPHS = " ◆▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£·";
+
+describe("G0 DEC Special Graphics (AC-CHARSET)", () => {
+  it("maps every byte of the 0x5F-0x7E table to its glyph", () => {
+    assert.equal(G0_SOURCE.length, G0_GLYPHS.length); // guards a miscounted table
+    for (let i = 0; i < G0_SOURCE.length; i++) {
+      assert.equal(translateG0(G0_SOURCE[i]!), G0_GLYPHS[i]!, `byte ${G0_SOURCE[i]}`);
+    }
+  });
+
+  it("passes 0x20-0x5E through untranslated", () => {
+    for (const char of " !0159:?ABZ[]^") assert.equal(translateG0(char), char);
+  });
+
+  it("starts in ASCII, so line-drawing letters render as letters", () => {
+    const p = initParser(20, 4);
+    assert.equal(p.g0, "ascii");
+    assert.equal(rowToText(getRow(feed(p, "lqqk").term, 0)), "lqqk");
+  });
+
+  it("ESC(0 renders a box border, ESC(B restores ASCII", () => {
+    const t = run("\x1b(0lqqk\x1b(Bqq", 40, 4);
+    assert.equal(rowToText(getRow(t, 0)), "┌──┐qq");
+  });
+
+  it("renders the whole table through feed", () => {
+    const t = run(`\x1b(0${G0_SOURCE}`, 40, 4);
+    assert.equal(rowToText(getRow(t, 0)), G0_GLYPHS);
+  });
+
+  it("leaves 0x20-0x5E alone while G0 is graphics", () => {
+    const t = run("\x1b(0AZ 09 []^", 40, 4);
+    assert.equal(rowToText(getRow(t, 0)), "AZ 09 []^");
+  });
+
+  it("designates across a chunk split (chunk safety)", () => {
+    let p = feed(initParser(20, 4), "\x1b(0"); // designation alone in one chunk...
+    p = feed(p, "qqq"); // ...glyphs in the next
+    assert.equal(rowToText(getRow(p.term, 0)), "───");
+  });
+
+  it("splits ESC and ( across chunks", () => {
+    let p = feed(initParser(20, 4), "\x1b");
+    p = feed(p, "(0qqq");
+    assert.equal(rowToText(getRow(p.term, 0)), "───");
+  });
+
+  it("ignores a G1 designation (ESC)0), which is out of scope", () => {
+    const t = run("\x1b)0qqq", 20, 4);
+    assert.equal(rowToText(getRow(t, 0)), "qqq");
+  });
+
+  it("consumes G2/G3 designations without printing the designator", () => {
+    for (const designator of ["*", "+"]) {
+      const t = run(`\x1b${designator}0qqq`, 20, 4);
+      assert.equal(rowToText(getRow(t, 0)), "qqq"); // no stray `0`, no translation
+    }
+  });
+
+  it("keeps the designation across a screen clear", () => {
+    let p = feed(initParser(20, 4), "\x1b(0");
+    p = feed(p, "\x1b[2Jqqq");
+    assert.equal(p.g0, "graphics");
+    assert.equal(rowToText(getRow(p.term, 0)), "───");
+  });
+
+  it("keeps the designation across an alternate-screen switch", () => {
+    let p = feed(initParser(20, 4), "\x1b(0");
+    p = feed(p, "\x1b[?1049hqq"); // enter alt
+    assert.equal(rowToText(getRow(p.term, 0)), "──");
+    p = feed(p, "\x1b[?1049l"); // leave alt
+    assert.equal(p.g0, "graphics");
+  });
+
+  it("keeps the designated charset in the parser it returns", () => {
+    const p = feed(initParser(20, 4), "\x1b(0");
+    assert.equal(p.g0, "graphics");
+    assert.equal(feed(p, "\x1b(B").g0, "ascii");
   });
 });
