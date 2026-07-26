@@ -14,7 +14,9 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
 - Perf harness: FPS and rows/sec meters, strategy level (low/med/high) times load level
   (off/low/med/high).
 - Pixel-locked grid: one cell is measured at runtime, then cell advance and row height snap to
-  whole device pixels (every strategy inherits the lock). Grid size stays a fixed 80x24.
+  whole device pixels (every strategy inherits the lock).
+- Grid size as a third harness axis: five presets (80x24 to 240x60) switch at runtime, tearing
+  down the old refs/pump/subscriptions and calling `session.resize`. Unit- and browser-tested.
 - Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 - G0 DEC Special Graphics (`ESC(0`/`ESC(B`): pane borders draw as `┌─┐│└┘├┤┬┴┼`, not `lqk`
@@ -70,6 +72,9 @@ What is established:
 - Affects `high`, the **default** strategy, so it is what users see first.
 - Roughly 0.15% of cells. It hits blank cells as often as written ones, which is why nothing
   caught it before: a dropped blank is invisible in row text.
+- It scales with cell count, so the grid-size axis (item 4) made it far more visible: roughly 3
+  cells at 80x24, roughly 22 at 240x60. Worth fixing before anyone reads the larger presets as a
+  rendering-quality result.
 - It **persists**. A later write to the same row does not heal the cell.
 - Pre-existing. Reproduced on `ce2419b` with the AC-CHARSET changes stashed, in pure ASCII
   (`ESC[2;1HA ESC[2;4HB` renders `A` and no `B`).
@@ -90,14 +95,20 @@ path in `@weftui/dom`.
 Done when: a browser test mounts a full 80x24 screen of content and finds zero empty cell regions,
 repeatedly.
 
-## 4. Dynamic sizing / resize
+## 4. Fit the grid to the window (automatic resize)
 
-Grid is fixed at 80x24. The pixel-lock already measures one monospace cell at runtime
-(`measureCell` / `getBoundingClientRect`, the `examples/element-ref` pattern), so the
-measurement half exists; this item adds the density half on top of it.
+Manual preset sizes landed as AC-GRIDSIZE: the control bar switches between 80x24 and 240x60, and
+each switch re-inits the grid and calls `session.resize`. So the re-init machinery and the PTY
+notification both exist and are tested. What remains is deriving the size instead of choosing it.
 
-- Reuse the measured cell metrics to compute cols/rows from the pane box, call `session.resize`,
-  and re-init the grid on change.
+The pixel-lock already measures one monospace cell at runtime (`measureCell` /
+`getBoundingClientRect`, the `examples/element-ref` pattern), so the measurement half exists too.
+This item is now mostly wiring the two together.
+
+- Compute cols/rows from the pane box using the measured cell metrics, and drive the existing
+  size ref from a resize observer rather than only from the preset buttons.
+- Decide precedence when both apply. Presets are a benchmarking control, auto-fit is the
+  real-world behaviour; likely auto-fit by default, with a preset click pinning an override.
 
 Done when: resizing the window reflows the shell (`$COLUMNS`/`$LINES` update, `htop` reflows).
 

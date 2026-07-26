@@ -110,7 +110,8 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - `PtyTransportWebSocketLive` wraps a browser `WebSocket` as an Effect `Stream` via
   `Stream.fromEventListener`. Validated live against the backend.
 - `PtyTransportMockLive` emits a scripted byte `Stream` and records `write`s (tests/dev, no
-  `node-pty` in CI).
+  `node-pty` in CI). It also records `resize`s as `(cols, rows)` pairs, so a browser test can
+  assert the PTY was told about a grid-size change (AC-GRIDSIZE), not just that the DOM changed.
 
 ### AC-RENDER — three switchable render levels (`src/terminal.ts`, `src/perf.ts`) ✅
 
@@ -136,8 +137,9 @@ The grid renders on fractional device pixels. Measured at the example's 13px mon
 (`dpr` 1): cell advance `7.83px`, row height `16.25px` (`line-height: 1.25`). Columns do line up
 row to row (measured cross-row spread `0`), so this is not a drift bug. The cost is that glyphs
 land off pixel boundaries, so the whole grid reads soft, not crisp. This is the foundational
-half of the "denser and pixel-sharp" goal (see `next-steps.md`); the density/resize half is
-AC-RESIZE (feature B). Static size (80x24) is unchanged here.
+half of the "denser and pixel-sharp" goal (see `next-steps.md`). The density half is split in
+two: manual preset sizes are AC-GRIDSIZE, automatic viewport-fitting stays AC-RESIZE. Size was
+static (80x24) when this criterion landed; AC-GRIDSIZE now varies it without disturbing the lock.
 
 - Cell advance is a whole number of device pixels: `cellAdvanceCss × devicePixelRatio` rounds to
   an integer (tolerance < 0.05px), for the example's monospace stack, at `dpr` 1 and 2.
@@ -148,8 +150,8 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
   stack resolves to a different monospace.
 - All three render strategies (`low`/`med`/`high`) inherit the lock, since it is a
   font-metric/layout property applied to the grid container, not a per-strategy concern.
-- Non-regression: columns still align across rows (cross-row spread stays `0`) and the grid
-  stays 80x24. Alignment is the invariant that must not break, not the thing being fixed.
+- Non-regression: columns still align across rows (cross-row spread stays `0`), at every size
+  AC-GRIDSIZE offers. Alignment is the invariant that must not break, not the thing being fixed.
 - The lock computation is a pure helper (`measured metrics + dpr → integer-device-px cell/row`),
   unit-testable without a browser; the applied result is asserted in the browser (AC-TEST).
 
@@ -172,6 +174,66 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
 - A synthetic load generator merged into the same parser pump, with off/low/med/high levels
   (~0/10/60/250 full-screen repaints per second), so any render level can be measured at any
   load. Changing the level takes effect immediately.
+
+### AC-GRIDSIZE — runtime grid-size control (`src/app.ts`, `src/main.ts`) ✅
+
+Makes grid size a third perf-harness axis alongside strategy × load, so the cost curve of Weft's
+reactive DOM can be read against cell count rather than inferred from one fixed grid. 80x24 is
+1,920 cells (3,840 live subscriptions at `high`); 240x60 is 14,400 (28,800). Finding where that
+falls over is the point of the axis. This is the manual, benchmark-driven half of density;
+automatic viewport-fitting on window resize stays AC-RESIZE.
+
+- The control bar gains a `size` group of five preset buttons: 80x24, 120x40, 160x48, 200x50,
+  240x60. Clicking one switches the grid with no page reload.
+- Switching size fully re-inits: fresh row refs (`makeGrid`), a fresh parser pump at the new
+  dimensions, and a fresh synthetic load stream sized to match. The previous size's refs, pump
+  fiber, and every per-cell subscription are torn down before the new ones are built.
+- Teardown is structural, not hand-rolled: the size-keyed `List.each` item scope owns them, and
+  the renderer closes a dropped key's scope (interrupting its fibers) before rendering the new
+  key. (`packages/dom/src/client/render.ts`: per-item scope forked in `renderItem`, closed in
+  `reconcileList`; the render function's `Scope.Scope` is provided from that item scope.)
+- `session.resize(cols, rows)` fires on every switch, so a real shell receives SIGWINCH and
+  reflows (`$COLUMNS`/`$LINES` update).
+- The grid blanks on switch and is repainted by the shell's redraw (or by the synthetic load).
+  This matches a real terminal emulator; content preservation is deliberately not attempted.
+- **Non-regression (AC-RENDER):** switching _strategy_ must still preserve grid content. The
+  nesting enforces it: the outer `List.each` keyed on size owns the refs, the inner one keyed on
+  strategy renders them, so a strategy change re-renders without touching the refs or the pump.
+- **Non-regression (AC-PIXELGRID):** the measured pixel-lock survives a size switch. The probe
+  span lives on the stable `.terminal-pane`, outside the size-keyed region, so the lock is
+  measured once on mount and keeps cascading to every size.
+- Initial size comes from `AppOptions` (`cols`/`rows`), seeded from the query string
+  (`?cols=200&rows=50`) by `main.ts`. Values must be positive integers and are clamped to
+  400x200, which bounds a typo to something that still renders rather than hanging the tab
+  before first paint. The bound is deliberately generous (presets stop at 240x60), since finding
+  the cliff is the point. Non-preset sizes are reachable only this way.
+- Clicking a preset writes the size back via `history.replaceState`, so a reload keeps the
+  current size and the URL stays shareable mid-benchmark.
+- The grid must lay out at full width: `#root` grows to its content instead of capping at 960px.
+  A clipped grid still takes the DOM writes, but the browser skips paint for the hidden part, so
+  a width cap makes the FPS meter read better than the truth.
+- The FPS and rows/sec meters are mount-scoped and shared across sizes. They sample on a 500ms
+  window that zeroes its counters each tick, so a reading is clean within half a second of a
+  switch. No explicit meter reset is needed.
+
+Expected behaviour and edge cases:
+
+- **Mock-only replay divergence.** `PtyTransportMockLive`'s output is `Stream.fromIterable`, so
+  every new subscription replays the scripted chunks from the start and the grid refills after a
+  switch. `transport-ws`'s output is `Stream.fromEventListener`, which delivers only future
+  events, so a real switch blanks until the shell redraws. The browser test must not be read as
+  evidence that content survives a resize in production.
+- **Transient double subscription on switch.** The renderer builds a new key's item before
+  closing the dropped key's scope, so for that instant both pumps are subscribed to
+  `session.output` and both feed `rate.bump`. The rows/sec meter double-counts across a switch.
+  It self-clears on the next 500ms sample, and it is a measurement artefact of the tool rather
+  than of Weft, so it is recorded rather than worked around.
+- At `high`, the AC-RENDER dropped-cell defect scales with cell count: roughly 3 cells at 80x24,
+  roughly 22 at 240x60. Expect visibly shredded rows at the top presets until `next-steps.md`
+  item 3 is fixed. Documented, not silent.
+- 240x60 is roughly 1,880 × 975 CSS px at the 13px font, larger than many viewports. Zoom out
+  before reading the FPS meter, and reload after zooming, since the pixel-lock reads
+  `devicePixelRatio` once at mount.
 
 ### AC-TEST 🚧 (unit + backend + hermetic browser done; mux assertions pending)
 
@@ -199,7 +261,14 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
   replayed via the mock transport keeps the status row in place with no bleed ✅
   (AC-SCROLLREGION). Rendered cell advance and row height are whole device pixels
   (`× devicePixelRatio` is integer) once the grid is mounted ✅ (AC-PIXELGRID; the probe logic
-  inverted to assert integrality, across all three strategies). The `Ctrl-b %` two-pane
+  inverted to assert integrality, across all three strategies). Clicking a size preset re-inits
+  the grid to the new dimensions _and_ records the matching `session.resize(cols, rows)` on the
+  mock ✅ (AC-GRIDSIZE; both halves asserted together, since DOM reflow and PTY notification can
+  break independently), with a strategy switch after a size switch still preserving grid content
+  (the AC-RENDER non-regression the nesting exists to protect) and the pixel-lock surviving the
+  switch. The top preset is covered explicitly: 240x60 builds all 14,400 cells correctly in about
+  3.5s headless, so the step is slow, not structurally broken. Its frame rate under load is the
+  open question, and that needs a real browser. The `Ctrl-b %` two-pane
   assertion lands with AC-MUX. A live
   real-PTY browser run (real shell →
   `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
@@ -216,6 +285,10 @@ AC-RESIZE (feature B). Static size (80x24) is unchanged here.
   - AC-SCROLLREGION specifically: `setScrollRegion`/`scrollUp`/`scrollDown`/`eraseChars` and the
     new `dispatchCsi` cases are non-generic fixed-signature functions over `TerminalState`; no
     type-level surface to assert.
+  - AC-GRIDSIZE specifically: `GridSize`/`AppOptions` are plain concrete interfaces of `number`
+    fields and the presets are a `ReadonlyArray<GridSize>`. No generics, overloads, or
+    conditional/inferred types, so the main typecheck already enforces the surface. The behaviour
+    under test is teardown and re-init, which is a runtime concern (browser tests).
   - AC-CHARSET specifically: `Charset` is a two-member string-literal union, `Parser.g0` a
     concrete field of it, and `translateG0` a non-generic `(string) => string`. No generics,
     overloads, or conditional/inferred types, so the main typecheck already enforces the surface.

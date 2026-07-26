@@ -19,8 +19,12 @@
         padding: 1.5rem;
       }
 
+      /* Grow to the grid rather than capping it. A clipped `.term` still takes the
+         DOM writes but the browser skips paint for what it hides, so a capped
+         width makes the FPS meter read better than the truth. */
       #root {
-        max-width: 960px;
+        width: fit-content;
+        min-width: min(960px, 100%);
         margin: 0 auto;
       }
 

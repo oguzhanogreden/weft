@@ -34,7 +34,9 @@ three render modes and lets you switch between them at runtime:
 - **Mode C** — one subscription per row driving `innerHTML`. Browser-bound baseline where Weft
   is deliberately off the hot path, included so the comparison is honest.
 
-An FPS and updates-per-second readout turns the demo into the repository's first benchmark.
+An FPS and updates-per-second readout turns the demo into the repository's first benchmark. Grid
+size is switchable at runtime too, so the same readout can be swept against cell count: 80x24 is
+1,920 cells, 240x60 is 14,400.
 
 ## How It Works
 
@@ -75,6 +77,10 @@ cd examples/tmux/server && npm start   # ws://localhost:8787
 # Terminal 2: dev server
 cd examples/tmux && vp run dev          # http://localhost:5173/
 ```
+
+The grid opens at 80x24. Switch it from the `size` buttons in the control bar, or start at any
+size with `?cols=200&rows=50` (the only way to reach a size that is not a preset, clamped to
+400x200). Clicking a preset writes it back to the URL, so a reload keeps it.
 
 The browser test uses `PtyTransportMockLive` and needs no backend.
 
@@ -127,11 +133,17 @@ Implemented and validated on Node 26:
   border reads as `┌──┐` instead of `lqqk`. All 32 bytes of the table, covered by unit and
   browser tests.
 
+- Grid size as a third harness axis: five preset buttons (80x24 through 240x60) switch the grid
+  with no page reload, from 1,920 cells to 14,400. Each switch tears down the old row refs, pump,
+  and per-cell subscriptions before building the new ones, and tells the shell via
+  `session.resize` so it reflows. Covered by unit and browser tests.
+
 Known defect: at the `high` strategy roughly 0.15% of cells render with an empty reactive region,
 so a glyph goes missing and the rest of that row shifts one cell left. It predates the charset
-work and is item 3 in `next-steps.md`.
+work and is item 3 in `next-steps.md`. It scales with cell count, so it is far more visible at
+the larger presets: roughly 3 cells at 80x24, roughly 22 at 240x60.
 
 Not yet built: insert/delete line and mouse reporting, the remaining fidelity for full
-`vim`/`tmux`-in-`tmux` rendering. The grid is still a fixed 80x24; fitting the window with more
-cells (dynamic resize) is the density follow-on. Note you run the real programs over the PTY, so
-there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.
+`vim`/`tmux`-in-`tmux` rendering. Grid size is switchable by preset but does not yet fit itself
+to the window; automatic resize is the density follow-on. Note you run the real programs over the
+PTY, so there is no need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.
