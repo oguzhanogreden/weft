@@ -127,9 +127,11 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - The app opens in `high`, the coloured real-use view, so real programs render in colour out of
   the box (a menu's reverse-video selection band, a status bar). `low`/`med` are opt-in perf
   baselines selected from the control bar.
-- ⚠️ Known defect (not silent): at `high`, roughly 0.15% of cells end up with an empty reactive
-  region, so a glyph is dropped and the rest of the row shifts left by one advance. Found while
-  writing the AC-CHARSET browser test, reproducible before it. See `next-steps.md` item 3.
+- Every cell renders a character, blanks included. Roughly 0.15% used to end up with an empty
+  reactive region (a dropped glyph, and the rest of the row shifted left by one advance). The
+  cause was in `@weftui/dom`, not here: a reactive child's first emission was discarded when it
+  arrived before its markers were attached. Fixed there and guarded both in that package and by
+  `render-integrity.browser.test.ts` here.
 
 ### AC-PIXELGRID — pixel-locked cell metrics (`src/terminal.ts`, `index.html`) ✅
 
@@ -232,9 +234,9 @@ Expected behaviour and edge cases:
   `session.output` and both feed `rate.bump`. The rows/sec meter double-counts across a switch.
   It self-clears on the next 500ms sample, and it is a measurement artefact of the tool rather
   than of Weft, so it is recorded rather than worked around.
-- At `high`, the AC-RENDER dropped-cell defect scales with cell count: roughly 3 cells at 80x24,
-  roughly 22 at 240x60. Expect visibly shredded rows at the top presets until `next-steps.md`
-  item 3 is fixed. Documented, not silent.
+- The AC-RENDER dropped-cell defect used to scale with cell count (roughly 3 cells at 80x24, 22 at
+  240x60), which made the larger presets look far worse than the renderer actually was. Fixed in
+  `@weftui/dom`; the larger presets are now a fair reading of render quality.
 - 240x60 is roughly 1,880 × 975 CSS px at the 13px font, larger than many viewports. Zoom out
   before reading the FPS meter, and reload after zooming, since the pixel-lock reads
   `devicePixelRatio` once at mount.
@@ -349,7 +351,10 @@ Expected behaviour and edge cases:
   Its companion asserts the example's monospace stack resolves every border glyph at the ASCII
   cell advance ✅, the AC-PIXELGRID column-alignment risk box-drawing glyphs carry (they are
   East-Asian-Ambiguous width). It measures a probe span directly rather than grid cells, so it
-  stays a font-metric assertion, unaffected by the AC-RENDER dropped-cell defect.
+  stays a font-metric assertion, which kept it valid while the AC-RENDER dropped-cell defect made
+  grid-cell layout unreliable. Cell integrity itself is now covered directly:
+  `render-integrity.browser.test.ts` asserts a full 80x24 screen and a sparse write leave zero
+  cells without a character ✅.
   A captured scroll-region sequence (`ESC[1;23r` + scrolling)
   replayed via the mock transport keeps the status row in place with no bleed ✅
   (AC-SCROLLREGION). Rendered cell advance and row height are whole device pixels

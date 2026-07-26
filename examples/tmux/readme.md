@@ -144,11 +144,11 @@ Implemented and validated on Node 26:
   and per-cell subscriptions before building the new ones, and tells the shell via
   `session.resize` so it reflows. Covered by unit and browser tests.
 
-Known defect: at the `high` strategy roughly 0.15% of cells render with an empty reactive region,
-so a glyph goes missing and the rest of that row shifts one cell left. It predates the charset
-work and is item 3 in `next-steps.md`. It scales with cell count, so it is far more visible at
-the larger presets: roughly 3 cells at 80x24, roughly 22 at 240x60.
-
+- Cell integrity: every cell renders a character, blanks included. Roughly 0.15% used to come out
+  empty, dropping a glyph and shifting the rest of the row one cell left, and it got worse with
+  grid size. The cause was in `@weftui/dom` rather than this example: a reactive child's first
+  emission was silently discarded if it arrived before its comment markers were attached, which
+  left that region permanently empty. Fixed there, guarded by tests in both packages.
 - Auto-fit: the grid derives its size from the viewport on load and on every debounced resize,
   clamped to the top preset so a large display cannot open on 26,000 cells. Pinning a preset stops
   the tracking; `auto` resumes it.

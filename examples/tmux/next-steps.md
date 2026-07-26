@@ -21,6 +21,9 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   clamped to the top preset. A preset click pins it; `auto` resumes tracking.
 - Touch input: a hidden textarea summons the soft keyboard, an accessory row supplies
   Esc/Tab/arrows, and a sticky Ctrl makes `Ctrl-C` reachable. Controls collapse on narrow screens.
+- Cell integrity: every cell renders a character, blanks included. The ~0.15% of cells that used
+  to come out empty were a `@weftui/dom` defect (a reactive child's first emission discarded when
+  it arrived before its markers were attached), fixed there and guarded in both packages.
 - Scroll regions (DECSTBM `ESC[r`) + erase-character (`ESC[X`): the emulator scrolls inside a
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 - G0 DEC Special Graphics (`ESC(0`/`ESC(B`): pane borders draw as `┌─┐│└┘├┤┬┴┼`, not `lqk`
@@ -44,8 +47,7 @@ glyphs instead of `q`/`x` letters (AC-CHARSET). What remains:
 - 24-bit truecolor (`48;2;r;g;b`): collapsed to the terminal default today, so a truecolor
   selection band or theme colour goes missing. Map it to a CSS colour (part of item 2).
 
-These overlap with item 6 (ANSI fidelity); together they are what make real `tmux` legible.
-Item 3 is the one that now limits how legible the result actually looks.
+These overlap with item 5 (ANSI fidelity); together they are what make real `tmux` legible.
 
 A Weft-native multiplexer (panes as Weft components, one PTY per pane via `PtyTransport.spawn`,
 `Ctrl-b` prefix over a global `keydown` stream) stays an option if you want browser-native
@@ -65,41 +67,7 @@ Open refinements:
 - Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
   becomes a bottleneck.
 
-## 3. Dropped cells in the `high` render strategy (correctness, blocks the rest)
-
-The default strategy occasionally leaves a cell's reactive region with no text node at all, so a
-glyph is missing and every cell after it on that row shifts left by one advance. Found while
-writing the AC-CHARSET browser test; it is not charset-related.
-
-What is established:
-
-- Affects `high`, the **default** strategy, so it is what users see first.
-- Roughly 0.15% of cells. It hits blank cells as often as written ones, which is why nothing
-  caught it before: a dropped blank is invisible in row text.
-- It scales with cell count, so the grid-size axis (item 4) made it far more visible: roughly 3
-  cells at 80x24, roughly 22 at 240x60. Worth fixing before anyone reads the larger presets as a
-  rendering-quality result.
-- It **persists**. A later write to the same row does not heal the cell.
-- Pre-existing. Reproduced on `ce2419b` with the AC-CHARSET changes stashed, in pure ASCII
-  (`ESC[2;1HA ESC[2;4HB` renders `A` and no `B`).
-
-Repro: mount `App` with the mock transport, feed one chunk writing 7 characters to rows 1-5, then
-collect `[...row.children].filter((el) => el.textContent === "")` per row. A typical run drops
-row 1 cell 3, row 2 cell 8, row 23 cell 69.
-
-Consequence for anyone writing tests here: no layout assertion over a grid row is reliable until
-this is fixed, because one dropped cell moves the rest of the row by a full cell advance. That is
-why the AC-CHARSET alignment guard measures a probe span's font metrics instead of grid cells.
-
-Start at `renderRowCells` in `src/terminal.ts`: each cell opens two subscriptions on the row's
-`SubscriptionRef.changes` (style + char), so an 80x24 grid holds ~3,840 live subscriptions on 24
-refs. Worth ruling out a lost first emission on a late subscriber before looking at the DOM patch
-path in `@weftui/dom`.
-
-Done when: a browser test mounts a full 80x24 screen of content and finds zero empty cell regions,
-repeatedly.
-
-## 4. Mobile and resize: landed, verification open
+## 3. Mobile and resize: landed, verification open
 
 Auto-fit (AC-RESIZE) and touch input (AC-MOBILE) both landed. The grid fits the viewport on load
 and on every debounced resize, a preset click pins it and stops tracking, and `auto` resumes.
@@ -119,7 +87,7 @@ What is not yet verified is the part a headless browser cannot show:
 
 Done when: a real phone can drive a shell, including `Ctrl-C`, without a hardware keyboard.
 
-## 5. Two `@weftui/core` HTML-attribute defects (found from this example)
+## 4. Two `@weftui/core` HTML-attribute defects (found from this example)
 
 Both surfaced wiring the mobile textarea (AC-MOBILE), and both are core issues, so they were
 worked around in the example rather than fixed in passing.
@@ -135,14 +103,14 @@ worked around in the example rather than fixed in passing.
 
 Done when: both can be expressed declaratively, and the example's workarounds are removed.
 
-## 6. ANSI parser fidelity
+## 5. ANSI parser fidelity
 
 Scroll regions (`r`) and erase-character (`X`) now land (AC-SCROLLREGION). Deferred gaps that
 remain (documented in `src/specs.md`, AC-ANSI): insert/delete line/char (`L`/`M`/`P`/`@`), mouse
 reporting, G1/locking-shift charset switching. Needed for full `vim`/`tmux`-in-`tmux` fidelity.
 Add table-driven parser unit tests as each lands.
 
-## 7. Browser-suite bundling flakiness (tooling, not this example)
+## 6. Browser-suite bundling flakiness (tooling, not this example)
 
 `vp run test:browser` occasionally fails with `Duplicate export of 'OpenApi'`, a Rolldown
 chunk-merge collision on `effect`'s httpapi namespace (pulled in via `@weftui/router`). It
@@ -154,7 +122,7 @@ surfaces above ~31 browser test files and is order/resource sensitive. Mitigated
 
 Done when: the full browser suite is green across many consecutive runs under load.
 
-## 8. Real-PTY browser test in CI (gated)
+## 7. Real-PTY browser test in CI (gated)
 
 The live "real shell to reactive DOM" browser run was validated manually and not kept, because
 it needs the backend and `node-pty` (absent from browser CI).
@@ -162,13 +130,13 @@ it needs the backend and `node-pty` (absent from browser CI).
 - Add an opt-in job that boots `server/` then runs a live `*.browser.test.ts` against it, gated
   behind an env flag so the default hermetic suite stays backend-free.
 
-## 9. `DEVELOPMENT.md`
+## 8. `DEVELOPMENT.md`
 
 Written this cycle on a separate local branch (`worktree-agent-...`), not merged. Decide whether
 to bring it onto this branch / `main`. It documents Node 26 via asdf, the no-corepack situation,
 the `vp` install, the pack caveat, and Playwright setup.
 
-## 10. Perf harness polish
+## 9. Perf harness polish
 
 - Record and display the FPS ceiling per strategy times load in a small results table.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.
