@@ -28,6 +28,10 @@ export default defineConfig({
         command: "vp test --config vitest.browser.config.ts",
         dependsOn: ["pack"],
       },
+      bench: {
+        command: "vp test --config vitest.bench.config.ts",
+        dependsOn: ["pack"],
+      },
       "test:types": {
         command: "tstyche",
         dependsOn: ["pack"],

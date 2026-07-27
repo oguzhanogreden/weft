@@ -148,6 +148,26 @@ the `vp` install, the pack caveat, and Playwright setup.
 
 ## 9. Perf harness polish
 
-- Record and display the FPS ceiling per strategy times load in a small results table.
+`src/perf-sweep.bench.ts` records exactly this: FPS/rows-per-sec across strategy x load
+(size pinned at 160x48) and strategy x size (load pinned at `med`). Run via `vp run bench`
+(own config, `vitest.bench.config.ts`; excluded from `vp run test`/`test:browser`).
+
+First run (2026-07-27, headless Chromium, SwiftShader software rendering, so treat as
+relative not absolute): `low`/`med` hold the environment's fps ceiling through every load
+level; `high` (one reactive node per cell) is fine at `load=off` but collapses once load
+is applied, and its rows/s stops scaling with offered load past `med` (~600 rows/s ceiling
+at 160x48, an 8x gap under `low`'s ~4800). Two cells in the size sweep (240x60 across all
+strategies, 200x50/`low`) show depressed rows/s in lockstep with fps: that is
+`makeLoadStream` outrunning the pump (no backpressure), not a real strategy/size reading.
+Discriminator: a healthy cell's rows/s sits near its size's plateau; a saturated one
+doesn't, regardless of strategy.
+
+`perf-analysis.md` traces _why_: the dominant cost is `@weftui/dom`'s `handleStyle`
+resetting and reapplying every cell's inline style on every emission with no diffing,
+regardless of whether the style changed (confirmed against the benchmark's own zero-SGR
+load). Ranked findings and a falsifiable prediction for validating a fix are there.
+
+- Add backpressure (or a bounded queue) to `makeLoadStream` so a saturated size doesn't
+  read as strategy noise.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.
 - Optionally add a styled per-cell strategy to measure colour's cost against monochrome.
