@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { describe, it } from "vite-plus/test";
+import { describe, it, vi } from "vite-plus/test";
 import { Cause, Effect, Exit, Option, Schedule, Stream, SubscriptionRef } from "effect";
 import { Component, h, Source, Subscribable } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
@@ -633,6 +633,55 @@ describe("AC13: Style as Stream", () => {
     assert.equal(div.style.padding, "10px");
     // Previous style properties should be replaced
     assert.equal(div.style.color, "");
+  });
+
+  it("should not re-apply a style property unchanged between two Stream<object> emissions", async () => {
+    const dom = createTestDOM();
+    const root = createRoot();
+    const setPropertySpy = vi.spyOn(dom.window.CSSStyleDeclaration.prototype, "setProperty");
+
+    const styleStream = Stream.make(
+      { color: "red", fontSize: "16px" },
+      { color: "red", fontSize: "20px" },
+    );
+
+    await runMount(h.div({ style: styleStream }, "test"), root);
+    await waitForStream();
+
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.style.color, "red");
+    assert.equal(div.style.fontSize, "20px");
+
+    const colorCalls = setPropertySpy.mock.calls.filter(([prop]) => prop === "color");
+    assert.equal(
+      colorCalls.length,
+      1,
+      "unchanged color should be applied once, not re-applied on the second emission",
+    );
+
+    setPropertySpy.mockRestore();
+  });
+
+  it("should fully reset before diffing when a Stream<string> emission precedes a Stream<object> one", async () => {
+    createTestDOM();
+    const root = createRoot();
+
+    // StyleAttributeValue types a style stream as consistently string or
+    // consistently object, never a per-emission mix, but handleStyle branches
+    // on typeof per emission and must not leave stale properties behind if a
+    // stream (however constructed) switches shape. Cast to exercise that path.
+    const styleStream = Stream.make("color: red; font-weight: bold;", {
+      fontSize: "16px",
+    }) as unknown as Source.Source<string>;
+
+    await runMount(h.div({ style: styleStream }, "test"), root);
+    await waitForStream();
+
+    const div = root.children[0] as HTMLElement;
+    assert.equal(div.style.fontSize, "16px");
+    // Properties set by the earlier string form must not survive into the object form.
+    assert.equal(div.style.color, "");
+    assert.equal(div.style.fontWeight, "");
   });
 });
 

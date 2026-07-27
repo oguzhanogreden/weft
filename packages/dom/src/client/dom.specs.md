@@ -135,6 +135,16 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - If object: replace all style properties
   - Handle both cases appropriately
 
+Implementation note: "replace all style properties" is an observable contract, not a
+mechanism. The object case is implemented by diffing each emission against the
+previously-applied object, rather than an unconditional clear-and-reapply. Changed keys
+update, keys no longer present are removed. The two are observationally identical: a key
+absent from the new object is still removed. A string emission forces a full reset
+before the next object emission diffs, since a string can set arbitrary properties
+outside the tracked key set. The diff exists to avoid redundant `CSSStyleDeclaration`
+writes when a stream re-emits an unchanged shape (see `perf-analysis.md` in
+`examples/tmux`).
+
 ### AC14: Effect/Stream Normalization
 
 - **Given** Effect or Stream values in JSX
