@@ -15,6 +15,7 @@
  * `startServer` is exported so the integration test can bind an ephemeral port.
  */
 
+import { timingSafeEqual } from "node:crypto";
 import { appendFileSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -22,8 +23,6 @@ import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node-pty";
 import { WebSocketServer } from "ws";
-
-const SHELL = process.env.SHELL ?? "bash";
 
 // Diagnostic: set CAPTURE_PTY=<file> to record the raw PTY output stream (exactly
 // what the browser emulator receives) for offline analysis / test fixtures. Each
@@ -39,19 +38,72 @@ function captureFile(base: string): string {
 	return join(dirname(base), `${basename(base, ext)}-${stamp}${ext}`);
 }
 
-/** A running backend: its bound port and a graceful shutdown. */
+/** A running backend: its bound address, port, and a graceful shutdown. */
 export interface PtyServer {
 	readonly port: number;
+	/** The interface actually bound, e.g. `127.0.0.1`. Lets a test prove the bind is loopback-only. */
+	readonly address: string;
 	readonly close: () => Promise<void>;
 }
 
-/** Start the backend. Port 0 binds an ephemeral port (used by the test). */
+/**
+ * Whether a connection may proceed. `expected` null means no `PTY_TOKEN` is
+ * configured and every connection is allowed. Otherwise `provided` must match
+ * exactly, compared in constant time so a wrong guess cannot be timed (see
+ * `src/specs.md`, AC-REMOTE).
+ */
+export function checkToken(expected: string | null, provided: string | null): boolean {
+	if (expected === null) return true;
+	if (provided === null) return false;
+	const expectedBuf = Buffer.from(expected);
+	const providedBuf = Buffer.from(provided);
+	// timingSafeEqual throws on unequal-length buffers; short-circuiting here is
+	// unavoidable (it needs equal lengths to compare), and the length itself is
+	// not the secret being protected.
+	if (expectedBuf.length !== providedBuf.length) return false;
+	return timingSafeEqual(expectedBuf, providedBuf);
+}
+
+/** A shell to spawn: the executable and its argument list. */
+export interface ShellCommand {
+	readonly command: string;
+	readonly args: readonly string[];
+}
+
+/**
+ * The shell command for a new connection. When `TMUX_SESSION` is set, spawns
+ * `tmux new -A -s <name>`, so a dropped socket's reconnect re-attaches to the
+ * same session instead of starting a fresh one. Otherwise spawns `SHELL` with no
+ * arguments, today's behavior (see `src/specs.md`, AC-REMOTE).
+ */
+export function resolveShellCommand(env: NodeJS.ProcessEnv): ShellCommand {
+	const session = env.TMUX_SESSION;
+	if (session) return { command: "tmux", args: ["new", "-A", "-s", session] };
+	return { command: env.SHELL ?? "bash", args: [] };
+}
+
+/**
+ * Start the backend. Port 0 binds an ephemeral port (used by the test). Binds
+ * loopback only: reachability beyond this machine is a proxy's job (a
+ * `tailscale serve` mapping), never this process's (see `src/specs.md`,
+ * AC-REMOTE).
+ */
 export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<PtyServer> {
+	// Read fresh per call, not hoisted to module scope, so a test can set/unset
+	// it around each `startServer` call.
+	const ptyToken = process.env.PTY_TOKEN || null;
+
 	const httpServer = createServer();
 	const wss = new WebSocketServer({ server: httpServer });
 
 	wss.on("connection", (socket, request) => {
 		const url = new URL(request.url ?? "/", "http://localhost");
+
+		if (!checkToken(ptyToken, url.searchParams.get("token"))) {
+			socket.close(1008, "unauthorized");
+			return;
+		}
+
 		const cols = clampDim(url.searchParams.get("cols"), 80);
 		const rows = clampDim(url.searchParams.get("rows"), 24);
 
@@ -61,7 +113,8 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 			console.log(`capturing PTY output to ${capturePath}`);
 		}
 
-		const shell = spawn(SHELL, [], {
+		const { command, args } = resolveShellCommand(process.env);
+		const shell = spawn(command, args, {
 			name: "xterm-256color",
 			cols,
 			rows,
@@ -90,9 +143,11 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 	});
 
 	return new Promise((resolve) => {
-		httpServer.listen(port, () => {
+		httpServer.listen(port, "127.0.0.1", () => {
+			const address = httpServer.address() as AddressInfo;
 			resolve({
-				port: (httpServer.address() as AddressInfo).port,
+				port: address.port,
+				address: address.address,
 				close: () =>
 					new Promise<void>((done) => {
 						wss.close();
@@ -111,7 +166,9 @@ function clampDim(raw: string | null, fallback: number): number {
 // Auto-start when run directly (`npm start`), not when imported by the test.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
 	void startServer().then((server) => {
+		const { command } = resolveShellCommand(process.env);
+		const tokenNote = process.env.PTY_TOKEN ? ", token required" : "";
 		// oxlint-disable-next-line no-console
-		console.log(`tmux PTY backend on ws://localhost:${server.port} (shell: ${SHELL})`);
+		console.log(`tmux PTY backend on ws://${server.address}:${server.port} (shell: ${command}${tokenNote})`);
 	});
 }

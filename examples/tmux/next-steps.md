@@ -28,6 +28,12 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   region and erases cell runs, so `tmux attach` renders without status-bar bleed.
 - G0 DEC Special Graphics (`ESC(0`/`ESC(B`): pane borders draw as `┌─┐│└┘├┤┬┴┼`, not `lqk`
   letters. All 32 bytes of the table, unit- and browser-tested.
+- Remote access: a running instance is reachable from another device over Tailscale (one HTTPS
+  origin, `tailscale serve` proxying to both processes). Backend binds loopback only; an optional
+  `PTY_TOKEN` gates the shell (constant-time compare, terminal on a wrong token, never retried);
+  `TMUX_SESSION` makes a dropped connection reconnect into the same tmux session. Reconnect is
+  automatic with exponential backoff, capped and eventually paused, shown as a status dot. Unit-,
+  backend-, and browser-tested.
 
 Rendering is single-pane. Colour renders per cell at the `high` strategy, now the default, so real
 programs open in colour. The items below are ordered roughly by value.
@@ -67,25 +73,29 @@ Open refinements:
 - Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
   becomes a bottleneck.
 
-## 3. Mobile and resize: landed, verification open
+## 3. Mobile, resize, and remote access: landed, verification open
 
-Auto-fit (AC-RESIZE) and touch input (AC-MOBILE) both landed. The grid fits the viewport on load
-and on every debounced resize, a preset click pins it and stops tracking, and `auto` resumes.
-Touch input rides a hidden textarea plus an accessory row with a sticky Ctrl. Both are
-browser-tested.
+Auto-fit (AC-RESIZE), touch input (AC-MOBILE), and remote access (AC-REMOTE) all landed. The grid
+fits the viewport on load and on every debounced resize, a preset click pins it and stops
+tracking, and `auto` resumes. Touch input rides a hidden textarea plus an accessory row with a
+sticky Ctrl. An instance is reachable from another device over Tailscale, with a token gate,
+session persistence, and automatic reconnect. All three are unit-, backend-, or browser-tested.
 
-What is not yet verified is the part a headless browser cannot show:
+What is not yet verified is the part none of those test layers can show:
 
-- **Run it on a real phone.** Chromium at a narrow viewport is not a soft keyboard. The things to
-  check are whether the keyboard opens on tap, whether sticky Ctrl survives the keyboard's own
-  event handling, and whether the keyboard's `resize` re-init is as unobtrusive as expected.
+- **Run it on a real phone, over a real tailnet.** Remote access removes the "same LAN as the dev
+  server" requirement, so this is now practical rather than theoretical. The things to check are
+  whether the keyboard opens on tap, whether sticky Ctrl survives the keyboard's own event
+  handling, whether the keyboard's `resize` re-init is as unobtrusive as expected, and whether a
+  real sleep/wake cycle reconnects as cleanly as the mock-driven tests say it should.
 - **Landscape.** ~101 columns at 13px, so a rotation crosses many cell boundaries and triggers a
   full re-init. Worth confirming that feels acceptable rather than janky.
 - **Consider a font-size control.** A phone fits ~43 columns at 13px and ~57 at 10px. Several
   TUIs need more than 43 to be usable at all, so a smaller font may matter more than any of the
   above.
 
-Done when: a real phone can drive a shell, including `Ctrl-C`, without a hardware keyboard.
+Done when: a real phone, over a real tailnet, can drive a shell, including `Ctrl-C` and a
+sleep/wake cycle, without a hardware keyboard or a shared LAN.
 
 ## 4. Two `@weftui/core` HTML-attribute defects (found from this example)
 

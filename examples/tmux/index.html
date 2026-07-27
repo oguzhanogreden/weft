@@ -88,6 +88,45 @@
         font-variant-numeric: tabular-nums;
       }
 
+      /* Connection status: a coloured dot plus a word, always visible next to
+         the meters (not inside `.control-groups`), since it matters most on the
+         device most likely to lose the connection (AC-REMOTE). */
+      .status {
+        margin-left: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .status::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .status-connecting {
+        color: #e6b450;
+      }
+
+      .status-live {
+        color: #7fd962;
+      }
+
+      .status-offline {
+        color: #6b7280;
+      }
+
+      .status-offline::before {
+        background: transparent;
+        border: 1px solid currentColor;
+      }
+
+      .status-unauthorized {
+        color: #f07178;
+      }
+
       .terminal-pane {
         font-size: 13px;
         outline: none;

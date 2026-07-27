@@ -18,6 +18,11 @@
  * a preset pins it and stops tracking (AC-RESIZE). Touch input rides a hidden
  * textarea plus an accessory row, since a soft keyboard has no Esc/Tab/Ctrl or
  * arrows (AC-MOBILE).
+ *
+ * The control bar also shows a connection-status dot (`connecting`/`live`/
+ * `offline`/`unauthorized`), reflecting `session.status`. Reconnect itself lives
+ * in the transport, not here: this component only renders whatever state it is
+ * told (AC-REMOTE).
  */
 
 import { h, List } from "@weftui/core";
@@ -45,7 +50,7 @@ import {
   pump,
   renderRows,
 } from "./terminal";
-import { PtyTransport, type TransportError } from "./transport";
+import { type ConnectionStatus, PtyTransport, type TransportError } from "./transport";
 
 /**
  * Initial grid size for a mounted app. Supplying either dimension also *pins*
@@ -70,12 +75,21 @@ const keepFocus = (event: Event): Effect.Effect<void> => Effect.sync(() => event
 const boolAttr = (ref: SubscriptionRef.SubscriptionRef<boolean>): Stream.Stream<string> =>
   Stream.map(SubscriptionRef.changes(ref), String);
 
+/** A short, human-facing word for each connection state (AC-REMOTE). */
+const STATUS_LABEL: Record<ConnectionStatus, string> = {
+  connecting: "connecting…",
+  live: "live",
+  offline: "offline",
+  unauthorized: "unauthorized",
+};
+
 interface ControlBarProps {
   readonly strategyRef: SubscriptionRef.SubscriptionRef<Strategy>;
   readonly loadRef: SubscriptionRef.SubscriptionRef<LoadLevel>;
   readonly sizeRef: SubscriptionRef.SubscriptionRef<GridSize>;
   readonly trackingRef: SubscriptionRef.SubscriptionRef<boolean>;
   readonly openRef: SubscriptionRef.SubscriptionRef<boolean>;
+  readonly status: Stream.Stream<ConnectionStatus>;
   readonly fps: Stream.Stream<number>;
   readonly rowsPerSec: Stream.Stream<number>;
 }
@@ -172,6 +186,13 @@ const controlBar = (props: ControlBarProps): Node<never, never> =>
         ),
       ),
     ]),
+    h.span(
+      {
+        class: Stream.map(props.status, (s) => `status status-${s}`),
+        "data-status": Stream.map(props.status, (s): string => s),
+      },
+      [Stream.map(props.status, (s) => STATUS_LABEL[s])],
+    ),
     h.span({ class: "meter fps" }, ["fps: ", Stream.map(props.fps, (n) => String(n))]),
     h.span({ class: "meter rows" }, ["rows/s: ", Stream.map(props.rowsPerSec, (n) => String(n))]),
   ]);
@@ -392,6 +413,7 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
         sizeRef,
         trackingRef,
         openRef,
+        status: session.status,
         fps: fps.stream,
         rowsPerSec: rate.stream,
       }),

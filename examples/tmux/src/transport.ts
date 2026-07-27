@@ -12,11 +12,21 @@ export interface SpawnOptions {
   readonly rows: number;
 }
 
+/**
+ * Connection state for a remote (WebSocket) session. `unauthorized` is terminal:
+ * the token was wrong, and no amount of retrying fixes that. `offline` means
+ * retries were abandoned and are waiting for a wake signal to re-arm, not that
+ * the session is gone (see `src/specs.md`, AC-REMOTE).
+ */
+export type ConnectionStatus = "connecting" | "live" | "offline" | "unauthorized";
+
 /** A live connection to one shell PTY. Scope-bound: closing the scope kills it. */
 export interface PaneSession {
-  /** Raw PTY output bytes. */
+  /** Raw PTY output bytes. One stream across reconnects; a blip does not end it. */
   readonly output: Stream.Stream<Uint8Array>;
-  /** Send keystrokes to the shell. */
+  /** Current connection state. Emits on subscribe, so a late subscriber is never blank. */
+  readonly status: Stream.Stream<ConnectionStatus>;
+  /** Send keystrokes to the shell. Dropped, not queued, while not `live`. */
   readonly write: (data: string) => Effect.Effect<void>;
   /** Tell the shell the grid was resized. */
   readonly resize: (cols: number, rows: number) => Effect.Effect<void>;

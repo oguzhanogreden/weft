@@ -98,6 +98,40 @@ automatically; by hand it is:
 chmod +x examples/tmux/server/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper
 ```
 
+## Remote Access
+
+The example can run on one machine and be driven from another, over Tailscale. Your laptop
+becomes a small terminal server your phone can reach.
+
+Point `tailscale serve` at both processes, mapping them onto one HTTPS origin:
+
+```bash
+tailscale serve --bg --set-path /    http://127.0.0.1:5173
+tailscale serve --bg --set-path /pty http://127.0.0.1:8787
+```
+
+Open the resulting `https://<machine>.<tailnet>.ts.net/` from any device on your tailnet. The app
+derives its WebSocket URL from the page itself (`wss://`, same host, path `/pty`), so nothing needs
+configuring on the client. Run `tailscale serve status` to see or undo the mapping.
+
+Two environment variables control what a remote connection can do:
+
+- `PTY_TOKEN=<secret>` requires `?token=<secret>` on every connection. Bookmark the URL with the
+  token included. A wrong or missing token closes with code 1008, and the control bar's status dot
+  shows `unauthorized`. Unset by default, so local dev needs nothing.
+- `TMUX_SESSION=<name>` spawns `tmux new -A -s <name>` instead of a plain shell. A dropped
+  connection reconnects into the same session rather than a fresh one, so a phone going to sleep
+  costs you nothing.
+
+The backend always binds `127.0.0.1`, never a public interface. `tailscale serve` is what makes it
+reachable, and only to your tailnet. `tailscale funnel` is a different command: it publishes to the
+public internet. Don't run it against this backend unless `PTY_TOKEN` is set.
+
+A dropped connection retries automatically with backoff, and the status dot shows `connecting`,
+`live`, `offline`, or `unauthorized`. `offline` means retries paused after about two minutes; they
+resume as soon as the page becomes visible again (your phone waking up) or every 30 seconds either
+way, whichever comes first. `unauthorized` means the token was wrong, so retrying will not help.
+
 ## When to Use
 
 Reach for this example when you want to see Weft under sustained, high-frequency reactive load,
@@ -156,7 +190,14 @@ Implemented and validated on Node 26:
   arrows, and a sticky Ctrl makes `Ctrl-C` reachable. Printable characters arrive as `input`
   events, the path a phone takes when `keydown` reports `Unidentified`.
 
+- Remote access: a running instance is reachable from another device over Tailscale, one HTTPS
+  origin proxied to both processes. The backend binds loopback only; an optional `PTY_TOKEN` gates
+  the shell, and `TMUX_SESSION` makes a dropped connection reconnect into the same session instead
+  of a fresh one. A dropped connection retries automatically with backoff, shown as a status dot in
+  the control bar; a rejected token is a distinct, non-retrying state. See "Remote Access" above.
+
 Not yet built: insert/delete line and mouse reporting, the remaining fidelity for full
-`vim`/`tmux`-in-`tmux` rendering. The mobile path is browser-tested but not yet exercised on a
-real handset. Note you run the real programs over the PTY, so there is no need for a Weft-native
-multiplexer. See `next-steps.md` for the full roadmap.
+`vim`/`tmux`-in-`tmux` rendering. The mobile path and remote access are both browser- and
+backend-tested but not yet exercised together on a real handset over a real tailnet, now the
+practical way to do that verification. Note you run the real programs over the PTY, so there is no
+need for a Weft-native multiplexer. See `next-steps.md` for the full roadmap.

@@ -7,6 +7,9 @@
 #
 #   ./examples/tmux/dev.sh        (or:  bash examples/tmux/dev.sh)
 #
+# PTY_TOKEN and TMUX_SESSION, if already exported, pass straight through to the
+# backend (see readme.md, "Remote Access"). Neither is required for local dev.
+#
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

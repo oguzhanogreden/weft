@@ -112,6 +112,11 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
 - `PtyTransportMockLive` emits a scripted byte `Stream` and records `write`s (tests/dev, no
   `node-pty` in CI). It also records `resize`s as `(cols, rows)` pairs, so a browser test can
   assert the PTY was told about a grid-size change (AC-GRIDSIZE), not just that the DOM changed.
+- The interface gains `status: Stream<ConnectionStatus>` (AC-REMOTE). `PtyTransportWebSocketLive`
+  now also owns a reconnect loop, so `output` is one `Queue`-backed stream across reconnects rather
+  than a single socket's event stream; `spawn` itself can no longer fail (`TransportError` stays
+  declared on the service for forward-compatibility, but nothing produces it today), since a
+  connection's fate is reported through `status` instead.
 
 ### AC-RENDER — three switchable render levels (`src/terminal.ts`, `src/perf.ts`) ✅
 
@@ -326,7 +331,135 @@ Expected behaviour and edge cases:
 - Tapping the pane must not scroll it away under the keyboard; the pane is focused rather than
   scrolled into view.
 
-### AC-TEST 🚧 (unit + backend + hermetic browser done; mux assertions pending)
+### AC-REMOTE — reach it from another device (`src/transport-ws.ts`, `server/server.ts`, `vite.config.ts`) ✅
+
+The example only runs where it was built. Seeing it needs this repo, Node 26, a `node-pty`
+install, the `spawn-helper` chmod, and two local processes. There is no URL to open, so the
+example cannot be demoed, and AC-MOBILE has never met a real phone. This criterion makes a
+running instance reachable from another device on the same Tailscale tailnet. The phone stops
+being a narrow viewport in Chromium and becomes a real client driving a real shell.
+
+An asciinema-style cast recorder and player was the other candidate and was dropped. A recording
+demos the renderer but not the interactivity, and interactivity is the half worth showing.
+
+**Topology.** One HTTPS origin, proxied by `tailscale serve`: `/` to Vite, `/pty` to the backend.
+
+- Nothing binds a public interface. `server.ts` becomes `listen(port, "127.0.0.1")`. It calls
+  `listen(port)` today, which binds every interface, so the shell is currently reachable from
+  every network the laptop is attached to.
+- Tailscale connects from loopback, so the proxy still reaches both.
+- Vite needs `allowedHosts` set for the tailnet name. Its DNS-rebinding guard rejects a Host
+  header it does not know.
+- `tailscale serve` is tailnet-only. `tailscale funnel` is one word away and publishes to the
+  internet. The token below is what stands behind that mistake.
+
+**WebSocket URL.** One rule, no branching: protocol from the page, host from the page, path `/pty`.
+
+- `wss:` when the page is `https:`, else `ws:`. So the tailnet and localhost differ only in what
+  the browser already knows.
+- A Vite dev proxy maps `/pty` to the backend with `ws: true`, so local dev takes the identical
+  code path and URL shape. The remote path is therefore exercised every day, not only when remote.
+- No path rewrite is required. `WebSocketServer({ server })` accepts an upgrade on any path, and
+  the backend reads only the query string.
+- The derivation is a pure helper over `{ protocol, host }` plus an optional token. Unit-testable
+  with no DOM, like `computePixelLock` and `fitGridSize`.
+
+**Auth.** A shared token, off by default.
+
+- `PTY_TOKEN` in the backend environment. When set, a connection whose `?token=` does not match is
+  closed with 1008 before any PTY is spawned. When unset the backend is open, so local dev is
+  unchanged.
+- Compared with `timingSafeEqual` over equal-length buffers.
+- The client reads `token` from `location.search` and forwards it on the WebSocket query, so the
+  phone URL carries it once and a bookmark keeps it.
+- **The rejection is a post-handshake close, deliberately.** `WebSocketServer({ server })`
+  completes the 101 upgrade before `connection` fires, so the client sees `open` and then a close
+  carrying code 1008. Rejecting earlier with a 401 during the upgrade reads cleaner and is worse
+  here: the browser `WebSocket` API hides handshake status on purpose, so a 401 arrives as a bare
+  `error` that cannot be told apart from connection-refused. A close code is visible. Since the
+  retry loop below must not retry a bad token, the client needs that distinction, so the design
+  that surfaces more to the client wins over the one that looks tidier on the server.
+- Deviation: the token rides in a URL, so it reaches browser history and any proxy log. Accepted.
+  A handshake sub-protocol or cookie buys little while tailnet membership is the outer boundary.
+- Non-regression: pinning a preset rewrites the URL through `new URL(location.href)` and sets only
+  `cols`/`rows`, so `token` survives (`app.ts:95`, `app.ts:106`). Asserted, not assumed.
+
+**Session durability.** `TMUX_SESSION` makes the backend spawn `tmux new -A -s <name>` in place of
+`$SHELL`. Attach-or-create, so a dropped socket loses nothing and a reconnect lands in the same
+session. Off by default. This is why the backend needs no session registry, TTL, or replay buffer:
+tmux is the session manager, and the example is named after it.
+
+**Reconnect.** The transport owns retry; the app observes state.
+
+- `PaneSession` gains `status: Stream<ConnectionStatus>`, one of four states. Backed by a
+  `SubscriptionRef`, so it emits current state on subscribe and the dot is never blank on a late
+  subscription.
+  - `connecting` — trying, and will keep trying.
+  - `live` — connected.
+  - `offline` — retries abandoned, waiting for a wake signal to re-arm.
+  - `unauthorized` — terminal. The token is wrong, and no amount of retrying fixes that.
+- Retry lives in `transport-ws.ts`. `output` stays one stream across reconnects, so `app.ts` never
+  tears down the grid or the pump. A blip leaves the screen intact and tmux repaints over it.
+- Backoff is exponential from 250ms, capped at 5s, and abandoned into `offline` after ~2 minutes.
+- **Close code 1008 is terminal, never retried.** Without this, a wrong token is indistinguishable
+  from a flaky link and the client hammers the backend forever on a 5s cap. This is the single
+  rule that makes the auth gate an actual gate rather than a slow loop.
+- `visibilitychange` to visible re-arms `offline`, but never `unauthorized`. This is the phone
+  case: a device asleep for hours outlasts any bounded policy, and waking it is the signal that
+  retrying is worth it again.
+- **A tab that stays visible the whole time also re-arms, on a 30-second poll.**
+  `visibilitychange` only fires on a transition, so a desktop tab that is never backgrounded would
+  otherwise wait forever for an event that can never come, even after the backend comes back. The
+  poll and the visibility event race; whichever happens first wins.
+- `offline` therefore means "not trying right now, will retry when you come back", and the dot
+  must say so rather than implying a dead end. A dot that reads terminal while secretly retrying,
+  or reads hopeful while permanently stuck, is a dot nobody trusts. That is why `unauthorized` is
+  its own state instead of being folded into `offline`.
+- The retry decision is a pure helper: `(closeCode, attempt) → delay | give-up | terminal`. It
+  holds the backoff curve, the 1008 rule, and the give-up boundary, so all three are unit-testable
+  with no browser and no socket. This matters because `transport-ws.ts` itself has no CI coverage
+  by design (no `node-pty` in the browser suite).
+- **`attempt` resets on any attempt that reached `live`, not only on `giveUp`.** The backoff is for
+  _consecutive_ failures. Without this, a phone that sleeps and wakes repeatedly (working fine each
+  time in between) still accumulates one increment per drop across the session's whole lifetime,
+  and eventually hits `giveUp` on a perfectly healthy link. `attemptAfter(previousAttempt, opened)`
+  makes this decision a named, tested unit rather than inline loop bookkeeping: the earlier version
+  had exactly this bug, in the part of the loop that stayed inline rather than the part already
+  extracted as a pure helper, which is the reminder that extraction only protects what it covers.
+- **Deviation, accepted: a flapping connection never gives up.** If a socket opens then closes
+  within milliseconds, repeatedly, `attemptAfter` resets to 0 every cycle, so the retry stays at
+  250ms and `giveUp` is never reached. The alternative, growing the backoff for a link that keeps
+  technically succeeding, throttles the exact case this criterion exists for (a phone that opens
+  fine, over and over, after every sleep). For a personal remote-access tool, retrying a flapping
+  link forever is the better failure mode than eventually refusing a healthy one.
+- A reconnect spawns at the _current_ grid size, not the size at first spawn. The transport tracks
+  the last `resize`, so a phone that rotated while offline comes back at the right size.
+- `write` while not `live` is dropped, not buffered. Replaying keystrokes into a shell that has
+  moved on is worse than losing them.
+- The dot renders in the control bar and stays visible when AC-MOBILE collapses the groups, like
+  the meters. Connection state matters most on the device most likely to lose it.
+- **Non-regression (AC-GRIDSIZE):** `session` is spawned outside the size-keyed list, and a size
+  switch transiently runs two subscribers against it. `status` must tolerate that the way `output`
+  already does. `SubscriptionRef.changes` gives each subscriber the current value independently,
+  so the dot does not flicker across a switch.
+
+Expected behaviour and edge cases:
+
+- **Vite HMR through the proxy.** The HMR client derives its own `wss` URL from the page. If that
+  misbehaves behind `tailscale serve`, the fallback is `server.hmr` config or disabling HMR.
+  Remote use is for driving a shell, not for editing code.
+- **A dev server over a network is deliberate.** It keeps the flow to one command. If the dev
+  server proves flaky over the tailnet, `vp build` plus a static preview is the alternative.
+- **Without `TMUX_SESSION` a reconnect gets a new PTY.** The old shell is gone, and its scrollback
+  with it. The status dot showing `live` again does not mean the session survived.
+- **The token gates the shell, not the page.** Vite serves the app to anyone on the tailnet. Only
+  the PTY connection is checked, which is the boundary that matters.
+- **A wrong token still renders the harness.** Because rejection arrives after `open`, `spawn`
+  succeeds and the grid builds before the close lands. The result is a full, empty terminal with
+  an `unauthorized` dot. That is the intended read: the UI works, the shell is refused, and the
+  dot says which. It is not a blank page with nothing to go on.
+
+### AC-TEST 🚧 (unit + backend + hermetic browser done, including AC-REMOTE; mux assertions pending)
 
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
   (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
@@ -340,9 +473,23 @@ Expected behaviour and edge cases:
   (AC-GRIDSIZE, 19 cases). The auto-fit computation (pane box + cell metrics + cap → `GridSize`,
   including the cap, the floor, and the inert sub-cell change) ✅ with AC-RESIZE, pure and
   DOM-free like `computePixelLock`. Touch encoding (`controlByte`, and every accessory key
-  cross-checked against `encodeKey` so the two input routes cannot drift) ✅ with AC-MOBILE. Keybinding state machine lands with AC-MUX.
+  cross-checked against `encodeKey` so the two input routes cannot drift) ✅ with AC-MOBILE. The
+  WebSocket URL derivation (`{ protocol, host }` plus optional token → URL, covering the `https:`
+  to `wss:` mapping, the `/pty` path, token forwarding, and token absence), its composition with
+  the current grid size (`buildConnectUrl`, cols/rows appended after any token), the retry
+  decision (`(closeCode, attempt) → delay | give-up | terminal`, covering the backoff curve, the 5s
+  cap, the give-up boundary, and 1008 being terminal at any attempt), and the attempt-reset rule
+  (`attemptAfter`: a streak of failures keeps counting, but one that reached `live` resets to 0,
+  including from deep into a give-up-bound streak) ✅ with AC-REMOTE, all pure and DOM-free.
+  Keybinding state machine lands with AC-MUX.
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
-  round-trips a typed command over `ws` ✅.
+  round-trips a typed command over `ws` ✅. With AC-REMOTE it also asserts that `PTY_TOKEN` set
+  rejects a missing or wrong `?token=` with close code 1008 and accepts the right one (`checkToken`
+  covered at both the length-mismatch and the equal-length-wrong-bytes case, so the
+  `timingSafeEqual` path itself is exercised, not only the short-circuit ahead of it), that an
+  unset `PTY_TOKEN` stays open, and that the listener binds loopback rather than every interface
+  ✅. The binding assertion is the one that fails open if it regresses, so it is asserted on the
+  bound address rather than inferred from the `listen` call.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
   selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
@@ -370,8 +517,20 @@ Expected behaviour and edge cases:
   re-fits on `resize`, stops tracking once a preset is pinned, and resumes on `auto` ✅
   (AC-RESIZE). Tapping the pane focuses the hidden textarea, an `input` event reaches
   `session.write` (the path `keydown` misses on mobile), each accessory key sends its expected
-  bytes, and armed `ctrl` turns the next character into its control byte ✅ (AC-MOBILE). The
-  `Ctrl-b %` two-pane assertion lands with AC-MUX. A live
+  bytes, and armed `ctrl` turns the next character into its control byte ✅ (AC-MOBILE). The mock
+  transport gains a way to drive `status`, so the app's half of reconnection is covered
+  hermetically: the dot tracks `connecting` → `live`, a simulated drop moves it to `connecting`
+  and back to `live`, it renders `unauthorized` distinctly, grid content survives the blip (the
+  reason retry lives in the transport rather than in a keyed axis, verified by reference-checking
+  a row element rather than trusting rendered text, which the mock's replay-on-resubscribe would
+  reproduce even after a remount), the dot stays visible when the narrow-screen toggle collapses
+  the control groups, a `write` issued while not `live` never reaches the write log, and a
+  bookmarked `?token=` survives a preset pin alongside the `cols`/`rows` it rewrites ✅ (AC-REMOTE).
+  Scope note, so this is not read as more than it is: the mock drives status directly, so these
+  assert the **app's** reaction to a state change, not the retry itself. The retry's own logic is
+  covered by the pure decision helper in the unit tests above; what remains manual is only the real
+  socket wiring in `transport-ws.ts`, consistent with
+  it having no CI coverage today. The `Ctrl-b %` two-pane assertion lands with AC-MUX. A live
   real-PTY browser run (real shell →
   `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
   backend.
@@ -395,6 +554,10 @@ Expected behaviour and edge cases:
     fields and the presets are a `ReadonlyArray<GridSize>`. No generics, overloads, or
     conditional/inferred types, so the main typecheck already enforces the surface. The behaviour
     under test is teardown and re-init, which is a runtime concern (browser tests).
+  - AC-REMOTE specifically: `ConnectionStatus` is a four-member string-literal union and `status`
+    a concrete `Stream<ConnectionStatus>` field on an existing interface. No generics, overloads,
+    or conditional/inferred types, so the main typecheck already enforces the surface. The
+    behaviour under test is URL derivation, an auth gate, and retry timing, all runtime concerns.
   - AC-CHARSET specifically: `Charset` is a two-member string-literal union, `Parser.g0` a
     concrete field of it, and `translateG0` a non-generic `(string) => string`. No generics,
     overloads, or conditional/inferred types, so the main typecheck already enforces the surface.
@@ -405,3 +568,8 @@ Expected behaviour and edge cases:
 - Not single-command self-contained: a real run needs the `server/` PTY backend started
   separately (`node-pty` native addon). The mock transport keeps `app.ts` importable and the
   browser test hermetic. Accepted per the approved plan.
+- AC-REMOTE's proxy setup lives in Tailscale's own configuration, not in this repo, so it is a
+  readme instruction rather than something the repo can make work by itself. What the repo owns is
+  everything that has to be true for that proxy to work: the same-origin `/pty` URL, the loopback
+  bind, the token gate, and the reconnect. Nothing about those is Tailscale-specific, so any
+  reverse proxy mapping the same two paths works identically.
