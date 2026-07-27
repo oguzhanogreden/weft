@@ -115,6 +115,20 @@ describe("tmux example", () => {
     );
   });
 
+  it("clears a cell's colour when it is overwritten with plain text (per-cell diffing)", async () => {
+    // `high`'s cell binding diffs char and style together against what it last
+    // applied (perf-analysis.md, Update 2). A cell that goes from styled back
+    // to plain must have its style actually removed, not just skip a
+    // redundant re-apply of an unchanged value.
+    await mountWith(["\x1b[7mX\x1b[0m", "\x1b[1;1HY"]);
+    await vi.waitFor(() => {
+      const firstRow = container.querySelector(".term-row");
+      const spans = [...(firstRow?.querySelectorAll("span") ?? [])] as HTMLElement[];
+      expect(spans[0]?.textContent).toBe("Y");
+      expect(spans[0]?.style.backgroundColor).toBe("");
+    });
+  });
+
   it("shows no share button until shareUrl resolves (AC-STREAM)", async () => {
     await mountWith(["$ "]);
     expect(container.querySelector("button.share")).toBeNull();

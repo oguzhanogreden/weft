@@ -177,12 +177,38 @@ strategies, 200x50/`low`) show depressed rows/s in lockstep with fps: that is
 Discriminator: a healthy cell's rows/s sits near its size's plateau; a saturated one
 doesn't, regardless of strategy.
 
-`perf-analysis.md` traces _why_: the dominant cost is `@weftui/dom`'s `handleStyle`
-resetting and reapplying every cell's inline style on every emission with no diffing,
-regardless of whether the style changed (confirmed against the benchmark's own zero-SGR
-load). Ranked findings and a falsifiable prediction for validating a fix are there.
+`perf-analysis.md` traced a real defect in `@weftui/dom`'s `handleStyle`: it reset and
+reapplied every cell's inline style on every emission with no diffing against the
+previous value, and predicted fixing it would close most of `high`'s gap under load.
+
+That fix landed: `handleStyle`'s object branch now diffs against the previously-applied
+object (`packages/dom/src/client/render.ts`, `dom.specs.md` AC13 kept its contract and
+gained an implementation note), unit-tested including the string-then-object transition,
+`vp run check`/`test`/`test:browser` all green. The prediction was falsified: `high`'s
+rows/s at 160x48 under load moved from ~440 to ~490, not the several-fold jump toward
+`med`'s ~2200-3900. The benchmark's load is zero-SGR (every cell's style was unchanged
+tick over tick, the case the diff optimizes hardest), so this is a clean disconfirmation,
+not noise. The leading hypothesis became per-cell subscription/fiber fan-out: `high`
+opened two reactive bindings per cell (style + char) against one per segment for
+`low`/`med`, a 40x gap in live bindings at 160 cols against the observed ~8x gap in
+rows/s.
+
+That hypothesis is confirmed and landed: `renderRowCells` now gives each `high`-strategy
+cell one binding (`renderCell` in `terminal.ts`, `ref`-mounted, one forked fiber per cell
+diffing char and style together) instead of two independent `style`/child-text streams.
+`high`'s rows/s at 160x48 under load moved from ~490 to ~1410, a ~2.8x jump, matching the
+throwaway spike that motivated it within noise. `render-integrity`, `app`, and
+`viewer-app` browser tests pass unchanged (no dropped cells, colour still renders,
+viewer parity holds), plus a new test locking in that a cell's style actually clears when
+overwritten plain, not just skips a redundant re-apply. `vp run
+check`/`test`/`test:browser` all green. See `perf-analysis.md`'s Updates 2-3 for the full
+numbers. A gap to `med`'s ~1900-3900 remains even after both fixes; the next suspect is
+raw per-cell DOM node count (7,680 spans at 160x48), not subscription count, untested so
+far.
 
 - Add backpressure (or a bounded queue) to `makeLoadStream` so a saturated size doesn't
   read as strategy noise.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.
 - Optionally add a styled per-cell strategy to measure colour's cost against monochrome.
+- Test the remaining-gap hypothesis above (DOM node count): coalescing same-style runs
+  into fewer spans (item 2) would discriminate it from a still-too-many-bindings story.

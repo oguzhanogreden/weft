@@ -8,14 +8,14 @@
  *
  * The strategy is how many reactive nodes each row is split into: `low` = 1 text
  * node (whole line), `med` = a handful of text segments, `high` = one coloured
- * `<span>` per cell (reactive style + char). That node/subscription count is the
- * variable the perf meter measures; `high` also carries SGR colour (see
- * `src/specs.md`, AC-RENDER).
+ * `<span>` per cell, each with a single binding driving both text and style
+ * (`renderCell`). That node count is the variable the perf meter measures;
+ * `high` also carries SGR colour (see `src/specs.md`, AC-RENDER).
  */
 
 import { h } from "@weftui/core";
 import type { Node } from "@weftui/core";
-import { Effect, type Scope, Stream, SubscriptionRef } from "effect";
+import { Effect, Option, pipe, type Scope, Stream, SubscriptionRef } from "effect";
 import { feed, initParser } from "./ansi/parser";
 import { blankRow, DEFAULT_STYLE, type Row, type Style } from "./grid";
 import type { PaneBox } from "./grid-size";
@@ -210,16 +210,65 @@ function cellStyle(style: Style): Record<string, string> {
   };
 }
 
-/** `high`: one `<span>` per cell with reactive style + char (full colour, max nodes). */
+/** Converts a camelCase CSS property name to kebab-case, for `setProperty`. */
+function camelToKebab(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+/**
+ * `high`'s cell: one binding drives both text and style, diffed against the
+ * cell's last-applied values. Two independent bindings per cell (style, plus
+ * a separate child-text stream) were the dominant cost under load; collapsing
+ * to one roughly tripled measured throughput (`perf-analysis.md`).
+ */
+function renderCell(changes: Stream.Stream<Row>, c: number): Node<never, Scope.Scope> {
+  return Effect.gen(function* () {
+    const elRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
+    let previousChar = " ";
+    let previousStyle: Record<string, string> = {};
+
+    yield* pipe(
+      SubscriptionRef.changes(elRef),
+      Stream.filter(Option.isSome),
+      Stream.take(1),
+      Stream.runForEach((el) => {
+        // Safe: `h.span` below gives this element exactly one static string
+        // child, so `firstChild` is a `Text` node by construction.
+        const textNode = el.value.firstChild as Text;
+        return pipe(
+          changes,
+          Stream.runForEach((row) =>
+            Effect.sync(() => {
+              const cell = row[c];
+              const char = cell?.char ?? " ";
+              if (char !== previousChar) {
+                textNode.data = char;
+                previousChar = char;
+              }
+              const style = cellStyle(cell?.style ?? DEFAULT_STYLE);
+              for (const [key, value] of Object.entries(style)) {
+                if (previousStyle[key] !== value) {
+                  el.value.style.setProperty(camelToKebab(key), value);
+                }
+              }
+              previousStyle = style;
+            }),
+          ),
+        );
+      }),
+      Effect.forkScoped,
+    );
+
+    return yield* h.span({ ref: elRef }, " ");
+  });
+}
+
+/** `high`: one `<span>` per cell, each with its own single reactive binding (see `renderCell`). */
 function renderRowCells(
   changes: Stream.Stream<Row>,
   cols: number,
-): ReadonlyArray<Node<never, never>> {
-  return Array.from({ length: cols }, (_unused, c) =>
-    h.span({ style: Stream.map(changes, (row) => cellStyle(row[c]?.style ?? DEFAULT_STYLE)) }, [
-      Stream.map(changes, (row) => row[c]?.char ?? " "),
-    ]),
-  );
+): ReadonlyArray<Node<never, Scope.Scope>> {
+  return Array.from({ length: cols }, (_unused, c) => renderCell(changes, c));
 }
 
 /** Render one row per the strategy: monochrome text segments, or coloured cells. */
@@ -227,7 +276,7 @@ function renderRow(
   ref: SubscriptionRef.SubscriptionRef<Row>,
   strategy: Strategy,
   cols: number,
-): Node<never, never> {
+): Node<never, Scope.Scope> {
   const changes = SubscriptionRef.changes(ref);
   if (strategy === "high") {
     return h.div({ class: "term-row" }, renderRowCells(changes, cols));
@@ -246,7 +295,7 @@ export function renderRows(
   rowRefs: ReadonlyArray<SubscriptionRef.SubscriptionRef<Row>>,
   strategy: Strategy,
   cols: number,
-): Node<never, never> {
+): Node<never, Scope.Scope> {
   return h.div(
     { class: "term" },
     rowRefs.map((ref) => renderRow(ref, strategy, cols)),
