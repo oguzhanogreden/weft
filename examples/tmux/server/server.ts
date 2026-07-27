@@ -74,6 +74,34 @@ export interface ShellCommand {
 	readonly args: readonly string[];
 }
 
+/** One client->server control frame: a keystroke, or a resize request. */
+export type ClientMessage =
+	| { readonly type: "input"; readonly data: string }
+	| { readonly type: "resize"; readonly cols: number; readonly rows: number };
+
+/**
+ * Parse one client control frame. `null` for anything that is not a
+ * recognized {@link ClientMessage}, malformed JSON included, all treated the
+ * same as before: ignored, never a thrown error.
+ */
+export function parseClientMessage(raw: string): ClientMessage | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return null;
+	}
+	if (typeof parsed !== "object" || parsed === null) return null;
+	const msg = parsed as Record<string, unknown>;
+	if (msg.type === "input" && typeof msg.data === "string") {
+		return { type: "input", data: msg.data };
+	}
+	if (msg.type === "resize" && typeof msg.cols === "number" && typeof msg.rows === "number") {
+		return { type: "resize", cols: msg.cols, rows: msg.rows };
+	}
+	return null;
+}
+
 /** Which access a connection gets: read-write (presenter) or read-only (viewer). */
 export type ConnectionRole = "presenter" | "viewer";
 
@@ -177,14 +205,16 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 		shell.onExit(() => socket.close());
 
 		socket.on("message", (raw) => {
-			let msg: { type?: string; data?: string; cols?: number; rows?: number };
-			try {
-				msg = JSON.parse(raw.toString());
-			} catch {
-				return; // ignore malformed control frames
+			const msg = parseClientMessage(raw.toString());
+			if (msg === null) return; // ignore malformed control frames
+			switch (msg.type) {
+				case "input":
+					shell.write(msg.data);
+					break;
+				case "resize":
+					shell.resize(msg.cols, msg.rows);
+					break;
 			}
-			if (msg.type === "input" && typeof msg.data === "string") shell.write(msg.data);
-			else if (msg.type === "resize" && msg.cols && msg.rows) shell.resize(msg.cols, msg.rows);
 		});
 
 		socket.on("close", () => shell.kill());

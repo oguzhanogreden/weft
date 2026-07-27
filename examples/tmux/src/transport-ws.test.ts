@@ -1,9 +1,11 @@
 import * as assert from "node:assert/strict";
+import { Option } from "effect";
 import { describe, it } from "vite-plus/test";
 import {
   attemptAfter,
   buildConnectUrl,
   buildShareUrl,
+  decodeControlMessage,
   deriveWsUrl,
   nextReconnectDecision,
 } from "./transport-ws";
@@ -96,6 +98,27 @@ describe("buildShareUrl (AC-STREAM)", () => {
     // a real PTY_VIEW_TOKEN value), not one worth a silent special case.
     const url = buildShareUrl({ protocol: "http:", host: "localhost:5173" }, "");
     assert.equal(url, "http://localhost:5173/?token=&role=viewer");
+  });
+});
+
+describe("decodeControlMessage (AC-STREAM)", () => {
+  it("decodes a valid view-token frame", () => {
+    const msg = decodeControlMessage({ type: "view-token", token: "abc123" });
+    assert.deepEqual(Option.getOrNull(msg), { type: "view-token", token: "abc123" });
+  });
+
+  it("rejects an unrecognized type", () => {
+    assert.equal(Option.isNone(decodeControlMessage({ type: "close" })), true);
+  });
+
+  it("rejects a wrongly-typed token", () => {
+    assert.equal(Option.isNone(decodeControlMessage({ type: "view-token", token: 123 })), true);
+  });
+
+  it("rejects non-object input", () => {
+    assert.equal(Option.isNone(decodeControlMessage(null)), true);
+    assert.equal(Option.isNone(decodeControlMessage("view-token")), true);
+    assert.equal(Option.isNone(decodeControlMessage([1, 2, 3])), true);
   });
 });
 

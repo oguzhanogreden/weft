@@ -15,6 +15,7 @@ import { after, test } from "node:test";
 import { WebSocket } from "ws";
 import {
 	checkToken,
+	parseClientMessage,
 	type PtyServer,
 	resolveRole,
 	resolveShellCommand,
@@ -130,6 +131,27 @@ test("resolveRole: an explicit view-token match wins even when presenter access 
 	assert.equal(resolveRole(null, "view-token", "view-token"), "viewer");
 	assert.equal(resolveRole(null, "view-token", "something-else"), "presenter");
 	assert.equal(resolveRole(null, "view-token", null), "presenter");
+});
+
+test("parseClientMessage: recognizes input and resize frames (AC-REMOTE)", () => {
+	assert.deepEqual(parseClientMessage(JSON.stringify({ type: "input", data: "ls\r" })), {
+		type: "input",
+		data: "ls\r",
+	});
+	assert.deepEqual(parseClientMessage(JSON.stringify({ type: "resize", cols: 80, rows: 24 })), {
+		type: "resize",
+		cols: 80,
+		rows: 24,
+	});
+});
+
+test("parseClientMessage: ignores malformed or unrecognized frames (AC-REMOTE)", () => {
+	assert.equal(parseClientMessage("not json"), null);
+	assert.equal(parseClientMessage(JSON.stringify(null)), null);
+	assert.equal(parseClientMessage(JSON.stringify([1, 2, 3])), null);
+	assert.equal(parseClientMessage(JSON.stringify({ type: "close" })), null);
+	assert.equal(parseClientMessage(JSON.stringify({ type: "input", data: 42 })), null);
+	assert.equal(parseClientMessage(JSON.stringify({ type: "resize", cols: "80", rows: 24 })), null);
 });
 
 test("binds loopback rather than every interface (AC-REMOTE)", async () => {

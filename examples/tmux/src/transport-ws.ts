@@ -12,7 +12,18 @@
  * against a running backend per `readme.md`.
  */
 
-import { Effect, Layer, Option, pipe, Queue, Ref, Scope, Stream, SubscriptionRef } from "effect";
+import {
+  Effect,
+  Layer,
+  Option,
+  pipe,
+  Queue,
+  Ref,
+  Schema,
+  Scope,
+  Stream,
+  SubscriptionRef,
+} from "effect";
 import {
   type ConnectionStatus,
   type PaneSession,
@@ -96,6 +107,16 @@ interface ConnectionResources {
   readonly shareUrlRef: SubscriptionRef.SubscriptionRef<Option.Option<string>>;
 }
 
+/** The one server->client control frame kind (AC-STREAM), distinct from binary PTY output. */
+export const ControlMessage = Schema.Struct({
+  type: Schema.Literal("view-token"),
+  token: Schema.String,
+});
+export type ControlMessage = typeof ControlMessage.Type;
+
+/** Decode an unknown JSON value into a {@link ControlMessage}, `None` for anything else. */
+export const decodeControlMessage = Schema.decodeUnknownOption(ControlMessage);
+
 /**
  * Handle one text-frame control message from the backend (binary frames are
  * PTY output and never reach here). Currently only `view-token` (AC-STREAM);
@@ -110,12 +131,10 @@ function handleControlMessage(data: string, resources: ConnectionResources): Eff
     } catch {
       return;
     }
-    if (typeof parsed !== "object" || parsed === null) return;
-    const msg = parsed as { type?: unknown; token?: unknown };
-    if (msg.type === "view-token" && typeof msg.token === "string") {
-      const url = buildShareUrl(window.location, msg.token);
-      yield* SubscriptionRef.set(resources.shareUrlRef, Option.some(url));
-    }
+    const msg = Option.getOrNull(decodeControlMessage(parsed));
+    if (msg === null) return;
+    const url = buildShareUrl(window.location, msg.token);
+    yield* SubscriptionRef.set(resources.shareUrlRef, Option.some(url));
   });
 }
 
