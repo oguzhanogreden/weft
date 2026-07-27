@@ -160,9 +160,13 @@ describe("pixel-locked grid (AC-PIXELGRID)", () => {
       const button = container.querySelector<HTMLButtonElement>(`[data-strategy="${strategy}"]`);
       expect(button).not.toBeNull();
       button!.click();
-      // Switching strategy rebuilds the `.term` node; wait for the new rows.
+      // Switching strategy rebuilds the `.term` node; wait for the new rows
+      // AND their content. Structural mount and a reactive child's first
+      // emission land in different scheduler ticks, so row count alone can
+      // be satisfied before any row has rendered a character.
       await vi.waitFor(() => {
         expect(pane.querySelectorAll(".term-row").length).toBe(24);
+        expect(pane.querySelector(".term-row")?.textContent).not.toBe("");
       });
       assertLocked(pane);
     }

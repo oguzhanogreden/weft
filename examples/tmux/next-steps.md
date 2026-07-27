@@ -193,22 +193,25 @@ opened two reactive bindings per cell (style + char) against one per segment for
 `low`/`med`, a 40x gap in live bindings at 160 cols against the observed ~8x gap in
 rows/s.
 
-That hypothesis is confirmed and landed: `renderRowCells` now gives each `high`-strategy
-cell one binding (`renderCell` in `terminal.ts`, `ref`-mounted, one forked fiber per cell
-diffing char and style together) instead of two independent `style`/child-text streams.
-`high`'s rows/s at 160x48 under load moved from ~490 to ~1410, a ~2.8x jump, matching the
-throwaway spike that motivated it within noise. `render-integrity`, `app`, and
-`viewer-app` browser tests pass unchanged (no dropped cells, colour still renders,
-viewer parity holds), plus a new test locking in that a cell's style actually clears when
-overwritten plain, not just skips a redundant re-apply. `vp run
-check`/`test`/`test:browser` all green. See `perf-analysis.md`'s Updates 2-3 for the full
-numbers. A gap to `med`'s ~1900-3900 remains even after both fixes; the next suspect is
-raw per-cell DOM node count (7,680 spans at 160x48), not subscription count, untested so
-far.
+That hypothesis was confirmed and landed, then taken one step further. First, one binding
+per cell (`renderCell`): `high`'s rows/s at 160x48 under load moved from ~490 to ~1410, a
+~2.8x jump. A gap to `med`'s ~1900-3900 remained, and this document's own next-suspect
+guess (per-cell DOM node count, 7,680 spans) turned out wrong: mechanistic reasoning about
+finding #3 ("no rAF/microtask batching," falsified by reading Effect's scheduler source
+directly, which already batches same-tick task dispatch) pointed at fiber-dispatch _count_
+instead, one level up from the cell fix. Collapsing further, to one binding per _row_
+(`renderRowHigh`, `ref`-mounted on the row `<div>`, one forked fiber looping over all
+cells per row-change) closed the remaining gap entirely: `high` now reaches the same
+120fps environment ceiling `low` and `med` hit, at 5083 rows/s under load at 160x48. See
+`perf-analysis.md`'s Updates 2-4 for the full numbers, the falsified DOM-node-count guess,
+and a test-timing gap this surfaced (`pixel-grid.browser.test.ts`'s post-switch wait
+needed to check content, not just row count; fixed alongside). `render-integrity`, `app`,
+`viewer-app`, `grid-size`, and `pixel-grid` browser tests all pass, `pixel-grid`
+specifically re-run several times given the timing sensitivity involved. `vp run
+check`/`test`/`test:browser` all green. There is no next suspect currently identified for
+further gains at this size.
 
 - Add backpressure (or a bounded queue) to `makeLoadStream` so a saturated size doesn't
   read as strategy noise.
 - Add an unthrottled "max" load (emit every tick) to find the hard ceiling.
 - Optionally add a styled per-cell strategy to measure colour's cost against monochrome.
-- Test the remaining-gap hypothesis above (DOM node count): coalescing same-style runs
-  into fewer spans (item 2) would discriminate it from a still-too-many-bindings story.

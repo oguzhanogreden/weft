@@ -204,11 +204,68 @@ Re-benchmarked against the real implementation: sweep A, `high` at 160x48 under
 conclusion from Update 2 stands unchanged; this confirms the clean implementation didn't
 lose anything the spike had.
 
+## Update 4 (2026-07-27): the gap to `med` closes entirely, and the DOM-node-count
+
+suspect is falsified
+
+The Status section above named per-cell DOM node count (7,680 spans at 160x48) as the
+next suspect for the remaining gap to `med`. It was wrong. Mechanistic reasoning about
+finding #3 ("no rAF/microtask batching") led to a different lever first: Effect's default
+scheduler already drains every same-tick-scheduled task in one synchronous burst before
+yielding to the browser (`Scheduler.ts:196-221`, read directly, not assumed), so manual
+rAF batching adds nothing. What does matter is _how many separate fiber continuations_
+run inside that burst: one per cell (`renderCell`, 160 at 160 cols) versus what one
+binding per _row_ would cost (1, looping over all 160 cells in plain JS).
+
+A second throwaway spike tested this: `renderRow`'s `high` branch replaced with one
+forked fiber per row instead of one per cell, mounting `cols` static spans together and
+reading them back via the row `<div>`'s own `ref` and `.children`, diffing char and style
+in a plain loop. Prediction, written down first: rows/s at 160x48 under load should land
+_above_ `med`'s ~2200 if fiber-dispatch count is the constraint; near ~1400 again if it
+is not.
+
+Result: `high` at `load=high` reached 4973 rows/s at a full 120fps, the same fps ceiling
+`low` and `med` also hit in this environment. That means `high` is no longer the
+rendering constraint at this size at all, not merely improved. Read that as hitting a
+shared ceiling, not as "`high` is faster than `low`" (a ranking the numbers don't
+actually support once both are ceiling-bound). Sweep B showed the same ceiling effect
+across all five sizes.
+
+**The DOM-node-count hypothesis is falsified as a result.** 7,680 spans are fine when one
+continuation drives all of them per row-change. This is the session's second falsified
+prediction, and it is recorded the same way as the first (Update 1): the original claim
+stays, marked wrong, rather than quietly replaced.
+
+**A real test gap surfaced, traced to the test, not the rendering fix.**
+`pixel-grid.browser.test.ts`'s "holds the lock across all three render strategies" test
+failed reproducibly (3/3) against the spike; the committed baseline passed cleanly (4/4).
+Cause: the test's post-switch wait checks only that 24 row `<div>`s exist, not that their
+content has rendered, and there is a real one-scheduler-tick gap between a row's
+structural mount and a reactive child stream's first emission. Waiting for content too
+(the same discipline `mountLocked` already applies by gating on the pixel-lock, not just
+row count) fixed it deterministically (5/5). Not carried as a diff against the spike,
+since it can't be validated against a tree where nothing is broken yet; it travels with
+whatever change makes it necessary.
+
+**Why the spike exposes this and the shipped fix does not: untraced.** The working
+hypothesis is that tearing down 24 fibers instead of 160 changes teardown timing enough
+to expose a gap that was always there. Equally plausible: it is specifically the fiber
+_count_ being interrupted, not overall speed, that matters. Nothing here distinguishes
+the two, and it is named as open rather than asserted.
+
 ## Status
 
-Both fixes are real, confirmed, and now properly implemented: `handleStyle`'s diff
-(Update 1, ~12% of the gap) and collapsing `high`'s two per-cell bindings into one
-(Updates 2-3, ~3x of the gap). Neither touched `packages/dom`'s public surface for the
-second fix (it lives entirely in `examples/tmux`), so the high-effort review gate applied
-only to the first. The remaining gap to `med` (per-cell DOM node count, not binding
-count) is untested and is the next thing to pick up, per `next-steps.md` item 9.
+Three fixes are real, confirmed, and now all properly implemented: `handleStyle`'s diff
+(Update 1, ~12% of the original gap), collapsing two per-cell bindings into one (Updates
+2-3, ~3x), and collapsing further to one binding per row (Update 4, closes the remaining
+gap to `med` entirely at this size). Only the first touched `packages/dom`'s public
+surface, so the high-effort review gate applied only there. `renderRowHigh` in
+`terminal.ts` replaced `renderCell`/`renderRowCells`; `pixel-grid.browser.test.ts`'s
+post-switch wait now checks content, not just row count, per Update 4's finding.
+`vp run check`, `vp run test` (870/870), and `vp run test:browser` (115/116, the same
+pre-existing unrelated skip) are all green, the latter run several times given the
+timing sensitivity Update 4 surfaced. `high` at 160x48 under `load=high`: 5083 rows/s at
+a full 120fps, matching the spike within noise and the same environment ceiling `low`
+and `med` also hit. The DOM-node-count hypothesis this section previously named as the
+next suspect is falsified (Update 4); there is no next suspect currently identified for
+further gains at this size.

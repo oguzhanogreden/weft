@@ -216,42 +216,51 @@ function camelToKebab(key: string): string {
 }
 
 /**
- * `high`'s cell: one binding drives both text and style, diffed against the
- * cell's last-applied values. Two independent bindings per cell (style, plus
- * a separate child-text stream) were the dominant cost under load; collapsing
- * to one roughly tripled measured throughput (`perf-analysis.md`).
+ * `high`'s row: one binding drives every cell's text and style together,
+ * diffed per cell against its last-applied values. `cols` static spans mount
+ * as siblings; once the row `<div>` itself resolves, its `.children` gives
+ * every span without a binding each, and one forked fiber loops over all of
+ * them per row-change. One binding per cell (160 at 160 cols) was still the
+ * dominant cost under load; one per row removed the gap to `med` entirely at
+ * this size (`perf-analysis.md`).
  */
-function renderCell(changes: Stream.Stream<Row>, c: number): Node<never, Scope.Scope> {
+function renderRowHigh(changes: Stream.Stream<Row>, cols: number): Node<never, Scope.Scope> {
   return Effect.gen(function* () {
-    const elRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
-    let previousChar = " ";
-    let previousStyle: Record<string, string> = {};
+    const rowRef = yield* SubscriptionRef.make<Option.Option<HTMLElement>>(Option.none());
 
     yield* pipe(
-      SubscriptionRef.changes(elRef),
+      SubscriptionRef.changes(rowRef),
       Stream.filter(Option.isSome),
       Stream.take(1),
-      Stream.runForEach((el) => {
-        // Safe: `h.span` below gives this element exactly one static string
-        // child, so `firstChild` is a `Text` node by construction.
-        const textNode = el.value.firstChild as Text;
+      Stream.runForEach((rowEl) => {
+        // Safe: the static spans below are this element's only children, so
+        // `.children` gives exactly `cols` of them, in column order.
+        const spans = [...rowEl.value.children] as HTMLElement[];
+        // Safe: each span below has exactly one static string child.
+        const textNodes = spans.map((span) => span.firstChild as Text);
+        const previousChars: string[] = spans.map(() => " ");
+        const previousStyles: Array<Record<string, string>> = spans.map(() => ({}));
+
         return pipe(
           changes,
           Stream.runForEach((row) =>
             Effect.sync(() => {
-              const cell = row[c];
-              const char = cell?.char ?? " ";
-              if (char !== previousChar) {
-                textNode.data = char;
-                previousChar = char;
-              }
-              const style = cellStyle(cell?.style ?? DEFAULT_STYLE);
-              for (const [key, value] of Object.entries(style)) {
-                if (previousStyle[key] !== value) {
-                  el.value.style.setProperty(camelToKebab(key), value);
+              for (let c = 0; c < cols; c++) {
+                const cell = row[c];
+                const char = cell?.char ?? " ";
+                if (char !== previousChars[c]) {
+                  textNodes[c]!.data = char;
+                  previousChars[c] = char;
                 }
+                const style = cellStyle(cell?.style ?? DEFAULT_STYLE);
+                const prevStyle = previousStyles[c]!;
+                for (const [key, value] of Object.entries(style)) {
+                  if (prevStyle[key] !== value) {
+                    spans[c]!.style.setProperty(camelToKebab(key), value);
+                  }
+                }
+                previousStyles[c] = style;
               }
-              previousStyle = style;
             }),
           ),
         );
@@ -259,16 +268,11 @@ function renderCell(changes: Stream.Stream<Row>, c: number): Node<never, Scope.S
       Effect.forkScoped,
     );
 
-    return yield* h.span({ ref: elRef }, " ");
+    return yield* h.div(
+      { ref: rowRef, class: "term-row" },
+      Array.from({ length: cols }, () => h.span({}, " ")),
+    );
   });
-}
-
-/** `high`: one `<span>` per cell, each with its own single reactive binding (see `renderCell`). */
-function renderRowCells(
-  changes: Stream.Stream<Row>,
-  cols: number,
-): ReadonlyArray<Node<never, Scope.Scope>> {
-  return Array.from({ length: cols }, (_unused, c) => renderCell(changes, c));
 }
 
 /** Render one row per the strategy: monochrome text segments, or coloured cells. */
@@ -279,7 +283,7 @@ function renderRow(
 ): Node<never, Scope.Scope> {
   const changes = SubscriptionRef.changes(ref);
   if (strategy === "high") {
-    return h.div({ class: "term-row" }, renderRowCells(changes, cols));
+    return renderRowHigh(changes, cols);
   }
   const segments = segmentsFor(strategy, cols);
   return h.div(
