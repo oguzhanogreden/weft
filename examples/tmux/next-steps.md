@@ -34,6 +34,14 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   `TMUX_SESSION` makes a dropped connection reconnect into the same tmux session. Reconnect is
   automatic with exponential backoff, capped and eventually paused, shown as a status dot. Unit-,
   backend-, and browser-tested.
+- Read-only multi-viewer access: a second token (`PTY_VIEW_TOKEN`) grants a read-only
+  `tmux attach -r` instead of the read-write shell, role decided server-side purely by which token
+  matches. Built on tmux's own multi-client and `ignore-size` support (verified against the
+  installed tmux's man page and empirically, not assumed) rather than a bespoke broadcast layer, so
+  it needs `TMUX_SESSION` set. The presenter's control bar can share a viewer link (a one-time
+  `view-token` WebSocket text frame, kept off the hot binary PTY-byte path); a viewer's screen is
+  the grid and a status dot, nothing else. Unit-, backend-, and browser-tested, including an
+  end-to-end backend test that a viewer's typed input never reaches the real shell.
 
 Rendering is single-pane. Colour renders per cell at the `high` strategy, now the default, so real
 programs open in colour. The items below are ordered roughly by value.
@@ -73,13 +81,15 @@ Open refinements:
 - Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
   becomes a bottleneck.
 
-## 3. Mobile, resize, and remote access: landed, verification open
+## 3. Mobile, resize, remote access, and read-only viewing: landed, verification open
 
-Auto-fit (AC-RESIZE), touch input (AC-MOBILE), and remote access (AC-REMOTE) all landed. The grid
-fits the viewport on load and on every debounced resize, a preset click pins it and stops
-tracking, and `auto` resumes. Touch input rides a hidden textarea plus an accessory row with a
-sticky Ctrl. An instance is reachable from another device over Tailscale, with a token gate,
-session persistence, and automatic reconnect. All three are unit-, backend-, or browser-tested.
+Auto-fit (AC-RESIZE), touch input (AC-MOBILE), remote access (AC-REMOTE), and read-only
+multi-viewer access (AC-STREAM) all landed. The grid fits the viewport on load and on every
+debounced resize, a preset click pins it and stops tracking, and `auto` resumes. Touch input rides
+a hidden textarea plus an accessory row with a sticky Ctrl. An instance is reachable from another
+device over Tailscale, with a token gate, session persistence, and automatic reconnect. A second
+token grants read-only `tmux attach -r` access instead, shareable from the control bar. All four
+are unit-, backend-, or browser-tested.
 
 What is not yet verified is the part none of those test layers can show:
 
@@ -93,9 +103,14 @@ What is not yet verified is the part none of those test layers can show:
 - **Consider a font-size control.** A phone fits ~43 columns at 13px and ~57 at 10px. Several
   TUIs need more than 43 to be usable at all, so a smaller font may matter more than any of the
   above.
+- **Share a link with an actual second device or person.** The backend test proves a viewer's
+  input never reaches the shell; it does not prove watching feels smooth, that the share button's
+  clipboard copy works on the presenter's actual device/browser, or that a viewer's own auto-fit
+  settles cleanly on a phone-sized viewport.
 
 Done when: a real phone, over a real tailnet, can drive a shell, including `Ctrl-C` and a
-sleep/wake cycle, without a hardware keyboard or a shared LAN.
+sleep/wake cycle, without a hardware keyboard or a shared LAN, and a second device can watch that
+same session live via a shared read-only link.
 
 ## 4. Two `@weftui/core` HTML-attribute defects (found from this example)
 

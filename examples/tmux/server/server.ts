@@ -1,11 +1,15 @@
 /**
  * PTY-over-WebSocket backend for the `examples/tmux` demo.
  *
- * One WebSocket connection == one pane == one shell PTY. Wire protocol:
+ * One WebSocket connection == one pane == one shell PTY (read-write), or one
+ * read-only `tmux attach -r` (a viewer, see `src/specs.md`, AC-STREAM). Wire
+ * protocol:
  *   - client -> server: JSON text frames
  *       { type: "input", data: string }         keystrokes
  *       { type: "resize", cols: number, rows: number }
- *   - server -> client: binary frames = raw PTY output bytes
+ *   - server -> client: binary frames = raw PTY output bytes; one JSON text
+ *     frame, `{ type: "view-token", token: string }`, sent once to a
+ *     read-write connection if `PTY_VIEW_TOKEN` is configured (AC-STREAM)
  *
  * Initial size comes from the `?cols=&rows=` query string. Closing the socket
  * kills the shell, so no PTY outlives its pane.
@@ -70,14 +74,45 @@ export interface ShellCommand {
 	readonly args: readonly string[];
 }
 
+/** Which access a connection gets: read-write (presenter) or read-only (viewer). */
+export type ConnectionRole = "presenter" | "viewer";
+
 /**
- * The shell command for a new connection. When `TMUX_SESSION` is set, spawns
- * `tmux new -A -s <name>`, so a dropped socket's reconnect re-attaches to the
- * same session instead of starting a fresh one. Otherwise spawns `SHELL` with no
- * arguments, today's behavior (see `src/specs.md`, AC-REMOTE).
+ * Which role, if any, `provided` grants. Checked against the view token
+ * first, so an explicit view-token match always yields `"viewer"` even when
+ * `presenterToken` is unset (open access): an explicit read-only credential
+ * should not silently upgrade to read-write just because presenter access
+ * happens to be open. Falls back to `checkToken`'s existing behavior for
+ * `"presenter"`. `null` means neither matched: reject the connection (see
+ * `src/specs.md`, AC-STREAM).
+ *
+ * Implemented here rather than left `declare`d: `startServer`'s connection
+ * handler calls this on every connection, including in the already-passing
+ * AC-REMOTE tests, so a bodyless stub would throw the moment any of them ran.
  */
-export function resolveShellCommand(env: NodeJS.ProcessEnv): ShellCommand {
+export function resolveRole(
+	presenterToken: string | null,
+	viewToken: string | null,
+	provided: string | null,
+): ConnectionRole | null {
+	if (viewToken !== null && provided !== null && checkToken(viewToken, provided)) return "viewer";
+	if (checkToken(presenterToken, provided)) return "presenter";
+	return null;
+}
+
+/**
+ * The shell command for a new connection. For `"viewer"`, attaches read-only
+ * to the named session (`tmux attach -t <name> -r`); the caller must already
+ * have verified `env.TMUX_SESSION` is set before choosing this role, since
+ * there is no session to attach to otherwise (see `src/specs.md`, AC-STREAM).
+ * For `"presenter"`, spawns `tmux new -A -s <name>` when `TMUX_SESSION` is
+ * set, so a dropped socket's reconnect re-attaches to the same session
+ * instead of starting a fresh one, otherwise spawns `SHELL` with no
+ * arguments, today's default behavior (see `src/specs.md`, AC-REMOTE).
+ */
+export function resolveShellCommand(env: NodeJS.ProcessEnv, role: ConnectionRole): ShellCommand {
 	const session = env.TMUX_SESSION;
+	if (role === "viewer") return { command: "tmux", args: ["attach", "-t", session!, "-r"] };
 	if (session) return { command: "tmux", args: ["new", "-A", "-s", session] };
 	return { command: env.SHELL ?? "bash", args: [] };
 }
@@ -92,6 +127,8 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 	// Read fresh per call, not hoisted to module scope, so a test can set/unset
 	// it around each `startServer` call.
 	const ptyToken = process.env.PTY_TOKEN || null;
+	const viewToken = process.env.PTY_VIEW_TOKEN || null;
+	const tmuxSession = process.env.TMUX_SESSION || null;
 
 	const httpServer = createServer();
 	const wss = new WebSocketServer({ server: httpServer });
@@ -99,8 +136,13 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 	wss.on("connection", (socket, request) => {
 		const url = new URL(request.url ?? "/", "http://localhost");
 
-		if (!checkToken(ptyToken, url.searchParams.get("token"))) {
+		const role = resolveRole(ptyToken, viewToken, url.searchParams.get("token"));
+		if (role === null) {
 			socket.close(1008, "unauthorized");
+			return;
+		}
+		if (role === "viewer" && tmuxSession === null) {
+			socket.close(1008, "viewing requires TMUX_SESSION");
 			return;
 		}
 
@@ -113,7 +155,7 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 			console.log(`capturing PTY output to ${capturePath}`);
 		}
 
-		const { command, args } = resolveShellCommand(process.env);
+		const { command, args } = resolveShellCommand(process.env, role);
 		const shell = spawn(command, args, {
 			name: "xterm-256color",
 			cols,
@@ -121,6 +163,12 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 			cwd: process.env.HOME,
 			env: process.env as Record<string, string>,
 		});
+
+		// A presenter who could be handed a view token to share it with (AC-STREAM).
+		// Sent as a text frame; PTY output below stays binary, unchanged.
+		if (role === "presenter" && viewToken !== null) {
+			socket.send(JSON.stringify({ type: "view-token", token: viewToken }));
+		}
 
 		shell.onData((data) => {
 			if (capturePath) appendFileSync(capturePath, data);
@@ -166,9 +214,17 @@ function clampDim(raw: string | null, fallback: number): number {
 // Auto-start when run directly (`npm start`), not when imported by the test.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
 	void startServer().then((server) => {
-		const { command } = resolveShellCommand(process.env);
+		const { command } = resolveShellCommand(process.env, "presenter");
 		const tokenNote = process.env.PTY_TOKEN ? ", token required" : "";
+		const viewNote =
+			process.env.PTY_VIEW_TOKEN && process.env.TMUX_SESSION
+				? ", viewing enabled"
+				: process.env.PTY_VIEW_TOKEN
+					? ", PTY_VIEW_TOKEN set but TMUX_SESSION is not: viewing will reject every connection"
+					: "";
 		// oxlint-disable-next-line no-console
-		console.log(`tmux PTY backend on ws://${server.address}:${server.port} (shell: ${command}${tokenNote})`);
+		console.log(
+			`tmux PTY backend on ws://${server.address}:${server.port} (shell: ${command}${tokenNote}${viewNote})`,
+		);
 	});
 }

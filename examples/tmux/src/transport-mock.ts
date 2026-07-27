@@ -5,7 +5,7 @@
  * without a real `node-pty` server (see `src/specs.md`, AC-TRANSPORT / AC-TEST).
  */
 
-import { Effect, Layer, Stream, SubscriptionRef } from "effect";
+import { Effect, Layer, Option, Stream, SubscriptionRef } from "effect";
 import {
   type ConnectionStatus,
   type PaneSession,
@@ -31,6 +31,12 @@ export interface MockHandle {
    * test unrelated to connection state is unaffected.
    */
   readonly setStatus: (status: ConnectionStatus) => Effect.Effect<void>;
+  /**
+   * Drive the session's share URL, so a test can simulate the backend's
+   * `view-token` message without a real socket (AC-STREAM). Starts at `None`,
+   * matching a connection that has not (yet, or ever) received one.
+   */
+  readonly setShareUrl: (url: Option.Option<string>) => Effect.Effect<void>;
 }
 
 /** Build a mock transport whose spawned session replays `chunks` then ends. */
@@ -38,9 +44,11 @@ export const makeMockTransport = (chunks: readonly string[]): MockHandle => {
   const writes: string[] = [];
   const resizes: SpawnOptions[] = [];
   const statusRef = Effect.runSync(SubscriptionRef.make<ConnectionStatus>("live"));
+  const shareUrlRef = Effect.runSync(SubscriptionRef.make<Option.Option<string>>(Option.none()));
   const session: PaneSession = {
     output: Stream.fromIterable(chunks).pipe(Stream.map((chunk) => encoder.encode(chunk))),
     status: SubscriptionRef.changes(statusRef),
+    shareUrl: SubscriptionRef.changes(shareUrlRef),
     write: (data) =>
       Effect.gen(function* () {
         if ((yield* SubscriptionRef.get(statusRef)) !== "live") return;
@@ -52,5 +60,11 @@ export const makeMockTransport = (chunks: readonly string[]): MockHandle => {
       }),
   };
   const layer = Layer.succeed(PtyTransport, { spawn: () => Effect.succeed(session) });
-  return { layer, writes, resizes, setStatus: (status) => SubscriptionRef.set(statusRef, status) };
+  return {
+    layer,
+    writes,
+    resizes,
+    setStatus: (status) => SubscriptionRef.set(statusRef, status),
+    setShareUrl: (url) => SubscriptionRef.set(shareUrlRef, url),
+  };
 };

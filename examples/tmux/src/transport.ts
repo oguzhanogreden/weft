@@ -4,7 +4,7 @@
  * component code (see `src/specs.md`, AC-TRANSPORT).
  */
 
-import { Context, Data, type Effect, type Scope, type Stream } from "effect";
+import { Context, Data, type Effect, type Option, type Scope, type Stream } from "effect";
 
 /** Initial (and resize) grid dimensions for a spawned shell. */
 export interface SpawnOptions {
@@ -26,6 +26,12 @@ export interface PaneSession {
   readonly output: Stream.Stream<Uint8Array>;
   /** Current connection state. Emits on subscribe, so a late subscriber is never blank. */
   readonly status: Stream.Stream<ConnectionStatus>;
+  /**
+   * A shareable read-only viewer URL, once the backend has sent one. `None` for
+   * the life of a viewer's own connection, which never receives it (see
+   * `src/specs.md`, AC-STREAM).
+   */
+  readonly shareUrl: Stream.Stream<Option.Option<string>>;
   /** Send keystrokes to the shell. Dropped, not queued, while not `live`. */
   readonly write: (data: string) => Effect.Effect<void>;
   /** Tell the shell the grid was resized. */

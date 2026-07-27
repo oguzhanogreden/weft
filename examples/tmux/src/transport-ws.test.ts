@@ -1,6 +1,12 @@
 import * as assert from "node:assert/strict";
 import { describe, it } from "vite-plus/test";
-import { attemptAfter, buildConnectUrl, deriveWsUrl, nextReconnectDecision } from "./transport-ws";
+import {
+  attemptAfter,
+  buildConnectUrl,
+  buildShareUrl,
+  deriveWsUrl,
+  nextReconnectDecision,
+} from "./transport-ws";
 
 describe("deriveWsUrl (AC-REMOTE)", () => {
   it("maps http: to ws:", () => {
@@ -59,6 +65,37 @@ describe("buildConnectUrl (AC-REMOTE)", () => {
       rows: 48,
     });
     assert.equal(url, "wss://laptop.ts.net/pty?token=tok&cols=160&rows=48");
+  });
+});
+
+describe("buildShareUrl (AC-STREAM)", () => {
+  it("builds a page URL (not /pty) with the token and role=viewer", () => {
+    const url = buildShareUrl({ protocol: "http:", host: "localhost:5173" }, "abc123");
+    assert.equal(url, "http://localhost:5173/?token=abc123&role=viewer");
+  });
+
+  it("maps https: to https:, unlike deriveWsUrl's ws:/wss: mapping", () => {
+    const url = buildShareUrl({ protocol: "https:", host: "laptop.ts.net" }, "abc123");
+    assert.equal(url, "https://laptop.ts.net/?token=abc123&role=viewer");
+  });
+
+  it("preserves the host verbatim, port included", () => {
+    const url = buildShareUrl({ protocol: "http:", host: "192.168.1.5:5173" }, "abc123");
+    assert.equal(url, "http://192.168.1.5:5173/?token=abc123&role=viewer");
+  });
+
+  it("percent-encodes a token that needs it", () => {
+    const url = buildShareUrl({ protocol: "http:", host: "localhost:5173" }, "a b&c");
+    assert.equal(url, "http://localhost:5173/?token=a+b%26c&role=viewer");
+  });
+
+  it("role=viewer is always present, even for an empty-string token", () => {
+    // Unlike deriveWsUrl, where an empty token omits the param entirely: a
+    // share link with no token would be meaningless to hand out, so this is
+    // a case that should not come up (buildShareUrl is only ever called with
+    // a real PTY_VIEW_TOKEN value), not one worth a silent special case.
+    const url = buildShareUrl({ protocol: "http:", host: "localhost:5173" }, "");
+    assert.equal(url, "http://localhost:5173/?token=&role=viewer");
   });
 });
 

@@ -34,6 +34,22 @@ export function deriveWsUrl(location: Pick<Location, "protocol" | "host">, token
   return url.toString();
 }
 
+/**
+ * The page URL a presenter can hand out for read-only viewing: same origin,
+ * the view token, and `role=viewer` (a frontend-only hint `main.ts` reads to
+ * mount `ViewerApp`; the server decides access purely from the token, see
+ * `src/specs.md`, AC-STREAM).
+ */
+export function buildShareUrl(
+  location: Pick<Location, "protocol" | "host">,
+  viewToken: string,
+): string {
+  const url = new URL(`${location.protocol}//${location.host}/`);
+  url.searchParams.set("token", viewToken);
+  url.searchParams.set("role", "viewer");
+  return url.toString();
+}
+
 /** The outcome of a WebSocket close: retry after a delay, pause until re-armed, or stop for good. */
 export type ReconnectDecision =
   | { readonly _tag: "retry"; readonly delayMillis: number }
@@ -77,6 +93,30 @@ interface ConnectionResources {
   readonly statusRef: SubscriptionRef.SubscriptionRef<ConnectionStatus>;
   readonly socketRef: Ref.Ref<Option.Option<WebSocket>>;
   readonly sizeRef: Ref.Ref<SpawnOptions>;
+  readonly shareUrlRef: SubscriptionRef.SubscriptionRef<Option.Option<string>>;
+}
+
+/**
+ * Handle one text-frame control message from the backend (binary frames are
+ * PTY output and never reach here). Currently only `view-token` (AC-STREAM);
+ * an unrecognized or malformed frame is ignored rather than failing the
+ * connection, the same tolerance `server.ts` extends to a bad client frame.
+ */
+function handleControlMessage(data: string, resources: ConnectionResources): Effect.Effect<void> {
+  return Effect.gen(function* () {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      return;
+    }
+    if (typeof parsed !== "object" || parsed === null) return;
+    const msg = parsed as { type?: unknown; token?: unknown };
+    if (msg.type === "view-token" && typeof msg.token === "string") {
+      const url = buildShareUrl(window.location, msg.token);
+      yield* SubscriptionRef.set(resources.shareUrlRef, Option.some(url));
+    }
+  });
 }
 
 /** The outcome of one connection attempt: its close code, and whether it ever reached `live`. */
@@ -105,8 +145,11 @@ function attemptConnection(
 
       yield* pipe(
         Stream.fromEventListener<MessageEvent>(ws, "message"),
-        Stream.map((event) => new Uint8Array(event.data as ArrayBuffer)),
-        Stream.runForEach((bytes) => Queue.offer(resources.queue, bytes)),
+        Stream.runForEach((event) =>
+          typeof event.data === "string"
+            ? handleControlMessage(event.data, resources)
+            : Queue.offer(resources.queue, new Uint8Array(event.data as ArrayBuffer)),
+        ),
         Effect.forkScoped,
       );
 
@@ -234,7 +277,8 @@ const spawn = (options: SpawnOptions): Effect.Effect<PaneSession, never, Scope.S
     const statusRef = yield* SubscriptionRef.make<ConnectionStatus>("connecting");
     const socketRef = yield* Ref.make<Option.Option<WebSocket>>(Option.none());
     const sizeRef = yield* Ref.make<SpawnOptions>(options);
-    const resources: ConnectionResources = { queue, statusRef, socketRef, sizeRef };
+    const shareUrlRef = yield* SubscriptionRef.make<Option.Option<string>>(Option.none());
+    const resources: ConnectionResources = { queue, statusRef, socketRef, sizeRef, shareUrlRef };
 
     const token = new URLSearchParams(window.location.search).get("token") ?? undefined;
     yield* Effect.forkScoped(runConnectionLoop(window.location, token, resources));
@@ -248,6 +292,7 @@ const spawn = (options: SpawnOptions): Effect.Effect<PaneSession, never, Scope.S
     return {
       output: Stream.fromQueue(queue),
       status: SubscriptionRef.changes(statusRef),
+      shareUrl: SubscriptionRef.changes(shareUrlRef),
       write: (data) => sendIfLive({ type: "input", data }),
       resize: (cols, rows) =>
         Effect.andThen(

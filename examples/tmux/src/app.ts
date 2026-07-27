@@ -62,8 +62,11 @@ export interface AppOptions {
   readonly rows?: number;
 }
 
-/** How long a resize must settle before re-fitting; each re-fit rebuilds the grid. */
-const RESIZE_SETTLE = "150 millis";
+/**
+ * How long a resize must settle before re-fitting; each re-fit rebuilds the
+ * grid. Exported: `ViewerApp` auto-fits too and must debounce identically.
+ */
+export const RESIZE_SETTLE = "150 millis";
 
 const STRATEGIES: ReadonlyArray<Strategy> = ["low", "med", "high"];
 const LOADS: ReadonlyArray<LoadLevel> = ["off", "low", "med", "high"];
@@ -83,6 +86,20 @@ const STATUS_LABEL: Record<ConnectionStatus, string> = {
   unauthorized: "unauthorized",
 };
 
+/**
+ * The connection-status dot: reflects `status` via class, `data-status`, and
+ * text. Shared between `App`'s control bar and `ViewerApp` (AC-STREAM), which
+ * has no control bar to put one in otherwise.
+ */
+export const statusDot = (status: Stream.Stream<ConnectionStatus>): Node<never, never> =>
+  h.span(
+    {
+      class: Stream.map(status, (s) => `status status-${s}`),
+      "data-status": Stream.map(status, (s): string => s),
+    },
+    [Stream.map(status, (s) => STATUS_LABEL[s])],
+  );
+
 interface ControlBarProps {
   readonly strategyRef: SubscriptionRef.SubscriptionRef<Strategy>;
   readonly loadRef: SubscriptionRef.SubscriptionRef<LoadLevel>;
@@ -90,6 +107,7 @@ interface ControlBarProps {
   readonly trackingRef: SubscriptionRef.SubscriptionRef<boolean>;
   readonly openRef: SubscriptionRef.SubscriptionRef<boolean>;
   readonly status: Stream.Stream<ConnectionStatus>;
+  readonly shareUrl: Stream.Stream<Option.Option<string>>;
   readonly fps: Stream.Stream<number>;
   readonly rowsPerSec: Stream.Stream<number>;
 }
@@ -126,6 +144,29 @@ const resumeAuto = (props: ControlBarProps): Effect.Effect<void> =>
     // would re-pin on next load and silently undo the resume.
     yield* SubscriptionRef.set(props.trackingRef, true);
   });
+
+/** Write a share URL to the clipboard (see `src/specs.md`, AC-STREAM). */
+const copyShareUrl = (url: string): Effect.Effect<void> =>
+  Effect.promise(() => navigator.clipboard.writeText(url));
+
+/**
+ * The share control: a "share" button once `shareUrl` resolves to `Some`,
+ * nothing before (AC-STREAM). Its own function, like `renderRow`/`renderRows`
+ * in `terminal.ts`, rather than inlined into `controlBar`'s tree.
+ */
+const shareControl = (
+  shareUrl: Stream.Stream<Option.Option<string>>,
+): Stream.Stream<Node<never, never>> =>
+  Stream.map(shareUrl, (url) =>
+    Option.match(url, {
+      onNone: () => h.span({ class: "share", "aria-hidden": "true" }, []),
+      onSome: (url) =>
+        h.button(
+          { type: "button", class: "level share", onclick: () => copyShareUrl(url) },
+          "share",
+        ),
+    }),
+  );
 
 const controlBar = (props: ControlBarProps): Node<never, never> =>
   h.div({ class: "controls" }, [
@@ -185,14 +226,9 @@ const controlBar = (props: ControlBarProps): Node<never, never> =>
           gridSizeLabel(size),
         ),
       ),
+      shareControl(props.shareUrl),
     ]),
-    h.span(
-      {
-        class: Stream.map(props.status, (s) => `status status-${s}`),
-        "data-status": Stream.map(props.status, (s): string => s),
-      },
-      [Stream.map(props.status, (s) => STATUS_LABEL[s])],
-    ),
+    statusDot(props.status),
     h.span({ class: "meter fps" }, ["fps: ", Stream.map(props.fps, (n) => String(n))]),
     h.span({ class: "meter rows" }, ["rows/s: ", Stream.map(props.rowsPerSec, (n) => String(n))]),
   ]);
@@ -414,6 +450,7 @@ export const App = (options: AppOptions = {}): Node<TransportError, PtyTransport
         trackingRef,
         openRef,
         status: session.status,
+        shareUrl: session.shareUrl,
         fps: fps.stream,
         rowsPerSec: rate.stream,
       }),

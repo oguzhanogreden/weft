@@ -117,6 +117,10 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
   than a single socket's event stream; `spawn` itself can no longer fail (`TransportError` stays
   declared on the service for forward-compatibility, but nothing produces it today), since a
   connection's fate is reported through `status` instead.
+- The interface gains `shareUrl: Stream<Option<string>>` (AC-STREAM): `Some` once a read-write
+  connection receives the backend's `view-token` control message and `PTY_VIEW_TOKEN` is
+  configured, `None` otherwise (including for the life of a viewer's own connection, which never
+  receives that message).
 
 ### AC-RENDER — three switchable render levels (`src/terminal.ts`, `src/perf.ts`) ✅
 
@@ -459,7 +463,93 @@ Expected behaviour and edge cases:
   an `unauthorized` dot. That is the intended read: the UI works, the shell is refused, and the
   dot says which. It is not a blank page with nothing to go on.
 
-### AC-TEST 🚧 (unit + backend + hermetic browser done, including AC-REMOTE; mux assertions pending)
+### AC-STREAM — read-only multi-viewer access (`src/transport-ws.ts`, `src/app.ts`, `src/viewer-app.ts`, `src/main.ts`, `server/server.ts`) ✅
+
+AC-REMOTE makes the shell reachable from one other device, read-write, with one shared secret.
+This criterion adds a second, read-only role: anyone holding a separate view credential can watch
+the same live session, and the presenter can hand that credential out from inside the app. Many
+viewers, one shell, no keystrokes leave the presenter's hands.
+
+**Built on tmux, not reimplemented.** tmux already solves "multiple clients attached to one
+session, one of them read-only": `attach-session -r` is documented as an alias for
+`-f read-only,ignore-size` (tmux 3.6a man page). Verified empirically, not just from the docs:
+input written to a `-r` client's PTY never reaches the shell (a scripted `echo` sent to a
+read-only-attached client never appeared in `tmux capture-pane`'s output), and a `-r` client's own
+terminal size, both smaller and larger than the session's, left the shared window's dimensions
+unchanged throughout. This criterion is therefore gated on `TMUX_SESSION` being set (AC-REMOTE's
+existing session-durability env var): without a named session there is nothing for a viewer to
+attach to. No new session registry, broadcast queue, or fan-out code is needed; the backend spawns
+`tmux attach -t <name> -r` for a viewer exactly as it spawns `tmux new -A -s <name>` for the
+presenter.
+
+**Auth.** A second shared token, `PTY_VIEW_TOKEN`, off by default like `PTY_TOKEN`.
+
+- Role is decided server-side, from _which_ token a connection presents, never from a
+  client-asserted flag: `?token=` matching `PTY_VIEW_TOKEN` gets read-only `tmux attach -r`;
+  matching `PTY_TOKEN` (or no token, when `PTY_TOKEN` is unset) gets the existing read-write path.
+  A client-asserted role would let anyone holding either token pick read-write for themselves;
+  checking only which secret matched keeps it a real boundary rather than a UI toggle.
+- If the view token matches but `TMUX_SESSION` is unset, the connection is rejected with the
+  existing close code 1008 (same as a wrong token), reason string `"viewing requires
+TMUX_SESSION"`. Deliberately not a new `ConnectionStatus`/close code: the viewer sees
+  `unauthorized`, which is not inaccurate (their credential did not get them a session), and it
+  avoids a fifth status label, a fifth CSS colour, and a new terminal-code branch in
+  `nextReconnectDecision` for a state that only exists when the operator half-configured the
+  server. The precise reason string is for the operator's logs, not the client UI.
+- Compared with the same constant-time helper `checkToken` already uses.
+
+**Sharing.** The presenter's page can hand out a viewer link without leaving the app.
+
+- On a successful read-write connection, if `PTY_VIEW_TOKEN` is configured, the backend sends one
+  control message over the same socket: `{ type: "view-token", token }`, as a text frame. PTY
+  output stays binary frames, unchanged; the client tells the two apart by `typeof event.data`,
+  not by wrapping every chunk in a JSON envelope. This example is a perf benchmark (`src/perf.ts`,
+  `perf-analysis.md`); paying JSON overhead on the hot per-chunk path to support a message sent
+  once per connection is the wrong trade.
+- `PaneSession` gains `shareUrl: Stream<Option<string>>`. The transport combines a received
+  `view-token` message with the page's own origin into a full URL
+  (`<origin>/?token=<view-token>&role=viewer`) via a new pure helper, `buildShareUrl`, alongside
+  `deriveWsUrl`/`buildConnectUrl`. Set once per session and not reset across reconnects, since the
+  token does not change.
+- The control bar gains a "Share" action, visible only once `shareUrl` resolves to `Some`, that
+  copies the URL to the clipboard. A viewer connection never receives the message, so its
+  `shareUrl` stays `None`; moot anyway, since `ViewerApp` (below) has no control bar to put it in.
+
+**Viewer UI.** `role=viewer` in the page URL is a frontend-only hint, read synchronously at mount
+by `main.ts`, independent of the auth decision above: which token you present decides what the
+_server_ lets you do; this decides what the _page_ renders. Present, `main.ts` mounts `ViewerApp`
+instead of `App`.
+
+- `ViewerApp` (`src/viewer-app.ts`): the terminal grid, pixel-locked and auto-fit exactly like
+  `App`'s (sharing `makeGrid`/`pump`/`renderRows` and the fit/pixel-lock helpers), plus the
+  connection-status dot. No control bar, no perf harness, no accessory row, no keyboard/textarea
+  wiring. A viewer did not choose to run a benchmark; they are watching someone's shell. Always
+  auto-fit; there is no size picker to pin a size with.
+- `write`/`resize` are simply never called from `ViewerApp`. Combined with tmux's own enforcement,
+  that is two independent reasons a viewer's keystrokes cannot reach the shell. Deliberately not a
+  third, transport-level guard: `PtyTransportWebSocketLive`'s `write`/`resize` stay role-agnostic,
+  since there is no code path by which `ViewerApp` would ever call them.
+- Reconnect (AC-REMOTE's backoff/status model) applies unchanged; `ConnectionStatus` and the retry
+  loop are role-agnostic and need no changes.
+
+Expected behaviour and edge cases:
+
+- **A viewer who opens the link before the presenter connects joins when the session appears, on
+  the existing backoff, with no special-cased waiting state.** `tmux attach -t <name> -r` exits
+  immediately when `<name>` does not exist yet; the backend's existing `shell.onExit(() =>
+socket.close())` then closes with no explicit code, which is not 1008, so the client's retry loop
+  treats it as an ordinary transient failure, not `unauthorized`. A viewer therefore just sits in
+  `connecting`/backoff until the presenter starts the session, then connects normally on the next
+  attempt. Verified against the actual `onExit` handler in `server/server.ts`, not assumed.
+- **Viewer size is real but harmless.** A viewer still auto-fits to its own viewport and reports
+  its own `cols`/`rows` like a presenter does; `ignore-size` (implied by `-r`) means tmux renders
+  that client's own view at that size without resizing the shared window, per the empirical check
+  above.
+- **A viewer can reshare nothing.** Only a read-write connection ever receives `view-token`; a
+  viewer who wants to invite someone else needs the presenter to share again, or the token itself,
+  out of band. Not solved here.
+
+### AC-TEST 🚧 (unit + backend + hermetic browser done, including AC-REMOTE and AC-STREAM; mux assertions pending)
 
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
   (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
@@ -481,6 +571,9 @@ Expected behaviour and edge cases:
   cap, the give-up boundary, and 1008 being terminal at any attempt), and the attempt-reset rule
   (`attemptAfter`: a streak of failures keeps counting, but one that reached `live` resets to 0,
   including from deep into a give-up-bound streak) ✅ with AC-REMOTE, all pure and DOM-free.
+  The share URL builder (`{ protocol, host }` plus a view token → page URL, covering the
+  `https:`-stays-`https:` contrast with `deriveWsUrl`'s `wss:` mapping, host/port preservation,
+  percent-encoding, and `role=viewer` always present) ✅ with AC-STREAM, pure and DOM-free.
   Keybinding state machine lands with AC-MUX.
 - Backend integration (Node `node --test`, `server/server.test.ts`): spawns a real PTY and
   round-trips a typed command over `ws` ✅. With AC-REMOTE it also asserts that `PTY_TOKEN` set
@@ -489,7 +582,18 @@ Expected behaviour and edge cases:
   `timingSafeEqual` path itself is exercised, not only the short-circuit ahead of it), that an
   unset `PTY_TOKEN` stays open, and that the listener binds loopback rather than every interface
   ✅. The binding assertion is the one that fails open if it regresses, so it is asserted on the
-  bound address rather than inferred from the `listen` call.
+  bound address rather than inferred from the `listen` call. With AC-STREAM: `resolveRole`'s full
+  truth table (open access, presenter-only, both tokens configured, and the case that guards the
+  real bug risk, an explicit view-token match winning even when presenter access is open) ✅;
+  `resolveShellCommand`'s viewer branch builds `tmux attach -t <name> -r` ✅; a view token is
+  rejected with 1008 when `TMUX_SESSION` is unset ✅; a presenter connection receives the
+  `view-token` message exactly once, asserted as an actual WebSocket text frame via `ws`'s
+  `isBinary` flag, not merely a JSON-parseable string ✅; a presenter connection gets no extra
+  message when `PTY_VIEW_TOKEN` is unset, so the control channel never pollutes a plain connection
+  ✅; and, spawning a real tmux session, a view-token connection's `input` message never reaches
+  the shell, asserted by `tmux capture-pane` on the session directly rather than by absence of an
+  echo (the read-only enforcement is tmux's, verified end-to-end through this repo's own server
+  code, not only by the standalone manual check the design decision was based on) ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
   selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
@@ -530,7 +634,17 @@ Expected behaviour and edge cases:
   assert the **app's** reaction to a state change, not the retry itself. The retry's own logic is
   covered by the pure decision helper in the unit tests above; what remains manual is only the real
   socket wiring in `transport-ws.ts`, consistent with
-  it having no CI coverage today. The `Ctrl-b %` two-pane assertion lands with AC-MUX. A live
+  it having no CI coverage today. With AC-STREAM: `App`'s control bar shows no share button until
+  the mock's `setShareUrl` resolves one, and clicking the button once it appears calls
+  `navigator.clipboard.writeText` with exactly that URL (the Clipboard API itself is stubbed via
+  `Object.defineProperty`, since a real browser does not reliably grant clipboard-write permission
+  to a headless, unattended page) ✅. `ViewerApp`'s own suite mounts it directly (not through
+  `App`) and asserts streamed output renders and the status dot tracks state the same as `App`'s
+  does, and, the point of the component, that none of `App`'s write-affecting or benchmark-only
+  surface exists at all: no `.controls`, no strategy/load/size buttons, no meters, no share button,
+  no accessory row, no hidden textarea, and a keydown sequence that would type `ls` into `App`
+  leaves the mock's write log empty, because there is no handler to have caught it ✅. The
+  `Ctrl-b %` two-pane assertion lands with AC-MUX. A live
   real-PTY browser run (real shell →
   `transport-ws` → reactive DOM) was validated manually; not kept in CI, since it needs the
   backend.
@@ -562,6 +676,11 @@ Expected behaviour and edge cases:
     concrete field of it, and `translateG0` a non-generic `(string) => string`. No generics,
     overloads, or conditional/inferred types, so the main typecheck already enforces the surface.
     The behaviour under test is the translation table, which is a runtime concern (unit tests).
+  - AC-STREAM specifically: `ConnectionRole` is a two-member string-literal union, and
+    `resolveRole`/`buildShareUrl` are non-generic fixed-signature functions returning it or a
+    plain `string`. No generics, overloads, or conditional/inferred types, so the main typecheck
+    already enforces the surface. The behaviour under test is token comparison, role resolution,
+    and URL construction, all runtime concerns (unit + backend tests).
 
 ## Notes / accepted deviations
 

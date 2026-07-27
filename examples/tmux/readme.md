@@ -132,6 +132,32 @@ A dropped connection retries automatically with backoff, and the status dot show
 resume as soon as the page becomes visible again (your phone waking up) or every 30 seconds either
 way, whichever comes first. `unauthorized` means the token was wrong, so retrying will not help.
 
+## Sharing a Read-Only View
+
+Beyond driving the shell yourself from another device, you can let other people watch it live,
+without giving them the ability to type. tmux already does the hard part: `attach-session -r` is
+a read-only attach, and a read-only client's own window size never resizes the shared session.
+
+Set a second token, distinct from `PTY_TOKEN`, alongside `TMUX_SESSION` (a read-only attach needs
+a named session to attach to):
+
+```bash
+PTY_VIEW_TOKEN=<a-different-secret> TMUX_SESSION=<name> ./examples/tmux/dev.sh
+```
+
+Connect as the presenter (with `PTY_TOKEN`, or with no token if you have not set one) and the
+control bar shows a `share` button. Click it to copy a viewer link to your clipboard:
+`https://<host>/?token=<view-token>&role=viewer`. Send that link to anyone on your tailnet.
+
+A viewer's screen is deliberately minimal: the terminal grid and a connection-status dot, no
+control bar, no perf harness. They cannot type into the shell, full stop, not because the control
+bar is hidden but because the connection itself attaches read-only. Which role a connection gets
+is decided purely by which token it presents, `PTY_TOKEN` or `PTY_VIEW_TOKEN`, never by anything
+the page itself asserts.
+
+Without `TMUX_SESSION` set, a `PTY_VIEW_TOKEN` connection is rejected the same way a wrong
+`PTY_TOKEN` is: there is no named session for a read-only attach to join.
+
 ## When to Use
 
 Reach for this example when you want to see Weft under sustained, high-frequency reactive load,
@@ -195,6 +221,10 @@ Implemented and validated on Node 26:
   the shell, and `TMUX_SESSION` makes a dropped connection reconnect into the same session instead
   of a fresh one. A dropped connection retries automatically with backoff, shown as a status dot in
   the control bar; a rejected token is a distinct, non-retrying state. See "Remote Access" above.
+- Read-only multi-viewer access: a second token (`PTY_VIEW_TOKEN`) grants a read-only `tmux
+attach -r` instead of the read-write shell, built on tmux's own multi-client support rather than
+  a bespoke broadcast layer. The presenter's control bar can share a viewer link directly; a
+  viewer's screen is the grid and a status dot, nothing else. See "Sharing a Read-Only View" above.
 
 Not yet built: insert/delete line and mouse reporting, the remaining fidelity for full
 `vim`/`tmux`-in-`tmux` rendering. The mobile path and remote access are both browser- and

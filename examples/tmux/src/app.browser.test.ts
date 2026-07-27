@@ -8,7 +8,7 @@
  */
 
 import { WeftApp } from "@weftui/dom/client";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { App } from "./app";
 import { makeMockTransport } from "./transport-mock";
@@ -37,7 +37,7 @@ const mountWith = async (chunks: readonly string[]) => {
     expect(el).not.toBeNull();
     return el!;
   });
-  return { term, writes: mock.writes };
+  return { term, writes: mock.writes, mock };
 };
 
 const meterValue = (selector: string): number =>
@@ -113,5 +113,27 @@ describe("tmux example", () => {
       },
       { timeout: 3000 },
     );
+  });
+
+  it("shows no share button until shareUrl resolves (AC-STREAM)", async () => {
+    await mountWith(["$ "]);
+    expect(container.querySelector("button.share")).toBeNull();
+  });
+
+  it("shows a share button once shareUrl resolves, and copies it on click (AC-STREAM)", async () => {
+    const { mock } = await mountWith(["$ "]);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+
+    const shareUrl = "https://laptop.ts.net/?token=abc123&role=viewer";
+    await Effect.runPromise(mock.setShareUrl(Option.some(shareUrl)));
+
+    const button = await vi.waitFor(() => {
+      const el = container.querySelector<HTMLButtonElement>("button.share");
+      expect(el).not.toBeNull();
+      return el!;
+    });
+    button.click();
+    await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith(shareUrl));
   });
 });
