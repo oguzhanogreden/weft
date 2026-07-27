@@ -187,6 +187,12 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Insert end comment marker: `<!-- stream-end-{id} -->`
   - Use simple counter for unique IDs
   - Keep internal reference to track nodes
+  - An emission arriving before the markers are spliced into their parent waits for
+    attachment rather than being dropped. The subscription is forked before the markers
+    are returned to the caller, so the first emission can win that race; discarding it is
+    unrecoverable, because the emission is already consumed and the region then stays
+    permanently empty (markers present, nothing between them). The wait is bounded, so a
+    region whose parent is discarded before it renders cannot spin.
 
 ### AC20: Stream Children - Updates (same-type patching)
 

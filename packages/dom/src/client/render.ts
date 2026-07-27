@@ -1247,6 +1247,21 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
  * Exported for reuse by the hydrator, which drives the same update flow against
  * markers adopted from server HTML rather than freshly created ones.
  */
+/**
+ * Yields until `marker` has a parent, bounded so a region whose markers are
+ * never attached (its parent was discarded before it rendered) cannot spin
+ * forever. In that case the caller's existing null-parent guard still applies.
+ */
+const MARKER_ATTACH_YIELDS = 100;
+
+function awaitMarkerAttached(marker: Comment): Effect.Effect<void> {
+  return Effect.gen(function* () {
+    for (let i = 0; marker.parentNode === null && i < MARKER_ATTACH_YIELDS; i++) {
+      yield* Effect.yieldNow;
+    }
+  });
+}
+
 export function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
@@ -1283,6 +1298,14 @@ export function updateStreamChild(
     }
 
     // SP4 (fallback): remove all nodes between markers, render, and insert.
+    //
+    // Wait for the markers to be parented first. {@link handleStreamChild} forks
+    // this subscription before returning the markers for the caller to splice in,
+    // so a first emission can arrive while they are still detached. Dropping it
+    // is not recoverable: the emission is already consumed, so the region stays
+    // permanently empty unless something happens to emit again.
+    yield* awaitMarkerAttached(startMarker);
+
     removeNodesBetweenMarkers(startMarker, endMarker);
     const result = yield* renderNode(newNode);
     const parent = startMarker.parentNode;
