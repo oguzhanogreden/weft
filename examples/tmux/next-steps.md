@@ -127,6 +127,8 @@ worked around in the example rather than fixed in passing.
   spec-legal `autocomplete="off"` does not typecheck. Worked around by omitting it.
 
 Done when: both can be expressed declaratively, and the example's workarounds are removed.
+Also tracked in `WEFT-FEEDBACK.md` at the repo root, alongside other framework-level
+findings from across all examples.
 
 ## 5. ANSI parser fidelity
 

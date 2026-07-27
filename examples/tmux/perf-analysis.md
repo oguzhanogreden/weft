@@ -253,6 +253,10 @@ to expose a gap that was always there. Equally plausible: it is specifically the
 _count_ being interrupted, not overall speed, that matters. Nothing here distinguishes
 the two, and it is named as open rather than asserted.
 
+The underlying gap (a reactive child's structural mount and its first emission can land
+in different scheduler ticks) is a `@weftui/dom` characteristic, not an example concern,
+so it is also tracked in `WEFT-FEEDBACK.md` at the repo root.
+
 ## Status
 
 Three fixes are real, confirmed, and now all properly implemented: `handleStyle`'s diff
