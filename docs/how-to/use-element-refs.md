@@ -2,7 +2,7 @@
 title: Use Element Refs
 order: 11
 section: how-to
-description: Capture a DOM element with the ref prop into a SubscriptionRef<Option<HTMLElement>>, then react to its mount with a scoped observer or read it imperatively.
+description: Capture a DOM element with the ref prop into a SubscriptionRef<Option<HTMLElement>>, then react to its mount, read it imperatively, or await it as a value.
 ---
 
 # Use Element Refs
@@ -57,9 +57,11 @@ yield * Effect.forkChild(observer); // wrong: dies the instant the component bod
 
 `forkScoped` ties the fiber to the component's **instance scope**, the ambient `Scope` the renderer provides per component. It lives as long as the component is mounted. `forkChild` binds to the transient component-body fiber instead, which is interrupted the instant the generator returns, so the observer would never fire.
 
+To consume that same first emission as a value elsewhere, rather than as a side effect here, see [Await the element as a value](#await-the-element-as-a-value) below.
+
 ## Read a ref imperatively
 
-When you only need the element later (e.g. in a click handler), skip the observer and read the ref on demand with `SubscriptionRef.get`:
+When you only need the element later (e.g. in a click handler), skip the observer and read it on demand with `SubscriptionRef.get`:
 
 ```typescript
 const scroll = () =>
@@ -68,6 +70,46 @@ const scroll = () =>
     if (Option.isSome(el)) el.value.scrollIntoView({ behavior: "smooth" });
   });
 ```
+
+## Await the element as a value
+
+Sometimes you don't want to react inline, and a single on-demand read isn't enough either: you want the element itself, once, as a value some other code can await. `Stream.runHead` fits this: it consumes the first element then releases the subscription, so `Stream.take(1)` isn't needed.
+
+```typescript
+import { Fiber } from "effect";
+
+const somes = pipe(
+  SubscriptionRef.changes(inputRef),
+  Stream.filter(Option.isSome),
+  Stream.map((o) => o.value),
+);
+
+const fiber = yield * Effect.forkScoped(Stream.runHead(somes));
+
+// later, in an event handler or test driver, never in the component body:
+const el = yield * Fiber.join(fiber); // Option.Option<HTMLInputElement>
+```
+
+`Option.isSome` is a refinement: it narrows each element to `Option.Some<A>`, so `.value` afterward is total, no `Option.getOrThrow` needed. `Fiber.join` returns the fiber's result as a value, so any code that holds `fiber` can await the element directly.
+
+**Never join the fiber inside the component body, before it returns its node.** The renderer attaches the element only after the body returns, so joining there waits forever: a deadlock. Join later, inside an event handler, or from driver or test code that runs after mount. In tests, joining the fiber replaces a sleep-based wait: it's the synchronization point for "the element has mounted."
+
+`Filter.fromPredicateOption(identity)` collapses the filter and map above into one pass: `Stream.filterMap(SubscriptionRef.changes(inputRef), Filter.fromPredicateOption(identity))` passes Somes through and unwraps them in the same step.
+
+When keeping a `Fiber` around is awkward, hand the value off through a `Deferred` instead:
+
+```typescript
+import { Deferred } from "effect";
+
+const captured = yield * Deferred.make<HTMLInputElement>();
+
+yield * Effect.forkScoped(Stream.runForEach(somes, (el) => Deferred.succeed(captured, el)));
+
+// elsewhere: another handler, another fiber
+const input = yield * Deferred.await(captured);
+```
+
+`Deferred.succeed` on an already-completed `Deferred` is a no-op, so "first value wins" needs no manual guard.
 
 ## Share a ref across behaviors
 
