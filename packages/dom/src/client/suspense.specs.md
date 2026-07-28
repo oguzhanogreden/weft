@@ -193,6 +193,12 @@ When `allSettled` fires in the swap fiber:
 2. Insert all resolved `childNodes` before `endMarker`
 3. Remove `startMarker` and `endMarker` (they serve no purpose post-swap)
 
+The async path returns the region pre-assembled inside a `DocumentFragment` (markers
+plus fallback), so the markers have a parent from birth. A swap firing before the caller
+splices the boundary in lands inside the fragment and travels with it; a null parent at
+swap time means the region was removed from the document, and skipping the swap is
+correct.
+
 ## Constraints
 
 - Error handling is out of scope here; the failure boundaries (`Boundary.catch`,

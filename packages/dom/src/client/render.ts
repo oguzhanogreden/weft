@@ -522,6 +522,9 @@ function boundaryRecoveryEffect(
 
     removeNodesBetweenMarkers(startMarker, endMarker);
     const fallbackNodes = yield* renderNode(fallbackNode as Renderable);
+    // On the mount path, markers are parented from birth (see mintRegion); on
+    // the hydrate path they are adopted from live server DOM. A null parent
+    // means the region was removed from the document; skipping is correct.
     const parent = endMarker.parentNode;
     if (parent !== null) {
       if (fallbackNodes !== null) {
@@ -547,7 +550,7 @@ function boundaryRecoveryEffect(
 function renderBoundary(
   props: Boundary.FailureProps & { children: Renderable[] },
 ): Effect.Effect<
-  readonly Node[],
+  DocumentFragment,
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
@@ -556,8 +559,12 @@ function renderBoundary(
     const parentBoundary = yield* Effect.serviceOption(BoundaryContext);
 
     const id = nextBoundaryId();
-    const startMarker = document.createComment(boundaryStartText(id));
-    const endMarker = document.createComment(boundaryEndText(id));
+    // Markers are parented from birth (see mintRegion): a recovery swap firing
+    // before the caller splices the boundary in lands inside the fragment.
+    const { fragment, startMarker, endMarker } = mintRegion(
+      boundaryStartText(id),
+      boundaryEndText(id),
+    );
 
     const subtreeScope = yield* Scope.fork(context.scope, "sequential");
     const subtreeContext = { ...context, scope: subtreeScope };
@@ -586,6 +593,12 @@ function renderBoundary(
       }),
     );
 
+    // Assemble the region before the recovery fiber exists, so a pre-splice
+    // swap finds the children between the markers and replaces them coherently.
+    for (const node of childNodes) {
+      fragment.insertBefore(node, endMarker);
+    }
+
     // Recovery fiber: awaits error deferred, swaps DOM on trigger
     yield* Effect.forkIn(
       boundaryRecoveryEffect(
@@ -599,7 +612,7 @@ function renderBoundary(
       context.scope,
     );
 
-    return [startMarker, ...childNodes, endMarker] as readonly Node[];
+    return fragment;
   });
 }
 
@@ -617,7 +630,7 @@ function renderBoundary(
 function renderSuspenseBoundary(
   props: Boundary.SuspenseProps & { children?: Renderable },
 ): Effect.Effect<
-  readonly Node[],
+  readonly Node[] | DocumentFragment,
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
@@ -690,9 +703,13 @@ function renderSuspenseBoundary(
     }
 
     // ── 7. Async path: show fallback while children settle ───────────────────
+    // Markers are parented from birth (see mintRegion): a swap firing before
+    // the caller splices the boundary in lands inside the fragment and travels.
     const boundaryId = yield* nextSuspenseId();
-    const startMarker = document.createComment(suspenseStartText(boundaryId));
-    const endMarker = document.createComment(suspenseEndText(boundaryId));
+    const { fragment, startMarker, endMarker } = mintRegion(
+      suspenseStartText(boundaryId),
+      suspenseEndText(boundaryId),
+    );
 
     // ── 8. Render fallback (null/undefined → empty, only markers shown) ──────
     const fallbackResult = yield* renderNode((props.fallback ?? null) as Renderable);
@@ -703,6 +720,11 @@ function renderSuspenseBoundary(
       } else {
         fallbackNodes.push(fallbackResult as Node);
       }
+    }
+    // Assemble the region before the swap fiber exists: markers bracket the
+    // fallback inside the birth fragment.
+    for (const node of fallbackNodes) {
+      fragment.insertBefore(node, endMarker);
     }
 
     // Put child nodes into a DocumentFragment so that nested Suspense swaps
@@ -722,6 +744,8 @@ function renderSuspenseBoundary(
 
       // Insert resolved children (from fragment) before the end marker.
       // insertBefore with a DocumentFragment moves all its children at once.
+      // Markers are parented from birth (see mintRegion); a null parent means
+      // the region was removed from the document, and skipping is correct.
       const parent = endMarker.parentNode;
       if (parent !== null) {
         parent.insertBefore(childFragment, endMarker);
@@ -732,8 +756,8 @@ function renderSuspenseBoundary(
 
     yield* Effect.forkIn(swapEffect, context.scope);
 
-    // ── 10. Return boundary: [startMarker, ...fallbackNodes, endMarker] ──────
-    return [startMarker, ...fallbackNodes, endMarker];
+    // ── 10. Return the boundary region: markers bracketing the fallback ──────
+    return fragment;
   });
 }
 
@@ -755,7 +779,7 @@ function renderSuspenseBoundary(
 function renderServerBoundary(
   props: ServerBoundaryProps,
 ): Effect.Effect<
-  readonly Node[],
+  DocumentFragment,
   UnsupportedNodeTypeError | StreamSubscriptionError | RenderError,
   RenderContext
 > {
@@ -778,8 +802,12 @@ function renderServerBoundary(
 
     const rpcClient = client.value;
     const id = nextBoundaryId();
-    const startMarker = document.createComment(boundaryStartText(id));
-    const endMarker = document.createComment(boundaryEndText(id));
+    // Markers are parented from birth (see mintRegion): a swap firing before
+    // the caller splices the boundary in lands inside the fragment and travels.
+    const { fragment, startMarker, endMarker } = mintRegion(
+      boundaryStartText(id),
+      boundaryEndText(id),
+    );
 
     // Render the fallback inline between the markers while the rpc resolves.
     const fallbackResult = yield* renderNode((props.fallback ?? null) as Renderable);
@@ -791,6 +819,9 @@ function renderServerBoundary(
         fallbackNodes.push(fallbackResult as Node);
       }
     }
+    for (const node of fallbackNodes) {
+      fragment.insertBefore(node, endMarker);
+    }
 
     // Forked resolution: call the rpc, seed a Resource from the decoded success,
     // render render(resource), and swap it in for the fallback between markers.
@@ -800,6 +831,8 @@ function renderServerBoundary(
       const rendered = yield* renderNode(props.render(resource));
 
       removeNodesBetweenMarkers(startMarker, endMarker);
+      // Markers are parented from birth (see mintRegion); a null parent means
+      // the region was removed from the document, and skipping is correct.
       const parent = endMarker.parentNode;
       if (parent !== null && rendered !== null) {
         if (Array.isArray(rendered)) {
@@ -821,7 +854,7 @@ function renderServerBoundary(
 
     yield* Effect.forkIn(swapEffect, context.scope);
 
-    return [startMarker, ...fallbackNodes, endMarker] as readonly Node[];
+    return fragment;
   });
 }
 
@@ -878,8 +911,7 @@ export function renderNode(
         }
       }
       const stream = toStream<Renderable>(node);
-      const markers = yield* handleStreamChild(stream);
-      return markers;
+      return yield* handleStreamChild(stream);
     }
 
     // AC3: Handle iterables (including arrays)
@@ -992,8 +1024,7 @@ function renderChildren(
         (isStream(child) || Effect.isEffect(child))
       ) {
         const stream = toStream<Renderable>(child);
-        const markers = yield* handleStreamChild(stream);
-        nodes.push(...markers);
+        nodes.push(yield* handleStreamChild(stream));
       } else {
         const result = yield* renderNode(child);
 
@@ -1067,10 +1098,7 @@ function renderElement(
           (isStream(child) || Effect.isEffect(child))
         ) {
           const stream = toStream<Renderable>(child);
-          const markers = yield* handleStreamChild(stream);
-          for (const marker of markers) {
-            element.appendChild(marker);
-          }
+          element.appendChild(yield* handleStreamChild(stream));
         } else {
           const result = yield* renderNode(child);
           if (result !== null) {
@@ -1154,6 +1182,8 @@ function renderComponent(
 
 /**
  * Handles a child that is a Stream by setting up comment markers and subscriptions.
+ * Returns the region as a `DocumentFragment` (markers parented from birth, see
+ * {@link mintRegion}); appending it splices markers and any early content in.
  *
  * AC-13/14: A fresh **content scope** is forked from `context.scope` for each
  * emission. The previous content scope is closed before the new one is opened,
@@ -1164,16 +1194,19 @@ function renderComponent(
 function handleStreamChild(
   stream: Stream.Stream<Renderable>,
 ): Effect.Effect<
-  readonly Node[],
+  DocumentFragment,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
   RenderContext
 > {
   return Effect.gen(function* () {
     const context = yield* RenderContext;
 
-    // AC19: Create comment markers
+    // AC19: Create comment markers, parented from birth (see mintRegion).
     const streamId = yield* nextStreamId();
-    const [startMarker, endMarker] = createStreamMarkers(streamId);
+    const { fragment, startMarker, endMarker } = mintRegion(
+      streamStartText(streamId),
+      streamEndText(streamId),
+    );
 
     // Mutable slot: the content scope from the most recent emission.
     // Closed before each new emission so nested fibers don't accumulate.
@@ -1209,19 +1242,35 @@ function handleStreamChild(
       context.reportUnhandled,
     );
 
-    // AC19: Return markers to be inserted.
-    // Content will be updated asynchronously by the daemon fiber.
-    return [startMarker, endMarker] as const;
+    // AC19: Return the region for the caller to splice in. Content is updated
+    // asynchronously by the daemon fiber; an emission that lands before the
+    // splice renders into the fragment and travels with it.
+    return fragment;
   });
 }
 
+/** A region's bracket markers, born inside the fragment that parents them. */
+interface MintedRegion {
+  readonly fragment: DocumentFragment;
+  readonly startMarker: Comment;
+  readonly endMarker: Comment;
+}
+
 /**
- * Creates start and end comment markers for stream child
+ * Mints a region's bracket markers inside a fresh `DocumentFragment`, so
+ * `startMarker.parentNode` is non-null from birth. A forked writer's emission
+ * arriving before the caller splices the region in renders into the fragment;
+ * the splice (appending the fragment) then moves markers and content into the
+ * real parent atomically. Both orderings are valid, so fork and splice need no
+ * coordination.
  */
-function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
-  const startMarker = document.createComment(streamStartText(streamId));
-  const endMarker = document.createComment(streamEndText(streamId));
-  return [startMarker, endMarker];
+function mintRegion(startText: string, endText: string): MintedRegion {
+  const fragment = document.createDocumentFragment();
+  const startMarker = document.createComment(startText);
+  const endMarker = document.createComment(endText);
+  fragment.appendChild(startMarker);
+  fragment.appendChild(endMarker);
+  return { fragment, startMarker, endMarker };
 }
 
 /**
@@ -1247,21 +1296,6 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
  * Exported for reuse by the hydrator, which drives the same update flow against
  * markers adopted from server HTML rather than freshly created ones.
  */
-/**
- * Yields until `marker` has a parent, bounded so a region whose markers are
- * never attached (its parent was discarded before it rendered) cannot spin
- * forever. In that case the caller's existing null-parent guard still applies.
- */
-const MARKER_ATTACH_YIELDS = 100;
-
-function awaitMarkerAttached(marker: Comment): Effect.Effect<void> {
-  return Effect.gen(function* () {
-    for (let i = 0; marker.parentNode === null && i < MARKER_ATTACH_YIELDS; i++) {
-      yield* Effect.yieldNow;
-    }
-  });
-}
-
 export function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
@@ -1299,13 +1333,10 @@ export function updateStreamChild(
 
     // SP4 (fallback): remove all nodes between markers, render, and insert.
     //
-    // Wait for the markers to be parented first. {@link handleStreamChild} forks
-    // this subscription before returning the markers for the caller to splice in,
-    // so a first emission can arrive while they are still detached. Dropping it
-    // is not recoverable: the emission is already consumed, so the region stays
-    // permanently empty unless something happens to emit again.
-    yield* awaitMarkerAttached(startMarker);
-
+    // Markers are minted inside a DocumentFragment (see mintRegion), so a null
+    // parent never means "not yet attached". It means the region was removed
+    // from the document (e.g. a swapped-out boundary fallback whose pump has
+    // not been interrupted yet); dropping the emission is correct by design.
     removeNodesBetweenMarkers(startMarker, endMarker);
     const result = yield* renderNode(newNode);
     const parent = startMarker.parentNode;
@@ -1462,10 +1493,7 @@ function appendRenderedChildren(
     for (const child of children) {
       if (isStream(child) || Effect.isEffect(child)) {
         const stream = toStream<Renderable>(child);
-        const markers = yield* handleStreamChild(stream);
-        for (const marker of markers) {
-          element.appendChild(marker);
-        }
+        element.appendChild(yield* handleStreamChild(stream));
       } else {
         const result = yield* renderNode(child);
         if (result !== null) {
@@ -1554,7 +1582,7 @@ interface ListState {
 function renderList(
   props: ListProps,
 ): Effect.Effect<
-  readonly Node[],
+  DocumentFragment,
   StreamSubscriptionError | RenderError | UnsupportedNodeTypeError,
   RenderContext
 > {
@@ -1563,8 +1591,10 @@ function renderList(
     const { of, by, render } = props;
 
     // Region brackets, located on each emission like any reactive child.
+    // Parented from birth (see mintRegion): a first emission arriving before
+    // the caller splices the region in reconciles into the fragment.
     const streamId = yield* nextStreamId();
-    const [startMarker, endMarker] = createStreamMarkers(streamId);
+    const { fragment, endMarker } = mintRegion(streamStartText(streamId), streamEndText(streamId));
 
     // Region scope: parent of every per-item scope and of the `of` pump fiber.
     // Forked from the enclosing scope so region teardown (SC3) cascades to all
@@ -1595,7 +1625,7 @@ function renderList(
     // boundary, or are reported by the Effect runtime when none encloses (AC8).
     yield* forkSupervised(effect, regionScope, `list:stream-${streamId}`, context.reportUnhandled);
 
-    return [startMarker, endMarker] as const;
+    return fragment;
   });
 }
 
@@ -1700,6 +1730,9 @@ function reconcileList(
     //    other item (new, or retained-but-out-of-order) is (re)inserted before the
     //    next item's start marker, right-to-left so anchors are already in place.
     const keep = longestIncreasingSubsequence(sources);
+    // Region markers are parented from birth (see mintRegion); a null parent
+    // means the region was removed from the document, so skipping the DOM work
+    // is correct (the records committed below are then invisible and dead).
     const parent = regionEnd.parentNode;
     if (parent !== null) {
       for (let j = records.length - 1; j >= 0; j--) {

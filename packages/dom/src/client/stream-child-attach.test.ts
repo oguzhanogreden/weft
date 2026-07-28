@@ -1,27 +1,28 @@
 /**
- * Regression: a reactive child's first emission must survive its markers not
- * being attached yet.
- *
- * `handleStreamChild` forks the subscription fiber before returning the marker
- * pair for the caller to splice into the parent. When the fiber wins that race,
- * `startMarker.parentNode` is still null. The insert used to be skipped by a
- * silent null-parent guard, and because the emission had already been consumed
- * the region stayed permanently empty: markers present, no content between them.
+ * A reactive child's markers are minted inside a `DocumentFragment`, so they
+ * have a parent from birth. `handleStreamChild` forks the subscription fiber
+ * before returning the region for the caller to splice in; a first emission
+ * that wins that race renders into the fragment, and the splice moves markers
+ * and content into the real parent atomically. Both orderings are valid by
+ * construction; no coordination between fork and splice exists.
  *
  * Two proof styles below:
  *
- * - "forced, deterministic": calls `updateStreamChild` directly and controls
- *   fiber scheduling explicitly (`startImmediately`), so the race is forced on
- *   every run instead of statistically induced. This is the tight regression
- *   proof for the exact mechanism the fix changed.
+ * - "forced, deterministic": drives `updateStreamChild` directly with explicit
+ *   fiber scheduling (`startImmediately`), pinning both halves of the
+ *   invariant: a pre-splice emission lands in the birth fragment and travels
+ *   with the splice; an emission against a region removed from the document
+ *   (parentless markers) is dropped without spinning.
  * - "reactive child attachment" (below): a dense grid mirroring the shape that
- *   found the bug in the wild. It needs volume and nesting to surface; a flat
- *   run of reactive children does not reproduce it, because that is what
- *   spreads the render across enough scheduler turns for some subscriptions to
- *   fire before their markers land. Kept as integration-level coverage for the
- *   real-world shape, alongside the deterministic proof above.
+ *   found the original bug in the wild (a first emission used to be dropped
+ *   when its markers were not yet attached). It needs volume and nesting to
+ *   surface; a flat run of reactive children does not reproduce it, because
+ *   that is what spreads the render across enough scheduler turns for some
+ *   subscriptions to fire before their markers land. Kept as integration-level
+ *   coverage for the real-world shape, alongside the deterministic proof above.
  *
- * Found via `examples/tmux`, where it dropped roughly 0.15% of terminal cells.
+ * Found via `examples/tmux`, where the pre-fix race dropped roughly 0.15% of
+ * terminal cells.
  */
 
 import * as assert from "node:assert/strict";
@@ -99,19 +100,24 @@ function makeTestRenderContext(): RenderContext["Service"] {
 }
 
 describe("reactive child attachment (forced, deterministic)", () => {
-  it("preserves a first emission that arrives before its markers are attached", async () => {
+  it("renders a pre-splice emission into the birth fragment; the splice carries it", async () => {
     createTestDOM();
     const parent = document.createElement("div");
+
+    // The invariant `handleStreamChild` guarantees: markers are born inside a
+    // DocumentFragment, so an emission always has a parent to render into.
+    const fragment = document.createDocumentFragment();
     const startMarker = document.createComment("stream-start-forced");
     const endMarker = document.createComment("stream-end-forced");
+    fragment.appendChild(startMarker);
+    fragment.appendChild(endMarker);
     const context = makeTestRenderContext();
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        // `startImmediately` runs the fiber synchronously, in this call, up to
-        // its first suspension point. Nothing before the attach-wait loop
-        // yields, so the fiber is parked there -- by construction, not by
-        // scheduler luck -- once `forkIn` returns.
+        // `startImmediately` processes the emission in this call, before the
+        // region is spliced anywhere: the exact ordering `handleStreamChild`
+        // produces when the subscription fiber wins the race.
         const fiber = yield* Effect.forkIn(
           updateStreamChild(startMarker, endMarker, "hello").pipe(
             Effect.provideService(RenderContext, context),
@@ -119,14 +125,10 @@ describe("reactive child attachment (forced, deterministic)", () => {
           context.scope,
           { startImmediately: true },
         );
-
-        // The exact race `handleStreamChild` risks in production: the
-        // emission is already mid-flight while the markers are still
-        // detached from any parent.
-        parent.appendChild(startMarker);
-        parent.appendChild(endMarker);
-
         yield* Fiber.join(fiber);
+
+        // The splice: content rendered into the fragment travels with it.
+        parent.appendChild(fragment);
       }),
     );
 
@@ -134,57 +136,22 @@ describe("reactive child attachment (forced, deterministic)", () => {
     assert.equal(parent.childNodes.length, 3);
   });
 
-  // The same forced race asserted from the pre-fix side: this body states the
-  // old behavior (emission consumed while the markers were detached, region
-  // left permanently empty). `it.fails` expects the body to fail, so it stays
-  // green while the fix holds. If the attach-wait regresses, the body passes
-  // and this reports "expected to fail", a second alarm alongside the
-  // positive proof above.
-  it.fails("pre-fix behavior: an emission racing marker attachment is dropped, leaving the region empty", async () => {
+  it("drops an emission for a region removed from the document, without spinning", async () => {
     createTestDOM();
-    const parent = document.createElement("div");
-    const startMarker = document.createComment("stream-start-pre-fix");
-    const endMarker = document.createComment("stream-end-pre-fix");
-    const context = makeTestRenderContext();
-
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const fiber = yield* Effect.forkIn(
-          updateStreamChild(startMarker, endMarker, "hello").pipe(
-            Effect.provideService(RenderContext, context),
-          ),
-          context.scope,
-          { startImmediately: true },
-        );
-
-        parent.appendChild(startMarker);
-        parent.appendChild(endMarker);
-
-        yield* Fiber.join(fiber);
-      }),
-    );
-
-    // The pre-fix signature: both markers attached, the emission gone.
-    assert.equal(parent.childNodes.length, 2);
-    assert.equal(parent.textContent, "");
-  });
-
-  it("terminates instead of hanging when the markers are never attached", async () => {
-    createTestDOM();
+    // Bare, parentless markers model a region whose nodes were removed from
+    // the document (e.g. a swapped-out boundary fallback whose pump has not
+    // been interrupted yet). A hang would trip the timeout below.
     const startMarker = document.createComment("stream-start-orphan");
     const endMarker = document.createComment("stream-end-orphan");
     const context = makeTestRenderContext();
 
-    // No parent is ever created. An unbounded attach-wait would hang this
-    // test until the timeout below fails it; MARKER_ATTACH_YIELDS caps the
-    // wait, so the effect completes and falls back to the existing
-    // null-parent guard instead.
     await Effect.runPromise(
       updateStreamChild(startMarker, endMarker, "hello").pipe(
         Effect.provideService(RenderContext, context),
       ),
     );
 
+    // Dropping the emission is the designed behavior: markers untouched.
     assert.equal(startMarker.parentNode, null);
     assert.equal(endMarker.parentNode, null);
   }, 2000);

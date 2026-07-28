@@ -59,6 +59,7 @@ Errors are reported via a `Cause<unknown>` so that `catchCause` can access defec
 17. On construction success: child nodes are placed between the markers.
 18. On error (construction or post-mount): child nodes between the markers are removed and fallback nodes are inserted.
 19. Comment markers remain in the DOM after a swap — the fallback occupies the same bracketed region.
+20. Mount returns the region pre-assembled inside a `DocumentFragment` (markers plus content), so the markers have a parent from birth. A swap firing before the caller splices the region in lands inside the fragment and travels with it; a null parent at swap time means the region was removed from the document, and skipping the swap is correct. This applies to `renderBoundary` and to the client-first `Boundary.rpc` mount alike.
 
 ### Shared abstraction with `Suspense`
 
