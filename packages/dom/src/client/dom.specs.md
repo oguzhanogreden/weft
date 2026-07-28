@@ -206,6 +206,13 @@ writes when a stream re-emits an unchanged shape (see `perf-analysis.md` in
 
 ### AC20: Stream Children - Updates (same-type patching)
 
+_(amended by loom.specs.md)_ Emissions no longer apply directly on the pump
+fiber. Each reactive region and prop is a latest-value cell in the app's Loom
+scheduler; a single flush fiber commits cells in registration order. Emissions
+arriving faster than commits drain conflate to the newest value
+(latest-value-wins), and `RootHandle.awaitCommit` acknowledges when everything
+dirty has committed. The per-commit reconciliation below is unchanged.
+
 - **Given** a Stream child that emits a new value
 - **When** emission occurs
 - **Then** the region between the start and end comment markers is reconciled against
