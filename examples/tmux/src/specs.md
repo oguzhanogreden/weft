@@ -146,6 +146,45 @@ so `38:2::r:g:b` mangles into one bogus code. This maps 24-bit colour end to end
   truecolor SGR yields spans whose computed colours are the exact `rgb()`, inverse included
   (extends AC-TEST).
 
+### AC-INSDEL — insert/delete line and character (`src/grid.ts`, `src/ansi/parser.ts`) 🚧
+
+The remaining vim-fidelity gap in AC-ANSI's deferred list: vim and other TUIs shift lines with
+IL/DL and splice characters with ICH/DCH instead of repainting. Without them, an `:normal O` or
+an inline edit repaints wrong until the next full redraw. Semantics verified against the VT510
+manual (vt100.net, IL/DCH pages) and the xterm/tmux consensus, not assumed.
+
+- **IL (`ESC[Ps L`)** inserts `Ps` blank lines at the cursor row: rows from the cursor through
+  `scrollBottom` shift down, rows shifted past the bottom margin are lost. **DL (`ESC[Ps M`)**
+  deletes `Ps` lines at the cursor row: rows below shift up, blank lines fill at the bottom
+  margin. Both default to 1 and clamp to the rows available.
+- **Region-gated:** IL/DL are no-ops when the cursor row is outside `[scrollTop, scrollBottom]`
+  (VT510: "IL has no effect outside the page margins"). With no region set they operate on
+  `[cursorRow, rows - 1]`.
+- **ICH (`ESC[Ps @`)** inserts `Ps` blank cells at the cursor column: the rest of the row
+  shifts right, cells pushed past the right edge are lost. **DCH (`ESC[Ps P`)** deletes `Ps`
+  cells: the rest shifts left, blanks fill the row end. Both default to 1, clamp to the row
+  width, and apply regardless of the vertical scroll region (row-local ops).
+- **Blank fill matches each op's mechanical sibling:** IL/DL fill with `DEFAULT_STYLE` blanks,
+  exactly like the region scrolls they are; ICH/DCH fill with the current SGR style, matching
+  `eraseChars`/`eraseInLine`. (References split here: VT510 says no attributes for DCH, xterm
+  fills with the current background. The sibling rule adds no third convention.)
+- **Cursor does not move** in any of the four (xterm/tmux consensus; DEC hardware reset IL/DL
+  to the left margin, a deviation this emulator does not follow).
+- **Zero param stays a no-op** (`ESC[0L` inserts nothing), matching every existing CSI op in
+  this dispatch; a deviation from ECMA-48's 0-means-default, documented not silent.
+- **Copy-on-write holds:** IL/DL give new references only to rows in `[cursorRow,
+scrollBottom]`; rows above the cursor and outside the region keep their exact references.
+  ICH/DCH replace exactly one row reference. Never throws on out-of-range input (AC-GRID).
+- **Grid surface:** four pure functions on `TerminalState` following the `eraseChars`
+  precedent: `insertLines`/`deleteLines`/`insertChars`/`deleteChars`, each `(state, n)`.
+- **Chunk-safe** via the existing `Parser.params` buffer (the AC-ANSI invariant; covered by a
+  split-feed test).
+- **Tests:** unit cases per op (shift correctness, clamping, region gating for IL/DL, fill
+  style per the sibling rule, cursor unchanged, zero no-op, a chunk split) plus a synthetic
+  vim-flavoured browser sequence (IL inside a region, DL, an ICH/DCH word splice) through the
+  mock transport asserting rendered rows (extends AC-TEST; no PTY capture contains these, so
+  synthetic input follows the AC-CHARSET precedent).
+
 ### AC-TRANSPORT — I/O as an Effect Service (`src/transport.ts`) ✅
 
 - `PtyTransport` is a `Context.Service`; the app depends only on the interface.
@@ -741,6 +780,11 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
     fixed-signature functions. No generics, overloads, or conditional/inferred types, so the
     main typecheck already enforces the surface. The behaviour under test is SGR parsing,
     CSS mapping, and env preparation, all runtime concerns (unit + backend + browser tests).
+  - AC-INSDEL specifically: `insertLines`/`deleteLines`/`insertChars`/`deleteChars` are four
+    identical non-generic `(TerminalState, number) => TerminalState` signatures. No generics,
+    overloads, or conditional/inferred types, so the main typecheck already enforces the
+    surface. The behaviour under test is line/cell shifting, region gating, and fill style,
+    all runtime concerns (unit + browser tests).
 
 ## Notes / accepted deviations
 

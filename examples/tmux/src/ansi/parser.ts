@@ -16,11 +16,15 @@
 import {
   carriageReturn,
   DEFAULT_STYLE,
+  deleteChars,
+  deleteLines,
   emptyState,
   enterAlt,
   eraseChars,
   eraseInDisplay,
   eraseInLine,
+  insertChars,
+  insertLines,
   leaveAlt,
   lineFeed,
   putChar,
@@ -269,8 +273,16 @@ function dispatchCsi(
       return scrollUp(term, nums(params, 1)[0]!);
     case "T":
       return scrollDown(term, nums(params, 1)[0]!);
+    case "L":
+      return insertLines(term, nums(params, 1)[0]!);
+    case "M":
+      return deleteLines(term, nums(params, 1)[0]!);
+    case "@":
+      return insertChars(term, nums(params, 1)[0]!);
+    case "P":
+      return deleteChars(term, nums(params, 1)[0]!);
     default:
-      // Unhandled (insert/delete line/char `L`/`M`/`P`/`@`, mouse modes, ...).
+      // Unhandled (mouse modes, locking shifts, ...).
       return term;
   }
 }

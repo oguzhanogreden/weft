@@ -290,3 +290,107 @@ describe("truecolor SGR (AC-TRUECOLOR)", () => {
     assert.equal(cell.style.bg, 8);
   });
 });
+
+describe("insert/delete line and character (AC-INSDEL)", () => {
+  it("IL (ESC[Ps L) inserts blank lines at the cursor; rows shift down", () => {
+    const t = run("a\r\nb\r\nc\x1b[2;1H\x1b[2L");
+    assert.equal(rowToText(getRow(t, 0)), "a");
+    assert.equal(rowToText(getRow(t, 1)), "");
+    assert.equal(rowToText(getRow(t, 2)), "");
+    assert.equal(rowToText(getRow(t, 3)), "b");
+    assert.equal(rowToText(getRow(t, 4)), "c");
+  });
+
+  it("IL defaults to one line", () => {
+    const t = run("x\x1b[H\x1b[L");
+    assert.equal(rowToText(getRow(t, 0)), "");
+    assert.equal(rowToText(getRow(t, 1)), "x");
+  });
+
+  it("IL is a no-op outside the scroll region and shifts inside it, keeping rows below by reference", () => {
+    let p = feed(initParser(20, 6), "a\r\nb\r\nc\r\nd\x1b[1;3r");
+    p = feed(p, "\x1b[4;1H\x1b[L"); // cursor below the bottom margin: no effect
+    assert.equal(rowToText(getRow(p.term, 0)), "a");
+    assert.equal(rowToText(getRow(p.term, 3)), "d");
+    const below = p.term.lines[3];
+    p = feed(p, "\x1b[2;1H\x1b[L"); // inside the region: shifts [1, 2] down
+    assert.equal(rowToText(getRow(p.term, 0)), "a");
+    assert.equal(rowToText(getRow(p.term, 1)), "");
+    assert.equal(rowToText(getRow(p.term, 2)), "b"); // c fell off the bottom margin
+    assert.equal(rowToText(getRow(p.term, 3)), "d");
+    assert.equal(p.term.lines[3], below); // out-of-region row keeps its reference
+  });
+
+  it("IL clamps past the bottom margin without throwing", () => {
+    const t = run("a\x1b[H\x1b[99L");
+    assert.equal(rowToText(getRow(t, 0)), "");
+  });
+
+  it("DL (ESC[Ps M) deletes lines at the cursor; rows shift up, blanks fill the bottom, cursor stays", () => {
+    const t = run("a\r\nb\r\nc\r\nd\x1b[2;1H\x1b[2M");
+    assert.equal(rowToText(getRow(t, 0)), "a");
+    assert.equal(rowToText(getRow(t, 1)), "d");
+    assert.equal(rowToText(getRow(t, 2)), "");
+    assert.equal(t.cursorRow, 1);
+    assert.equal(t.cursorCol, 0);
+  });
+
+  it("DL respects the scroll region and keeps rows below it by reference", () => {
+    let p = feed(initParser(20, 6), "a\r\nb\r\nc\r\nd\x1b[1;3r");
+    const below = p.term.lines[3];
+    p = feed(p, "\x1b[1;1H\x1b[M");
+    assert.equal(rowToText(getRow(p.term, 0)), "b");
+    assert.equal(rowToText(getRow(p.term, 1)), "c");
+    assert.equal(rowToText(getRow(p.term, 2)), ""); // blank fill at the bottom margin
+    assert.equal(rowToText(getRow(p.term, 3)), "d");
+    assert.equal(p.term.lines[3], below);
+  });
+
+  it("ICH (ESC[Ps @) inserts blank cells; the tail shifts right and overflow is lost", () => {
+    const t = run("abcde\x1b[1;2H\x1b[2@", 5);
+    assert.equal(rowToText(getRow(t, 0)), "a  bc");
+  });
+
+  it("ICH fills with the current SGR style and leaves the cursor in place", () => {
+    const t = run("hello\x1b[1;2H\x1b[41m\x1b[2@");
+    assert.equal(rowToText(getRow(t, 0)), "h  ello");
+    const row = getRow(t, 0);
+    assert.equal(row[1]!.char, " ");
+    assert.equal(row[1]!.style.bg, 1);
+    assert.equal(row[2]!.style.bg, 1);
+    assert.equal(t.cursorCol, 1);
+  });
+
+  it("DCH (ESC[Ps P) deletes cells; the tail shifts left, current-style blanks fill the row end", () => {
+    const t = run("abcde\x1b[1;2H\x1b[42m\x1b[2P", 5);
+    assert.equal(rowToText(getRow(t, 0)), "ade");
+    const row = getRow(t, 0);
+    assert.equal(row[3]!.style.bg, 2);
+    assert.equal(row[4]!.style.bg, 2);
+  });
+
+  it("DCH clamps to the row width without throwing", () => {
+    const t = run("abcde\x1b[1;2H\x1b[99P", 5);
+    assert.equal(rowToText(getRow(t, 0)), "a");
+  });
+
+  it("an explicit zero param is a no-op for all four, unlike the default", () => {
+    let p = feed(initParser(20, 6), "a\r\nb\x1b[H");
+    p = feed(p, "\x1b[0L\x1b[0M\x1b[0@\x1b[0P");
+    assert.equal(rowToText(getRow(p.term, 0)), "a");
+    assert.equal(rowToText(getRow(p.term, 1)), "b");
+    p = feed(p, "\x1b[L"); // no param: default 1 applies
+    assert.equal(rowToText(getRow(p.term, 0)), "");
+    assert.equal(rowToText(getRow(p.term, 1)), "a");
+    assert.equal(rowToText(getRow(p.term, 2)), "b");
+  });
+
+  it("parses an insert-line sequence split across two feeds (chunk safety)", () => {
+    let p = feed(initParser(20, 6), "a\r\nb\x1b[H\x1b[2");
+    p = feed(p, "L");
+    assert.equal(rowToText(getRow(p.term, 0)), "");
+    assert.equal(rowToText(getRow(p.term, 1)), "");
+    assert.equal(rowToText(getRow(p.term, 2)), "a");
+    assert.equal(rowToText(getRow(p.term, 3)), "b");
+  });
+});

@@ -151,6 +151,74 @@ export function scrollUp(state: TerminalState, n = 1): TerminalState {
   return { ...state, lines };
 }
 
+/**
+ * Insert `n` blank lines at the cursor row (IL): rows from the cursor through the
+ * bottom margin shift down, default-style fill. No-op when the cursor is outside
+ * the scroll region.
+ */
+export function insertLines(state: TerminalState, n: number): TerminalState {
+  if (state.cursorRow < state.scrollTop || state.cursorRow > state.scrollBottom || n <= 0) {
+    return state;
+  }
+  const lines = state.lines.slice();
+  for (let r = state.scrollBottom; r >= state.cursorRow; r--) {
+    const src = r - n;
+    lines[r] = src >= state.cursorRow ? getRow(state, src) : blankRow(state.cols);
+  }
+  return { ...state, lines };
+}
+
+/**
+ * Delete `n` lines at the cursor row (DL): rows below shift up within the scroll
+ * region, default-style fill at the bottom margin. No-op when the cursor is
+ * outside the scroll region.
+ */
+export function deleteLines(state: TerminalState, n: number): TerminalState {
+  if (state.cursorRow < state.scrollTop || state.cursorRow > state.scrollBottom || n <= 0) {
+    return state;
+  }
+  const lines = state.lines.slice();
+  for (let r = state.cursorRow; r <= state.scrollBottom; r++) {
+    const src = r + n;
+    lines[r] = src <= state.scrollBottom ? getRow(state, src) : blankRow(state.cols);
+  }
+  return { ...state, lines };
+}
+
+/**
+ * Insert `n` blank cells at the cursor (ICH): the row's tail shifts right,
+ * current-style fill, cells pushed past the right edge lost.
+ */
+export function insertChars(state: TerminalState, n: number): TerminalState {
+  if (n <= 0) return state;
+  const row = (state.lines[state.cursorRow] ?? blankRow(state.cols)).slice();
+  const fill: Cell = { char: " ", style: state.style };
+  for (let c = row.length - 1; c >= state.cursorCol; c--) {
+    const src = c - n;
+    row[c] = src >= state.cursorCol ? row[src]! : fill;
+  }
+  const lines = state.lines.slice();
+  lines[state.cursorRow] = row;
+  return { ...state, lines };
+}
+
+/**
+ * Delete `n` cells at the cursor (DCH): the row's tail shifts left,
+ * current-style blanks fill the row end.
+ */
+export function deleteChars(state: TerminalState, n: number): TerminalState {
+  if (n <= 0) return state;
+  const row = (state.lines[state.cursorRow] ?? blankRow(state.cols)).slice();
+  const fill: Cell = { char: " ", style: state.style };
+  for (let c = state.cursorCol; c < row.length; c++) {
+    const src = c + n;
+    row[c] = src < row.length ? row[src]! : fill;
+  }
+  const lines = state.lines.slice();
+  lines[state.cursorRow] = row;
+  return { ...state, lines };
+}
+
 /** Scroll the scroll region down by `n` lines, filling the top margin with blanks. */
 export function scrollDown(state: TerminalState, n = 1): TerminalState {
   const lines = state.lines.slice();
