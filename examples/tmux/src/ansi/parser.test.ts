@@ -212,3 +212,81 @@ describe("G0 DEC Special Graphics (AC-CHARSET)", () => {
     assert.equal(feed(p, "\x1b(B").g0, "ascii");
   });
 });
+
+describe("truecolor SGR (AC-TRUECOLOR)", () => {
+  it("semicolon form sets a truecolor foreground (ESC[38;2;r;g;bm)", () => {
+    const t = run("\x1b[38;2;255;128;0mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 128, b: 0 });
+  });
+
+  it("semicolon form sets a truecolor background (ESC[48;2;r;g;bm)", () => {
+    const t = run("\x1b[48;2;10;20;30mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.bg, { r: 10, g: 20, b: 30 });
+  });
+
+  it("colon form with an empty colorspace-id parses (ESC[38:2::r:g:bm, tmux's output)", () => {
+    const t = run("\x1b[38:2::255:128:0mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 128, b: 0 });
+  });
+
+  it("colon form without a colorspace-id parses (ESC[38:2:r:g:bm)", () => {
+    const t = run("\x1b[38:2:255:128:0mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 128, b: 0 });
+  });
+
+  it("colon-form background parses (ESC[48:2::r:g:bm)", () => {
+    const t = run("\x1b[48:2::1:2:3mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.bg, { r: 1, g: 2, b: 3 });
+  });
+
+  it("colon-form 256-colour parses (ESC[38:5:nm)", () => {
+    const t = run("\x1b[38:5:196mX");
+    assert.equal(getRow(t, 0)[0]!.style.fg, 196);
+  });
+
+  it("a colon group never consumes following params (ESC[0;38:2::r:g:b;1m applies all three)", () => {
+    const t = run("\x1b[0;38:2::255:128:0;1mX");
+    const cell = getRow(t, 0)[0]!;
+    assert.deepEqual(cell.style.fg, { r: 255, g: 128, b: 0 });
+    assert.equal(cell.style.bold, true);
+  });
+
+  it("components missing at the params end default to 0 (ESC[38;2;255m)", () => {
+    const t = run("\x1b[38;2;255mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 0, b: 0 });
+  });
+
+  it("out-of-range components clamp to 0-255 (ESC[38;2;300;0;0m)", () => {
+    const t = run("\x1b[38;2;300;0;0mX");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 0, b: 0 });
+  });
+
+  it("parses a truecolor sequence split across two feeds (chunk safety)", () => {
+    let p = initParser(20, 6);
+    p = feed(p, "\x1b[38:2::255:");
+    p = feed(p, "128:0mX");
+    assert.deepEqual(getRow(p.term, 0)[0]!.style.fg, { r: 255, g: 128, b: 0 });
+  });
+
+  it("default-colour reset (ESC[39m) clears a truecolor foreground", () => {
+    const t = run("\x1b[38;2;255;128;0mA\x1b[39mB");
+    assert.deepEqual(getRow(t, 0)[0]!.style.fg, { r: 255, g: 128, b: 0 });
+    assert.equal(getRow(t, 0)[1]!.style.fg, null);
+  });
+
+  it("a stray colon in a non-SGR sequence falls back to the param default (no NaN)", () => {
+    // `ESC[:S` must scroll exactly one row, like `ESC[S`; a NaN leaking into
+    // scrollUp would blank the region instead.
+    const t = run("a\r\nb\x1b[:S");
+    assert.equal(rowToText(getRow(t, 0)), "b");
+  });
+
+  it("semicolon 38 with an unknown kind keeps today's fallthrough behavior", () => {
+    // `38;9` sets nothing and does not skip, so the `100` after it is read as
+    // an SGR code (bright bg). Documented pragmatic subset, not new behavior.
+    const t = run("\x1b[38;9;100mX");
+    const cell = getRow(t, 0)[0]!;
+    assert.equal(cell.style.fg, null);
+    assert.equal(cell.style.bg, 8);
+  });
+});

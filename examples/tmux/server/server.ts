@@ -145,6 +145,39 @@ export function resolveShellCommand(env: NodeJS.ProcessEnv, role: ConnectionRole
 	return { command: env.SHELL ?? "bash", args: [] };
 }
 
+// node-pty's own `_sanitizeEnv` list. It only runs when handed `process.env`
+// by reference identity (`opt.env === process.env` in unixTerminal), so
+// building a copy here silently disables it; strip the same keys ourselves or
+// a server started inside tmux/screen would leak `$TMUX`/`$STY` and the child
+// `tmux new` would refuse to nest.
+const PTY_SANITIZED_KEYS = [
+	"TMUX",
+	"TMUX_PANE",
+	"STY",
+	"WINDOW",
+	"WINDOWID",
+	"TERMCAP",
+	"COLUMNS",
+	"LINES",
+] as const;
+
+/**
+ * The spawned shell's environment: the parent's, minus the terminal-nesting
+ * variables node-pty would have stripped from a bare `process.env`, plus
+ * `COLORTERM=truecolor` so programs emit 24-bit SGR the emulator renders
+ * (`src/specs.md`, AC-TRUECOLOR). `TERM` stays `xterm-256color` via the PTY
+ * spawn options.
+ */
+export function spawnEnv(env: NodeJS.ProcessEnv): Record<string, string> {
+	const out: Record<string, string> = {};
+	for (const [key, value] of Object.entries(env)) {
+		if (value !== undefined) out[key] = value;
+	}
+	for (const key of PTY_SANITIZED_KEYS) delete out[key];
+	out.COLORTERM = "truecolor";
+	return out;
+}
+
 /**
  * Start the backend. Port 0 binds an ephemeral port (used by the test). Binds
  * loopback only: reachability beyond this machine is a proxy's job (a
@@ -189,7 +222,7 @@ export function startServer(port = Number(process.env.PORT ?? 8787)): Promise<Pt
 			cols,
 			rows,
 			cwd: process.env.HOME,
-			env: process.env as Record<string, string>,
+			env: spawnEnv(process.env),
 		});
 
 		// A presenter who could be handed a view token to share it with (AC-STREAM).

@@ -33,7 +33,7 @@ Status legend: ✅ implemented + verified · 🚧 pending · ⏭ deferred (post-
   string in one call (scan state lives in `Parser`, not `TerminalState`). (Verified.)
 - Handles: printable text, CR/LF/BS/TAB/BEL, CUP (`H`/`f`), cursor moves (`A`/`B`/`C`/`D`),
   CHA (`G`), VPA (`d`), ED (`J`), EL (`K`), SGR (`m`: reset/bold/italic/underline/inverse,
-  16-colour, bright, `38;5;n`/`48;5;n` 256-colour, truecolor collapsed to default), cursor
+  16-colour, bright, `38;5;n`/`48;5;n` 256-colour, truecolor now handled, see AC-TRUECOLOR), cursor
   save/restore (`s`/`u`, `ESC 7`/`ESC 8`), alternate screen (`ESC[?1049h/l`), and OSC strings
   (consumed, not rendered).
 - **Acceptance gate for milestone 2:** must render `bash`, `vim`, and `htop` legibly.
@@ -101,6 +101,51 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
   (`ESC D`/`M`/`E`), origin mode (`?6`). Documented, not silent. (DEC charset was out of scope
   here too; it landed separately as AC-CHARSET.)
 
+### AC-TRUECOLOR — 24-bit SGR colour (`src/grid.ts`, `src/ansi/parser.ts`, `src/terminal.ts`, `server/server.ts`) ✅
+
+Truecolor SGR is parsed and discarded today: `38;2;r;g;b`/`48;2;r;g;b` collapse to the terminal
+default (AC-ANSI), so a truecolor selection band or theme colour goes missing. The colon form
+tmux itself emits is worse off: the CSI scanner accepts only digits and `;` as parameter bytes,
+so `38:2::r:g:b` mangles into one bogus code. This maps 24-bit colour end to end: model, parser
+(both syntax forms), CSS, plus environment advertisement so real programs actually emit it.
+
+- **Model (`src/grid.ts`):** `Color` widens to `number | Rgb | null`, where `Rgb` is a readonly
+  `{ r, g, b }` object (each 0-255). The model stays presentation-free; palette indices remain
+  plain numbers, discriminated by `typeof`.
+- **Parser, semicolon form:** `38;2;r;g;b` (fg) / `48;2;r;g;b` (bg) produce the `Rgb`, consuming
+  exactly five codes. Semicolon form has no colorspace slot (matches xterm). Components missing
+  because the sequence ends early default to 0; out-of-range components clamp to 0-255.
+- **Parser, colon form (ISO 8613-6):** the CSI scanner accepts `:` as a parameter byte (it is in
+  ECMA-48's 0x30-0x3F range), and SGR treats each `;`-separated param containing `:` as one
+  self-contained subparameter group. `38:2::r:g:b` (empty colorspace-id slot, what tmux emits)
+  and `38:2:r:g:b` parse to the same `Rgb`; `38:5:n` parses as 256-colour (same dispatch,
+  near-free). A group never consumes following `;`-params, so `0;38:2::255:128:0;1m` applies
+  reset, then the colour, then bold.
+- **Render (`src/terminal.ts`):** `cellStyle` maps an `Rgb` to `rgb(r, g, b)`. Inverse swaps
+  truecolor fg/bg exactly like palette colours. `high` only; `low`/`med` stay the monochrome
+  node-count baselines (AC-RENDER unchanged).
+- **Advertise (`server/server.ts`):** the spawned shell's env gets `COLORTERM=truecolor`
+  (inherit `process.env`, override that one key). Because a copied env defeats node-pty's
+  identity-gated `_sanitizeEnv` (it only runs on `process.env` itself), `spawnEnv` strips the
+  same terminal-nesting keys (`TMUX`, `TMUX_PANE`, `STY`, `WINDOW`, `WINDOWID`, `TERMCAP`,
+  `COLUMNS`, `LINES`); otherwise a server started inside tmux would leak `$TMUX` and the child
+  `tmux new` would refuse to nest. `TERM` stays `xterm-256color`. The readme documents the
+  tmux-side pass-through (`terminal-features`/`terminal-overrides` `RGB`/`Tc`), which cannot be
+  set from the server.
+- **Chunk-safe:** `:` rides the existing `params` buffer on `Parser`, so a truecolor sequence
+  split across `feed` calls parses identically (the AC-ANSI invariant extends).
+- **Non-regression:** palette (`30-37`/`90-97`/`38;5;n`), default (`39`/`49`), and every other
+  SGR code behave exactly as before. Semicolon `38`/`48` with an unknown kind keeps today's
+  behavior (documented pragmatic subset). Because the scanner now admits `:` for every CSI
+  final, `nums` NaN-guards malformed slots to the param default, so a stray colon reaching a
+  non-SGR final (e.g. `ESC[:S`) degrades to the sequence's default instead of leaking NaN
+  into grid ops.
+- **Tests:** parser unit tests (both forms, mixed groups, truncation, clamping, chunk splits,
+  the unknown-kind fallthrough, the stray-colon NaN guard), a backend test that `spawnEnv`
+  overrides `COLORTERM` and strips the sanitized keys, plus a browser assertion that a
+  truecolor SGR yields spans whose computed colours are the exact `rgb()`, inverse included
+  (extends AC-TEST).
+
 ### AC-TRANSPORT — I/O as an Effect Service (`src/transport.ts`) ✅
 
 - `PtyTransport` is a `Context.Service`; the app depends only on the interface.
@@ -131,7 +176,8 @@ region. Honoring both makes dynamic redraws render correctly. Scope is targeted 
   only the render (a `List.each` keyed on the level); the parser pump feeding the refs persists.
 - Changed-only rows update (untouched rows keep their ref and their subscriptions).
 - `high` renders one `<span>` per cell with a reactive `style` prop (SGR fg/bg/bold/italic/
-  underline/inverse, 16 + 256-colour) plus a reactive char, so it carries full colour at max
+  underline/inverse, 16 + 256-colour + 24-bit truecolor, see AC-TRUECOLOR) plus a reactive
+  char, so it carries full colour at max
   node count. `low`/`med` stay monochrome text, the cheaper node-count baselines.
 - The app opens in `high`, the coloured real-use view, so real programs render in colour out of
   the box (a menu's reverse-video selection band, a status bar). `low`/`med` are opt-in perf
@@ -549,7 +595,7 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
   viewer who wants to invite someone else needs the presenter to share again, or the token itself,
   out of band. Not solved here.
 
-### AC-TEST 🚧 (unit + backend + hermetic browser done, including AC-REMOTE and AC-STREAM; mux assertions pending)
+### AC-TEST 🚧 (unit + backend + hermetic browser done, including AC-REMOTE, AC-STREAM, and AC-TRUECOLOR; mux assertions pending)
 
 - Unit (`vp run test`): grid model ✅, ANSI parser ✅. Pixel-lock computation helper
   (measured metrics + dpr → integer-device-px cell/row) ✅ (AC-PIXELGRID). G0 DEC Special
@@ -558,7 +604,10 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
   alternate screen, and the negative guards that `ESC)0`/`ESC*0`/`ESC+0` do not translate).
   Scroll regions + ECH (table-driven: DECSTBM set/reset/invalid + cursor home,
   region scroll preserving out-of-region refs, region-aware `lineFeed`, `eraseChars`, and the
-  distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Grid-size presets, labels, and
+  distilled tmux-attach bleed scenario) ✅ with AC-SCROLLREGION. Truecolor SGR (semicolon +
+  colon forms for fg and bg, colon-form 256-colour, mixed groups, truncation-to-0, clamping, a
+  chunk split, the `39` reset, the unknown-kind fallthrough, and the stray-colon NaN guard on
+  non-SGR finals) ✅ with AC-TRUECOLOR. Grid-size presets, labels, and
   URL parsing (fallback per dimension, non-integer/zero/negative rejection, clamping) ✅
   (AC-GRIDSIZE, 19 cases). The auto-fit computation (pane box + cell metrics + cap → `GridSize`,
   including the cap, the floor, and the inert sub-cell change) ✅ with AC-RESIZE, pure and
@@ -593,7 +642,10 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
   ✅; and, spawning a real tmux session, a view-token connection's `input` message never reaches
   the shell, asserted by `tmux capture-pane` on the session directly rather than by absence of an
   echo (the read-only enforcement is tmux's, verified end-to-end through this repo's own server
-  code, not only by the standalone manual check the design decision was based on) ✅.
+  code, not only by the standalone manual check the design decision was based on) ✅. With
+  AC-TRUECOLOR: `spawnEnv` overrides `COLORTERM=truecolor` over an inherited env and strips the
+  terminal-nesting keys node-pty's identity-gated sanitization no longer sees once the env is a
+  copy ✅.
 - Browser e2e (`vp run test:browser`): mount `App` with `PtyTransportMockLive`; assert streamed
   output renders, a keystroke reaches the mock write log, the FPS + rows/sec meters render, a
   selected load level drives rows/sec above zero, and a strategy switch keeps the grid ✅. A
@@ -608,7 +660,10 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
   cells without a character ✅.
   A captured scroll-region sequence (`ESC[1;23r` + scrolling)
   replayed via the mock transport keeps the status row in place with no bleed ✅
-  (AC-SCROLLREGION). Rendered cell advance and row height are whole device pixels
+  (AC-SCROLLREGION). A truecolor byte sequence (semicolon-form fg, colon-form bg, and an
+  inverse cell) renders spans whose computed colours are the exact `rgb()` values, inverse
+  painting the truecolor fg into the background ✅ (AC-TRUECOLOR, same hermetic pipeline).
+  Rendered cell advance and row height are whole device pixels
   (`× devicePixelRatio` is integer) once the grid is mounted ✅ (AC-PIXELGRID; the probe logic
   inverted to assert integrality, across all three strategies). Clicking a size preset re-inits
   the grid to the new dimensions _and_ records the matching `session.resize(cols, rows)` on the
@@ -681,6 +736,11 @@ socket.close())` then closes with no explicit code, which is not 1008, so the cl
     plain `string`. No generics, overloads, or conditional/inferred types, so the main typecheck
     already enforces the surface. The behaviour under test is token comparison, role resolution,
     and URL construction, all runtime concerns (unit + backend tests).
+  - AC-TRUECOLOR specifically: `Rgb` is a plain concrete readonly interface, `Color` a
+    three-member union of it, `number`, and `null`, and `rgbToCss`/`spawnEnv` non-generic
+    fixed-signature functions. No generics, overloads, or conditional/inferred types, so the
+    main typecheck already enforces the surface. The behaviour under test is SGR parsing,
+    CSS mapping, and env preparation, all runtime concerns (unit + backend + browser tests).
 
 ## Notes / accepted deviations
 

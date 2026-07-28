@@ -28,6 +28,7 @@ import {
   scrollUp,
   setCursor,
   setScrollRegion,
+  type Rgb,
   type Style,
   type TerminalState,
 } from "../grid";
@@ -119,18 +120,65 @@ const TAB = 0x09;
 const LF = 0x0a;
 const CR = 0x0d;
 
-/** Parse the CSI parameter buffer into numbers, `fallback` for empty slots. */
+/**
+ * Parse the CSI parameter buffer into numbers, `fallback` for empty or
+ * malformed slots. The scanner admits `:` for SGR subparameter groups, so a
+ * stray colon can reach any final byte; NaN must fall back rather than leak
+ * into grid ops (a `scrollUp(NaN)` would blank the whole region).
+ */
 function nums(params: string, fallback: number): number[] {
   if (params === "") return [fallback];
-  return params.split(";").map((p) => (p === "" ? fallback : Number.parseInt(p, 10)));
+  return params.split(";").map((p) => {
+    const n = Number.parseInt(p, 10);
+    return Number.isNaN(n) ? fallback : n;
+  });
+}
+
+/** Clamp a truecolor component to 0-255; a missing or malformed component reads 0. */
+function channel(part: string | undefined): number {
+  const n = part === undefined || part === "" ? 0 : Number.parseInt(part, 10);
+  if (Number.isNaN(n)) return 0;
+  return n < 0 ? 0 : n > 255 ? 255 : n;
+}
+
+/**
+ * One ISO 8613-6 colon group (`38:2::r:g:b`, `38:2:r:g:b`, `38:5:n`).
+ * Self-contained: subparameters never spill into neighbouring `;`-params. The
+ * colorspace-id slot is taken as present when the subparam after the kind is
+ * empty or when six subparams arrive (both shapes occur in the wild).
+ */
+function applyColonSgr(style: Style, group: string): Style {
+  const sub = group.split(":");
+  const c = Number.parseInt(sub[0]!, 10);
+  if (c !== 38 && c !== 48) return style;
+  const kind = Number.parseInt(sub[1] ?? "", 10);
+  if (kind === 5) {
+    const p = sub[2];
+    const idx = p === undefined ? null : p === "" ? 0 : Number.parseInt(p, 10);
+    return c === 38 ? { ...style, fg: idx } : { ...style, bg: idx };
+  }
+  if (kind === 2) {
+    const offset = sub[2] === "" || sub.length >= 6 ? 3 : 2;
+    const rgb: Rgb = {
+      r: channel(sub[offset]),
+      g: channel(sub[offset + 1]),
+      b: channel(sub[offset + 2]),
+    };
+    return c === 38 ? { ...style, fg: rgb } : { ...style, bg: rgb };
+  }
+  return style;
 }
 
 function applySgr(style: Style, params: string): Style {
-  const codes =
-    params === "" ? [0] : params.split(";").map((p) => (p === "" ? 0 : Number.parseInt(p, 10)));
+  const parts = params === "" ? [""] : params.split(";");
   let next = style;
-  for (let i = 0; i < codes.length; i++) {
-    const c = codes[i]!;
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]!;
+    if (part.includes(":")) {
+      next = applyColonSgr(next, part);
+      continue;
+    }
+    const c = part === "" ? 0 : Number.parseInt(part, 10);
     if (c === 0) next = DEFAULT_STYLE;
     else if (c === 1) next = { ...next, bold: true };
     else if (c === 22) next = { ...next, bold: false };
@@ -147,14 +195,21 @@ function applySgr(style: Style, params: string): Style {
     else if (c >= 100 && c <= 107) next = { ...next, bg: c - 100 + 8 };
     else if (c === 49) next = { ...next, bg: null };
     else if (c === 38 || c === 48) {
-      // Extended colour: `38;5;n` (256) or `38;2;r;g;b` (truecolor, mapped to null).
-      const kind = codes[i + 1];
+      // Extended colour: `38;5;n` (256) or `38;2;r;g;b` (truecolor). Semicolon
+      // form has no colorspace slot (matches xterm); missing components read 0.
+      const kind = Number.parseInt(parts[i + 1] ?? "", 10);
       if (kind === 5) {
-        const idx = codes[i + 2] ?? null;
+        const p = parts[i + 2];
+        const idx = p === undefined ? null : p === "" ? 0 : Number.parseInt(p, 10);
         next = c === 38 ? { ...next, fg: idx } : { ...next, bg: idx };
         i += 2;
       } else if (kind === 2) {
-        next = c === 38 ? { ...next, fg: null } : { ...next, bg: null };
+        const rgb: Rgb = {
+          r: channel(parts[i + 2]),
+          g: channel(parts[i + 3]),
+          b: channel(parts[i + 4]),
+        };
+        next = c === 38 ? { ...next, fg: rgb } : { ...next, bg: rgb };
         i += 4;
       }
     }
@@ -268,7 +323,7 @@ export function feed(parser: Parser, text: string): Parser {
         break;
       case "csi":
         if (ch === "?" && params === "") priv = true;
-        else if ((code >= 0x30 && code <= 0x39) || ch === ";") params += ch;
+        else if ((code >= 0x30 && code <= 0x39) || ch === ";" || ch === ":") params += ch;
         else if (code >= 0x40 && code <= 0x7e) {
           term = dispatchCsi(term, params, priv, ch);
           mode = "ground";

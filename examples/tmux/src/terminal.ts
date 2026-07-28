@@ -8,16 +8,17 @@
  *
  * The strategy is how many reactive nodes each row is split into: `low` = 1 text
  * node (whole line), `med` = a handful of text segments, `high` = one coloured
- * `<span>` per cell, each with a single binding driving both text and style
- * (`renderCell`). That node count is the variable the perf meter measures;
- * `high` also carries SGR colour (see `src/specs.md`, AC-RENDER).
+ * `<span>` per cell, a whole row's cells driven by one per-row binding
+ * (`renderRowHigh`). That node count is the variable the perf meter measures;
+ * `high` also carries SGR colour, truecolor included (see `src/specs.md`,
+ * AC-RENDER and AC-TRUECOLOR).
  */
 
 import { h } from "@weftui/core";
 import type { Node } from "@weftui/core";
 import { Effect, Option, pipe, type Scope, Stream, SubscriptionRef } from "effect";
 import { feed, initParser } from "./ansi/parser";
-import { blankRow, DEFAULT_STYLE, type Row, type Style } from "./grid";
+import { blankRow, DEFAULT_STYLE, type Rgb, type Row, type Style } from "./grid";
 import type { PaneBox } from "./grid-size";
 import { segmentsFor, type Strategy } from "./perf";
 
@@ -180,6 +181,11 @@ const ANSI_16 = [
 const THEME_FG = "#b3b1ad";
 const THEME_BG = "#0d1017";
 
+/** Map a truecolor `Rgb` to its CSS `rgb()` string. */
+function rgbToCss(rgb: Rgb): string {
+  return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+}
+
 /** Map an xterm palette index (0-255) to a CSS colour. */
 function paletteToCss(index: number): string {
   if (index < 16) return ANSI_16[index] ?? THEME_FG;
@@ -202,8 +208,10 @@ function cellStyle(style: Style): Record<string, string> {
   const fg = inv ? style.bg : style.fg;
   const bg = inv ? style.fg : style.bg;
   return {
-    color: fg != null ? paletteToCss(fg) : inv ? THEME_BG : "",
-    backgroundColor: bg != null ? paletteToCss(bg) : inv ? THEME_FG : "",
+    color:
+      fg == null ? (inv ? THEME_BG : "") : typeof fg === "number" ? paletteToCss(fg) : rgbToCss(fg),
+    backgroundColor:
+      bg == null ? (inv ? THEME_FG : "") : typeof bg === "number" ? paletteToCss(bg) : rgbToCss(bg),
     fontWeight: style.bold ? "bold" : "",
     fontStyle: style.italic ? "italic" : "",
     textDecoration: style.underline ? "underline" : "",

@@ -182,12 +182,15 @@ Implemented and validated on Node 26:
   node/row, med = 8, high = one coloured `<span>` per cell), and a synthetic load generator
   (off/low/med/high). Switch strategy against load to find where reactivity caps out. Covered
   by the browser test.
-- Per-cell SGR colour at the `high` level (fg/bg/bold/italic/underline/inverse, 256-colour);
-  `low`/`med` stay monochrome as the cheap node-count baselines.
+- Per-cell SGR colour at the `high` level (fg/bg/bold/italic/underline/inverse, 256-colour and
+  24-bit truecolor); `low`/`med` stay monochrome as the cheap node-count baselines.
 - The app opens in the `high` (coloured) strategy, so real programs render in colour by default,
   including the reverse-video selection band as you move it through a menu. `low`/`med` are opt-in
-  monochrome baselines you switch to from the control bar for benchmarking. 24-bit truecolor
-  backgrounds are collapsed to the terminal default for now.
+  monochrome baselines you switch to from the control bar for benchmarking.
+- Both truecolor syntax forms parse: `38;2;r;g;b` and tmux's `38:2::r:g:b`. The backend advertises
+  `COLORTERM=truecolor` to the spawned shell. tmux itself still needs its own config to pass RGB
+  through: `set -as terminal-features ',xterm-256color:RGB'` (tmux ≥ 3.2), or
+  `set -ga terminal-overrides ',xterm-256color:Tc'` on older tmux.
 - Pixel-locked grid: one monospace cell is measured at runtime, then cell advance and row height
   snap to whole device pixels so glyphs render crisp. The lock applies to the grid container, so
   every render strategy inherits it. Covered by unit and browser tests.

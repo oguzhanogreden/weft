@@ -34,6 +34,14 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   `TMUX_SESSION` makes a dropped connection reconnect into the same tmux session. Reconnect is
   automatic with exponential backoff, capped and eventually paused, shown as a status dot. Unit-,
   backend-, and browser-tested.
+- 24-bit truecolor SGR (AC-TRUECOLOR): semicolon (`38;2;r;g;b`) and colon (`38:2::r:g:b`,
+  tmux's output) forms both parse into an `Rgb` on the grid model and render as the exact
+  `rgb()` at the `high` strategy, inverse included. The backend advertises
+  `COLORTERM=truecolor` and strips the terminal-nesting env keys node-pty's identity-gated
+  sanitization no longer sees once the env is a copy. The CSI scanner's widened `:` acceptance
+  is NaN-guarded, so malformed sequences degrade to param defaults instead of corrupting the
+  grid. Unit-, backend-, and browser-tested; the readme documents the tmux-side `RGB`
+  pass-through.
 - Read-only multi-viewer access: a second token (`PTY_VIEW_TOKEN`) grants a read-only
   `tmux attach -r` instead of the read-write shell, role decided server-side purely by which token
   matches. Built on tmux's own multi-client and `ignore-size` support (verified against the
@@ -44,7 +52,7 @@ Done and validated on Node 26 (`vp run check` / `test` / `test:browser` green):
   end-to-end backend test that a viewer's typed input never reaches the real shell.
 
 Rendering is single-pane. Colour renders per cell at the `high` strategy, now the default, so real
-programs open in colour. The items below are ordered roughly by value.
+programs open in colour, 24-bit truecolor included. The items below are ordered roughly by value.
 
 ## 1. Run real tmux (fidelity, not reinvention)
 
@@ -58,10 +66,9 @@ glyphs instead of `q`/`x` letters (AC-CHARSET). What remains:
 
 - Insert/delete line (`L`/`M`): vim and some TUIs shift lines this way. Absent from the tmux
   capture, so lower priority.
-- 24-bit truecolor (`48;2;r;g;b`): collapsed to the terminal default today, so a truecolor
-  selection band or theme colour goes missing. Map it to a CSS colour (part of item 2).
 
-These overlap with item 5 (ANSI fidelity); together they are what make real `tmux` legible.
+This overlaps with item 5 (ANSI fidelity); truecolor landed (AC-TRUECOLOR), so insert/delete
+line is the main gap left for full legibility.
 
 A Weft-native multiplexer (panes as Weft components, one PTY per pane via `PtyTransport.spawn`,
 `Ctrl-b` prefix over a global `keydown` stream) stays an option if you want browser-native
@@ -74,10 +81,12 @@ The `high` strategy renders the grid model's `fg`/`bg`/`bold`/`italic`/`underlin
 colour, including a menu's reverse-video selection band. `low`/`med` stay monochrome as the
 node-count baselines (colour is a property of the real-use view, not the benchmark).
 
+24-bit truecolor landed too (AC-TRUECOLOR): both syntax forms map to the exact `rgb()`, the
+backend advertises `COLORTERM=truecolor`, and the readme documents the tmux-side `RGB`
+pass-through.
+
 Open refinements:
 
-- 24-bit truecolor (`48;2;r;g;b`) is collapsed to the terminal default; map it to a CSS colour so
-  truecolor selection bands and themes render.
 - Coalesce same-style runs into fewer `<span>`s for the real-use view if the per-cell node count
   becomes a bottleneck.
 
@@ -143,6 +152,9 @@ Add table-driven parser unit tests as each lands.
 chunk-merge collision on `effect`'s httpapi namespace (pulled in via `@weftui/router`). It
 surfaces above ~31 browser test files and is order/resource sensitive. Mitigated today by
 `optimizeDeps: { include: ["effect"] }` in `vitest.browser.config.ts`; seen once in ~7 runs.
+Also seen (2026-07-28, the first run after the suite grew to 41 files): `SyntaxError:
+Unexpected token '*'` at import time across 11 files, same class, new signature; two immediate
+full re-runs were green.
 
 - Reproduce deterministically (run the full suite under load), then either harden the browser
   bundling (dep pre-bundling / chunking) or file it upstream against the effect beta.

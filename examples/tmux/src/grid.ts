@@ -8,8 +8,15 @@
  * affordable (see `src/specs.md`, AC-GRID).
  */
 
-/** SGR colour: a 0-255 palette index, or `null` for the terminal default. */
-export type Color = number | null;
+/** A 24-bit truecolor SGR value, each component 0-255 (specs.md, AC-TRUECOLOR). */
+export interface Rgb {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+}
+
+/** SGR colour: a 0-255 palette index, a truecolor `Rgb`, or `null` for the terminal default. */
+export type Color = number | Rgb | null;
 
 /** Per-cell visual attributes carried by SGR. */
 export interface Style {

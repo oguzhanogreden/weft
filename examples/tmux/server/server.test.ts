@@ -19,6 +19,7 @@ import {
 	type PtyServer,
 	resolveRole,
 	resolveShellCommand,
+	spawnEnv,
 	startServer,
 } from "./server.ts";
 
@@ -103,6 +104,32 @@ test("resolveShellCommand: a viewer attaches read-only to the named session (AC-
 		command: "tmux",
 		args: ["attach", "-t", "weft", "-r"],
 	});
+});
+
+test("spawnEnv: sets COLORTERM=truecolor over the inherited env (AC-TRUECOLOR)", () => {
+	const env = spawnEnv({ PATH: "/bin", COLORTERM: "8bit", TERM: "dumb" });
+	assert.equal(env.COLORTERM, "truecolor");
+	assert.equal(env.PATH, "/bin");
+});
+
+test("spawnEnv: strips the terminal-nesting vars node-pty no longer sanitizes (AC-TRUECOLOR)", () => {
+	// node-pty's `_sanitizeEnv` only runs on `process.env` by identity; handing
+	// it a copy disables it, so spawnEnv must strip the same keys itself.
+	const env = spawnEnv({
+		HOME: "/home/u",
+		TMUX: "/tmp/tmux-501/default,123,0",
+		TMUX_PANE: "%1",
+		STY: "1234.pts-0.host",
+		WINDOW: "0",
+		WINDOWID: "77594624",
+		TERMCAP: "SC|screen|VT 100/ANSI X3.64 virtual terminal",
+		COLUMNS: "80",
+		LINES: "24",
+	});
+	assert.equal(env.HOME, "/home/u");
+	for (const key of ["TMUX", "TMUX_PANE", "STY", "WINDOW", "WINDOWID", "TERMCAP", "COLUMNS", "LINES"]) {
+		assert.equal(key in env, false, `${key} must be stripped`);
+	}
 });
 
 test("resolveRole: open access when neither token is configured (AC-STREAM)", () => {
