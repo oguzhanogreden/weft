@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tmux in the browser - Weft</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        background: #0b0e14;
+        min-height: 100vh;
+        color: #b3b1ad;
+        padding: 1.5rem;
+      }
+
+      /* Grow to the grid rather than capping it. A clipped `.term` still takes the
+         DOM writes but the browser skips paint for what it hides, so a capped
+         width makes the FPS meter read better than the truth.
+         `min-width: 100%` (not a fixed cap) so an auto-fitted grid never leaves
+         the root narrower than the viewport, which is what keeps the available
+         width measurable independently of the grid inside it. */
+      #root {
+        width: fit-content;
+        min-width: 100%;
+        margin: 0 auto;
+      }
+
+      .term {
+        background: #0d1017;
+        border: 1px solid #1c2230;
+        border-radius: 4px;
+        padding: 0.5rem 0.75rem;
+        white-space: pre;
+        overflow: auto;
+        outline: none;
+      }
+
+      .term:focus {
+        border-color: #39bae6;
+      }
+
+      .term-row {
+        white-space: pre;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+        font-size: 12px;
+      }
+
+      .controls .label {
+        color: #6b7280;
+        margin-left: 0.5rem;
+      }
+
+      .controls .label:first-child {
+        margin-left: 0;
+      }
+
+      .level {
+        background: #0d1017;
+        color: #b3b1ad;
+        border: 1px solid #1c2230;
+        border-radius: 3px;
+        padding: 0.15rem 0.5rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+      }
+
+      .level:hover {
+        border-color: #39bae6;
+      }
+
+      .meter {
+        margin-left: 0.5rem;
+        color: #39bae6;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Connection status: a coloured dot plus a word, always visible next to
+         the meters (not inside `.control-groups`), since it matters most on the
+         device most likely to lose the connection (AC-REMOTE). */
+      .status {
+        margin-left: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .status::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .status-connecting {
+        color: #e6b450;
+      }
+
+      .status-live {
+        color: #7fd962;
+      }
+
+      .status-offline {
+        color: #6b7280;
+      }
+
+      .status-offline::before {
+        background: transparent;
+        border: 1px solid currentColor;
+      }
+
+      .status-unauthorized {
+        color: #f07178;
+      }
+
+      .terminal-pane {
+        font-size: 13px;
+        outline: none;
+      }
+
+      /* Groups collapse behind the toggle on narrow screens; the meters stay put,
+         since watching them is the point of the harness (AC-MOBILE). */
+      .control-groups {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .controls-toggle {
+        display: none;
+      }
+
+      @media (max-width: 720px) {
+        .controls-toggle {
+          display: inline-block;
+        }
+
+        .control-groups {
+          display: none;
+          width: 100%;
+        }
+
+        .control-groups[data-open="true"] {
+          display: flex;
+        }
+      }
+
+      /* Touch accessory row: the keys a soft keyboard does not have. Coarse
+         pointers only, so desktop is untouched (AC-MOBILE). */
+      .accessory {
+        display: none;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+      }
+
+      @media (pointer: coarse) {
+        .accessory {
+          display: flex;
+        }
+      }
+
+      .accessory-key {
+        background: #0d1017;
+        color: #b3b1ad;
+        border: 1px solid #1c2230;
+        border-radius: 3px;
+        /* Roomy enough to hit with a thumb. */
+        min-width: 2.75rem;
+        padding: 0.45rem 0.6rem;
+        font-family: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .accessory-key[data-armed="true"] {
+        border-color: #39bae6;
+        color: #39bae6;
+      }
+
+      /* Focus target that summons the soft keyboard. Must stay focusable, so it
+         is transparent rather than `display: none` (AC-MOBILE). */
+      .term-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        border: 0;
+        opacity: 0;
+        resize: none;
+        overflow: hidden;
+      }
+
+      /* Hidden probe: measured once on mount to pixel-lock the grid (AC-PIXELGRID). */
+      .term-probe {
+        position: absolute;
+        visibility: hidden;
+        pointer-events: none;
+        white-space: pre;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

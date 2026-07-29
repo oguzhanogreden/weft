@@ -271,6 +271,7 @@ A shallow clone of [Effect-TS/effect](https://github.com/Effect-TS/effect) lives
 ## Meta Rules
 
 - Always discuss new rules and rule changes in Q&A style. Ask a question and await the answer before asking the next question, until sufficient information is provided.
+- Whenever work on an example (or any package) surfaces something that is really feedback for Weft itself, not the thing being built, log it in `WEFT-FEEDBACK.md` at the repo root: a framework defect, a papercut worked around locally, or a non-obvious characteristic that could surprise other consumers. Cross-reference from wherever it was found (e.g. an example's `next-steps.md`); `WEFT-FEEDBACK.md` is the one place that collects these across the whole repo.
 
 <!--VITE PLUS START-->
 

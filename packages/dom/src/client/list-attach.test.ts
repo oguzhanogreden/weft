@@ -22,6 +22,7 @@ import { Effect, Scope, SubscriptionRef } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { RenderContext } from "~/data";
+import { ensureFlushFiber, makeLoomUnsafe } from "./loom";
 import { renderNode } from "./render";
 import * as WeftApp from "./weft-app";
 
@@ -43,6 +44,7 @@ function makeTestRenderContext(): RenderContext["Service"] {
     rootScope: scope,
     streamIdCounter: { current: 0 },
     reportUnhandled: () => Effect.void,
+    loom: makeLoomUnsafe(),
   };
 }
 
@@ -62,6 +64,8 @@ const items = (ids: readonly string[]): readonly Item[] =>
 const mountRacedList = (root: HTMLElement) =>
   Effect.gen(function* () {
     const context = makeTestRenderContext();
+    // Cell writes only commit once a flush fiber drains them (AC-LOOM).
+    yield* ensureFlushFiber(context.loom, context.scope);
     const ref = yield* SubscriptionRef.make(items(["a", "b", "c"]));
 
     const region = yield* renderNode(

@@ -31,6 +31,7 @@ import { Effect, Fiber, Scope, Stream, SubscriptionRef } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
 import { RenderContext } from "~/data";
+import { makeLoomUnsafe } from "./loom";
 import { updateStreamChild } from "./render";
 import * as WeftApp from "./weft-app";
 
@@ -84,9 +85,10 @@ function emptyRegions(root: HTMLElement): string[] {
 /**
  * Minimal `RenderContext` for calling `updateStreamChild` directly, bypassing
  * `handleStreamChild`'s fork and `mount`'s own scheduling of the marker-insert.
- * Nothing in these tests reads `runtime` or `reportUnhandled`; both are wired
- * to real, harmless implementations rather than stubs so the effect resolves
- * exactly as it would in production.
+ * Nothing in these tests reads `runtime`, `reportUnhandled`, or `loom`; all
+ * three are wired to real, harmless implementations rather than stubs so the
+ * effect resolves exactly as it would in production. `updateStreamChild`
+ * itself never touches the Loom scheduler; only `handleStreamChild` does.
  */
 function makeTestRenderContext(): RenderContext["Service"] {
   const scope = Scope.makeUnsafe("sequential");
@@ -96,6 +98,7 @@ function makeTestRenderContext(): RenderContext["Service"] {
     rootScope: scope,
     streamIdCounter: { current: 0 },
     reportUnhandled: () => Effect.void,
+    loom: makeLoomUnsafe(),
   };
 }
 
