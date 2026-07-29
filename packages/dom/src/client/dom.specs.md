@@ -135,6 +135,16 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - If object: replace all style properties
   - Handle both cases appropriately
 
+Implementation note: "replace all style properties" is an observable contract, not a
+mechanism. The object case is implemented by diffing each emission against the
+previously-applied object, rather than an unconditional clear-and-reapply. Changed keys
+update, keys no longer present are removed. The two are observationally identical: a key
+absent from the new object is still removed. A string emission forces a full reset
+before the next object emission diffs, since a string can set arbitrary properties
+outside the tracked key set. The diff exists to avoid redundant `CSSStyleDeclaration`
+writes when a stream re-emits an unchanged shape (see `perf-analysis.md` in
+`examples/tmux`).
+
 ### AC14: Effect/Stream Normalization
 
 - **Given** Effect or Stream values in JSX
@@ -187,6 +197,12 @@ Enable declarative, reactive UI rendering in the browser by mounting JSX trees t
   - Insert end comment marker: `<!-- stream-end-{id} -->`
   - Use simple counter for unique IDs
   - Keep internal reference to track nodes
+  - An emission arriving before the markers are spliced into their parent waits for
+    attachment rather than being dropped. The subscription is forked before the markers
+    are returned to the caller, so the first emission can win that race; discarding it is
+    unrecoverable, because the emission is already consumed and the region then stays
+    permanently empty (markers present, nothing between them). The wait is bounded, so a
+    region whose parent is discarded before it renders cannot spin.
 
 ### AC20: Stream Children - Updates (same-type patching)
 

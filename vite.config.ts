@@ -28,6 +28,10 @@ export default defineConfig({
         command: "vp test --config vitest.browser.config.ts",
         dependsOn: ["pack"],
       },
+      bench: {
+        command: "vp test --config vitest.bench.config.ts",
+        dependsOn: ["pack"],
+      },
       "test:types": {
         command: "tstyche",
         dependsOn: ["pack"],
@@ -39,13 +43,26 @@ export default defineConfig({
   // `~` alias resolution) apply to that package's tests without hoisting
   // anything to this root config.
   test: {
-    projects: ["packages/*", "website"],
+    projects: ["packages/*", "website", "examples/tmux"],
   },
   fmt: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
+    ignorePatterns: [
+      "**/dist/**",
+      "*.min.js",
+      "**/.claude/**",
+      "graphify-out",
+      // Standalone PTY backend: its own package, installed/run separately.
+      "examples/tmux/server/**",
+    ],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "*.min.js", "**/.claude/**", "graphify-out"],
+    ignorePatterns: [
+      "**/dist/**",
+      "*.min.js",
+      "**/.claude/**",
+      "graphify-out",
+      "examples/tmux/server/**",
+    ],
     plugins: ["typescript", "unicorn", "oxc"],
     options: {
       typeAware: true,

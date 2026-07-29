@@ -250,23 +250,40 @@ function handleStyle(
     // AC13: Stream of styles
     if (isStream(value) || Effect.isEffect(value)) {
       const stream = toStream(value);
+      // Reconciled against the previously-applied object rather than a full
+      // cssText reset on every emission (see dom.specs.md, AC13): `null` means
+      // "unknown prior state" (first emission, or the last one was a string),
+      // forcing one full reset before diffing resumes. A style stream that
+      // re-emits the same shape on every tick then costs zero CSSOM writes for
+      // unchanged properties instead of clear-and-reapply-all.
+      let previous: Record<string, string> | null = null;
       yield* subscribeToStream(
         stream,
         (val) => {
           // AC13: String -> setAttribute
           if (typeof val === "string") {
             element.setAttribute("style", val);
+            previous = null;
           }
-          // AC13: Object -> replace all properties
+          // AC13: Object -> replace all properties (diffed against `previous`)
           else if (typeof val === "object" && val !== null) {
-            // Clear existing styles
-            element.style.cssText = "";
-            // Set new styles
+            if (previous === null) element.style.cssText = "";
+            const before = previous ?? {};
+            const stale = new Set(Object.keys(before));
+            const next: Record<string, string> = {};
             for (const [key, styleValue] of Object.entries(val)) {
-              if (styleValue !== undefined && styleValue !== null) {
-                element.style.setProperty(camelToKebab(key), String(styleValue as string | number));
+              stale.delete(key);
+              const serialized =
+                styleValue !== undefined && styleValue !== null
+                  ? String(styleValue as string | number)
+                  : "";
+              next[key] = serialized;
+              if (before[key] !== serialized) {
+                element.style.setProperty(camelToKebab(key), serialized);
               }
             }
+            for (const key of stale) element.style.removeProperty(camelToKebab(key));
+            previous = next;
           }
         },
         "style",
@@ -1299,6 +1316,21 @@ function createStreamMarkers(streamId: number): readonly [Comment, Comment] {
  * Exported for reuse by the hydrator, which drives the same update flow against
  * markers adopted from server HTML rather than freshly created ones.
  */
+/**
+ * Yields until `marker` has a parent, bounded so a region whose markers are
+ * never attached (its parent was discarded before it rendered) cannot spin
+ * forever. In that case the caller's existing null-parent guard still applies.
+ */
+const MARKER_ATTACH_YIELDS = 100;
+
+function awaitMarkerAttached(marker: Comment): Effect.Effect<void> {
+  return Effect.gen(function* () {
+    for (let i = 0; marker.parentNode === null && i < MARKER_ATTACH_YIELDS; i++) {
+      yield* Effect.yieldNow;
+    }
+  });
+}
+
 export function updateStreamChild(
   startMarker: Comment,
   endMarker: Comment,
@@ -1335,6 +1367,14 @@ export function updateStreamChild(
     }
 
     // SP4 (fallback): remove all nodes between markers, render, and insert.
+    //
+    // Wait for the markers to be parented first. {@link handleStreamChild} forks
+    // this subscription before returning the markers for the caller to splice in,
+    // so a first emission can arrive while they are still detached. Dropping it
+    // is not recoverable: the emission is already consumed, so the region stays
+    // permanently empty unless something happens to emit again.
+    yield* awaitMarkerAttached(startMarker);
+
     removeNodesBetweenMarkers(startMarker, endMarker);
     const result = yield* renderNode(newNode);
     const parent = startMarker.parentNode;
