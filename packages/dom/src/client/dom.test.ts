@@ -1,6 +1,17 @@
 import * as assert from "node:assert/strict";
 import { describe, it, vi } from "vite-plus/test";
-import { Cause, Effect, Exit, Option, Schedule, Stream, SubscriptionRef } from "effect";
+import {
+  Cause,
+  Effect,
+  Exit,
+  Fiber,
+  Filter,
+  identity,
+  Option,
+  Schedule,
+  Stream,
+  SubscriptionRef,
+} from "effect";
 import { Component, h, Source, Subscribable } from "@weftui/core";
 import type { Renderable } from "@weftui/core/types";
 import { UnsupportedNodeTypeError } from "~/data";
@@ -1619,46 +1630,29 @@ describe("Ref Handling", () => {
     createTestDOM();
     const root = createRoot();
 
-    // Create the ref and track if we received an element via the stream
-    const captured: { element: HTMLInputElement | null } = { element: null };
-
-    await Effect.runPromise(
+    const receivedElement = await Effect.runPromise(
       Effect.gen(function* () {
         const ref = yield* SubscriptionRef.make<Option.Option<HTMLInputElement>>(Option.none());
 
-        // Subscribe to changes and capture the first Option.some emission
-        yield* Effect.forkChild(
-          Stream.runForEach(Stream.filter(SubscriptionRef.changes(ref), Option.isSome), (opt) =>
-            Effect.sync(() => {
-              if (captured.element === null) {
-                captured.element = Option.getOrThrow(opt);
-              }
-            }),
+        // Await the first Option.some emission as a value. `changes` replays the
+        // current value on subscribe, so this cannot race with mount.
+        const first = yield* Effect.forkChild(
+          Stream.runHead(
+            Stream.filterMap(SubscriptionRef.changes(ref), Filter.fromPredicateOption(identity)),
           ),
         );
 
-        // Give the subscription time to start
-        yield* Effect.sleep("50 millis");
-
         // Mount will set the ref
-        return h.input({ ref, type: "text" });
-      }).pipe(
-        Effect.flatMap((node) =>
-          Effect.promise(async () => {
-            await runMount(node, root);
-          }),
-        ),
-      ),
+        yield* Effect.promise(() => runMount(h.input({ ref, type: "text" }), root));
+
+        // Joining is the "element has mounted" synchronization point: no sleeps.
+        return yield* Fiber.join(first);
+      }),
     );
 
-    // Wait for emission to be processed
-    await waitForStream();
-
-    // Verify we received the element through the subscription
-    const receivedElement = captured.element;
-    assert.ok(receivedElement !== null, "Should have received element via stream");
-    assert.equal(receivedElement.tagName, "INPUT");
-    assert.equal(receivedElement.type, "text");
+    assert.ok(Option.isSome(receivedElement), "Should have received element via stream");
+    assert.equal(receivedElement.value.tagName, "INPUT");
+    assert.equal(receivedElement.value.type, "text");
   });
 
   it("should work with HTMLElement for div", async () => {

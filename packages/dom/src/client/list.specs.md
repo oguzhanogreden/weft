@@ -72,6 +72,14 @@ assertions, per `dom.test.ts`.
 - **MR3 — empty.** Given `of` emits `[]`, When the region mounts, Then only the
   `stream-start`/`stream-end` markers are present (no item nodes), and a later non-empty
   emission inserts items between them.
+- **MR4 — pre-splice first emission.** The region markers are minted inside a fresh
+  `DocumentFragment`, so `regionEnd.parentNode` is non-null from birth. Given a first
+  emission that arrives before the caller splices the region into its parent (the pump
+  is forked before the markers are returned), When reconciled, Then the items render
+  into the fragment and the splice moves markers and items atomically. A subsequent
+  emission that reorders the keys and adds a new key must find every retained item
+  inserted (the LIS reuse path must not skip items that were never placed) and must not
+  fail on an anchor that is not in the DOM.
 
 ### Keyed reconciliation (KR)
 

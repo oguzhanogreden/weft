@@ -1,26 +1,38 @@
 /**
- * Regression: a reactive child's first emission must survive its markers not
- * being attached yet.
+ * A reactive child's markers are minted inside a `DocumentFragment`, so they
+ * have a parent from birth. `handleStreamChild` forks the subscription fiber
+ * before returning the region for the caller to splice in; a first emission
+ * that wins that race renders into the fragment, and the splice moves markers
+ * and content into the real parent atomically. Both orderings are valid by
+ * construction; no coordination between fork and splice exists.
  *
- * `handleStreamChild` forks the subscription fiber before returning the marker
- * pair for the caller to splice into the parent. When the fiber wins that race,
- * `startMarker.parentNode` is still null. The insert used to be skipped by a
- * silent null-parent guard, and because the emission had already been consumed
- * the region stayed permanently empty: markers present, no content between them.
+ * Two proof styles below:
  *
- * It needs volume and nesting to surface. A flat run of reactive children does
- * not reproduce it; sibling containers each holding many reactive children does,
- * because that is what spreads the render across enough scheduler turns for some
- * subscriptions to fire before their markers land.
+ * - "forced, deterministic": drives `updateStreamChild` directly with explicit
+ *   fiber scheduling (`startImmediately`), pinning both halves of the
+ *   invariant: a pre-splice emission lands in the birth fragment and travels
+ *   with the splice; an emission against a region removed from the document
+ *   (parentless markers) is dropped without spinning.
+ * - "reactive child attachment" (below): a dense grid mirroring the shape that
+ *   found the original bug in the wild (a first emission used to be dropped
+ *   when its markers were not yet attached). It needs volume and nesting to
+ *   surface; a flat run of reactive children does not reproduce it, because
+ *   that is what spreads the render across enough scheduler turns for some
+ *   subscriptions to fire before their markers land. Kept as integration-level
+ *   coverage for the real-world shape, alongside the deterministic proof above.
  *
- * Found via `examples/tmux`, where it dropped roughly 0.15% of terminal cells.
+ * Found via `examples/tmux`, where the pre-fix race dropped roughly 0.15% of
+ * terminal cells.
  */
 
 import * as assert from "node:assert/strict";
 import { h } from "@weftui/core";
-import { Effect, Stream, SubscriptionRef } from "effect";
+import { Effect, Fiber, Scope, Stream, SubscriptionRef } from "effect";
 import { JSDOM } from "jsdom";
 import { describe, it } from "vite-plus/test";
+import { RenderContext } from "~/data";
+import { makeLoomUnsafe } from "./loom";
+import { updateStreamChild } from "./render";
 import * as WeftApp from "./weft-app";
 
 const ROWS = 24;
@@ -69,6 +81,84 @@ function emptyRegions(root: HTMLElement): string[] {
   });
   return empty;
 }
+
+/**
+ * Minimal `RenderContext` for calling `updateStreamChild` directly, bypassing
+ * `handleStreamChild`'s fork and `mount`'s own scheduling of the marker-insert.
+ * Nothing in these tests reads `runtime`, `reportUnhandled`, or `loom`; all
+ * three are wired to real, harmless implementations rather than stubs so the
+ * effect resolves exactly as it would in production. `updateStreamChild`
+ * itself never touches the Loom scheduler; only `handleStreamChild` does.
+ */
+function makeTestRenderContext(): RenderContext["Service"] {
+  const scope = Scope.makeUnsafe("sequential");
+  return {
+    runtime: WeftApp.make().runtime,
+    scope,
+    rootScope: scope,
+    streamIdCounter: { current: 0 },
+    reportUnhandled: () => Effect.void,
+    loom: makeLoomUnsafe(),
+  };
+}
+
+describe("reactive child attachment (forced, deterministic)", () => {
+  it("renders a pre-splice emission into the birth fragment; the splice carries it", async () => {
+    createTestDOM();
+    const parent = document.createElement("div");
+
+    // The invariant `handleStreamChild` guarantees: markers are born inside a
+    // DocumentFragment, so an emission always has a parent to render into.
+    const fragment = document.createDocumentFragment();
+    const startMarker = document.createComment("stream-start-forced");
+    const endMarker = document.createComment("stream-end-forced");
+    fragment.appendChild(startMarker);
+    fragment.appendChild(endMarker);
+    const context = makeTestRenderContext();
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        // `startImmediately` processes the emission in this call, before the
+        // region is spliced anywhere: the exact ordering `handleStreamChild`
+        // produces when the subscription fiber wins the race.
+        const fiber = yield* Effect.forkIn(
+          updateStreamChild(startMarker, endMarker, "hello").pipe(
+            Effect.provideService(RenderContext, context),
+          ),
+          context.scope,
+          { startImmediately: true },
+        );
+        yield* Fiber.join(fiber);
+
+        // The splice: content rendered into the fragment travels with it.
+        parent.appendChild(fragment);
+      }),
+    );
+
+    assert.equal(parent.textContent, "hello");
+    assert.equal(parent.childNodes.length, 3);
+  });
+
+  it("drops an emission for a region removed from the document, without spinning", async () => {
+    createTestDOM();
+    // Bare, parentless markers model a region whose nodes were removed from
+    // the document (e.g. a swapped-out boundary fallback whose pump has not
+    // been interrupted yet). A hang would trip the timeout below.
+    const startMarker = document.createComment("stream-start-orphan");
+    const endMarker = document.createComment("stream-end-orphan");
+    const context = makeTestRenderContext();
+
+    await Effect.runPromise(
+      updateStreamChild(startMarker, endMarker, "hello").pipe(
+        Effect.provideService(RenderContext, context),
+      ),
+    );
+
+    // Dropping the emission is the designed behavior: markers untouched.
+    assert.equal(startMarker.parentNode, null);
+    assert.equal(endMarker.parentNode, null);
+  }, 2000);
+});
 
 describe("reactive child attachment", () => {
   it("renders content into every region of a dense grid", async () => {

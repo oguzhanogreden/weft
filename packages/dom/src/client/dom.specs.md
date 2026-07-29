@@ -197,12 +197,15 @@ writes when a stream re-emits an unchanged shape (see `perf-analysis.md` in
   - Insert end comment marker: `<!-- stream-end-{id} -->`
   - Use simple counter for unique IDs
   - Keep internal reference to track nodes
-  - An emission arriving before the markers are spliced into their parent waits for
-    attachment rather than being dropped. The subscription is forked before the markers
-    are returned to the caller, so the first emission can win that race; discarding it is
-    unrecoverable, because the emission is already consumed and the region then stays
-    permanently empty (markers present, nothing between them). The wait is bounded, so a
-    region whose parent is discarded before it renders cannot spin.
+  - The marker pair is minted inside a fresh `DocumentFragment`, so
+    `startMarker.parentNode` is non-null from birth. The subscription is forked before
+    the markers are returned to the caller, so a first emission can arrive before the
+    caller splices the region in; it then renders into the fragment, and the splice
+    (appending the fragment) moves markers and content into the real parent atomically.
+    Both orderings are valid; no coordination between fork and splice is needed.
+  - A null `parentNode` at update time therefore means the region was removed from the
+    document (e.g. a swapped-out boundary fallback whose pump has not yet been
+    interrupted). Dropping such an emission is correct by design.
 
 ### AC20: Stream Children - Updates (same-type patching)
 
