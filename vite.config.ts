@@ -43,7 +43,7 @@ export default defineConfig({
   // `~` alias resolution) apply to that package's tests without hoisting
   // anything to this root config.
   test: {
-    projects: ["packages/*", "website", "examples/tmux"],
+    projects: ["packages/*", "website", "examples/tmux", "examples/noai"],
   },
   fmt: {
     ignorePatterns: [

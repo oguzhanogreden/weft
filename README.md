@@ -91,6 +91,7 @@ The [examples/](./examples) directory contains standalone applications you can r
 | `form-handling`              | Reactive inputs, Schema validation, Effect submit handlers                           |
 | `keyed-list`                 | Keyed list rendering with `List.each`                                                |
 | `list-rendering`             | Static and stream-based lists, fragments, nested iterables                           |
+| `noai`                       | Streaming two-party transcript over one WebSocket, filtered by speaker               |
 | `reactive-styles`            | Per-property and whole-object stream styles, CSS transitions                         |
 | `router-ssr`                 | Universal nested routing with SSR, hydration, layouts, `Boundary.rpc`, `Router.lazy` |
 | `server-boundary`            | `Boundary.rpc` client-first mount + refetch, router-less                             |

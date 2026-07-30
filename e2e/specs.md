@@ -63,6 +63,15 @@ server. Notes from wiring these up:
   and is interrupted the instant the gen returns the tree. Under `vp dev` it usually
   wins the race and emits anyway, but under an isolated `mount` it is killed first
   (see `examples/element-ref`).
+- A queryable root element does not mean a settled tree. Reactive **props** land a tick
+  after the element they are on, so `el.dataset.foo` reads `undefined` and a checkbox
+  bound to a stream reads `checked === false`, both briefly. Put those reads inside the
+  `vi.waitFor` callback, not after it (see `examples/noai/src/app.browser.test.ts`).
+- **Asserting a node is absent needs an anchor.** An absent node and a not-yet-rendered
+  node are indistinguishable, so a bare `expect(query(".banner")).toBeNull()` passes for
+  the wrong reason. Wait for an unrelated reactive binding to apply first, and pin the
+  read point by asserting in a sibling test that the node _is_ present at that same
+  anchor. Without that pairing the absence test proves nothing.
 - The test page has none of the example's `index.html` CSS, so don't assert on
   layout-derived pixel values.
 

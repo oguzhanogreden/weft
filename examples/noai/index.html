@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The document half of the signal. The server injects this tag during SSR
+      (`server/signal.ts`, injectRobotsMeta) and the injection is idempotent, so
+      having it here in the dev template does not produce two tags.
+      See src/specs.md, AC-SIGNAL-META.
+    -->
+    <meta name="robots" content="noai, noimageai" />
+    <title>noai: a transparent dialogue - Weft</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #0b0e14;
+        min-height: 100vh;
+        color: #b3b1ad;
+        padding: 1.5rem;
+        line-height: 1.5;
+      }
+
+      #root {
+        max-width: 46rem;
+        margin: 0 auto;
+      }
+
+      .banner {
+        border: 1px solid #6c5626;
+        background: #2a2312;
+        color: #e6c07b;
+        padding: 0.6rem 0.8rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+      }
+
+      .signal {
+        border: 1px solid #1f2430;
+        border-radius: 4px;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.8125rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+      }
+
+      .turn {
+        border-left: 2px solid #1f2430;
+        padding: 0.4rem 0 0.4rem 0.8rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .turn[data-speaker="crawler"] {
+        border-left-color: #59c2ff;
+      }
+
+      .turn[data-speaker="site"] {
+        border-left-color: #d2a6ff;
+      }
+
+      /* Tool turns are part of the dialogue but visually subordinate to it:
+         they show the round-trip happened without competing with the prose. */
+      .turn[data-kind="fetch-call"],
+      .turn[data-kind="fetch-result"] {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.8125rem;
+        opacity: 0.75;
+      }
+
+      .turn[data-kind="refusal"],
+      .turn[data-kind="error"] {
+        border-left-color: #ff6666;
+        color: #ff8f8f;
+      }
+
+      .speaker {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.6;
+        margin-bottom: 0.2rem;
+      }
+
+      .empty {
+        opacity: 0.5;
+        font-style: italic;
+        padding: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

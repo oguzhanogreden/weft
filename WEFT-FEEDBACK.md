@@ -44,6 +44,88 @@ document clearly for `@weftui/dom` consumers ("wait for content, not structure, 
 a reactive rebuild"). The mechanism for why some teardown paths expose it and others
 don't is untraced. See `examples/tmux/perf-analysis.md`, Update 4.
 
+### A reactive attribute or boolean prop paints its element before applying its first value
+
+The same tick gap as the reactive-child entry above, but for props rather than children,
+and with a user-visible consequence rather than only a test-timing one.
+
+An element whose attribute is `Stream`-valued is inserted without that attribute, which
+then appears a tick later. For `data-*` that is invisible. For a boolean IDL property it
+is not: a checkbox bound to a stream whose first value is `true` paints **unchecked**, then
+corrects itself. In a real app with CSS that is a flash of the wrong state on every mount.
+
+A consumer cannot avoid it. There is no way to pass a static initial value alongside a
+stream for the same prop, so `checked: Stream.map(…)` is the only expressible form and it
+necessarily starts from the element's default. If props accepted an initial value plus a
+stream, or applied the stream's already-available current value during element creation,
+the flash would not exist.
+
+Found in: `examples/noai` (`src/app.browser.test.ts`, AC-FILTER's "starts with both
+toggles on", and `data-complete` in AC-STREAM). Both toggles render off for a tick before
+showing their real state. Worked around in the test with `vi.waitFor`; not worked around in
+the app, because it cannot be from outside `packages/dom`.
+
+### `oxfmt` does not converge on an indented paragraph inside a checklist item
+
+A markdown list item with a second paragraph indented to align with its text is reformatted
+by `oxfmt` into deeper and deeper indentation each pass, so it never reaches a fixed point.
+
+The failure mode is worse than the formatting itself. `vp check --fix` exits **pass** while
+`vp run check` keeps reporting the same file as unformatted, which reads as a broken cache
+or a stale build rather than as a file the formatter cannot settle. `vp fmt --check` names
+the file; `--fix` does not.
+
+Workaround: unindent the continuation to column 0, i.e. end the list and continue as
+ordinary prose. Found in `examples/noai/src/specs.md` while adding an acceptance criterion
+with a multi-paragraph rationale.
+
+### A new workspace package's tests are silently skipped until it is added to root `test.projects`
+
+`vp run test` discovers tests through `test.projects` in the root `vite.config.ts`, an
+explicit list. A new workspace package with perfectly good `*.test.ts` files contributes
+zero tests until it is added there, and the run stays green throughout. Nothing warns.
+
+The same applies one level down: a package whose tests live outside `src/` needs its own
+`test.include` to cover them.
+
+`examples/tmux` makes this easier to get wrong rather than harder. Its `server/` is
+deliberately outside the workspace, excluded from `fmt` and `lint` at the root, and tested
+via a bare `node --test`, because `node-pty` is a native addon. Copying that shape for an
+ordinary dependency inherits the exclusions without the reason, and the server tests never
+run in CI.
+
+Verify positively when adding a package: add a throwaway test and confirm the reported
+file count moves. A green run is not evidence of discovery.
+
+Found in: `examples/noai`, where the server is in-workspace (its `@anthropic-ai/sdk`
+dependency needs no native-addon escape hatch) and both the root `test.projects` entry and
+a package-level `test.include` were required. Recorded with the surrounding agent-workflow
+learnings in `plans/effect-api-digest-proposal.md` (untracked; `plans/` is gitignored).
+
+### The example convention leaves every thin entry structurally untested
+
+Examples are split into a side-effect-free `app.ts` exporting `App` and a thin entry
+(`main.ts` or `entry-client.ts`) that mounts it. The split is what makes `app.ts` importable,
+and the browser test imports exactly that. The entry is therefore the one file no test
+reaches, in every example, by construction.
+
+That is usually harmless, because most entries only pick a root element and mount. It stops
+being harmless once an entry makes a decision. `examples/noai`'s entry reads a server-written
+`<meta>` tag to choose between the live and scripted transports, and its failure mode is
+silent: a wrong read sends a keyless dev server to the live transport, and a mount failure
+goes to `console.error` with a blank `#root` left behind.
+
+The gap is not visible from the test output. Both the unit and browser suites can be fully
+green while the page a person actually opens is blank.
+
+Worth deciding repo-wide rather than per example: either keep entries dumb enough that no
+test is owed, or give any entry that branches a home a test can reach. `examples/noai` took
+the first route in spirit but not in fact, and its one decision is now covered only by a
+manual check recorded in `src/specs.md`.
+
+Found in: `examples/noai` at `/document`, verifying the served page by hand because nothing
+automated could.
+
 ## Resolved
 
 ### A reactive child's first emission was discarded if it arrived before its markers attached
